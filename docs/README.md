@@ -79,3 +79,4 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`concepts/decisoes-de-admissao-da-migracao.md`](concepts/decisoes-de-admissao-da-migracao.md) | Aprovado v1.0 |
 | [`concepts/proposta-de-admissao-agente-conectado.md`](concepts/proposta-de-admissao-agente-conectado.md) | Homologada v1.0 |
 | [`concepts/decisao-de-admissao-agente-conectado.md`](concepts/decisao-de-admissao-agente-conectado.md) | Aprovado v1.0 |
+| [`requirements/REQ-011-vinculo-de-distribuicao.md`](requirements/REQ-011-vinculo-de-distribuicao.md) | Aprovado v1.0 |
