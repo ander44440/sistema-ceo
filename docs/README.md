@@ -14,6 +14,7 @@
 | ADR | Decisões arquiteturais e registros de revisão | `docs/adr/` | Engenheiro registra | decisão do CTO/Usuário |
 | ANL | Análises de capacidade (preparatórias, não normativas) | `docs/analysis/` | Engenheiro/CTO | CTO (ADR-005) |
 | ARQ | Documentos de arquitetura | `docs/architecture/` | Engenheiro/CTO | CTO, com aval do Usuário (ADR-010) |
+| IMP | Planos de implementação | `docs/implementation/` | Engenheiro/CTO | CTO, com aval do Usuário (ADR-012) |
 | FLW | Fluxos | `docs/flows/` | CTO/Engenheiro | CTO |
 | TSK | Tarefas | `docs/tasks/` | CEO/Engenheiro | CTO |
 | TST | Testes | `docs/tests/` | Engenheiro | CTO |
@@ -68,3 +69,5 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`analysis/ANL-003-analise-da-estrategia-de-migracao.md`](analysis/ANL-003-analise-da-estrategia-de-migracao.md) | Aprovada v1.0 |
 | [`architecture/ARQ-002-arquitetura-de-identificacao-organizacional.md`](architecture/ARQ-002-arquitetura-de-identificacao-organizacional.md) | Aprovado v1.0 |
 | [`architecture/ARQ-003-espaco-de-identificacao-dos-conceitos.md`](architecture/ARQ-003-espaco-de-identificacao-dos-conceitos.md) | Aprovado v1.0 |
+| [`adr/ADR-012-cria-tipo-documental-imp.md`](adr/ADR-012-cria-tipo-documental-imp.md) | Aceito v1.0 |
+| [`implementation/IMP-001-plano-de-implementacao-do-mecanismo-de-conceitos.md`](implementation/IMP-001-plano-de-implementacao-do-mecanismo-de-conceitos.md) | Em análise |
