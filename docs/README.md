@@ -44,7 +44,7 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`requirements/REQ-002-registro-canonico-de-normas.md`](requirements/REQ-002-registro-canonico-de-normas.md) | Aprovado v1.0 |
 | [`requirements/REQ-003-resolucao-da-norma-vigente.md`](requirements/REQ-003-resolucao-da-norma-vigente.md) | Aprovado v1.0 |
 | [`requirements/REQ-004-registro-estruturado-do-conhecimento.md`](requirements/REQ-004-registro-estruturado-do-conhecimento.md) | Aprovado v1.0 |
-| [`requirements/REQ-005-recuperacao-contextual-do-conhecimento.md`](requirements/REQ-005-recuperacao-contextual-do-conhecimento.md) | Em análise |
+| [`requirements/REQ-005-recuperacao-contextual-do-conhecimento.md`](requirements/REQ-005-recuperacao-contextual-do-conhecimento.md) | Aprovado v1.0 |
 | [`requirements/TEMPLATE-REQ.md`](requirements/TEMPLATE-REQ.md) | Padrão oficial (ADR-003) |
 | [`adr/ADR-001-revisao-cto-sistema-de-governanca.md`](adr/ADR-001-revisao-cto-sistema-de-governanca.md) | Aceito |
 | [`adr/ADR-002-diretrizes-estrategicas-e-padrao-documental.md`](adr/ADR-002-diretrizes-estrategicas-e-padrao-documental.md) | Aceito |
