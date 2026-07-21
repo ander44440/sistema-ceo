@@ -8,11 +8,12 @@
 
 O CEO deverá determinar e entregar, para qualquer contexto de trabalho sob sua coordenação, o conjunto de itens de conhecimento registrados aplicáveis a esse contexto — sob demanda e proativamente — referenciando cada item por seu identificador permanente e informando seu estado de validade.
 
-**Definição** (CTO, 21/07/2026): ***Contexto de Trabalho*: unidade identificável de execução ou decisão sob governança do CEO, dentro da qual conhecimentos organizacionais podem ser registrados, recuperados ou utilizados.**
+**Conceito referenciado:** *Contexto de Trabalho* — **[CNC-003](../concepts/CNC-003-contexto-de-trabalho.md)**.
+
+> **Anotação de migração (21/07/2026):** a definição que residia provisoriamente neste requisito migrou para a autoridade semântica oficial no corte único (ADR-009), encerrando a provisoriedade registrada na nota de governança original. A transcrição abaixo é informativa e não vinculante; a definição normativa vigente é a do CNC-003.
+> *Contexto de Trabalho*: unidade identificável de execução ou decisão sob governança do CEO, dentro da qual conhecimentos organizacionais podem ser registrados, recuperados ou utilizados.
 
 *Nota explicativa (sem força normativa):* exemplos de contexto de trabalho incluem um projeto, uma tarefa, uma decisão em elaboração e interações com o usuário ou entre agentes.
-
-*Nota de governança:* esta definição reside provisoriamente neste requisito. Não existe ainda mecanismo oficial para conceitos organizacionais; a necessidade está registrada como oportunidade de evolução da governança em `docs/learning/2026-07-21-conceitos-organizacionais.md`.
 
 ## Tipo
 
@@ -69,3 +70,4 @@ Conhecimento que não é reencontrado no momento certo tem valor zero (ANL-001 �
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 21/07/2026 | Engenheiro (Cursor) | Criação | Nova ordem da CAP-04 (A → C → D → B) e autorização do CTO para o Grupo C | Aprovado com um ajuste |
 | 1.0 | 21/07/2026 | CTO revisou; Usuário aprovou | Definição de "Contexto de Trabalho" substituída pela oficial do CTO; exemplos rebaixados a nota explicativa sem força normativa; análise metodológica registrou a ausência de mecanismo para conceitos organizacionais | Revisão do CTO | **Aprovado — segundo requisito da CAP-04** |
+| 1.0 (anotação) | 21/07/2026 | Engenheiro (Cursor), ato de execução autorizado pela ADR-009 (D5) | Anotação de migração: a definição de "Contexto de Trabalho" tornou-se informativa e subordinada ao mecanismo de conceitos (CNC-003); nota de governança provisória encerrada | Corte único de migração (IMP-001, E4) | Documento passa a consumidor por referência; sem reabertura nem novo ciclo de aprovação |

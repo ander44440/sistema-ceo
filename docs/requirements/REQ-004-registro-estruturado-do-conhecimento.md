@@ -8,7 +8,10 @@
 
 O CEO deverá manter um registro estruturado dos conhecimentos organizacionais, no qual cada item de conhecimento possua identificador permanente, classificação, origem e relacionamentos expressos por identificadores rastreáveis.
 
-**Definição** (fronteira oficial CAP-04 × CAP-05, CTO, 21/07/2026 — ANL-001 §2): *item de conhecimento* é todo conhecimento **reutilizável e independente de uma decisão específica**. Registros históricos de fatos, decisões, eventos e seus contextos pertencem à Memória Organizacional (CAP-05) e não são itens de conhecimento.
+**Conceito referenciado:** *item de conhecimento* — **[CNC-002](../concepts/CNC-002-item-de-conhecimento.md)**.
+
+> **Anotação de migração (21/07/2026):** a definição transcrita neste documento migrou para a autoridade semântica oficial no corte único (ADR-009). A transcrição abaixo é informativa e não vinculante; a definição normativa vigente é a do CNC-002.
+> *Item de conhecimento* é todo conhecimento **reutilizável e independente de uma decisão específica**. Registros históricos de fatos, decisões, eventos e seus contextos pertencem à Memória Organizacional (CAP-05) e não são itens de conhecimento.
 
 ## Tipo
 
@@ -65,3 +68,4 @@ Nenhuma dependência bloqueante. Quando um item referenciar normas, utiliza os i
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 21/07/2026 | Engenheiro (Cursor) | Criação | Gate de REQs da CAP-04 aberto (ANL-001 aprovada; ADR-006 em vigor); autorização do CTO | Aprovado com um ajuste |
 | 1.0 | 21/07/2026 | CTO revisou; Usuário aprovou | Critério de validade explicitado: exige apenas a existência do estado registrado; atribuição, alteração, aprovação e revisão pertencem ao Grupo D | Revisão do CTO — REQ-004 estrutura o registro, não o gerencia | **Aprovado — primeiro requisito da CAP-04** |
+| 1.0 (anotação) | 21/07/2026 | Engenheiro (Cursor), ato de execução autorizado pela ADR-009 (D5) | Anotação de migração: a definição de "item de conhecimento" tornou-se informativa e subordinada ao mecanismo de conceitos (CNC-002) | Corte único de migração (IMP-001, E4) | Documento passa a consumidor por referência; sem reabertura nem novo ciclo de aprovação |

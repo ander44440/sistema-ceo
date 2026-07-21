@@ -32,6 +32,8 @@ O que **não é** da CAP-04:
 
 A fronteira mais sensível é com a CAP-05 — já sinalizada como incerteza no REQ-002 ("norma × conhecimento organizacional"). A definição oficial estabelecida pelo CTO em 21/07/2026 é a referência para todos os próximos requisitos da CAP-04:
 
+> **Anotação de migração (21/07/2026):** a definição de "item de conhecimento" derivada desta fronteira migrou para a autoridade semântica oficial no corte único (ADR-009); a definição normativa vigente é a do **[CNC-002](../concepts/CNC-002-item-de-conhecimento.md)**, com o significado desta seção preservado por deliberação expressa do CTO (Gate E3). A formulação abaixo é informativa e não vinculante.
+
 * **CAP-04 — Gestão do Conhecimento:** administra conhecimentos **reutilizáveis, independentes de uma decisão específica**.
 * **CAP-05 — Memória Organizacional:** administra **registros históricos de fatos, decisões, eventos e seus respectivos contextos**.
 
@@ -94,3 +96,4 @@ A fronteira mais sensível é com a CAP-05 — já sinalizada como incerteza no 
 | 0.1 | 21/07/2026 | Engenheiro (Cursor) | Criação | Ordem do CTO — preparar estratégia da CAP-04 antes dos REQs | Aprovada com um ajuste |
 | 1.0 | 21/07/2026 | CTO decidiu; Engenheiro aplicou | Fronteira CAP-04 × CAP-05 substituída pela definição oficial do CTO (conhecimento reutilizável × registro histórico) | Revisão da ANL-001 | **Aprovada — referência para os REQs da CAP-04** |
 | 1.1 | 21/07/2026 | CTO decidiu; Engenheiro aplicou; CTO aprovou | Ordem dos grupos redefinida: A (concluído) → C → D → B | A utilidade do conhecimento depende primeiro da recuperação; a preservação protege um patrimônio cujo modelo de uso já está definido | **Aprovada — ordem oficial vigente** |
+| 1.1 (anotação) | 21/07/2026 | Engenheiro (Cursor), ato de execução autorizado pela ADR-009 (D5) | Anotação de migração no §2: a definição derivada da fronteira CAP-04 × CAP-05 tornou-se informativa e subordinada ao mecanismo de conceitos (CNC-002) | Corte único de migração (IMP-001, E4) | Documento passa a consumidor por referência; sem reabertura nem novo ciclo de aprovação |

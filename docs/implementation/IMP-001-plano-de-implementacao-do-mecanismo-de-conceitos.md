@@ -108,6 +108,18 @@ Nenhuma etapa avança sem o gate anterior — disciplina idêntica à aplicada e
 * **Desvio textual na regularização:** mitigado duas vezes — fixação do texto em E2 e verificação de fidelidade em E3.4 e E5 (ADR-009, D6.2).
 * **Prolongamento do congelamento:** o plano minimiza o intervalo até o corte ao permitir E1 ∥ E2; risco já classificado como aceitável na ANL-003 (§3.2).
 
+## Encerramento da Implementação (E6)
+
+**Declaração formal de conclusão:** a implementação do Mecanismo de Conceitos Organizacionais foi concluída em 21/07/2026, com as etapas E1 a E5 executadas e verificadas conforme este plano. A homologação final do mecanismo foi solicitada ao CTO no relatório final de execução.
+
+| Campo | Registro |
+|-------|----------|
+| Quem | CTO aprovou os gates E1, E2 e E3 e autorizou E4–E6; Usuário aprovou; Engenheiro (Cursor) executou |
+| Quando | 21/07/2026 |
+| Por quê | Concluir formalmente a implementação após o corte único e a verificação dos critérios da ADR-009 (D6) |
+| Baseado em quê | IMP-001 v1.0 (etapas e gates); deliberação do Gate E3 (CTO, 21/07/2026); evidências das etapas E4 e E5 |
+| Resultado | CNC-001 a CNC-004 registrados e vigentes; cinco documentos legados anotados; disposição transitória da ADR-007 extinta; catálogo atualizado; implementação declarada concluída — homologação final do CTO pendente |
+
 ## Rastreabilidade
 
 | Elo | Referência |
@@ -123,3 +135,4 @@ Nenhuma etapa avança sem o gate anterior — disciplina idêntica à aplicada e
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 21/07/2026 | Engenheiro (Cursor) | Redação | Deliberação do CTO — planejar a implementação antes de executá-la | Aprovado com dois ajustes |
 | 1.0 | 21/07/2026 | CTO revisou; Usuário aprovou | Adicionados o princípio organizacional do plano (nenhum efeito permanente antes do gate) e a etapa E6 — Encerramento da Implementação | Revisão do CTO — explicitar a natureza controlada da implementação e formalizar seu encerramento | **Aprovado — plano de implementação em vigor** |
+| 1.0 (execução) | 21/07/2026 | CTO (gates); Engenheiro (execução) | E1 e E2 executadas e aprovadas (relatório + deliberação do Gate E3); E3 aprovado com ordem oficial CNC-001 a CNC-004; E4 — corte único executado; E5 — critérios D6 da ADR-009 atestados; E6 — encerramento registrado | Autorização de execução do IMP-001 e deliberação do Gate E3 | **Implementação concluída — homologação final solicitada ao CTO** |

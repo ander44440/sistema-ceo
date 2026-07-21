@@ -36,7 +36,10 @@ A ADR-007 já decidiu a responsabilidade nuclear: o mecanismo é a **autoridade 
 | Aplicação dos conceitos em cada contexto | Documentos e processos consumidores | ADR-007, "problemas que não resolve" |
 | Distribuição dos conceitos aos agentes | CAP-01 / REQ-001 | Conceitos integram o conjunto distribuível; o mecanismo é fonte, não canal |
 
-**Definição** (CTO, 21/07/2026): **conceito organizacional é um termo cujo significado precisa permanecer único e normativamente consistente para garantir a correta interpretação de um ou mais documentos da organização.**
+**Conceito referenciado:** *conceito organizacional* — **[CNC-004](../concepts/CNC-004-conceito-organizacional.md)**.
+
+> **Anotação de migração (21/07/2026):** a definição oficial estabelecida nesta seção migrou para a autoridade semântica no corte único (ADR-009). A transcrição abaixo é informativa e não vinculante; a definição normativa vigente é a do CNC-004.
+> **Conceito organizacional é um termo cujo significado precisa permanecer único e normativamente consistente para garantir a correta interpretação de um ou mais documentos da organização.**
 
 *Nota de promoção (indicativa, sem força normativa):* na prática, a promoção de um termo a conceito organizacional normalmente ocorre quando ele é reutilizado por múltiplos documentos normativos.
 
@@ -105,3 +108,4 @@ Alternativas analisadas: **(a)** nova capacidade CAP-13 — rejeitada pelos trê
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 21/07/2026 | Engenheiro (Cursor) | Criação | Ordem do CTO — compreender a responsabilidade antes dos requisitos (ADR-006) | Aprovada com dois ajustes |
 | 1.0 | 21/07/2026 | CTO revisou; Usuário aprovou | Definição oficial de "conceito organizacional" substituiu a proposta; explicitada a separação entre definir significado e decidir promoção, com a política de admissão remetida aos REQs do mecanismo | Revisão do CTO | **Aprovada — base para a ADR de posicionamento/formato** |
+| 1.0 (anotação) | 21/07/2026 | Engenheiro (Cursor), ato de execução autorizado pela ADR-009 (D5) | Anotação de migração no §2: a definição de "conceito organizacional" tornou-se informativa e subordinada ao mecanismo de conceitos (CNC-004) | Corte único de migração (IMP-001, E4) | Documento passa a consumidor por referência; sem reabertura nem novo ciclo de aprovação |

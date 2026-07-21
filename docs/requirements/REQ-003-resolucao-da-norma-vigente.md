@@ -8,7 +8,10 @@
 
 O CEO deverá determinar, para toda decisão sob sua governança, o conjunto de normas vigentes e aplicáveis que a fundamenta, resolvendo conflitos entre níveis pela hierarquia normativa da CON-001 e nunca utilizando normas não vigentes como referência operacional.
 
-**Definição** (CTO, 21/07/2026): *decisão sob governança* é toda decisão produzida, validada ou executada pelo CEO, independentemente de seu registro posterior na Memória Organizacional.
+**Conceito referenciado:** *decisão sob governança* — **[CNC-001](../concepts/CNC-001-decisao-sob-governanca.md)**.
+
+> **Anotação de migração (21/07/2026):** a definição originalmente estabelecida neste documento migrou para a autoridade semântica oficial no corte único (ADR-009). A transcrição abaixo é informativa e não vinculante; a definição normativa vigente é a do CNC-001.
+> *Decisão sob governança* é toda decisão produzida, validada ou executada pelo CEO, independentemente de seu registro posterior na Memória Organizacional.
 
 ## Tipo
 
@@ -64,3 +67,4 @@ A hierarquia normativa (CON-001, Art. 5º) e a rastreabilidade decisória (Art. 
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 21/07/2026 | Engenheiro (Cursor) | Criação, incorporando as três decisões do CTO sobre o escopo refinado | Autorização do CTO para redação do REQ-003 | Aprovado com um ajuste |
 | 1.0 | 21/07/2026 | CTO revisou; Usuário aprovou | Risco de detecção de conflitos generalizado — removida referência a forma de representação das normas | Revisão final do CTO: requisito deve permanecer válido independentemente da representação futura das normas | **Aprovado** |
+| 1.0 (anotação) | 21/07/2026 | Engenheiro (Cursor), ato de execução autorizado pela ADR-009 (D5) | Anotação de migração: a definição de "decisão sob governança" tornou-se informativa e subordinada ao mecanismo de conceitos (CNC-001) | Corte único de migração (IMP-001, E4) | Documento passa a consumidor por referência; sem reabertura nem novo ciclo de aprovação |

@@ -64,6 +64,8 @@ Caso seja necessária a alteração de um conceito, ela ocorre primeiro no mecan
 
 ### Disposição transitória
 
+> **EXTINTA em 21/07/2026** — cumpridos os cinco critérios de conclusão da migração (ADR-009, Decisão 6), verificados na etapa E5 do IMP-001. Os conceitos CNC-001 a CNC-004 respondem integralmente pelo inventário; a autoridade semântica oficial está operacional em `docs/concepts/`. O texto abaixo permanece apenas como registro histórico.
+
 Enquanto o mecanismo não for definido (formato e estrutura são decisões futuras), vale o regime provisório já em vigor: cada definição oficial permanece no documento em que o CTO a estabeleceu, citada por referência e nunca copiada. Após a definição do mecanismo, as três definições existentes serão migradas, permanecendo nos documentos de origem apenas a referência.
 
 ## Fora do escopo desta ADR
@@ -92,3 +94,4 @@ Enquanto o mecanismo não for definido (formato e estrutura são decisões futur
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 21/07/2026 | Engenheiro (Cursor) | Redação | Autorização do CTO — problema estrutural de governança identificado | Aprovada com dois ajustes |
 | 1.0 | 21/07/2026 | CTO revisou; Usuário aprovou | Responsabilidade reformulada como autoridade semântica oficial; adicionado princípio arquitetural: nenhum documento altera significado de conceito por definição local | Revisão do CTO | **Aprovada — mecanismo decidido em existência e responsabilidade** |
+| 1.0 (anotação) | 21/07/2026 | Engenheiro (Cursor), ato de execução pré-autorizado pela ADR-009 (D6) | Disposição transitória declarada extinta: migração concluída com os cinco critérios da ADR-009 D6 atestados (IMP-001, E5) | Corte único executado — CNC-001 a CNC-004 registrados | Regime transitório encerrado; autoridade semântica plenamente operacional |
