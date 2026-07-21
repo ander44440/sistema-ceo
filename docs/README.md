@@ -74,7 +74,7 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`analysis/ANL-004-analise-da-distribuicao-de-governanca.md`](analysis/ANL-004-analise-da-distribuicao-de-governanca.md) | Aprovada v1.0 |
 | [`adr/ADR-013-decisoes-estruturais-do-ciclo-da-distribuicao.md`](adr/ADR-013-decisoes-estruturais-do-ciclo-da-distribuicao.md) | Homologada v1.0 |
 | [`requirements/REQ-010-composicao-do-pacote-de-governanca.md`](requirements/REQ-010-composicao-do-pacote-de-governanca.md) | Aprovado v1.0 |
-| [`concepts/README.md`](concepts/README.md) — Índice Oficial de Conceitos (CNC-001 a CNC-004) | Oficial — em vigor |
+| [`concepts/README.md`](concepts/README.md) — Índice Oficial de Conceitos (CNC-001 a CNC-005) | Oficial — em vigor |
 | [`concepts/TEMPLATE-CONCEITO.md`](concepts/TEMPLATE-CONCEITO.md) | Oficial |
 | [`concepts/decisoes-de-admissao-da-migracao.md`](concepts/decisoes-de-admissao-da-migracao.md) | Aprovado v1.0 |
 | [`concepts/proposta-de-admissao-agente-conectado.md`](concepts/proposta-de-admissao-agente-conectado.md) | Homologada v1.0 |

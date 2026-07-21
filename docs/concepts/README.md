@@ -23,6 +23,7 @@ A relação oficial de todos os conceitos organizacionais registrados na **autor
 | [CNC-002](CNC-002-item-de-conhecimento.md) | Item de conhecimento | Vigente desde 21/07/2026 |
 | [CNC-003](CNC-003-contexto-de-trabalho.md) | Contexto de Trabalho | Vigente desde 21/07/2026 |
 | [CNC-004](CNC-004-conceito-organizacional.md) | Conceito organizacional | Vigente desde 21/07/2026 |
+| [CNC-005](CNC-005-agente-conectado.md) | Agente Conectado | Vigente desde 21/07/2026 |
 
 ## Registro do corte único de migração (Memória Organizacional — ADR-009, D6.5)
 
