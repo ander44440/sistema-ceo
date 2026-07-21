@@ -71,6 +71,7 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`architecture/ARQ-003-espaco-de-identificacao-dos-conceitos.md`](architecture/ARQ-003-espaco-de-identificacao-dos-conceitos.md) | Aprovado v1.0 |
 | [`adr/ADR-012-cria-tipo-documental-imp.md`](adr/ADR-012-cria-tipo-documental-imp.md) | Aceito v1.0 |
 | [`implementation/IMP-001-plano-de-implementacao-do-mecanismo-de-conceitos.md`](implementation/IMP-001-plano-de-implementacao-do-mecanismo-de-conceitos.md) | Aprovado v1.0 |
+| [`analysis/ANL-004-analise-da-distribuicao-de-governanca.md`](analysis/ANL-004-analise-da-distribuicao-de-governanca.md) | Aprovada v1.0 |
 | [`concepts/README.md`](concepts/README.md) — Índice Oficial de Conceitos (CNC-001 a CNC-004) | Oficial — em vigor |
 | [`concepts/TEMPLATE-CONCEITO.md`](concepts/TEMPLATE-CONCEITO.md) | Oficial |
 | [`concepts/decisoes-de-admissao-da-migracao.md`](concepts/decisoes-de-admissao-da-migracao.md) | Aprovado v1.0 |
