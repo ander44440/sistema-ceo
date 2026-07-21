@@ -52,5 +52,6 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`adr/ADR-004-decisao-final-da-fase-0.md`](adr/ADR-004-decisao-final-da-fase-0.md) | Aceito |
 | [`adr/ADR-005-cria-tipo-documental-anl.md`](adr/ADR-005-cria-tipo-documental-anl.md) | Aceito |
 | [`analysis/ANL-001-analise-cap-04.md`](analysis/ANL-001-analise-cap-04.md) | Aprovado v1.1 |
+| [`analysis/ANL-002-analise-mecanismo-de-conceitos.md`](analysis/ANL-002-analise-mecanismo-de-conceitos.md) | Aprovado v1.0 |
 | [`adr/ADR-006-fluxo-oficial-de-desenvolvimento-de-capacidades.md`](adr/ADR-006-fluxo-oficial-de-desenvolvimento-de-capacidades.md) | Aceito v1.0 |
 | [`adr/ADR-007-mecanismo-de-conceitos-organizacionais.md`](adr/ADR-007-mecanismo-de-conceitos-organizacionais.md) | Aceito v1.0 |
