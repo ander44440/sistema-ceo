@@ -66,3 +66,4 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`adr/ADR-011-criacao-da-capacidade-de-identidade-organizacional.md`](adr/ADR-011-criacao-da-capacidade-de-identidade-organizacional.md) | Aceito v1.0 |
 | [`architecture/ARQ-001-arquitetura-do-registro-de-conceitos.md`](architecture/ARQ-001-arquitetura-do-registro-de-conceitos.md) | Aprovado v1.0 |
 | [`analysis/ANL-003-analise-da-estrategia-de-migracao.md`](analysis/ANL-003-analise-da-estrategia-de-migracao.md) | Aprovada v1.0 |
+| [`architecture/ARQ-002-arquitetura-de-identificacao-organizacional.md`](architecture/ARQ-002-arquitetura-de-identificacao-organizacional.md) | Aprovado v1.0 |
