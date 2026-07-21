@@ -1,7 +1,7 @@
 # ANL-001 — Análise da CAP-04 — Gestão do Conhecimento
 
 > **Status: APROVADA.**
-> Versão 1.0 — 21/07/2026, aprovada pelo CTO com ajuste na fronteira CAP-04 × CAP-05. Tipo criado pela ADR-005 (aprovada).
+> Versão 1.1 — 21/07/2026, aprovada pelo CTO: ordem oficial dos grupos A → C → D → B. Tipo criado pela ADR-005 (aprovada).
 > Norma superior: CON-001 v1.0; VIS-001 v1.0; CAP-001 v1.0 (CAP-04).
 > Documento preparatório: não é requisito nem arquitetura; organiza a estratégia antes da escrita dos REQs da CAP-04.
 
@@ -67,14 +67,14 @@ A fronteira mais sensível é com a CAP-05 — já sinalizada como incerteza no 
 * **Overengineering ontológico:** taxonomias e metadados demais transformam registro em burocracia e ninguém alimenta o acervo. Mitigação: campos mínimos obrigatórios (como na Memória Organizacional), extensão só com evidência de necessidade.
 * **Medibilidade da promessa:** "cada projeto mais rápido que o anterior" é difícil de verificar objetivamente. Os critérios de aceitação deverão medir propriedades observáveis do acervo e da recuperação, não o efeito macro.
 
-## 6. Ordem sugerida para elaboração dos futuros REQs
+## 6. Ordem para elaboração dos futuros REQs
 
-Replicando o padrão validado na CAP-01 — primeiro o estado, depois a leitura, depois a qualidade:
+**Ordem oficial (redefinida pelo CTO em 21/07/2026):** a utilidade do conhecimento depende primeiro da capacidade de recuperá-lo corretamente; a preservação protege um patrimônio cujo modelo de uso já está definido.
 
-1. **REQ (Grupo A) — Registro estruturado do conhecimento:** o que é um item de conhecimento, identificação permanente, classificação (aplicando a definição oficial de fronteira com a CAP-05, §2), origem e relacionamentos. Análogo do REQ-002.
-2. **REQ (Grupo B) — Preservação independente de ferramenta:** o conhecimento sobrevive a sessões, agentes e plataformas, com integridade e versões. Complementa A e destrava o valor do pilar.
-3. **REQ (Grupo C) — Recuperação contextual:** dado um contexto de trabalho, o conhecimento aplicável e válido é determinável e entregue. Análogo do REQ-003 e núcleo de valor da capacidade.
-4. **REQ (Grupo D) — Atualidade e curadoria:** validade, obsolescência e depuração do acervo. Depende de A–C existirem para ter o que curar.
+1. **REQ (Grupo A) — Registro estruturado do conhecimento** *(concluído — REQ-004 v1.0)*: o que é um item de conhecimento, identificação permanente, classificação (aplicando a definição oficial de fronteira com a CAP-05, §2), origem e relacionamentos. Análogo do REQ-002.
+2. **REQ (Grupo C) — Recuperação contextual:** dado um contexto de trabalho, o conhecimento aplicável é determinável e entregue. Análogo do REQ-003 e núcleo de valor da capacidade.
+3. **REQ (Grupo D) — Atualidade e curadoria:** validade, obsolescência e depuração do acervo.
+4. **REQ (Grupo B) — Preservação independente de ferramenta:** o conhecimento sobrevive a sessões, agentes e plataformas, com integridade e versões.
 5. **Grupo E — Fronteiras:** avaliar com o CTO se vira requisito próprio ou se dilui nos anteriores (a integração com CAP-05 provavelmente cabe no Grupo A; os insumos para CAP-06/CAP-12 podem esperar as respectivas capacidades).
 
 ---
@@ -93,3 +93,4 @@ Replicando o padrão validado na CAP-01 — primeiro o estado, depois a leitura,
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 21/07/2026 | Engenheiro (Cursor) | Criação | Ordem do CTO — preparar estratégia da CAP-04 antes dos REQs | Aprovada com um ajuste |
 | 1.0 | 21/07/2026 | CTO decidiu; Engenheiro aplicou | Fronteira CAP-04 × CAP-05 substituída pela definição oficial do CTO (conhecimento reutilizável × registro histórico) | Revisão da ANL-001 | **Aprovada — referência para os REQs da CAP-04** |
+| 1.1 | 21/07/2026 | CTO decidiu; Engenheiro aplicou; CTO aprovou | Ordem dos grupos redefinida: A (concluído) → C → D → B | A utilidade do conhecimento depende primeiro da recuperação; a preservação protege um patrimônio cujo modelo de uso já está definido | **Aprovada — ordem oficial vigente** |
