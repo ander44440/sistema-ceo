@@ -52,6 +52,7 @@ Ao tomar decisões relevantes, explicar: o porquê, as alternativas, os riscos e
 
 Fase 0 encerrada em 21/07/2026 (ADR-004). Ainda NÃO existe implementação, arquitetura definitiva nem código — **nenhuma linha de código sem requisito aprovado e arquitetura decidida**. Regras da Fase 1:
 
+- Fluxo oficial de desenvolvimento de capacidades (ADR-006), com gates de governança — cada etapa só autoriza a seguinte após aprovação: ANL → ADR (quando necessária) → REQ → Arquitetura → Implementação → Validação. Artefato fora do fluxo é não oficial.
 - Todo REQ usa `docs/requirements/TEMPLATE-REQ.md` e rastreia exatamente uma capacidade (CAP-01 a CAP-12 do CAP-001).
 - Ordem de detalhamento: ondas do CAP-002 — Onda 1 Fundação (CAP-01, CAP-04, CAP-05, CAP-07, CAP-10), depois Onda 2 Operação, depois Onda 3 Evolução.
 - Catálogo oficial da documentação e vocabulário de status: `docs/README.md`. Novo tipo documental só nasce por ADR.
