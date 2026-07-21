@@ -12,6 +12,7 @@
 | CAP | Capacidades e estratégias derivadas | `docs/` | Engenheiro/CTO | Usuário, com revisão do CTO |
 | REQ | Requisitos | `docs/requirements/` | CTO/Engenheiro | Usuário, com revisão do CTO |
 | ADR | Decisões arquiteturais e registros de revisão | `docs/adr/` | Engenheiro registra | decisão do CTO/Usuário |
+| ANL | Análises de capacidade (preparatórias, não normativas) | `docs/analysis/` | Engenheiro/CTO | CTO (ADR-005) |
 | FLW | Fluxos | `docs/flows/` | CTO/Engenheiro | CTO |
 | TSK | Tarefas | `docs/tasks/` | CEO/Engenheiro | CTO |
 | TST | Testes | `docs/tests/` | Engenheiro | CTO |
@@ -47,3 +48,5 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`adr/ADR-002-diretrizes-estrategicas-e-padrao-documental.md`](adr/ADR-002-diretrizes-estrategicas-e-padrao-documental.md) | Aceito |
 | [`adr/ADR-003-consolidacao-cap-001-e-encerramento-da-fase-0.md`](adr/ADR-003-consolidacao-cap-001-e-encerramento-da-fase-0.md) | Aceito |
 | [`adr/ADR-004-decisao-final-da-fase-0.md`](adr/ADR-004-decisao-final-da-fase-0.md) | Aceito |
+| [`adr/ADR-005-cria-tipo-documental-anl.md`](adr/ADR-005-cria-tipo-documental-anl.md) | Aceito |
+| [`analysis/ANL-001-analise-cap-04.md`](analysis/ANL-001-analise-cap-04.md) | Aprovado v1.0 |
