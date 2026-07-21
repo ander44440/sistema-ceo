@@ -63,5 +63,6 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`adr/ADR-008-integracao-arquitetural-do-mecanismo-de-conceitos.md`](adr/ADR-008-integracao-arquitetural-do-mecanismo-de-conceitos.md) | Aceito v1.0 |
 | [`adr/ADR-009-transicao-para-o-mecanismo-de-conceitos.md`](adr/ADR-009-transicao-para-o-mecanismo-de-conceitos.md) | Aceito v1.0 |
 | [`adr/ADR-010-cria-tipo-documental-arq.md`](adr/ADR-010-cria-tipo-documental-arq.md) | Aceito v1.0 |
+| [`adr/ADR-011-criacao-da-capacidade-de-identidade-organizacional.md`](adr/ADR-011-criacao-da-capacidade-de-identidade-organizacional.md) | Aceito v1.0 |
 | [`architecture/ARQ-001-arquitetura-do-registro-de-conceitos.md`](architecture/ARQ-001-arquitetura-do-registro-de-conceitos.md) | Aprovado v1.0 |
 | [`analysis/ANL-003-analise-da-estrategia-de-migracao.md`](analysis/ANL-003-analise-da-estrategia-de-migracao.md) | Aprovada v1.0 |
