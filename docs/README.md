@@ -71,11 +71,13 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`architecture/ARQ-002-arquitetura-de-identificacao-organizacional.md`](architecture/ARQ-002-arquitetura-de-identificacao-organizacional.md) | Aprovado v1.0 |
 | [`architecture/ARQ-003-espaco-de-identificacao-dos-conceitos.md`](architecture/ARQ-003-espaco-de-identificacao-dos-conceitos.md) | Aprovado v1.0 |
 | [`architecture/ARQ-004-arquitetura-do-registro-canonico-de-normas.md`](architecture/ARQ-004-arquitetura-do-registro-canonico-de-normas.md) | Homologada v1.0 |
-| [`norms/README.md`](norms/README.md) — Índice Oficial do Registro Canônico de Normas | Operacional — Gate E3 homologado (29 entradas) |
+| [`norms/README.md`](norms/README.md) — Índice Oficial do Registro Canônico de Normas | Operacional — 29 entradas (universo E2) |
 | [`norms/decisao-universo-normativo-inicial.md`](norms/decisao-universo-normativo-inicial.md) | Homologada v1.0 (Gate E2) |
+| [`norms/verificacao-e4-conformidade-e-estabilidade.md`](norms/verificacao-e4-conformidade-e-estabilidade.md) | Homologada v1.0 (Gate E4) |
+| [`norms/encerramento-e5-implementacao-registro-canonico.md`](norms/encerramento-e5-implementacao-registro-canonico.md) | Homologada v1.0 (Gate E5) |
 | [`adr/ADR-012-cria-tipo-documental-imp.md`](adr/ADR-012-cria-tipo-documental-imp.md) | Aceito v1.0 |
 | [`implementation/IMP-001-plano-de-implementacao-do-mecanismo-de-conceitos.md`](implementation/IMP-001-plano-de-implementacao-do-mecanismo-de-conceitos.md) | Aprovado v1.0 |
-| [`implementation/IMP-002-plano-de-implementacao-do-registro-canonico-de-normas.md`](implementation/IMP-002-plano-de-implementacao-do-registro-canonico-de-normas.md) | Homologado v1.0 |
+| [`implementation/IMP-002-plano-de-implementacao-do-registro-canonico-de-normas.md`](implementation/IMP-002-plano-de-implementacao-do-registro-canonico-de-normas.md) | Homologado v1.0 — **Implementação CONCLUÍDA (E1–E5)** |
 | [`analysis/ANL-004-analise-da-distribuicao-de-governanca.md`](analysis/ANL-004-analise-da-distribuicao-de-governanca.md) | Aprovada v1.0 |
 | [`adr/ADR-013-decisoes-estruturais-do-ciclo-da-distribuicao.md`](adr/ADR-013-decisoes-estruturais-do-ciclo-da-distribuicao.md) | Homologada v1.0 |
 | [`requirements/REQ-010-composicao-do-pacote-de-governanca.md`](requirements/REQ-010-composicao-do-pacote-de-governanca.md) | Aprovado v1.0 |

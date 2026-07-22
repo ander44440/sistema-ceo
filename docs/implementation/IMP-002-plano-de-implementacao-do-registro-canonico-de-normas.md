@@ -1,10 +1,9 @@
 # IMP-002 — Plano de Implementação Documental do Registro Canônico de Normas
 
-> **Status: Homologado — v1.0 (Governança, 22/07/2026).**
+> **Status: Homologado — v1.0 (Governança, 22/07/2026). Implementação CONCLUÍDA (E1–E5).**
 > Versão 1.0 — 22/07/2026. Tipo IMP (ADR-012).
 > Norma superior: CON-001 v1.0; ADR-006; REQ-002 v1.0; REQ-003 v1.0; ARQ-004 v1.0 (L1; P1–P7); ADR-013 v1.0.
-> Este documento **planeja**; a execução segue as etapas E1–E5 com gates. Não altera normas existentes, não modifica identificadores, não redefine a ARQ-004, não introduz tecnologia nem antecipa a Arquitetura da Distribuição.
-> **Autorização:** execução da Etapa E1 aberta pela Governança em 22/07/2026.
+> **Resultado:** Gate de Implementação da ARQ-004 encerrado; Registro Canônico de Normas operacional no plano documental (`docs/norms/`).
 
 ---
 
@@ -133,4 +132,5 @@ Nenhuma etapa posterior inicia sem conclusão do gate anterior. E3 só após E2 
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 22/07/2026 | Engenheiro (Cursor) | Plano em 5 etapas (E1–E5) para materialização documental da ARQ-004 | Autorização da Governança — abertura do Gate de Implementação | Aprovado pelo CTO com ajustes pontuais |
 | 0.1-r | 22/07/2026 | CTO revisou; Engenheiro aplicou | Critério geral de entrada; E2 deliberativo (decisão formal do universo); critério de estabilidade índice×catálogo×documentos antes de E5; hipótese CON/VIS/REQ/ADR explicitada como não definitiva | Revisão técnica do CTO | Encaminhado à Governança |
-| 1.0 | 22/07/2026 | Governança homologou | Plano E1–E5 homologado; hipótese de universo não constitui classificação oficial; execução de E1 autorizada | Homologação da Governança — Gate de Implementação da ARQ-004 | **Homologado — execução E1 aberta** |
+| 1.0 | 22/07/2026 | Governança homologou | Plano E1–E5 homologado; hipótese de universo não constitui classificação oficial; execução de E1 autorizada | Homologação da Governança — Gate de Implementação da ARQ-004 | Homologado — execução E1–E5 |
+| 1.0-c | 22/07/2026 | Governança | E1–E5 executadas e homologadas; Gate de Implementação da ARQ-004 encerrado | Homologação do Gate E5 | **Implementação CONCLUÍDA** |
