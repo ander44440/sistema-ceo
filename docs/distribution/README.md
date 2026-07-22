@@ -37,7 +37,7 @@ Porta de entrada documental do canal de Distribuição de Governança sob `docs/
 |-------------------------|--------|
 | Índice do canal (este documento) | Homologado (E1) |
 | Composição do pacote | Ainda não materializada (E3) |
-| Vínculos / registro de alcance | Em deliberação (E2) |
+| Vínculos / registro de alcance | Homologado E2 — [decisão](decisao-estado-inicial-dos-vinculos.md) v1.0; [registro](registro-de-alcance.md) (vazio) |
 | Rastro | Ainda não estruturado (E4) |
 
 ## Fontes (somente leitura)
@@ -63,3 +63,4 @@ Porta de entrada documental do canal de Distribuição de Governança sob `docs/
 | 0.1 | 22/07/2026 | Engenheiro (Cursor) | Criação de `docs/distribution/` e índice estrutural (D1–D6; regras; estado E1) | IMP-003 E1 autorizada após publicação do plano | Aguarda Gate E1 |
 | 0.1 | 22/07/2026 | CTO | Revisão técnica — sem ajustes; escopo estrutural conforme IMP-003 | Conformidade ARQ-005 / IMP-003 / ADR-013 | Aprovada — encaminhada à Governança |
 | 1.0 | 22/07/2026 | Governança homologou | Estrutura documental inicial do domínio de Distribuição | Conformidade ADR-006/012/013; ARQ-005; IMP-003 | **Homologada — E1 encerrada; E2 autorizada** |
+| — | 22/07/2026 | Governança | Gate E2 homologado — alcance inicial vazio | deliberação E2 | Ver decisão e registro de alcance |
