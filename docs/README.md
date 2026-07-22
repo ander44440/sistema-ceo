@@ -40,6 +40,7 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`D0-fundacao.md`](D0-fundacao.md) | Histórico (fundação) |
 | [`CON-001-constituicao.md`](CON-001-constituicao.md) | Aprovado v1.0 |
 | [`vision/VIS-001-visao-do-produto.md`](vision/VIS-001-visao-do-produto.md) | Aprovado v1.0 |
+| [`vision/VIS-002-identidade-institucional-do-produto.md`](vision/VIS-002-identidade-institucional-do-produto.md) | Homologado v1.0 |
 | [`CAP-001-mapa-de-capacidades.md`](CAP-001-mapa-de-capacidades.md) | Aprovado v1.0 |
 | [`CAP-002-priorizacao-das-capacidades.md`](CAP-002-priorizacao-das-capacidades.md) | Aprovado v1.0 |
 | [`requirements/REQ-001-distribuicao-da-constituicao.md`](requirements/REQ-001-distribuicao-da-constituicao.md) | Aprovado |
@@ -80,3 +81,4 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`concepts/proposta-de-admissao-agente-conectado.md`](concepts/proposta-de-admissao-agente-conectado.md) | Homologada v1.0 |
 | [`concepts/decisao-de-admissao-agente-conectado.md`](concepts/decisao-de-admissao-agente-conectado.md) | Aprovado v1.0 |
 | [`requirements/REQ-011-vinculo-de-distribuicao.md`](requirements/REQ-011-vinculo-de-distribuicao.md) | Aprovado v1.0 |
+| [`learning/2026-07-22-ancora-operacional-pos-cnc-005.md`](learning/2026-07-22-ancora-operacional-pos-cnc-005.md) | Homologada — marco de continuidade pós-CNC-005 |
