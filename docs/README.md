@@ -80,6 +80,7 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`implementation/IMP-001-plano-de-implementacao-do-mecanismo-de-conceitos.md`](implementation/IMP-001-plano-de-implementacao-do-mecanismo-de-conceitos.md) | Aprovado v1.0 |
 | [`implementation/IMP-002-plano-de-implementacao-do-registro-canonico-de-normas.md`](implementation/IMP-002-plano-de-implementacao-do-registro-canonico-de-normas.md) | Homologado v1.0 — **Implementação CONCLUÍDA (E1–E5)** |
 | [`implementation/IMP-003-plano-de-implementacao-documental-da-distribuicao.md`](implementation/IMP-003-plano-de-implementacao-documental-da-distribuicao.md) | Homologado v1.0 — plano oficial; execução E1–E6 por Gates |
+| [`distribution/README.md`](distribution/README.md) — Índice do Canal de Distribuição | Homologado E1 — estrutura; E2–E6 pendentes |
 | [`analysis/ANL-004-analise-da-distribuicao-de-governanca.md`](analysis/ANL-004-analise-da-distribuicao-de-governanca.md) | Aprovada v1.0 |
 | [`adr/ADR-013-decisoes-estruturais-do-ciclo-da-distribuicao.md`](adr/ADR-013-decisoes-estruturais-do-ciclo-da-distribuicao.md) | Homologada v1.0 |
 | [`requirements/REQ-010-composicao-do-pacote-de-governanca.md`](requirements/REQ-010-composicao-do-pacote-de-governanca.md) | Aprovado v1.0 |
