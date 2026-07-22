@@ -88,6 +88,7 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`distribution/verificacao-e5-conformidade-e-estabilidade.md`](distribution/verificacao-e5-conformidade-e-estabilidade.md) | Homologada v1.0 (Gate E5) |
 | [`distribution/encerramento-e5-implementacao-distribuicao.md`](distribution/encerramento-e5-implementacao-distribuicao.md) | Homologada v1.0 (Gate E5) — IMP-003 encerrado |
 | [`analysis/ANL-004-analise-da-distribuicao-de-governanca.md`](analysis/ANL-004-analise-da-distribuicao-de-governanca.md) | Aprovada v1.0 |
+| [`analysis/ANL-005-proposta-gates-por-lote-batch-gates.md`](analysis/ANL-005-proposta-gates-por-lote-batch-gates.md) | Homologada v1.0 — análise; Batch Gates para evolução normativa futura; ADR-006 intacta |
 | [`adr/ADR-013-decisoes-estruturais-do-ciclo-da-distribuicao.md`](adr/ADR-013-decisoes-estruturais-do-ciclo-da-distribuicao.md) | Homologada v1.0 |
 | [`requirements/REQ-010-composicao-do-pacote-de-governanca.md`](requirements/REQ-010-composicao-do-pacote-de-governanca.md) | Aprovado v1.0 |
 | [`concepts/README.md`](concepts/README.md) — Índice Oficial de Conceitos (CNC-001 a CNC-005) | Oficial — em vigor |
