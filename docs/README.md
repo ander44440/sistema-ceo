@@ -71,6 +71,8 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`architecture/ARQ-002-arquitetura-de-identificacao-organizacional.md`](architecture/ARQ-002-arquitetura-de-identificacao-organizacional.md) | Aprovado v1.0 |
 | [`architecture/ARQ-003-espaco-de-identificacao-dos-conceitos.md`](architecture/ARQ-003-espaco-de-identificacao-dos-conceitos.md) | Aprovado v1.0 |
 | [`architecture/ARQ-004-arquitetura-do-registro-canonico-de-normas.md`](architecture/ARQ-004-arquitetura-do-registro-canonico-de-normas.md) | Homologada v1.0 |
+| [`norms/README.md`](norms/README.md) — Índice Oficial do Registro Canônico de Normas | Operacional — Gate E3 homologado (29 entradas) |
+| [`norms/decisao-universo-normativo-inicial.md`](norms/decisao-universo-normativo-inicial.md) | Homologada v1.0 (Gate E2) |
 | [`adr/ADR-012-cria-tipo-documental-imp.md`](adr/ADR-012-cria-tipo-documental-imp.md) | Aceito v1.0 |
 | [`implementation/IMP-001-plano-de-implementacao-do-mecanismo-de-conceitos.md`](implementation/IMP-001-plano-de-implementacao-do-mecanismo-de-conceitos.md) | Aprovado v1.0 |
 | [`implementation/IMP-002-plano-de-implementacao-do-registro-canonico-de-normas.md`](implementation/IMP-002-plano-de-implementacao-do-registro-canonico-de-normas.md) | Homologado v1.0 |
