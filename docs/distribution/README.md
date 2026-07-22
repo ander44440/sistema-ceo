@@ -1,15 +1,15 @@
 # Índice do Canal de Distribuição de Governança
 
-> **Status: Operacional (estrutura) — Gate E1 homologado (Governança, 22/07/2026).**
+> **Status: Operacional — IMP-003 ENCERRADO (Governança, 22/07/2026).**
 > Norma superior: CON-001 v1.0; ARQ-005 v1.0; IMP-003 v1.0; REQ-010 a REQ-013 v1.0; ADR-013 v1.0 (D4); CNC-005.
 > Este índice é a **fonte de estado do mecanismo de distribuição** (não das normas). A autoridade normativa e semântica permanece nas fontes canônicas (ARQ-005 D1, D4).
-> **E1–E4 homologadas:** estrutura, alcance (vazio), snapshot do pacote e rastro (vazio). Gate E5 em aberto.
+> **Implementação documental concluída (E1–E5):** estrutura, alcance (vazio), snapshot do pacote e rastro (vazio). Verificação e encerramento homologados.
 
 ---
 
 ## O que é
 
-Porta de entrada documental do canal de Distribuição de Governança sob `docs/distribution/` (ARQ-005 A1). Organiza o estado do *mecanismo*: aponta (quando existirem) a composição do pacote vigente derivado, o registro de alcance e o rastro — sem hospedar texto normativo canônico.
+Porta de entrada documental do canal de Distribuição de Governança sob `docs/distribution/` (ARQ-005 A1). Organiza o estado do *mecanismo*: aponta a composição do pacote vigente derivado, o registro de alcance e o rastro — sem hospedar texto normativo canônico.
 
 ## Princípios observáveis (ARQ-005)
 
@@ -35,10 +35,11 @@ Porta de entrada documental do canal de Distribuição de Governança sob `docs/
 
 | Componente (ARQ-005 A1) | Estado |
 |-------------------------|--------|
-| Índice do canal (este documento) | Homologado (E1) |
+| Índice do canal (este documento) | Homologado (E1) — operacional |
 | Composição do pacote | Homologada E3 — [composicao-do-pacote.md](composicao-do-pacote.md) v1.0 (snapshot 22/07/2026) |
 | Vínculos / registro de alcance | Homologado E2 — [decisão](decisao-estado-inicial-dos-vinculos.md) v1.0; [registro](registro-de-alcance.md) (vazio) |
 | Rastro | Homologado E4 — [rastro.md](rastro.md) v1.0 (operacionalmente vazio) |
+| Verificação / encerramento | Homologados E5 — [verificação](verificacao-e5-conformidade-e-estabilidade.md); [encerramento](encerramento-e5-implementacao-distribuicao.md) |
 
 ## Fontes (somente leitura)
 
@@ -53,8 +54,8 @@ Porta de entrada documental do canal de Distribuição de Governança sob `docs/
 | Elo | Referência |
 |-----|------------|
 | Arquitetura | ARQ-005 A1 |
-| Plano | IMP-003 E1 |
-| Origem | Homologação IMP-003; Gate E1 (Governança, 22/07/2026) |
+| Plano | IMP-003 — **ENCERRADO** |
+| Origem | Homologação IMP-003; Gates E1–E5 (Governança, 22/07/2026) |
 
 ## Histórico
 
@@ -62,7 +63,8 @@ Porta de entrada documental do canal de Distribuição de Governança sob `docs/
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 22/07/2026 | Engenheiro (Cursor) | Criação de `docs/distribution/` e índice estrutural (D1–D6; regras; estado E1) | IMP-003 E1 autorizada após publicação do plano | Aguarda Gate E1 |
 | 0.1 | 22/07/2026 | CTO | Revisão técnica — sem ajustes; escopo estrutural conforme IMP-003 | Conformidade ARQ-005 / IMP-003 / ADR-013 | Aprovada — encaminhada à Governança |
-| 1.0 | 22/07/2026 | Governança homologou | Estrutura documental inicial do domínio de Distribuição | Conformidade ADR-006/012/013; ARQ-005; IMP-003 | **Homologada — E1 encerrada; E2 autorizada** |
+| 1.0 | 22/07/2026 | Governança homologou | Estrutura documental inicial do domínio de Distribuição | Conformidade ADR-006/012/013; ARQ-005; IMP-003 | Homologada — E1 encerrada; E2 autorizada |
 | — | 22/07/2026 | Governança | Gate E2 homologado — alcance inicial vazio | deliberação E2 | Ver decisão e registro de alcance |
 | — | 22/07/2026 | Governança | Gate E3 homologado — snapshot do pacote | deliberação E3 | Ver composição do pacote |
 | — | 22/07/2026 | Governança | Gate E4 homologado — rastro operacionalmente vazio | deliberação E4 | Ver rastro |
+| — | 22/07/2026 | Governança | Gate E5 homologado — verificação e encerramento do IMP-003 | deliberação E5 | **Canal operacional; IMP-003 ENCERRADO** |

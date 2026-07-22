@@ -1,11 +1,10 @@
 # IMP-003 — Plano de Implementação Documental da Distribuição de Governança
 
-> **Status: Homologado — v1.0 (Governança, 22/07/2026).**
+> **Status: Homologado — v1.0 (Governança, 22/07/2026). Implementação CONCLUÍDA (E1–E5; E6 consolidada na E5). Processo ENCERRADO.**
 > Versão 1.0 — 22/07/2026. Tipo IMP (ADR-012).
 > Norma superior: CON-001 v1.0; ADR-006; ADR-012; ADR-013 v1.0 (D4); ARQ-005 v1.0; REQ-010 a REQ-013 v1.0; CNC-005; ARQ-004 / IMP-002 (fontes operacionais).
-> Este documento **planeja**; não executa por si. Não reinterpreta a ARQ-005; não cria requisitos; não altera fontes canônicas; não introduz implementação técnica.
-> **Vinculação:** o IMP-003 implementa **exclusivamente a ARQ-005** — não constitui mecanismo genérico de implementação para futuros domínios.
-> **Gate de Implementação Documental da ARQ-005:** plano homologado; execução incremental E1–E6 condicionada aos respectivos Gates.
+> **Resultado:** Gate de Implementação Documental da ARQ-005 encerrado; canal documental operacional em `docs/distribution/` nos limites da Fase 1.
+> **Vinculação:** o IMP-003 implementou **exclusivamente a ARQ-005** — não constitui mecanismo genérico de implementação para futuros domínios.
 
 ---
 
@@ -160,7 +159,7 @@ Nenhuma etapa posterior inicia sem homologação da anterior. E3 só após E2 (e
 | Norma superior | ADR-006; ADR-012; ADR-013 D4; ARQ-005; REQ-010…013 |
 | Origem | Deliberação da Governança — autorização IMP-003 (22/07/2026); Recomendação Técnica com ajustes do CTO |
 | Planeja | Materialização documental de `docs/distribution/` |
-| Estado | Homologado v1.0 — execução E1–E6 por Gates sucessivos |
+| Estado | **ENCERRADO** — Implementação CONCLUÍDA (E1–E5; E6 consolidada na E5) |
 
 ## Histórico
 
@@ -168,4 +167,5 @@ Nenhuma etapa posterior inicia sem homologação da anterior. E3 só após E2 (e
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 22/07/2026 | Engenheiro (Cursor) | Plano E1–E6; snapshot; rastro vazio permitido; idempotência; só leitura das fontes | Autorização da Governança — redação IMP-003 | Em revisão técnica do CTO |
 | 0.1 | 22/07/2026 | Engenheiro (Cursor) | Ajustes editoriais A–C do CTO: vinculação exclusiva à ARQ-005; E5 só domínio Distribuição; E6 imutável + novo ciclo ADR-006 | Parecer CTO — aprovado com ajustes editoriais | Aguarda deliberação da Governança |
-| 1.0 | 22/07/2026 | Governança homologou | Plano oficial de implementação documental da Distribuição; E1–E6 e diretrizes homologadas | Conformidade ADR-006/012/013; ARQ-005; REQ-010…013; CNC-005 | **Homologado — publicação autorizada; E1 autorizada após publicação** |
+| 1.0 | 22/07/2026 | Governança homologou | Plano oficial de implementação documental da Distribuição; E1–E6 e diretrizes homologadas | Conformidade ADR-006/012/013; ARQ-005; REQ-010…013; CNC-005 | Homologado — publicação autorizada; E1 autorizada após publicação |
+| 1.0 | 22/07/2026 | Governança | E1–E5 executadas e homologadas; E6 consolidada na E5; processo encerrado | Deliberação E5 — encerramento oficial | **ENCERRADO — canal documental operacional** |
