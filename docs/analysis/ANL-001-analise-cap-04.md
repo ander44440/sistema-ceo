@@ -79,6 +79,8 @@ A fronteira mais sensível é com a CAP-05 — já sinalizada como incerteza no 
 4. **REQ (Grupo B) — Preservação independente de ferramenta:** o conhecimento sobrevive a sessões, agentes e plataformas, com integridade e versões.
 5. **Grupo E — Fronteiras:** avaliar com o CTO se vira requisito próprio ou se dilui nos anteriores (a integração com CAP-05 provavelmente cabe no Grupo A; os insumos para CAP-06/CAP-12 podem esperar as respectivas capacidades).
 
+> **Deliberação da Governança (23/07/2026) — Opção 2c:** o Grupo E **não** foi materializado como REQ próprio. Elementos essenciais consideram-se atendidos pelos REQ-004, REQ-005, REQ-014 e REQ-015. Contratos específicos com CAP-05, CAP-06 e CAP-12 remetem aos ciclos dessas capacidades. A fase de requisitos da CAP-04 fica **encerrada**. Registro oficial: [`decisao-encerramento-requisitos-cap-04-grupo-e.md`](decisao-encerramento-requisitos-cap-04-grupo-e.md).
+
 ---
 
 ## Rastreabilidade
@@ -97,3 +99,4 @@ A fronteira mais sensível é com a CAP-05 — já sinalizada como incerteza no 
 | 1.0 | 21/07/2026 | CTO decidiu; Engenheiro aplicou | Fronteira CAP-04 × CAP-05 substituída pela definição oficial do CTO (conhecimento reutilizável × registro histórico) | Revisão da ANL-001 | **Aprovada — referência para os REQs da CAP-04** |
 | 1.1 | 21/07/2026 | CTO decidiu; Engenheiro aplicou; CTO aprovou | Ordem dos grupos redefinida: A (concluído) → C → D → B | A utilidade do conhecimento depende primeiro da recuperação; a preservação protege um patrimônio cujo modelo de uso já está definido | **Aprovada — ordem oficial vigente** |
 | 1.1 (anotação) | 21/07/2026 | Engenheiro (Cursor), ato de execução autorizado pela ADR-009 (D5) | Anotação de migração no §2: a definição derivada da fronteira CAP-04 × CAP-05 tornou-se informativa e subordinada ao mecanismo de conceitos (CNC-002) | Corte único de migração (IMP-001, E4) | Documento passa a consumidor por referência; sem reabertura nem novo ciclo de aprovação |
+| 1.1 (anotação) | 23/07/2026 | Governança deliberou; Engenheiro registrou | Anotação no §6 item 5: Grupo E satisfeito por Opção 2c; fase REQ da CAP-04 encerrada | Deliberação da Governança — Grupo E | Sem reabertura da ANL; remissão ao registro oficial da decisão |
