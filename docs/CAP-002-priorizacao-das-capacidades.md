@@ -22,6 +22,8 @@
 
 Prioridade é decisão do Usuário (CON-001, Art. 6º); esta estratégia foi aprovada na decisão final da Fase 0 (ADR-004). A priorização vale para a **ordem de detalhamento dos requisitos e evolução**, não como sequência rígida de implementação — capacidades são transversais e evoluem continuamente.
 
+> **Emenda de priorização operacional (ADR-015, 23/07/2026):** sem alterar as ondas abaixo, aplica-se o filtro oficial — *"Esta entrega aproxima o usuário de utilizar o CEO diariamente no desenvolvimento do MG2?"* — para candidatar alta prioridade ou postergar (salvo infraestrutura indispensável). O rigor REQ/ARQ/IMP/VAL permanece. Ver [`ADR-015`](adr/ADR-015-priorizacao-pelo-uso-operacional-diario-mg2.md).
+
 ---
 
 ## Critérios de priorização propostos

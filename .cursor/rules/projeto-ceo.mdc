@@ -5,7 +5,11 @@ alwaysApply: true
 
 # Projeto CEO — Diretrizes Obrigatórias
 
-Fontes canônicas: `docs/CON-001-constituicao.md` (norma máxima), `docs/D0-fundacao.md` e `docs/adr/ADR-001-*.md`. Este arquivo é apenas um espelho operacional para o Cursor — as regras de governança são independentes de ferramenta (REQ-001). Este projeto é independente de qualquer projeto anterior (Motoboy Game, Flow Last Mile etc.) — ignore contexto, arquitetura e padrões deles.
+Fontes canônicas: `docs/CON-001-constituicao.md` (norma máxima), `docs/D0-fundacao.md` e `docs/adr/ADR-001-*.md`. Este arquivo é apenas um espelho operacional para o Cursor — as regras de governança são independentes de ferramenta (REQ-001). O CEO é produto **independente**: não herda arquitetura, código nem padrões de Motoboy Game / Flow Last Mile etc. O **Motoboy Game 2 (MG2)** é o primeiro **contexto de uso operacional** do patrocinador (ADR-015) — priorizar o que aproxima o uso diário do CEO nesse contexto, sem importar a engenharia do MG2 para dentro do CEO.
+
+## Fase estratégica atual (ADR-015)
+
+Fundação metodológica preservada. Prioridade operacional: menor MVP que permita ao patrocinador usar o CEO **diariamente** no desenvolvimento do MG2. Filtro obrigatório em propostas: *"Esta entrega aproxima o usuário de utilizar o CEO diariamente no desenvolvimento do MG2?"* Rigor REQ → ARQ → IMP → VAL intacto. Experiência de uso real alimenta a evolução. Sugerir ao CTO antecipações práticas sem comprometer qualidade arquitetural.
 
 ## O produto
 
@@ -48,11 +52,11 @@ Fluxo obrigatório: Visão → Requisitos → Arquitetura → Fluxos → Impleme
 
 Ao tomar decisões relevantes, explicar: o porquê, as alternativas, os riscos e os princípios de engenharia aplicados. Todo recurso deve responder: (1) como isso melhora o CEO? (2) o que isso ensina ao usuário?
 
-## Fase atual: Fase 1 — Engenharia de Requisitos
+## Fase atual: Fase estratégica — Uso operacional (ADR-015)
 
-Fase 0 encerrada em 21/07/2026 (ADR-004). Ainda NÃO existe implementação, arquitetura definitiva nem código — **nenhuma linha de código sem requisito aprovado e arquitetura decidida**. Regras da Fase 1:
+Fase 0 encerrada em 21/07/2026 (ADR-004). Fundação metodológica preservada. Prioridade: MVP mínimo para uso diário do CEO no desenvolvimento do MG2 (ADR-015), **sem** abandonar o fluxo ADR-006.
 
 - Fluxo oficial de desenvolvimento de capacidades (ADR-006), com gates de governança — cada etapa só autoriza a seguinte após aprovação: ANL → ADR (quando necessária) → REQ → Arquitetura → Implementação → Validação. Artefato fora do fluxo é não oficial.
 - Todo REQ usa `docs/requirements/TEMPLATE-REQ.md` e rastreia exatamente uma capacidade (CAP-01 a CAP-12 do CAP-001).
-- Ordem de detalhamento: ondas do CAP-002 — Onda 1 Fundação (CAP-01, CAP-04, CAP-05, CAP-07, CAP-10), depois Onda 2 Operação, depois Onda 3 Evolução.
+- Ordem de detalhamento: ondas do CAP-002 **filtradas** pelo critério ADR-015 (uso diário MG2 / infraestrutura indispensável).
 - Catálogo oficial da documentação e vocabulário de status: `docs/README.md`. Novo tipo documental só nasce por ADR.

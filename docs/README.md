@@ -78,9 +78,9 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`architecture/ARQ-007-espaco-de-identificacao-do-acervo-de-conhecimento.md`](architecture/ARQ-007-espaco-de-identificacao-do-acervo-de-conhecimento.md) | Homologada v1.0 — espaço `KNW-nnn`; Fase ARQ CAP-04 encerrada; IMP não iniciada |
 | [`analysis/plano-pre-imp-cap-04-gestao-do-conhecimento.md`](analysis/plano-pre-imp-cap-04-gestao-do-conhecimento.md) | Homologado v1.1 — referência pré-IMP CAP-04; IMP-004 homologado v1.0 |
 | [`knowledge/decisao-conjunto-inicial-de-classificacoes.md`](knowledge/decisao-conjunto-inicial-de-classificacoes.md) | Em análise v0.1 — decisão técnica CTO; pré-condição IMP-004; **não** é E1 |
-| [`implementation/IMP-004-plano-de-implementacao-documental-do-acervo-de-conhecimento.md`](implementation/IMP-004-plano-de-implementacao-documental-do-acervo-de-conhecimento.md) | Homologado v1.0 — CAP-04; Implementação fechada até autorização E1 |
+| [`implementation/IMP-004-plano-de-implementacao-documental-do-acervo-de-conhecimento.md`](implementation/IMP-004-plano-de-implementacao-documental-do-acervo-de-conhecimento.md) | Homologado v1.0 — CAP-04; E1+E2 homologadas; E3 não iniciada |
 | [`adr/ADR-014-cria-tipo-documental-val.md`](adr/ADR-014-cria-tipo-documental-val.md) | Aceita v1.0 — tipo VAL oficial |
-| [`validation/VAL-004-plano-de-validacao-implementacao-documental-acervo-conhecimento.md`](validation/VAL-004-plano-de-validacao-implementacao-documental-acervo-conhecimento.md) | Homologado v1.0 — CAP-04; Validação não executada; E1 não iniciada |
+| [`validation/VAL-004-plano-de-validacao-implementacao-documental-acervo-conhecimento.md`](validation/VAL-004-plano-de-validacao-implementacao-documental-acervo-conhecimento.md) | Homologado v1.0 — CAP-04; Validação não executada; E1+E2 homologadas |
 | [`norms/README.md`](norms/README.md) — Índice Oficial do Registro Canônico de Normas | Operacional — 29 entradas (universo E2) |
 | [`norms/decisao-universo-normativo-inicial.md`](norms/decisao-universo-normativo-inicial.md) | Homologada v1.0 (Gate E2) |
 | [`norms/verificacao-e4-conformidade-e-estabilidade.md`](norms/verificacao-e4-conformidade-e-estabilidade.md) | Homologada v1.0 (Gate E4) |
@@ -99,6 +99,9 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`analysis/ANL-004-analise-da-distribuicao-de-governanca.md`](analysis/ANL-004-analise-da-distribuicao-de-governanca.md) | Aprovada v1.0 |
 | [`analysis/ANL-005-proposta-gates-por-lote-batch-gates.md`](analysis/ANL-005-proposta-gates-por-lote-batch-gates.md) | Homologada v1.0 — análise; Batch Gates para evolução normativa futura; ADR-006 intacta |
 | [`adr/ADR-013-decisoes-estruturais-do-ciclo-da-distribuicao.md`](adr/ADR-013-decisoes-estruturais-do-ciclo-da-distribuicao.md) | Homologada v1.0 |
+| [`adr/ADR-015-priorizacao-pelo-uso-operacional-diario-mg2.md`](adr/ADR-015-priorizacao-pelo-uso-operacional-diario-mg2.md) | Aceita v1.0 — filtro de priorização uso diário MG2; rigor preservado |
+| [`learning/2026-07-23-milestone-01-ceo-mvp-strategy.md`](learning/2026-07-23-milestone-01-ceo-mvp-strategy.md) | Marco permanente MILESTONE 01 — tag `CEO-MVP-START` |
+| [`knowledge/README.md`](knowledge/README.md) — Índice Oficial do Acervo de Conhecimento | Operacional — E1+E2 homologadas; zero itens KNW; E3 não iniciada |
 | [`requirements/REQ-010-composicao-do-pacote-de-governanca.md`](requirements/REQ-010-composicao-do-pacote-de-governanca.md) | Aprovado v1.0 |
 | [`concepts/README.md`](concepts/README.md) — Índice Oficial de Conceitos (CNC-001 a CNC-005) | Oficial — em vigor |
 | [`concepts/TEMPLATE-CONCEITO.md`](concepts/TEMPLATE-CONCEITO.md) | Oficial |
