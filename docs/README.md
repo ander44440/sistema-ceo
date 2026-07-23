@@ -100,3 +100,4 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`learning/2026-07-22-ancora-operacional-pos-cnc-005.md`](learning/2026-07-22-ancora-operacional-pos-cnc-005.md) | Homologada — marco de continuidade pós-CNC-005 |
 | [`requirements/REQ-012-entrega-e-propagacao.md`](requirements/REQ-012-entrega-e-propagacao.md) | Aprovado v1.0 |
 | [`requirements/REQ-013-rastro-da-distribuicao.md`](requirements/REQ-013-rastro-da-distribuicao.md) | Aprovado v1.0 |
+| [`requirements/REQ-014-curadoria-do-conhecimento.md`](requirements/REQ-014-curadoria-do-conhecimento.md) | Aprovado v1.0 — CAP-04 Grupo D (Curadoria) |
