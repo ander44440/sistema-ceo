@@ -101,3 +101,4 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`requirements/REQ-012-entrega-e-propagacao.md`](requirements/REQ-012-entrega-e-propagacao.md) | Aprovado v1.0 |
 | [`requirements/REQ-013-rastro-da-distribuicao.md`](requirements/REQ-013-rastro-da-distribuicao.md) | Aprovado v1.0 |
 | [`requirements/REQ-014-curadoria-do-conhecimento.md`](requirements/REQ-014-curadoria-do-conhecimento.md) | Aprovado v1.0 — CAP-04 Grupo D (Curadoria) |
+| [`requirements/REQ-015-preservacao-do-conhecimento.md`](requirements/REQ-015-preservacao-do-conhecimento.md) | Aprovado v1.0 — CAP-04 Grupo B (Preservação) |
