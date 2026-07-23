@@ -15,6 +15,7 @@
 | ANL | Análises de capacidade (preparatórias, não normativas) | `docs/analysis/` | Engenheiro/CTO | CTO (ADR-005) |
 | ARQ | Documentos de arquitetura | `docs/architecture/` | Engenheiro/CTO | CTO, com aval do Usuário (ADR-010) |
 | IMP | Planos de implementação | `docs/implementation/` | Engenheiro/CTO | CTO, com aval do Usuário (ADR-012) |
+| VAL | Planos de validação | `docs/validation/` | Engenheiro/CTO | CTO, com aval do Usuário (ADR-014) |
 | FLW | Fluxos | `docs/flows/` | CTO/Engenheiro | CTO |
 | TSK | Tarefas | `docs/tasks/` | CEO/Engenheiro | CTO |
 | TST | Testes | `docs/tests/` | Engenheiro | CTO |
@@ -78,6 +79,8 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`analysis/plano-pre-imp-cap-04-gestao-do-conhecimento.md`](analysis/plano-pre-imp-cap-04-gestao-do-conhecimento.md) | Homologado v1.1 — referência pré-IMP CAP-04; IMP-004 homologado v1.0 |
 | [`knowledge/decisao-conjunto-inicial-de-classificacoes.md`](knowledge/decisao-conjunto-inicial-de-classificacoes.md) | Em análise v0.1 — decisão técnica CTO; pré-condição IMP-004; **não** é E1 |
 | [`implementation/IMP-004-plano-de-implementacao-documental-do-acervo-de-conhecimento.md`](implementation/IMP-004-plano-de-implementacao-documental-do-acervo-de-conhecimento.md) | Homologado v1.0 — CAP-04; Implementação fechada até autorização E1 |
+| [`adr/ADR-014-cria-tipo-documental-val.md`](adr/ADR-014-cria-tipo-documental-val.md) | Aceita v1.0 — tipo VAL oficial |
+| [`validation/VAL-004-plano-de-validacao-implementacao-documental-acervo-conhecimento.md`](validation/VAL-004-plano-de-validacao-implementacao-documental-acervo-conhecimento.md) | Homologado v1.0 — CAP-04; Validação não executada; E1 não iniciada |
 | [`norms/README.md`](norms/README.md) — Índice Oficial do Registro Canônico de Normas | Operacional — 29 entradas (universo E2) |
 | [`norms/decisao-universo-normativo-inicial.md`](norms/decisao-universo-normativo-inicial.md) | Homologada v1.0 (Gate E2) |
 | [`norms/verificacao-e4-conformidade-e-estabilidade.md`](norms/verificacao-e4-conformidade-e-estabilidade.md) | Homologada v1.0 (Gate E4) |
