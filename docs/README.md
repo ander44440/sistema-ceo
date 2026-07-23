@@ -73,6 +73,7 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`architecture/ARQ-003-espaco-de-identificacao-dos-conceitos.md`](architecture/ARQ-003-espaco-de-identificacao-dos-conceitos.md) | Aprovado v1.0 |
 | [`architecture/ARQ-004-arquitetura-do-registro-canonico-de-normas.md`](architecture/ARQ-004-arquitetura-do-registro-canonico-de-normas.md) | Homologada v1.0 |
 | [`architecture/ARQ-005-arquitetura-da-distribuicao-de-governanca.md`](architecture/ARQ-005-arquitetura-da-distribuicao-de-governanca.md) | Homologada v1.0 |
+| [`architecture/ARQ-006-arquitetura-do-acervo-de-conhecimento.md`](architecture/ARQ-006-arquitetura-do-acervo-de-conhecimento.md) | Homologada v1.0 — CAP-04; IMP não iniciada |
 | [`norms/README.md`](norms/README.md) — Índice Oficial do Registro Canônico de Normas | Operacional — 29 entradas (universo E2) |
 | [`norms/decisao-universo-normativo-inicial.md`](norms/decisao-universo-normativo-inicial.md) | Homologada v1.0 (Gate E2) |
 | [`norms/verificacao-e4-conformidade-e-estabilidade.md`](norms/verificacao-e4-conformidade-e-estabilidade.md) | Homologada v1.0 (Gate E4) |
