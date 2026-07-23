@@ -75,6 +75,9 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`architecture/ARQ-005-arquitetura-da-distribuicao-de-governanca.md`](architecture/ARQ-005-arquitetura-da-distribuicao-de-governanca.md) | Homologada v1.0 |
 | [`architecture/ARQ-006-arquitetura-do-acervo-de-conhecimento.md`](architecture/ARQ-006-arquitetura-do-acervo-de-conhecimento.md) | Homologada v1.0 — CAP-04; Fase ARQ encerrada com ARQ-007 |
 | [`architecture/ARQ-007-espaco-de-identificacao-do-acervo-de-conhecimento.md`](architecture/ARQ-007-espaco-de-identificacao-do-acervo-de-conhecimento.md) | Homologada v1.0 — espaço `KNW-nnn`; Fase ARQ CAP-04 encerrada; IMP não iniciada |
+| [`analysis/plano-pre-imp-cap-04-gestao-do-conhecimento.md`](analysis/plano-pre-imp-cap-04-gestao-do-conhecimento.md) | Homologado v1.1 — referência pré-IMP CAP-04; IMP-004 homologado v1.0 |
+| [`knowledge/decisao-conjunto-inicial-de-classificacoes.md`](knowledge/decisao-conjunto-inicial-de-classificacoes.md) | Em análise v0.1 — decisão técnica CTO; pré-condição IMP-004; **não** é E1 |
+| [`implementation/IMP-004-plano-de-implementacao-documental-do-acervo-de-conhecimento.md`](implementation/IMP-004-plano-de-implementacao-documental-do-acervo-de-conhecimento.md) | Homologado v1.0 — CAP-04; Implementação fechada até autorização E1 |
 | [`norms/README.md`](norms/README.md) — Índice Oficial do Registro Canônico de Normas | Operacional — 29 entradas (universo E2) |
 | [`norms/decisao-universo-normativo-inicial.md`](norms/decisao-universo-normativo-inicial.md) | Homologada v1.0 (Gate E2) |
 | [`norms/verificacao-e4-conformidade-e-estabilidade.md`](norms/verificacao-e4-conformidade-e-estabilidade.md) | Homologada v1.0 (Gate E4) |
