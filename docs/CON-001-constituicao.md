@@ -1,7 +1,7 @@
 # CON-001 — Constituição do CEO
 
 > **Status: APROVADA.**
-> Versão 1.0 — 21/07/2026. Aprovada pelo Usuário via revisão técnica do CTO, com os Ajustes 1 a 4 incorporados.
+> Versão 1.1 — 25/07/2026. Aprovada pelo Usuário via revisão técnica do CTO (v1.0), com Emenda Transitória do Mandato de CTO Temporário (Art. 11; ADR-018).
 > Este é o documento mais importante do projeto. Toda decisão futura deverá estar de acordo com ele.
 
 ---
@@ -138,9 +138,25 @@ Todo o projeto obedece à seguinte hierarquia, da norma superior à inferior:
 
 ---
 
-## Disposição transitória — Fase 0
+## Disposição transitória — Fase 0 (histórico)
 
-O projeto encontra-se na Fase 0: não existe implementação, arquitetura definitiva nem código. O foco é exclusivamente Engenharia de Requisitos e definição da visão. Nenhuma linha de código será escrita antes da aprovação do VIS-001.
+A Fase 0 foi encerrada. Esta disposição permanece apenas como registro histórico da fundação: à época, não havia implementação nem arquitetura definitiva; o foco era Engenharia de Requisitos e visão (VIS-001).
+
+---
+
+## Disposição transitória — Mandato de CTO Temporário (vigente)
+
+§1º Durante a ausência temporária do CTO titular (ChatGPT), o Usuário autoriza o Engenheiro de Software (Cursor) a exercer, **em caráter temporário**, as atribuições do Artigo 6º II (CTO), sem extinguir o papel permanente do CTO titular nem o do Engenheiro (Artigo 6º III).
+
+§2º O Usuário permanece a autoridade máxima (Artigo 6º I). Homologações relevantes, abertura de CAP e alteração de ROADMAP exigem seu aval explícito.
+
+§3º O mandato observa obrigatoriamente: checkpoint Git de retorno; branch dedicada; preservação das baselines homologadas; registro de Memória Organizacional em todo ato; declaração explícita do conflito de papéis (mesmo agente como CTO temporário e Engenheiro).
+
+§4º Detalhamento operacional: ADR-018 e `docs/governance/mandato-cto-temporario-vigente.md`. Ponto de retorno: tag `checkpoint-pre-cto-temporario-2026-07-25`.
+
+§5º Ao retorno do CTO titular, o mandato suspende-se para avaliação. O Usuário poderá incorporar, ajustar ou reverter ao checkpoint. Aprendizados úteis da experiência poderão ser aproveitados mesmo após reversão, desde que registrados deliberadamente.
+
+§6º Esta disposição **não** altera o texto permanente do Artigo 6º; cessa por ato do Usuário ou deliberação de encerramento após o retorno do CTO titular.
 
 ---
 
@@ -150,6 +166,7 @@ O projeto encontra-se na Fase 0: não existe implementação, arquitetura defini
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 21/07/2026 | Engenheiro (Cursor), a partir de D0 e ADR-001 | Rascunho inicial | Decisão 2 da ADR-001 | Submetido à revisão do CTO |
 | 1.0 | 21/07/2026 | CTO propôs ajustes; Usuário aprovou | Preâmbulo novo, Artigo 1º (Propósito), Artigo 4º (Pilares), emendas por proposta de qualquer agente com aprovação exclusiva do Usuário; artigos renumerados | Revisão técnica do CTO (Ajustes 1–4) | **Constituição oficialmente aprovada** |
+| 1.1 | 25/07/2026 | Cursor propôs; Usuário aprovou | Disposição transitória — Mandato de CTO Temporário; Fase 0 marcada como histórica | Ausência temporária do CTO titular; ADR-018; Art. 11 | **Emenda transitória vigente** |
 
 ---
 
@@ -160,3 +177,4 @@ O projeto encontra-se na Fase 0: não existe implementação, arquitetura defini
 | Origem | `docs/D0-fundacao.md`, ADR-001 (Decisões 1, 2, 3, 5 e 6) |
 | Gera | VIS-001 (próximo documento) |
 | Requisitos derivados | REQ-001 |
+| Emenda 1.1 | ADR-018 — Mandato de CTO Temporário |

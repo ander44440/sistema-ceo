@@ -81,7 +81,7 @@
 * **Fora do Escopo:** Conhecimento não decisório (CAP-04); exibição do andamento dos trabalhos (CAP-09).
 * **Pilares Fortalecidos:** Conhecimento.
 * **Fontes Normativas:** CON-001 Art. 8º; ADR-001 Decisão 5.
-* **Observações:** —
+* **Observações:** Ciclo ADR-006 completo e **homologado** (24/07/2026): VIS-004 → REQ-033 → ARQ-009 → IMP-006 → VAL-006. Baseline em `docs/cap-05/` (H/I/J). **Não reabrir** REQ/ARQ/IMP. OE EV-033…035 arquivadas.
 
 ### CAP-06 — Aprendizado
 
@@ -98,6 +98,7 @@
 
 * **Identificador:** CAP-07
 * **Nome:** Comunicação
+* **Ciclo:** **Homologada e concluída (24/07/2026)** — baseline do Sistema CEO (VIS-005 → REQ-034 → ARQ-010 → IMP-007 → VAL-007).
 * **Objetivo:** Entregar ao usuário o mínimo necessário para que avance com segurança.
 * **Descrição:** Comunicar-se de forma adaptada ao perfil do usuário, sem burocracia nem repetição, com transparência sobre limitações e incertezas.
 * **Fora do Escopo:** Aprender o perfil do usuário (CAP-06); conteúdo educacional estruturado (CAP-12).
@@ -109,12 +110,13 @@
 
 * **Identificador:** CAP-08
 * **Nome:** Planejamento
+* **Ciclo:** **Homologada e concluída (24/07/2026)** — baseline do Sistema CEO (VIS-006 → REQ-035 → ARQ-011 → IMP-008 → VAL-008).
 * **Objetivo:** Nunca executar sem objetivo claro.
 * **Descrição:** Transformar a visão e as prioridades do usuário em planos e tarefas distribuíveis entre humanos e agentes, com objetivos explícitos e critérios de conclusão.
 * **Fora do Escopo:** Definir prioridades (papel do Usuário — CON-001, Art. 6º); acompanhar a execução (CAP-03, CAP-09).
 * **Pilares Fortalecidos:** Execução.
 * **Fontes Normativas:** CON-001 Art. 9º princípio 3; CON-001 Art. 6º.
-* **Observações:** —
+* **Observações:** Ciclo ADR-006 completo e **homologado** (24/07/2026): VIS-006 → REQ-035 → ARQ-011 → IMP-008 → VAL-008. Baseline em `docs/cap-08/` (L/M). **Não reabrir** REQ/ARQ/IMP/VAL. OE EV-039…040 arquivadas. Relatório: `docs/cap-08/relatorio-encerramento-cap-08.md`.
 
 ### CAP-09 — Observabilidade
 

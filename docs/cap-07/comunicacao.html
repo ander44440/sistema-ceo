@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CEO — Comunicação Executiva · CAP-07</title>
+  <style>
+    :root {
+      --ink: #121816;
+      --muted: #5a635e;
+      --line: #d2d8d4;
+      --surface: #f7f8f6;
+      --panel: #ffffff;
+      --brand: #1e4d42;
+      --brand-soft: #e6f0ec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(ellipse 80% 50% at 10% -10%, #d9e8e2 0%, transparent 55%), var(--surface);
+      padding: 1.75rem 1.25rem 2.5rem;
+    }
+    .shell { max-width: 42rem; margin: 0 auto; }
+    .brand { margin: 0; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; color: var(--brand); }
+    .brand span { display: block; margin-top: 0.2rem; font-size: 1.35rem; letter-spacing: -0.02em; text-transform: none; font-weight: 650; color: var(--ink); }
+    .row { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; margin-bottom: 1rem; }
+    .badge { font-size: 0.7rem; padding: 0.25rem 0.55rem; border: 1px solid var(--brand); color: var(--brand); background: var(--panel); }
+    .panel { background: var(--panel); border: 1px solid var(--line); padding: 1.35rem; box-shadow: 0 10px 36px rgba(18,24,22,0.06); }
+    .label { margin: 0 0 0.35rem; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .block { margin-bottom: 1.1rem; }
+    .box { border: 1px solid var(--line); padding: 0.75rem 0.85rem; background: #fff; white-space: pre-wrap; }
+    .box.soft { background: var(--brand-soft); border-left: 4px solid var(--brand); }
+    .meta { font-size: 0.82rem; color: var(--muted); margin-top: 0.45rem; }
+    .actions { display: grid; gap: 0.5rem; }
+    button {
+      appearance: none; border: 1px solid var(--brand); background: var(--panel);
+      color: var(--brand); font: inherit; font-size: 0.85rem; font-weight: 600;
+      padding: 0.7rem 0.65rem; cursor: pointer;
+    }
+    button.primary { background: var(--brand); color: #fff; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .note { margin: 1rem 0 0; font-size: 0.78rem; color: #5c4030; border: 1px dashed var(--line); padding: 0.65rem 0.75rem; line-height: 1.4; }
+    footer { margin-top: 1rem; font-size: 0.72rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="row">
+      <p class="brand">CEO<span>Comunicação Executiva</span></p>
+      <span class="badge">CAP-07 · IMP-007</span>
+    </div>
+
+    <main class="panel">
+      <p style="margin:0 0 1rem;color:var(--muted);font-size:0.95rem;line-height:1.45">
+        Camada K: síntese primeiro, detalhe sob demanda. Somente leitura sobre H/I/F. MVP e CAP-05 preservados.
+      </p>
+
+      <div class="block">
+        <p class="label">Síntese (RF-01)</p>
+        <div class="box soft" id="sintese">—</div>
+        <p class="meta" id="meta"></p>
+      </div>
+
+      <div class="block">
+        <p class="label">Detalhe (RF-02 — sob demanda)</p>
+        <div class="box" id="detalhe">Ainda não solicitado.</div>
+      </div>
+
+      <div class="block" style="margin-bottom:0">
+        <p class="label">Ações</p>
+        <div class="actions">
+          <button type="button" class="primary" id="btnContexto">Comunicar contexto</button>
+          <button type="button" id="btnRec">Comunicar recomendação</button>
+          <button type="button" id="btnAut">Comunicar pedido de autoridade</button>
+          <button type="button" id="btnDetalhe" disabled>Ver detalhe</button>
+        </div>
+      </div>
+
+      <p class="note">
+        Comunicar ≠ registrar ≠ confirmar. Vigência só após confirmação na CAP-05/C. Execução MG2 fora do CEO.
+      </p>
+    </main>
+    <footer>Projeto CEO · docs/cap-07/comunicacao.html · IMP-007 · 24/07/2026</footer>
+  </div>
+
+  <script src="../cap-05/memoria-organizacional.js"></script>
+  <script src="../cap-05/estado-dia.js"></script>
+  <script src="../cap-05/conducao-executiva.js"></script>
+  <script src="./comunicacao-executiva.js"></script>
+  <script>
+    const storage = window.localStorage;
+    const memoria = CeoMemoriaOrganizacional.criar(storage);
+    const estadoDia = CeoEstadoDia.criar(storage);
+    memoria.inicializar();
+    estadoDia.inicializar();
+    const conducao = CeoConducaoExecutiva.criar({ memoria, estadoDia });
+    conducao.montarContexto({ tema: "taxa", motivoPedido: "Demonstrar CAP-07" });
+    conducao.proporProximoPasso();
+    const k = CeoComunicacaoExecutiva.criar({ memoria, estadoDia, conducao });
+
+    let atual = null;
+    const el = (id) => document.getElementById(id);
+
+    function render(msg) {
+      atual = msg;
+      el("sintese").textContent = msg.sintese;
+      el("meta").textContent =
+        msg.id + " · tipo=" + msg.tipo +
+        " · transparência=" + msg.transparencia +
+        " · vigência=" + msg.vigencia +
+        (msg.avisoVigencia ? " · " + msg.avisoVigencia : "");
+      el("detalhe").textContent = "Ainda não solicitado.";
+      el("btnDetalhe").disabled = false;
+    }
+
+    el("btnContexto").onclick = () => render(k.montarMensagem({ tipo: "contexto" }));
+    el("btnRec").onclick = () => render(k.montarMensagem({ tipo: "recomendacao" }));
+    el("btnAut").onclick = () => render(k.montarMensagem({ tipo: "autoridade" }));
+    el("btnDetalhe").onclick = () => {
+      if (!atual) return;
+      const exp = k.expandirDetalhe(atual.id);
+      atual = exp;
+      el("detalhe").textContent = exp.detalhe || "—";
+    };
+
+    render(k.montarMensagem({ tipo: "contexto" }));
+  </script>
+</body>
+</html>

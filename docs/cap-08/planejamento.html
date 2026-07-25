@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CEO — Planejamento Executivo · CAP-08</title>
+  <style>
+    :root {
+      --ink: #121816;
+      --muted: #5a635e;
+      --line: #d2d8d4;
+      --surface: #f7f8f6;
+      --panel: #ffffff;
+      --brand: #1e4d42;
+      --brand-soft: #e6f0ec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(ellipse 80% 50% at 10% -10%, #d9e8e2 0%, transparent 55%), var(--surface);
+      padding: 1.75rem 1.25rem 2.5rem;
+    }
+    .shell { max-width: 44rem; margin: 0 auto; }
+    .brand { margin: 0; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; color: var(--brand); }
+    .brand span { display: block; margin-top: 0.2rem; font-size: 1.35rem; letter-spacing: -0.02em; text-transform: none; font-weight: 650; color: var(--ink); }
+    .row { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; margin-bottom: 1rem; }
+    .badge { font-size: 0.7rem; padding: 0.25rem 0.55rem; border: 1px solid var(--brand); color: var(--brand); background: var(--panel); }
+    .panel { background: var(--panel); border: 1px solid var(--line); padding: 1.35rem; box-shadow: 0 10px 36px rgba(18,24,22,0.06); }
+    .label { margin: 0 0 0.35rem; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .block { margin-bottom: 1.1rem; }
+    .box { border: 1px solid var(--line); padding: 0.75rem 0.85rem; background: #fff; white-space: pre-wrap; font-size: 0.92rem; line-height: 1.45; }
+    .box.soft { background: var(--brand-soft); border-left: 4px solid var(--brand); }
+    .meta { font-size: 0.82rem; color: var(--muted); margin-top: 0.45rem; }
+    .actions { display: grid; gap: 0.5rem; }
+    button {
+      appearance: none; border: 1px solid var(--brand); background: var(--panel);
+      color: var(--brand); font: inherit; font-size: 0.85rem; font-weight: 600;
+      padding: 0.7rem 0.65rem; cursor: pointer;
+    }
+    button.primary { background: var(--brand); color: #fff; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .note { margin: 1rem 0 0; font-size: 0.78rem; color: #5c4030; border: 1px dashed var(--line); padding: 0.65rem 0.75rem; line-height: 1.4; }
+    footer { margin-top: 1rem; font-size: 0.72rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="row">
+      <p class="brand">CEO<span>Planejamento Executivo</span></p>
+      <span class="badge">CAP-08 · IMP-008</span>
+    </div>
+
+    <main class="panel">
+      <p style="margin:0 0 1rem;color:var(--muted);font-size:0.95rem;line-height:1.45">
+        Cadeia: Analisar → Avaliar suficiência → Recomendar → Planejar → Executar (fora).
+        L e M não gravam H/I/F. MVP e CAP-05/07 preservados.
+      </p>
+
+      <div class="block">
+        <p class="label">Análise Executiva (L)</p>
+        <div class="box soft" id="analise">—</div>
+        <p class="meta" id="metaAnalise"></p>
+      </div>
+
+      <div class="block">
+        <p class="label">Recomendação (M)</p>
+        <div class="box" id="recomendacao">Aguardando suficiência.</div>
+      </div>
+
+      <div class="block">
+        <p class="label">Plano (M)</p>
+        <div class="box" id="plano">Aguardando recomendação.</div>
+      </div>
+
+      <div class="block" style="margin-bottom:0">
+        <p class="label">Ações</p>
+        <div class="actions">
+          <button type="button" class="primary" id="btnAnalisar">Analisar (suficiente)</button>
+          <button type="button" id="btnInsuf">Analisar (insuficiente)</button>
+          <button type="button" id="btnRec" disabled>Recomendar</button>
+          <button type="button" id="btnPlano" disabled>Planejar</button>
+        </div>
+      </div>
+
+      <p class="note">
+        Suficiência ≠ certeza absoluta. Proposta ≠ vigência. Execução MG2 fora do CEO.
+      </p>
+    </main>
+    <footer>Projeto CEO · docs/cap-08/planejamento.html · IMP-008 · 24/07/2026</footer>
+  </div>
+
+  <script src="../cap-05/memoria-organizacional.js"></script>
+  <script src="../cap-05/estado-dia.js"></script>
+  <script src="../cap-05/conducao-executiva.js"></script>
+  <script src="./analise-executiva.js"></script>
+  <script src="./planejamento-executivo.js"></script>
+  <script>
+    const storage = window.localStorage;
+    const memoria = CeoMemoriaOrganizacional.criar(storage);
+    const estadoDia = CeoEstadoDia.criar(storage);
+    memoria.inicializar();
+    estadoDia.inicializar();
+    const conducao = CeoConducaoExecutiva.criar({ memoria, estadoDia });
+    conducao.montarContexto({ tema: "taxa", motivoPedido: "Demonstrar CAP-08" });
+    conducao.proporProximoPasso();
+    const l = CeoAnaliseExecutiva.criar({ memoria, estadoDia, conducao });
+    const m = CeoPlanejamentoExecutivo.criar({ analise: l });
+
+    let analise = null;
+    let recomendacao = null;
+    const el = (id) => document.getElementById(id);
+
+    function renderAnalise(a) {
+      analise = a;
+      recomendacao = null;
+      el("analise").textContent =
+        "contexto: " + a.contexto + "\n" +
+        "lacunas: " + a.lacunas + "\n" +
+        "riscos: " + a.riscos + "\n" +
+        "dependências: " + a.dependencias + "\n" +
+        "alternativas: " + a.alternativas + "\n" +
+        "justificativa: " + a.justificativa + "\n" +
+        "confiança: " + a.confianca + "\n" +
+        "suficiência: " + a.suficiencia + "\n" +
+        "incertezas: " + a.incertezasRemanescentes +
+        (a.justificativaTiming ? "\ntiming: " + a.justificativaTiming : "");
+      el("metaAnalise").textContent = a.id + " · " + a.suficiencia;
+      el("recomendacao").textContent =
+        a.suficiencia === "suficiente"
+          ? "Análise suficiente — pode recomendar."
+          : "Insuficiente — recomendação bloqueada.";
+      el("plano").textContent = "Aguardando recomendação.";
+      el("btnRec").disabled = a.suficiencia !== "suficiente";
+      el("btnPlano").disabled = true;
+    }
+
+    el("btnAnalisar").onclick = () =>
+      renderAnalise(l.montarAnalise({
+        objetivo: "Definir taxa zerada no piloto MG2",
+        suficiencia: "suficiente",
+        incertezasRemanescentes: ["Churn ainda não medido"],
+        justificativaTiming: "Base registrada basta para recomendar o piloto agora"
+      }));
+
+    el("btnInsuf").onclick = () =>
+      renderAnalise(l.montarAnalise({
+        objetivo: "Tema sem evidência",
+        forcarInsuficiencia: true
+      }));
+
+    el("btnRec").onclick = () => {
+      if (!analise) return;
+      try {
+        recomendacao = m.recomendar({
+          analise: analise,
+          enunciado: "Iniciar piloto de taxa zerada"
+        });
+        el("recomendacao").textContent =
+          recomendacao.id + " · " + recomendacao.enunciado +
+          "\nvigência: " + recomendacao.vigencia +
+          "\n" + recomendacao.avisoVigencia;
+        el("btnPlano").disabled = false;
+      } catch (e) {
+        el("recomendacao").textContent = String(e.message || e);
+        el("btnPlano").disabled = true;
+      }
+    };
+
+    el("btnPlano").onclick = () => {
+      if (!recomendacao) return;
+      const p = m.planejar({
+        recomendacao: recomendacao,
+        passos: [
+          "Especificar regra de taxa",
+          "Implementar no fluxo MG2 (fora do CEO)",
+          "Validar com o patrocinador"
+        ]
+      });
+      el("plano").textContent =
+        p.id + " · vigência=" + p.vigencia + "\n" +
+        p.passos.map((s) => s.ordem + ". " + s.enunciado).join("\n") +
+        "\n" + p.avisoVigencia;
+    };
+  </script>
+</body>
+</html>

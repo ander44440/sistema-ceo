@@ -9,7 +9,10 @@
 |---------|------|-------------|--------------|-------------|
 | CON | Constituição | `docs/` | qualquer agente propõe (Art. 11) | Usuário |
 | VIS | Visão | `docs/vision/` | Engenheiro/CTO | Usuário, com revisão do CTO |
+| ROADMAP | Planos estratégicos (acima das CAPs) | `docs/roadmap/` | Engenheiro/CTO | CTO, com aval do Usuário (ADR-016) |
 | CAP | Capacidades e estratégias derivadas | `docs/` | Engenheiro/CTO | Usuário, com revisão do CTO |
+| — CAP-E | Capacidade de Evolução — cria capacidade estratégica nova (mapa CAP-001) | `docs/` (ciclo ADR-006) | Engenheiro/CTO | CTO, com aval do Usuário (ADR-017) |
+| — CAP-R | Capacidade de Consolidação — aprimora baselines já homologadas; identificação CAP-R-nnn; gera nova baseline e integra a próxima RELEASE | Sede fixada na abertura (ciclo ADR-006) | Engenheiro/CTO | CTO, com aval do Usuário (ADR-017) |
 | REQ | Requisitos | `docs/requirements/` | CTO/Engenheiro | Usuário, com revisão do CTO |
 | ADR | Decisões arquiteturais e registros de revisão | `docs/adr/` | Engenheiro registra | decisão do CTO/Usuário |
 | ANL | Análises de capacidade (preparatórias, não normativas) | `docs/analysis/` | Engenheiro/CTO | CTO (ADR-005) |
@@ -32,17 +35,33 @@ Toda mudança de status gera uma linha no histórico de versões do documento, c
 
 ## Documentos estratégicos
 
-Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas do padrão documental (ADR-002, Decisão 1): O que é? Por que existe? Para quem existe? Como seu sucesso será medido?
+Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro perguntas do padrão documental (ADR-002, Decisão 1): O que é? Por que existe? Para quem existe? Como seu sucesso será medido?
+
+**Hierarquia metodológica (ADR-016):**  
+`ROADMAP → ÉPICO → CAP → VIS → REQ → ARQ → IMP → VAL → BASELINE → RELEASE`  
+(O fluxo ADR-006 por capacidade permanece obrigatório; o ROADMAP orienta, não substitui.)
+
+**Classificação de capacidades (ADR-017):**  
+- **CAP-E (Evolução):** cria novas capacidades estratégicas.  
+- **CAP-R (Consolidação):** consolida e aprimora capacidades já homologadas a partir de OE rastreáveis; segue o mesmo fluxo VIS → REQ → ARQ → IMP → VAL; sua homologação gera **nova baseline** e integra a **próxima RELEASE**. Nenhuma OE altera baseline homologada.
 
 ## Documentos vigentes
 
 | Documento | Status |
 |-----------|--------|
 | [`D0-fundacao.md`](D0-fundacao.md) | Histórico (fundação) |
-| [`CON-001-constituicao.md`](CON-001-constituicao.md) | Aprovado v1.0 |
+| [`CON-001-constituicao.md`](CON-001-constituicao.md) | Aprovado v1.1 — Mandato CTO Temporário vigente (disposição transitória) |
 | [`vision/VIS-001-visao-do-produto.md`](vision/VIS-001-visao-do-produto.md) | Aprovado v1.0 |
 | [`vision/VIS-002-identidade-institucional-do-produto.md`](vision/VIS-002-identidade-institucional-do-produto.md) | Homologado v1.0 |
-| [`CAP-001-mapa-de-capacidades.md`](CAP-001-mapa-de-capacidades.md) | Aprovado v1.0 |
+| [`CAP-001-mapa-de-capacidades.md`](CAP-001-mapa-de-capacidades.md) | Aprovado v1.0 — CAP-05, CAP-07 e CAP-08 marcadas como ciclos homologados (24/07/2026) |
+| [`adr/ADR-016-cria-tipo-documental-roadmap.md`](adr/ADR-016-cria-tipo-documental-roadmap.md) | Aceita v1.0 — tipo ROADMAP instituído |
+| [`adr/ADR-017-institui-cap-r-consolidacao-de-release.md`](adr/ADR-017-institui-cap-r-consolidacao-de-release.md) | Aceita v1.0 — classificação CAP-E / CAP-R instituída; nenhuma CAP-R aberta |
+| [`adr/ADR-018-mandato-cto-temporario.md`](adr/ADR-018-mandato-cto-temporario.md) | Aceita v1.0 — Mandato CTO Temporário (Cursor); checkpoint de retorno |
+| [`governance/mandato-cto-temporario-vigente.md`](governance/mandato-cto-temporario-vigente.md) | Operacional — espelho do mandato vigente |
+| [`learning/2026-07-25-checkpoint-pre-cto-temporario.md`](learning/2026-07-25-checkpoint-pre-cto-temporario.md) | Marco — ponto de retorno Git antes do mandato |
+| [`learning/2026-07-24-institucionalizacao-cap-r.md`](learning/2026-07-24-institucionalizacao-cap-r.md) | Marco — institucionalização da CAP-R |
+| [`roadmap/ROADMAP-001-plano-estrategico-do-sistema-ceo.md`](roadmap/ROADMAP-001-plano-estrategico-do-sistema-ceo.md) | Homologado v1.0 — plano estratégico até CEO 1.0; épicos E1–E7 |
+| [`learning/2026-07-24-institucionalizacao-roadmap.md`](learning/2026-07-24-institucionalizacao-roadmap.md) | Marco — institucionalização do tipo ROADMAP |
 | [`CAP-002-priorizacao-das-capacidades.md`](CAP-002-priorizacao-das-capacidades.md) | Aprovado v1.0 |
 | [`requirements/REQ-001-distribuicao-da-constituicao.md`](requirements/REQ-001-distribuicao-da-constituicao.md) | Aprovado |
 | [`requirements/REQ-002-registro-canonico-de-normas.md`](requirements/REQ-002-registro-canonico-de-normas.md) | Aprovado v1.0 |
@@ -114,3 +133,42 @@ Documentos estratégicos (CON, VIS, CAP) abrem respondendo às quatro perguntas 
 | [`requirements/REQ-013-rastro-da-distribuicao.md`](requirements/REQ-013-rastro-da-distribuicao.md) | Aprovado v1.0 |
 | [`requirements/REQ-014-curadoria-do-conhecimento.md`](requirements/REQ-014-curadoria-do-conhecimento.md) | Aprovado v1.0 — CAP-04 Grupo D (Curadoria) |
 | [`requirements/REQ-015-preservacao-do-conhecimento.md`](requirements/REQ-015-preservacao-do-conhecimento.md) | Aprovado v1.0 — CAP-04 Grupo B (Preservação) |
+| [`vision/VIS-003-visao-do-ceo-mvp-v0-1-uso-diario-mg2.md`](vision/VIS-003-visao-do-ceo-mvp-v0-1-uso-diario-mg2.md) | Homologado v1.0 — CEO MVP v0.1 uso diário MG2 |
+| [`vision/VIS-004-visao-estrategica-cap-05-executivo-digital.md`](vision/VIS-004-visao-estrategica-cap-05-executivo-digital.md) | Homologado v1.0 — CAP-05 **concluída**; baseline CEO |
+| [`requirements/REQ-033-requisitos-funcionais-cap-05-executivo-digital.md`](requirements/REQ-033-requisitos-funcionais-cap-05-executivo-digital.md) | Homologado v1.0 — **congelado**; não reabrir |
+| [`architecture/ARQ-009-arquitetura-cap-05-executivo-digital.md`](architecture/ARQ-009-arquitetura-cap-05-executivo-digital.md) | Homologada v1.0 — H/I/J; **congelada**; não reabrir |
+| [`implementation/IMP-006-plano-de-implementacao-cap-05-executivo-digital.md`](implementation/IMP-006-plano-de-implementacao-cap-05-executivo-digital.md) | Homologado v1.0 — **ENCERRADO**; não reabrir |
+| [`cap-05/README.md`](cap-05/README.md) — Sede / baseline CAP-05 | **Homologada e concluída** — baseline do Sistema CEO |
+| [`cap-05/relatorio-implementacao-cap-05.md`](cap-05/relatorio-implementacao-cap-05.md) | Aprovado — relatório consolidado IMP-006 |
+| [`cap-05/e1-evidencias.md`](cap-05/e1-evidencias.md) … [`e6-evidencias.md`](cap-05/e6-evidencias.md) | Evidências por etapa (rastreabilidade) |
+| [`validation/VAL-006-plano-de-validacao-cap-05-executivo-digital.md`](validation/VAL-006-plano-de-validacao-cap-05-executivo-digital.md) | Homologado v1.0 — **ENCERRADO** |
+| [`cap-05/val-006-relatorio-consolidado.md`](cap-05/val-006-relatorio-consolidado.md) | Homologado — 32 C / 0 NC / 3 OE; CAP-05 aprovada |
+| [`cap-05/oportunidades-evolucao-arquivadas.md`](cap-05/oportunidades-evolucao-arquivadas.md) | Arquivado — EV-033…035 para ciclos futuros |
+| [`learning/2026-07-24-encerramento-cap-05-executivo-digital.md`](learning/2026-07-24-encerramento-cap-05-executivo-digital.md) | Marco — encerramento do ciclo CAP-05 |
+| [`vision/VIS-005-visao-da-cap-07.md`](vision/VIS-005-visao-da-cap-07.md) | Homologado v1.0 — CAP-07 **concluída**; congelado |
+| [`requirements/REQ-034-requisitos-da-cap-07.md`](requirements/REQ-034-requisitos-da-cap-07.md) | Homologado v1.0 — **congelado**; não reabrir |
+| [`architecture/ARQ-010-arquitetura-da-cap-07.md`](architecture/ARQ-010-arquitetura-da-cap-07.md) | Homologada v1.0 — componente K; **congelada**; não reabrir |
+| [`implementation/IMP-007-plano-de-implementacao-cap-07.md`](implementation/IMP-007-plano-de-implementacao-cap-07.md) | Homologado v1.0 — **ENCERRADO**; não reabrir |
+| [`validation/VAL-007-validacao-da-cap-07.md`](validation/VAL-007-validacao-da-cap-07.md) | Aprovada — Homologado v1.0; **ENCERRADA** — 24 C / 0 NC / 3 OE |
+| [`cap-07/README.md`](cap-07/README.md) — Sede / baseline CAP-07 | **Homologada e concluída** — baseline do Sistema CEO |
+| [`cap-07/relatorio-implementacao-cap-07.md`](cap-07/relatorio-implementacao-cap-07.md) | Homologado v1.0 — evidências IMP-007 (24 pass / 0 fail) |
+| [`cap-07/oportunidades-evolucao-arquivadas.md`](cap-07/oportunidades-evolucao-arquivadas.md) | Consolidado — EV-036…038 fora da baseline |
+| [`learning/2026-07-24-encerramento-cap-07-comunicacao.md`](learning/2026-07-24-encerramento-cap-07-comunicacao.md) | Marco — encerramento do ciclo CAP-07 |
+| [`vision/VIS-006-visao-da-cap-08-planejamento-executivo.md`](vision/VIS-006-visao-da-cap-08-planejamento-executivo.md) | Aprovada / Homologada v1.0 — CAP-08 **concluída**; congelada |
+| [`requirements/REQ-035-requisitos-da-cap-08-planejamento-executivo.md`](requirements/REQ-035-requisitos-da-cap-08-planejamento-executivo.md) | Homologado v1.0 — **congelado**; não reabrir |
+| [`architecture/ARQ-011-arquitetura-da-cap-08-planejamento-executivo.md`](architecture/ARQ-011-arquitetura-da-cap-08-planejamento-executivo.md) | Homologada v1.0 — L/M; **congelada**; não reabrir |
+| [`implementation/IMP-008-plano-de-implementacao-cap-08.md`](implementation/IMP-008-plano-de-implementacao-cap-08.md) | Homologado v1.0 — **ENCERRADO**; não reabrir |
+| [`validation/VAL-008-validacao-da-cap-08.md`](validation/VAL-008-validacao-da-cap-08.md) | Homologada v1.0 — **ENCERRADA** — 28 C / 0 NC / 2 OE |
+| [`cap-08/README.md`](cap-08/README.md) — Sede / baseline CAP-08 | **Homologada e concluída** — baseline do Sistema CEO |
+| [`cap-08/val-008-relatorio-consolidado.md`](cap-08/val-008-relatorio-consolidado.md) | Homologado — relatório VAL-008 |
+| [`cap-08/oportunidades-evolucao-arquivadas.md`](cap-08/oportunidades-evolucao-arquivadas.md) | Consolidado — EV-039…040 no backlog de evolução |
+| [`cap-08/relatorio-encerramento-cap-08.md`](cap-08/relatorio-encerramento-cap-08.md) | Relatório oficial de encerramento — CAP-08 concluída |
+| [`learning/2026-07-24-encerramento-cap-08-planejamento-executivo.md`](learning/2026-07-24-encerramento-cap-08-planejamento-executivo.md) | Marco — encerramento do ciclo CAP-08 |
+| [`requirements/pacote-requisitos-ceo-mvp-v0-1.md`](requirements/pacote-requisitos-ceo-mvp-v0-1.md) | Homologado — pacote REQ-016…032 |
+| [`requirements/REQ-016-painel-do-dia.md`](requirements/REQ-016-painel-do-dia.md) … [`REQ-032-respeito-ao-tempo-do-patrocinador.md`](requirements/REQ-032-respeito-ao-tempo-do-patrocinador.md) | Pacote MVP (ver pacote) |
+| [`architecture/ARQ-008-arquitetura-funcional-ceo-mvp-v0-1.md`](architecture/ARQ-008-arquitetura-funcional-ceo-mvp-v0-1.md) | Homologada v1.0 — módulos A–G; Dia de Trabalho |
+| [`implementation/IMP-005-plano-de-implementacao-ceo-mvp-v0-1.md`](implementation/IMP-005-plano-de-implementacao-ceo-mvp-v0-1.md) | Homologado v1.0 — **Implementação CONCLUÍDA e ENCERRADA (E1–E7)** |
+| [`mvp/README.md`](mvp/README.md) — Sede operacional do Dia de Trabalho | Operacional — IMP-005 encerrado; Validação Operacional autorizada |
+| [`validation/VAL-005-plano-de-validacao-operacional-ceo-mvp-v0-1.md`](validation/VAL-005-plano-de-validacao-operacional-ceo-mvp-v0-1.md) | Homologado v1.0 — Validação Operacional; calendário Dia 1=23/07 (Deliberação CTO) |
+| [`mvp/validacao-diario.md`](mvp/validacao-diario.md) | Operacional — diário VAL-005; Dia 2 com relatório de sessão |
+| [`mvp/val-005-relatorio-sessao-2026-07-24.md`](mvp/val-005-relatorio-sessao-2026-07-24.md) | Arquivado — evidências E-01…E-03; sem implementação na Validação |
