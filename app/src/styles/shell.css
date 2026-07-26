@@ -570,6 +570,138 @@
   margin-top: 0;
 }
 
+/* Dashboard executivo (Onda 02) — extensão mínima */
+.proj-dashboard {
+  margin-top: 1.5rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.proj-dash-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.proj-dash-head h2 {
+  margin: 0.15rem 0 0;
+}
+
+.proj-estado {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.proj-estado--estavel {
+  color: #6fbf8a;
+}
+
+.proj-estado--andamento {
+  color: var(--brand-mid);
+}
+
+.proj-estado--atencao {
+  color: #d4a017;
+}
+
+.proj-estado--critico {
+  color: #e07070;
+}
+
+.proj-metricas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-bottom: 0.9rem;
+}
+
+@media (min-width: 720px) {
+  .proj-metricas {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.proj-metricas > div {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md, 10px);
+  padding: 0.65rem 0.75rem;
+}
+
+.proj-metricas strong {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.proj-metricas span {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.proj-resumo {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md, 10px);
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.proj-resumo h3 {
+  margin: 0 0 0.45rem;
+}
+
+.proj-resumo p {
+  margin: 0.15rem 0;
+  font-size: 0.9rem;
+}
+
+.proj-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.proj-timeline li {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr;
+  gap: 0.65rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.proj-timeline li:last-child {
+  border-bottom: 0;
+}
+
+.proj-timeline time {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.proj-timeline strong {
+  display: block;
+  font-size: 0.85rem;
+}
+
+.proj-timeline span {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+  color: var(--muted-strong);
+}
+
 .shell-backdrop {
   display: none;
 }

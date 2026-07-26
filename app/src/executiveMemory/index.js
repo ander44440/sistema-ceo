@@ -6,6 +6,7 @@
 import {
   definirProximoPasso as catDefinirProximoPasso,
   listarProjetos,
+  obterPainelExecutivo,
   obterProjetoAtivo,
   obterWorkspaceAtivo,
   registrarAcaoHistorico,
@@ -264,61 +265,36 @@ function derivarProximoPasso({ capacidade, ok, instrucao }) {
  * @returns {string}
  */
 export function resumirEstado() {
-  const e = montarEstado();
+  const painel = obterPainelExecutivo();
   const ativo = obterProjetoAtivo();
-  const linhas = [];
+  if (!painel || !ativo) {
+    return "Nenhum projeto ativo no gabinete.";
+  }
 
+  const linhas = [];
   linhas.push("Estado atual do gabinete — Memória Executiva");
   linhas.push("");
-  linhas.push(
-    `Projeto ativo: ${ativo ? `${ativo.nome} (${ativo.estado})` : "nenhum"}`
-  );
+  linhas.push(`Projeto ativo: ${ativo.nome}`);
+  linhas.push(`Estado executivo: ${painel.estadoExecutivo}`);
+  linhas.push("");
+  linhas.push(painel.resumoExecutivo);
+  linhas.push("");
 
-  linhas.push(
-    `Catálogo: ${
-      e.projetosAtivos.length
-        ? e.projetosAtivos.map((p) => p.nome).join("; ")
-        : "vazio"
-    }`
-  );
+  const px = (ativo.proximasAcoes || []).slice(0, 3);
+  if (px.length) {
+    linhas.push(
+      `Próximas ações: ${px.map((a) => a.texto).join(" | ")}`
+    );
+  }
 
-  const decisoesAbertas = e.decisoes.slice(0, 3);
-  linhas.push(
-    `Decisões: ${
-      decisoesAbertas.length
-        ? decisoesAbertas.map((d) => d.texto).join(" | ")
-        : "nenhuma registrada"
-    }`
-  );
-
-  const pens = e.pendencias.filter((p) => p.status === "aberta").slice(0, 3);
-  linhas.push(
-    `Pendências: ${
-      pens.length ? pens.map((p) => p.texto).join(" | ") : "nenhuma aberta"
-    }`
-  );
-
-  const px = (e.proximasAcoes || []).slice(0, 3);
-  linhas.push(
-    `Próximas ações: ${
-      px.length ? px.map((a) => a.texto).join(" | ") : "nenhuma registrada"
-    }`
-  );
-
-  const acoes = e.ultimasAcoes.slice(0, 3);
-  linhas.push(
-    `Histórico recente: ${
-      acoes.length
-        ? acoes.map((a) => a.instrucao || a.resumo).join(" | ")
-        : "nenhum ainda"
-    }`
-  );
-
-  linhas.push(
-    `Próximo passo sugerido: ${
-      e.proximoPasso || "Não há próximo passo definido."
-    }`
-  );
+  const recentes = (painel.linhaDoTempo || []).slice(0, 3);
+  if (recentes.length) {
+    linhas.push(
+      `Linha do tempo: ${recentes
+        .map((e) => e.rotulo)
+        .join(" · ")}`
+    );
+  }
 
   return linhas.join("\n");
 }

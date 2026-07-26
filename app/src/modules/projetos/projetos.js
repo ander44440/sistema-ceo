@@ -1,17 +1,19 @@
 /**
- * Módulo Projetos — catálogo + workspace do projeto ativo (Onda 01).
- * Reutiliza o padrão visual do workspace-module; sem redesign de shell.
+ * Módulo Projetos — dashboard executivo do projeto ativo (Onda 02).
+ * Catálogo + painel numa única vista; sem redesign de shell.
  */
 
 import {
   criarProjeto,
   listarProjetos,
+  obterPainelExecutivo,
   obterProjetoAtivo,
   registrarDecisao,
   registrarPendencia,
   registrarProximaAcao,
   selecionarProjeto
 } from "../../catalogoProjetos/index.js";
+import { tomEstadoExecutivo } from "../../catalogoProjetos/estadoExecutivo.js";
 
 function escaparHtml(texto) {
   return String(texto)
@@ -36,6 +38,18 @@ function formatarData(iso) {
   }
 }
 
+function formatarHora(iso) {
+  if (!iso) return "—";
+  try {
+    return new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(new Date(iso));
+  } catch {
+    return "—";
+  }
+}
+
 function listaHtml(itens, vazio) {
   if (!itens.length) {
     return `<p class="meta">${escaparHtml(vazio)}</p>`;
@@ -50,6 +64,106 @@ function listaHtml(itens, vazio) {
     .join("")}</ul>`;
 }
 
+function painelHtml(ativo, painel) {
+  if (!ativo || !painel) {
+    return `<p class="meta">Selecione um projeto no catálogo para abrir o dashboard executivo.</p>`;
+  }
+
+  const m = painel.metricas;
+  const tom = tomEstadoExecutivo(painel.estadoExecutivo);
+  const resumoLinhas = String(painel.resumoExecutivo || "")
+    .split("\n")
+    .map((l) => `<p>${escaparHtml(l)}</p>`)
+    .join("");
+
+  const timeline =
+    painel.linhaDoTempo.length === 0
+      ? `<p class="meta">Nenhum evento ainda.</p>`
+      : `<ol class="proj-timeline">${painel.linhaDoTempo
+          .map(
+            (ev) => `
+        <li>
+          <time datetime="${escaparHtml(ev.quando)}">${escaparHtml(
+            formatarHora(ev.quando)
+          )}</time>
+          <div>
+            <strong>${escaparHtml(ev.rotulo)}</strong>
+            ${
+              ev.detalhe
+                ? `<span>${escaparHtml(ev.detalhe)}</span>`
+                : ""
+            }
+          </div>
+        </li>`
+          )
+          .join("")}</ol>`;
+
+  return `
+    <div class="proj-dashboard" data-estado="${escaparHtml(tom)}">
+      <header class="proj-dash-head">
+        <div>
+          <p class="workspace-kicker">Dashboard executivo</p>
+          <h2>${escaparHtml(ativo.nome)}</h2>
+        </div>
+        <span class="proj-estado proj-estado--${escaparHtml(tom)}">${escaparHtml(
+          painel.estadoExecutivo
+        )}</span>
+      </header>
+
+      <div class="proj-metricas" aria-label="Métricas do projeto">
+        <div><strong>${m.decisoes}</strong><span>Decisões</span></div>
+        <div><strong>${m.pendencias}</strong><span>Pendências</span></div>
+        <div><strong>${m.proximasAcoes}</strong><span>Próximas ações</span></div>
+        <div><strong>${escaparHtml(
+          formatarData(m.ultimaAtividadeEm)
+        )}</strong><span>Última atividade</span></div>
+      </div>
+
+      <section class="proj-resumo" aria-label="Resumo executivo">
+        <h3>Resumo executivo</h3>
+        ${resumoLinhas}
+      </section>
+
+      <div class="proj-grid">
+        <section>
+          <h3>Decisões</h3>
+          ${listaHtml(ativo.decisoes || [], "Nenhuma decisão registrada.")}
+          <form data-reg="decisao" class="proj-reg">
+            <input name="texto" type="text" required placeholder="Registrar decisão…" autocomplete="off" />
+            <button type="submit" class="proj-btn">Registrar</button>
+          </form>
+        </section>
+        <section>
+          <h3>Pendências</h3>
+          ${listaHtml(
+            (ativo.pendencias || []).filter((p) => p.status === "aberta"),
+            "Nenhuma pendência aberta."
+          )}
+          <form data-reg="pendencia" class="proj-reg">
+            <input name="texto" type="text" required placeholder="Criar pendência…" autocomplete="off" />
+            <button type="submit" class="proj-btn">Criar</button>
+          </form>
+        </section>
+        <section>
+          <h3>Próximas ações</h3>
+          ${listaHtml(
+            ativo.proximasAcoes || [],
+            "Nenhuma próxima ação registrada."
+          )}
+          <form data-reg="proxima" class="proj-reg">
+            <input name="texto" type="text" required placeholder="Registrar próxima ação…" autocomplete="off" />
+            <button type="submit" class="proj-btn">Registrar</button>
+          </form>
+        </section>
+        <section>
+          <h3>Linha do tempo</h3>
+          ${timeline}
+        </section>
+      </div>
+    </div>
+  `;
+}
+
 /**
  * @returns {HTMLElement}
  */
@@ -62,11 +176,12 @@ export function montarProjetos() {
   function pintar() {
     const catalogo = listarProjetos();
     const ativo = obterProjetoAtivo();
+    const painel = obterPainelExecutivo();
 
     root.innerHTML = `
       <p class="workspace-kicker">Módulo do posto de comando</p>
       <h1>Projetos</h1>
-      <p>Catálogo permanente e workspace do projeto ativo. Toda a navegação operacional usa o projeto selecionado.</p>
+      <p>Ambiente de trabalho executivo do projeto ativo — estado, resumo e histórico numa única vista.</p>
 
       <div class="proj-catalogo">
         <h2>Catálogo</h2>
@@ -80,13 +195,13 @@ export function montarProjetos() {
                 ${p.ativo ? '<span class="proj-badge">Ativo</span>' : ""}
               </header>
               <p>${escaparHtml(p.descricao || "Sem descrição.")}</p>
-              <p class="meta">Estado: ${escaparHtml(p.estado)} · Última atividade: ${escaparHtml(
+              <p class="meta">Última atividade: ${escaparHtml(
                 formatarData(p.ultimaAtividadeEm)
               )}</p>
               ${
                 p.ativo
                   ? ""
-                  : `<button type="button" class="proj-btn" data-ativar="${escaparHtml(p.id)}">Selecionar</button>`
+                  : `<button type="button" class="proj-btn" data-ativar="${escaparHtml(p.id)}">Abrir</button>`
               }
             </article>`
             )
@@ -102,48 +217,7 @@ export function montarProjetos() {
         </form>
       </div>
 
-      <div class="proj-workspace">
-        <h2>Workspace — ${escaparHtml(ativo?.nome || "nenhum projeto")}</h2>
-        <div class="proj-grid">
-          <section>
-            <h3>Decisões</h3>
-            ${listaHtml(ativo?.decisoes || [], "Nenhuma decisão registrada.")}
-            <form data-reg="decisao" class="proj-reg">
-              <input name="texto" type="text" required placeholder="Registrar decisão…" autocomplete="off" />
-              <button type="submit" class="proj-btn">Registrar</button>
-            </form>
-          </section>
-          <section>
-            <h3>Pendências</h3>
-            ${listaHtml(
-              (ativo?.pendencias || []).filter((p) => p.status === "aberta"),
-              "Nenhuma pendência aberta."
-            )}
-            <form data-reg="pendencia" class="proj-reg">
-              <input name="texto" type="text" required placeholder="Criar pendência…" autocomplete="off" />
-              <button type="submit" class="proj-btn">Criar</button>
-            </form>
-          </section>
-          <section>
-            <h3>Próximas ações</h3>
-            ${listaHtml(ativo?.proximasAcoes || [], "Nenhuma próxima ação registrada.")}
-            <form data-reg="proxima" class="proj-reg">
-              <input name="texto" type="text" required placeholder="Registrar próxima ação…" autocomplete="off" />
-              <button type="submit" class="proj-btn">Registrar</button>
-            </form>
-          </section>
-          <section>
-            <h3>Histórico resumido</h3>
-            ${listaHtml(
-              (ativo?.historicoResumido || []).map((h) => ({
-                texto: h.texto,
-                quando: h.quando
-              })),
-              "Histórico vazio."
-            )}
-          </section>
-        </div>
-      </div>
+      ${painelHtml(ativo, painel)}
     `;
 
     root.querySelectorAll("[data-ativar]").forEach((btn) => {

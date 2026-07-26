@@ -3,6 +3,7 @@
  */
 
 import { carregarDocumento, gravarDocumento } from "./persistencia.js";
+import { montarPainelExecutivo } from "./estadoExecutivo.js";
 
 const MAX_DECISOES = 50;
 const MAX_PENDENCIAS = 50;
@@ -153,12 +154,17 @@ export function obterProjetoAtivoId() {
 
 /**
  * @param {string} id
+ * @param {{ registrarAlteracao?: boolean }} [opts]
  */
-export function selecionarProjeto(id) {
+export function selecionarProjeto(id, opts = {}) {
   garantirDoc();
   const p = doc.projetos.find((x) => x.id === id);
   if (!p) return null;
+  const trocou = doc.projetoAtivoId !== p.id;
   doc.projetoAtivoId = p.id;
+  if (trocou && opts.registrarAlteracao !== false) {
+    acrescentarHistorico(p, "Projeto alterado");
+  }
   marcarAtividade(p);
   persistir();
   return obterProjetoAtivo();
@@ -377,6 +383,18 @@ export function obterEstadoGabinete() {
 }
 
 /**
+ * Painel executivo do projeto ativo (ou de um id).
+ * @param {string} [projetoId]
+ */
+export function obterPainelExecutivo(projetoId) {
+  garantirDoc();
+  const id = projetoId || doc.projetoAtivoId;
+  const p = doc.projetos.find((x) => x.id === id);
+  if (!p) return null;
+  return montarPainelExecutivo(p, { ativo: id === doc.projetoAtivoId });
+}
+
+/**
  * @param {{ rotaId?: string }} patch
  */
 export function atualizarEstadoGabinete(patch) {
@@ -401,6 +419,7 @@ export const catalogoProjetos = {
   selecionarProjetoPorRef,
   criarProjeto,
   obterWorkspaceAtivo,
+  obterPainelExecutivo,
   registrarDecisao,
   registrarPendencia,
   registrarProximaAcao,
