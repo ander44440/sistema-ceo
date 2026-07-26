@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CEO — Memória · CAP-03</title>
+  <link rel="stylesheet" href="./navegacao.css" />
+</head>
+<body>
+  <div class="shell">
+    <div class="row">
+      <div>
+        <p class="brand">CEO<span>Memória</span></p>
+        <p class="saudacao">Superfície mínima nesta fase (D16)</p>
+      </div>
+      <span class="badge">CAP-03 · IMP-009 E7 · REQ-043</span>
+    </div>
+
+    <section class="panel">
+      <p class="label">COA ativo</p>
+      <div class="valor soft" id="coaAtivo">—</div>
+    </section>
+
+    <section class="panel">
+      <p class="label">Memória do contexto</p>
+      <p class="esqueleto">
+        Esqueleto de navegação no escopo do COA ativo. Decisões e conhecimentos
+        recentes continuam visíveis nos blocos auxiliares da
+        <a class="link" href="./home.html">Home Executiva</a>.
+      </p>
+      <p class="esqueleto">
+        O detalhamento desta superfície depende de ciclo formal posterior.
+      </p>
+    </section>
+
+    <nav class="menu" id="menuInferior" aria-label="Navegação auxiliar"></nav>
+    <footer>Projeto CEO · docs/cap-03/memoria.html · IMP-009 E7 · 26/07/2026</footer>
+  </div>
+
+  <script src="./catalogo-coa.js"></script>
+  <script src="./sessao-coa.js"></script>
+  <script src="./navegacao.js"></script>
+  <script src="./menu-inferior.js"></script>
+  <script>
+    CeoMenuInferior.montar({ destinoAtual: "memoria", elementoCoa: "coaAtivo" });
+  </script>
+</body>
+</html>

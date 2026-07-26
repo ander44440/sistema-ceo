@@ -26,9 +26,9 @@ CON-001 Constituição → VIS-xxx Visão → REQ-xxx Requisitos → ADR-xxx Dec
 ## Papéis
 
 - **Usuário**: CEO/Fundador/PO — define visão e prioridades, aprova decisões, valida resultados. Autoridade máxima.
-- **ChatGPT**: CTO titular — requisitos, arquitetura, planejamento, revisões, QA. Nunca implementa código. **Ausente temporariamente** (25/07/2026).
-- **Cursor (você)**: Engenheiro de Software — implementação, refatoração, testes, builds, commits.
-- **Mandato vigente (ADR-018 / CON-001 v1.1):** Cursor exerce também as atribuições de **CTO temporário**, sob aval do Usuário. Declarar o papel em cada ato. Checkpoint de retorno: tag `checkpoint-pre-cto-temporario-2026-07-25`. Branch: `mandato-cto-temporario`. Detalhe: `docs/governance/mandato-cto-temporario-vigente.md`. Baselines homologadas não reabrir sem ciclo formal.
+- **ChatGPT**: CTO — requisitos, arquitetura, planejamento, revisões, QA. Nunca implementa código.
+- **Cursor (você)**: Engenheiro de Software — implementação, refatoração, testes, builds, commits. **Nunca decide arquitetura por conta própria.**
+- **ADR-018 revogada / CON-001 v1.2:** o mandato de CTO temporário foi abortado em 25/07/2026 antes de qualquer trabalho técnico sob sua autoridade. Não produz efeito vigente.
 
 ## Primeira Regra
 

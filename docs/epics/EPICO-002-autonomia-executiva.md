@@ -7,7 +7,7 @@
 > **Correspondência:** ROADMAP-001 → **E4** → este ÉPICO-002.  
 > **Release prevista:** **v0.7**.  
 > **Observação de governança (ADR-016):** o Épico é estrutura interna do ROADMAP; este documento materializa o E4 por deliberação do CTO.  
-> **Proibições deste artefato:** **não** abre CAP-02 nem CAP-03; **não** reabre CAP-08 (já em baseline); **não** altera ROADMAP-001, ADRs, código nem baselines homologadas; **não** abre ciclo ADR-006 por si.
+> **Proibições deste artefato:** **não** abre CAP-02 por si; **não** reabre CAP-08 (já em baseline); **não** altera ROADMAP-001, ADRs, código nem baselines homologadas. A abertura da **CAP-03** ocorreu por deliberação própria do CTO (25/07/2026 — COA), fora deste documento.
 
 ---
 
@@ -144,7 +144,7 @@ Objetivos da etapa de **Análise Executiva** (precedente ao planejamento; aplic�
 | 3 | Sempre que novas CAP-E envolverem decisões, **deverá** ser avaliado se o princípio também se aplica |
 | 4 | Esta deliberação histórica **não** abriu CAP por si; a CAP-08 foi aberta e concluída por atos posteriores do CTO |
 
-Rastreabilidade: o princípio e a Análise Executiva constam no REQ-035 e foram refletidos em ARQ-011 / IMP-008 / VAL-008. CAP-08 **homologada** (baseline). CAP-02 e CAP-03 **permanecem não abertas** por este documento.
+Rastreabilidade: o princípio e a Análise Executiva constam no REQ-035 e foram refletidos em ARQ-011 / IMP-008 / VAL-008. CAP-08 **homologada** (baseline). **CAP-03 homologada** em 26/07/2026 (VIS-007…VAL-003 — ciclo COA). CAP-02 **permanece não aberta**.
 
 #### CAP-02 — Gestão de Agentes
 
@@ -152,12 +152,15 @@ Rastreabilidade: o princípio e a Análise Executiva constam no REQ-035 e foram 
 * Decidir qual agente usar, quando e em que ordem — decisão do CEO, não do usuário.  
 * **Fora deste ato:** abrir a CAP-02.
 
-#### CAP-03 — Gestão de Projetos
+#### CAP-03 — Gestão de Projetos — **Homologada (26/07/2026)**
 
-* Apoiar a materialização de planos em estrutura de projeto/tarefas distribuíveis (recorte inicial).  
-* **Fora deste ato:** abrir a CAP-03; escopo pleno pode aprofundar-se no E5 conforme ROADMAP.
+* Conceito fundador: **Contexto Operacional Ativo (COA)**; Projeto = especialização inicial.  
+* Home executiva conversacional; isolamento entre contextos; migração MG2.  
+* Cadeia: VIS-007 → REQ-036…044 → ARQ-012 → IMP-009 → VAL-003 — **baseline** em `docs/cap-03/`.  
+* **Não** altera MVP v0.1; VAL-005 permanece independente.  
+* Escopo pleno de planos/tarefas distribuíveis pode aprofundar-se no E5 conforme ROADMAP.
 
-**CAP-08** está em baseline. **CAP-02** e **CAP-03** **não** estão abertas por este documento.
+**CAP-08** e **CAP-03** estão em baseline. **CAP-02** **não** está aberta.
 
 ---
 
@@ -168,11 +171,11 @@ O ÉPICO-002 somente se considera **encerrado** quando, cumulativamente:
 | # | Critério | Estado (24/07/2026) |
 |---|----------|---------------------|
 | 1 | **CAP-08** atingiu **BASELINE** homologada por ciclo ADR-006 completo | **Satisfeito** |
-| 2 | **CAP-02** e **CAP-03** (recorte inicial do E4) atingiram baseline conforme deliberação de abertura e o marco da **v0.7** | Pendente |
+| 2 | **CAP-02** e **CAP-03** (recorte inicial do E4) atingiram baseline conforme deliberação de abertura e o marco da **v0.7** | CAP-03 **satisfeito** (26/07/2026); CAP-02 pendente |
 | 3 | O usuário permanece autoridade final: planos não vigoram sem confirmação | Atendido na CAP-08 (`vigencia=proposta`) |
-| 4 | Nenhuma baseline anterior (MVP, CAP-05, CAP-07) foi regredida | Atendido (VAL-008 regressão) |
-| 5 | Evidências demonstram passagem do “próximo passo” único a planos coordenados (humanos e/ou agentes) | Atendido na CAP-08 (planos); distribuição plena com CAP-02/03 |
-| 6 | Rastreabilidade ROADMAP-001 → ÉPICO-002 → CAP-E → VIS…VAL → BASELINE está completa no catálogo | Parcial (CAP-08 completa; CAP-02/03 pendentes) |
+| 4 | Nenhuma baseline anterior (MVP, CAP-05, CAP-07) foi regredida | Atendido (VAL-008; VAL-003 / CAP-03) |
+| 5 | Evidências demonstram passagem do “próximo passo” único a planos coordenados (humanos e/ou agentes) | Atendido na CAP-08 (planos); distribuição plena com CAP-02 |
+| 6 | Rastreabilidade ROADMAP-001 → ÉPICO-002 → CAP-E → VIS…VAL → BASELINE está completa no catálogo | Parcial (CAP-08 e CAP-03 completas; CAP-02 pendente) |
 | 7 | CTO declara o encerramento do épico; oportunidades remanescentes vão a CAP-R / backlog / épicos seguintes | Pendente |
 
 Enquanto qualquer critério obrigatório não for evidenciado, o épico **permanece aberto**.
@@ -194,7 +197,8 @@ Homologação deste documento (quando ocorrer) ≠ abertura de CAP ≠ implement
 | E2 Executivo Digital (CAP-05) | Baseline congelada | Condução e memória disponíveis |
 | E3 / ÉPICO-001 (CAP-07) | Baseline homologada | Dependência direta E3→E4 **satisfeita** |
 | CAP-08 | **Baseline homologada** (24/07/2026) — VIS-006…VAL-008 | Critério §7.1 **satisfeito**; não reabrir |
-| CAP-02 / CAP-03 | Previstas no CAP-001; **não abertas** | Abertura somente por deliberação do CTO |
+| CAP-03 | **Baseline homologada** (26/07/2026) — VIS-007…VAL-003 | Critério §7.2 (parte CAP-03) **satisfeito**; não reabrir |
+| CAP-02 | Prevista no CAP-001; **não aberta** | Abertura somente por deliberação do CTO |
 
 Dependência estratégica (ROADMAP §8):
 
@@ -228,8 +232,9 @@ E3 Inteligência Executiva (✔) → E4 / ÉPICO-002 → (habilita) E5 Gestão E
 | **S0** | Homologação deste ÉPICO-002 pelo CTO | Deliberação CTO |
 | **S1** | Abertura da **CAP-08** (VIS…) | **Concluída** (24/07/2026) |
 | **S2** | Ciclo completo CAP-08 até BASELINE (Princípio Arquitetural + Análise Executiva) | **Concluída** — VIS-006…VAL-008 Homologados v1.0; Relatório de Encerramento |
-| **S3** | Abertura deliberada de CAP-02 e/ou CAP-03 (recorte inicial), na ordem que o CTO definir | ADR-006; filtro ADR-015 — **próximo passo do épico** |
-| **S4** | Baselines CAP-02/03 iniciais + integração sem regressão | VAL; preservação MVP/CAP-05/07 |
+| **S3** | Abertura deliberada de CAP-03 (recorte COA) | **Concluída** — Gate Final 26/07/2026; VIS-007…VAL-003 Homologados |
+| **S3b** | Abertura deliberada de CAP-02 (quando o CTO definir) | ADR-006; filtro ADR-015 |
+| **S4** | Baselines CAP-02/03 iniciais + integração sem regressão | CAP-03 em baseline; CAP-02 pendente |
 | **S5** | Consolidação para marco **RELEASE v0.7** | ROADMAP §6; ato de release futuro |
 | **Paralelo** | OE / CAP-R | ADR-017 — **não** automático; não misturar com S1–S4 |
 
@@ -270,4 +275,6 @@ Este ÉPICO **não**:
 | 0.1 | 24/07/2026 | Engenheiro (Cursor) | Criação — objetivo, contexto, valor, escopo, CAP-08/02/03, sucesso, dependências, riscos, estratégia | Deliberação CTO — abertura ÉPICO-002 / E4 | Em elaboração |
 | 0.1a | 24/07/2026 | Engenheiro (Cursor) | Registro da diretriz: Planejamento Executivo precedido por Análise Executiva (objetivos 1–7); risco R8; S2 atualizado | Deliberação CTO — diretriz arquitetural para futura CAP-08 | Em elaboração |
 | 0.1b | 24/07/2026 | Engenheiro (Cursor) | Homologação como Princípio Arquitetural do CEO; cadeia Análise→Recomendação→Planejamento→Execução; determinações 1–4 | Deliberação CTO — princípio de identidade conceitual | Em elaboração |
-| 0.1c | 24/07/2026 | Engenheiro (Cursor) | Rastreabilidade pós-encerramento CAP-08: §6–§8 e S1/S2 concluídos; critério §7.1 satisfeito; OE EV-039…040 | Relatório de Encerramento CAP-08; Deliberação Final CTO | **Em elaboração** — épico aberto |
+| 0.1c | 24/07/2026 | Engenheiro (Cursor) | Rastreabilidade pós-encerramento CAP-08: §6–§8 e S1/S2 concluídos; critério §7.1 satisfeito; OE EV-039…040 | Relatório de Encerramento CAP-08; Deliberação Final CTO | Em elaboração |
+| 0.1d | 25/07/2026 | Engenheiro (Cursor) | CAP-03 aberta por deliberação própria (COA); S3 em curso; CAP-02 ainda fechada | Deliberação CTO 25/07/2026 — VIS-007/REQ/ARQ | **Em elaboração** |
+| 0.1e | 26/07/2026 | Engenheiro (Cursor) | CAP-03 Homologada (VIS…VAL); S3 concluída; §7.2 parcial (CAP-03); CAP-02 permanece aberta | Gate Final CAP-03; VAL-003 | **Em elaboração** |

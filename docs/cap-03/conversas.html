@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CEO — Conversas · CAP-03</title>
+  <link rel="stylesheet" href="./navegacao.css" />
+</head>
+<body>
+  <div class="shell">
+    <div class="row">
+      <div>
+        <p class="brand">CEO<span>Conversas</span></p>
+        <p class="saudacao">Superfície mínima nesta fase (D16)</p>
+      </div>
+      <span class="badge">CAP-03 · IMP-009 E7 · REQ-043</span>
+    </div>
+
+    <section class="panel">
+      <p class="label">COA ativo</p>
+      <div class="valor soft" id="coaAtivo">—</div>
+    </section>
+
+    <section class="panel">
+      <p class="label">Conversas</p>
+      <p class="esqueleto">
+        Esqueleto de navegação. O fluxo conversacional do Executivo Digital
+        permanece na <a class="link" href="./home.html">Home Executiva</a>,
+        onde a conversa é a interface principal (REQ-041).
+      </p>
+      <p class="esqueleto">
+        Nenhum histórico é exibido aqui nesta etapa; a superfície será
+        detalhada em ciclo posterior, sem alterar o COA ativo.
+      </p>
+    </section>
+
+    <nav class="menu" id="menuInferior" aria-label="Navegação auxiliar"></nav>
+    <footer>Projeto CEO · docs/cap-03/conversas.html · IMP-009 E7 · 26/07/2026</footer>
+  </div>
+
+  <script src="./catalogo-coa.js"></script>
+  <script src="./sessao-coa.js"></script>
+  <script src="./navegacao.js"></script>
+  <script src="./menu-inferior.js"></script>
+  <script>
+    CeoMenuInferior.montar({ destinoAtual: "conversas", elementoCoa: "coaAtivo" });
+  </script>
+</body>
+</html>

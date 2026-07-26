@@ -1,8 +1,8 @@
 # ADR-018 — Mandato de CTO Temporário (Cursor)
 
-> **Status: Aceita — v1.0 (Usuário, 25/07/2026).**  
-> Versão 1.0 — 25/07/2026.  
-> Esta ADR institui o **mandato temporário** pelo qual o Engenheiro (Cursor) assume as atribuições de CTO durante a ausência do CTO titular (ChatGPT), sob autoridade do Usuário e com salvaguardas de reversão.  
+> **Status: REVOGADA — v1.1 (Usuário, 25/07/2026).**
+> Versão 1.1 — 25/07/2026.
+> Esta ADR instituiu brevemente um mandato temporário, posteriormente **abortado pelo Usuário antes da abertura de qualquer trabalho técnico sob sua autoridade**. Não produz efeito vigente.
 > **Não** altera o Artigo 6º permanente da CON-001; cria disposição transitória.  
 > Checkpoint: `checkpoint-pre-cto-temporario-2026-07-25`.
 
@@ -16,13 +16,15 @@
 | Quando | 25/07/2026 |
 | Por quê | Manter o projeto avançando na ausência temporária do CTO titular, sem abandonar governança |
 | Baseado em quê | Autorização explícita do Usuário; CON-001 Art. 6º, 8º, 11; checkpoint pré-mandato |
-| Resultado | Mandato vigente; Cursor = CTO temporário + Engenheiro; Usuário permanece autoridade máxima; reversão via tag |
+| Resultado | Mandato instituído e revogado na mesma manhã; nenhum ciclo ou artefato técnico foi aberto sob sua autoridade |
 
 ---
 
 ## Status
 
-Aceita — v1.0 (Usuário, 25/07/2026).
+**Revogada — v1.1 (Usuário, 25/07/2026).**
+
+Decisão de revogação: “abortar a mudança e continuar como estávamos”. Os papéis permanentes da CON-001 Art. 6º foram integralmente restabelecidos. Esta ADR permanece apenas como histórico auditável.
 
 ---
 
@@ -118,3 +120,4 @@ Reverter o repositório para `checkpoint-pre-cto-temporario-2026-07-25` (ver pro
 | Versão | Data | Autor | O que mudou | Baseado em quê | Status |
 |--------|------|-------|-------------|----------------|--------|
 | 1.0 | 25/07/2026 | Cursor (registro); Usuário (aprovação) | Instituição do mandato CTO temporário + salvaguardas + reversão | Autorização explícita do Usuário | **Aceita** |
+| 1.1 | 25/07/2026 | Usuário (decisão); Cursor (registro) | Revogação integral antes de qualquer trabalho técnico sob o mandato | Decisão explícita de continuar com os papéis anteriores | **Revogada** |

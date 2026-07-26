@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CEO — Projetos · CAP-03</title>
+  <style>
+    :root {
+      --ink: #121816;
+      --muted: #5a635e;
+      --line: #d2d8d4;
+      --surface: #f7f8f6;
+      --panel: #ffffff;
+      --brand: #1e4d42;
+      --brand-soft: #e6f0ec;
+      --active: #1e4d42;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 80% 50% at 10% -10%, #d9e8e2 0%, transparent 55%),
+        var(--surface);
+      padding: 1.75rem 1.25rem 2.5rem;
+    }
+    .shell { max-width: 44rem; margin: 0 auto; }
+    .brand { margin: 0; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; color: var(--brand); }
+    .brand span { display: block; margin-top: 0.2rem; font-size: 1.35rem; letter-spacing: -0.02em; text-transform: none; font-weight: 650; color: var(--ink); }
+    .row { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; margin-bottom: 1rem; }
+    .badge { font-size: 0.7rem; padding: 0.25rem 0.55rem; border: 1px solid var(--brand); color: var(--brand); background: var(--panel); }
+    .panel { background: var(--panel); border: 1px solid var(--line); padding: 1.35rem; box-shadow: 0 10px 36px rgba(18,24,22,0.06); }
+    .label { margin: 0 0 0.35rem; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .block { margin-bottom: 1.15rem; }
+    .body { margin: 0; font-size: 0.95rem; line-height: 1.45; color: var(--muted); }
+    .ativo-bar {
+      border: 1px solid var(--brand); background: var(--brand-soft);
+      padding: 0.75rem 0.85rem; font-size: 0.92rem; font-weight: 600;
+    }
+    .vazio {
+      border: 1px dashed var(--line); padding: 1rem 0.9rem;
+      font-size: 0.92rem; color: var(--muted); line-height: 1.45;
+    }
+    .lista { display: grid; gap: 0.55rem; }
+    .item {
+      border: 1px solid var(--line); padding: 0.8rem 0.85rem; background: #fff;
+      cursor: pointer; text-align: left; width: 100%; font: inherit;
+    }
+    .item.selecionado { border-color: var(--brand); background: #f3f8f6; }
+    .item.ativo { box-shadow: inset 3px 0 0 var(--active); }
+    .item strong { display: block; font-size: 0.98rem; margin-bottom: 0.25rem; }
+    .item .meta { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+    .pill {
+      display: inline-block; font-size: 0.65rem; letter-spacing: 0.06em;
+      text-transform: uppercase; font-weight: 700; color: var(--brand);
+      border: 1px solid var(--brand); padding: 0.1rem 0.35rem; margin-left: 0.35rem;
+    }
+    form { display: grid; gap: 0.55rem; }
+    input, textarea, select {
+      width: 100%; font: inherit; font-size: 0.9rem; padding: 0.55rem 0.65rem;
+      border: 1px solid var(--line); background: #fff; color: var(--ink);
+    }
+    textarea { min-height: 4rem; resize: vertical; }
+    .actions { display: grid; gap: 0.5rem; margin-top: 0.35rem; }
+    button.acao {
+      appearance: none; border: 1px solid var(--brand); background: var(--panel);
+      color: var(--brand); font: inherit; font-size: 0.85rem; font-weight: 600;
+      padding: 0.7rem 0.65rem; cursor: pointer;
+    }
+    button.acao.primary { background: var(--brand); color: #fff; }
+    button.acao:disabled { opacity: 0.45; cursor: not-allowed; }
+    .toast {
+      display: none; margin-top: 0.75rem; font-size: 0.82rem;
+      padding: 0.55rem 0.7rem; background: var(--brand-soft); color: var(--brand);
+    }
+    .toast.show { display: block; }
+    .note {
+      margin: 1rem 0 0; font-size: 0.78rem; color: #5c4030;
+      border: 1px dashed var(--line); padding: 0.65rem 0.75rem; line-height: 1.4;
+    }
+    .menu {
+      display: flex; gap: 0.35rem; flex-wrap: wrap;
+      border-top: 1px solid var(--line); padding-top: 0.65rem; margin-top: 0.85rem;
+    }
+    .menu a {
+      flex: 1 1 auto; text-align: center; text-decoration: none;
+      font-size: 0.78rem; font-weight: 600; color: var(--muted);
+      border: 1px solid transparent; padding: 0.5rem 0.4rem;
+    }
+    .menu a:hover { color: var(--brand); }
+    .menu a.atual { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
+    .menu a .esq { display: block; font-size: 0.62rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.75; }
+    footer { margin-top: 1rem; font-size: 0.72rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="row">
+      <p class="brand">CEO<span>Projetos</span></p>
+      <span class="badge">CAP-03 · IMP-009 E4</span>
+    </div>
+
+    <main class="panel">
+      <p class="body" style="margin-bottom:1rem">
+        Superfície administrativa da especialização Projeto (REQ-042).
+        Usa apenas Catálogo (E1) e Sessão (E2). Home e conversa ficam na E5+.
+      </p>
+
+      <div class="block">
+        <p class="label">COA ativo</p>
+        <div class="ativo-bar" id="coaAtivo">—</div>
+      </div>
+
+      <div class="block">
+        <p class="label">Catálogo de Projetos</p>
+        <div id="lista" class="lista"></div>
+      </div>
+
+      <div class="block">
+        <p class="label">Novo Projeto</p>
+        <form id="formNovo">
+          <input id="nome" name="nome" required placeholder="Nome do projeto" autocomplete="off" />
+          <input id="objetivo" name="objetivo" required placeholder="Objetivo principal" autocomplete="off" />
+          <textarea id="descricao" name="descricao" placeholder="Descrição (opcional)"></textarea>
+          <select id="status" name="status" aria-label="Status do ciclo de vida">
+            <option value="ativo">Ativo</option>
+            <option value="pausado">Pausado</option>
+            <option value="concluido">Concluído</option>
+          </select>
+          <div class="actions">
+            <button type="submit" class="acao primary">+ Novo Projeto</button>
+            <button type="button" class="acao" id="btnAbrir">Abrir Projeto selecionado</button>
+          </div>
+        </form>
+        <div class="toast" id="toast" role="status"></div>
+      </div>
+
+      <p class="note">
+        Abrir Projeto troca o COA ativo via Componente O (REQ-038).
+        statusCicloVida é do Projeto — distinto do COA ativo da sessão.
+      </p>
+    </main>
+    <nav class="menu" id="menuInferior" aria-label="Navegação auxiliar"></nav>
+    <footer>Projeto CEO · docs/cap-03/projetos.html · IMP-009 E4/E7 · 26/07/2026</footer>
+  </div>
+
+  <script src="./catalogo-coa.js"></script>
+  <script src="./sessao-coa.js"></script>
+  <script src="./politica-isolamento.js"></script>
+  <script src="./tela-projetos.js"></script>
+  <script src="./navegacao.js"></script>
+  <script src="./menu-inferior.js"></script>
+  <script>
+    (function () {
+      const storage = window.localStorage;
+      const catalogo = CeoCatalogoCOA.criar(storage);
+      const sessao = CeoSessaoCOA.criar({ catalogo: catalogo, storage: storage });
+      CeoPoliticaIsolamento.criar({ sessao: sessao, storage: storage });
+      const tela = CeoTelaProjetos.criar({ catalogo: catalogo, sessao: sessao });
+
+      const elLista = document.getElementById("lista");
+      const elAtivo = document.getElementById("coaAtivo");
+      const elToast = document.getElementById("toast");
+      const btnAbrir = document.getElementById("btnAbrir");
+
+      function mostrarToast(msg) {
+        if (!msg) {
+          elToast.classList.remove("show");
+          elToast.textContent = "";
+          return;
+        }
+        elToast.textContent = msg;
+        elToast.classList.add("show");
+      }
+
+      function render(estado) {
+        if (!estado.coaAtivoId) {
+          elAtivo.textContent = estado.precisaCriarPrimeiroProjeto
+            ? "Nenhum — cadastre o primeiro Projeto"
+            : "Nenhum COA ativo";
+        } else {
+          const ativo = estado.projetos.find(function (p) { return p.ativo; });
+          elAtivo.textContent = ativo
+            ? ativo.nome + " (" + ativo.statusCicloVida + ")"
+            : estado.coaAtivoId;
+        }
+
+        elLista.innerHTML = "";
+        if (estado.vazio) {
+          const vazio = document.createElement("div");
+          vazio.className = "vazio";
+          vazio.textContent =
+            "Catálogo vazio. Use + Novo Projeto para criar o primeiro Contexto Operacional.";
+          elLista.appendChild(vazio);
+        } else {
+          estado.projetos.forEach(function (p) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "item" +
+              (p.selecionado ? " selecionado" : "") +
+              (p.ativo ? " ativo" : "");
+            btn.setAttribute("data-coa-id", p.coaId);
+            const titulo = document.createElement("strong");
+            titulo.textContent = p.nome;
+            if (p.ativo) {
+              const pill = document.createElement("span");
+              pill.className = "pill";
+              pill.textContent = "Ativo";
+              titulo.appendChild(pill);
+            }
+            const meta = document.createElement("div");
+            meta.className = "meta";
+            meta.textContent =
+              "Status: " + p.statusCicloVida +
+              " · Última atividade: " + (p.ultimaAtividade || "—") +
+              " · Objetivo: " + (p.objetivoPrincipal || "—");
+            btn.appendChild(titulo);
+            btn.appendChild(meta);
+            btn.addEventListener("click", function () {
+              render(tela.selecionarProjeto(p.coaId).estado);
+              mostrarToast(tela.montarEstado().mensagem);
+            });
+            btn.addEventListener("dblclick", function () {
+              const r = tela.abrirProjeto(p.coaId);
+              render(r.estado);
+              mostrarToast(r.estado.mensagem);
+            });
+            elLista.appendChild(btn);
+          });
+        }
+
+        btnAbrir.disabled = !estado.selecionadoId;
+        mostrarToast(estado.mensagem);
+      }
+
+      document.getElementById("formNovo").addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        const r = tela.criarProjeto({
+          nome: document.getElementById("nome").value,
+          objetivoPrincipal: document.getElementById("objetivo").value,
+          descricao: document.getElementById("descricao").value || null,
+          statusCicloVida: document.getElementById("status").value
+        });
+        ev.target.reset();
+        render(r.estado);
+      });
+
+      btnAbrir.addEventListener("click", function () {
+        const r = tela.abrirProjeto();
+        render(r.estado);
+      });
+
+      render(tela.inicializar());
+      CeoMenuInferior.montar({ destinoAtual: "projetos" });
+    })();
+  </script>
+</body>
+</html>

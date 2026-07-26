@@ -14,4 +14,6 @@ Registros educacionais: por que cada decisão foi tomada, alternativas, riscos e
 | [`2026-07-24-encerramento-cap-08-planejamento-executivo.md`](2026-07-24-encerramento-cap-08-planejamento-executivo.md) | Encerramento do ciclo CAP-08 (diário; ver também `cap-08/relatorio-encerramento-cap-08.md`) |
 | [`2026-07-24-institucionalizacao-cap-r.md`](2026-07-24-institucionalizacao-cap-r.md) | Institucionalização da CAP-R (ADR-017) |
 | [`2026-07-24-ancora-continuidade-pos-cap-08.md`](2026-07-24-ancora-continuidade-pos-cap-08.md) | Âncora de continuidade pós-CAP-08 (retomada 25/07) |
-| [`2026-07-25-checkpoint-pre-cto-temporario.md`](2026-07-25-checkpoint-pre-cto-temporario.md) | Checkpoint de retorno — pré mandato CTO temporário |
+| [`2026-07-25-checkpoint-pre-cto-temporario.md`](2026-07-25-checkpoint-pre-cto-temporario.md) | Histórico — checkpoint da transição abortada |
+| [`2026-07-25-revogacao-mandato-cto-temporario.md`](2026-07-25-revogacao-mandato-cto-temporario.md) | Revogação do mandato temporário; papéis anteriores restabelecidos |
+| [`2026-07-26-encerramento-cap-03-coa.md`](2026-07-26-encerramento-cap-03-coa.md) | Encerramento do ciclo CAP-03 (COA / Ambiente Executivo Conversacional) |

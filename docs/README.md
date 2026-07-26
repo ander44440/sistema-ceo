@@ -50,15 +50,20 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | Documento | Status |
 |-----------|--------|
 | [`D0-fundacao.md`](D0-fundacao.md) | Histórico (fundação) |
-| [`CON-001-constituicao.md`](CON-001-constituicao.md) | Aprovado v1.1 — Mandato CTO Temporário vigente (disposição transitória) |
+| [`CON-001-constituicao.md`](CON-001-constituicao.md) | Aprovado v1.2 — mandato temporário revogado; papéis permanentes restabelecidos |
 | [`vision/VIS-001-visao-do-produto.md`](vision/VIS-001-visao-do-produto.md) | Aprovado v1.0 |
 | [`vision/VIS-002-identidade-institucional-do-produto.md`](vision/VIS-002-identidade-institucional-do-produto.md) | Homologado v1.0 |
-| [`CAP-001-mapa-de-capacidades.md`](CAP-001-mapa-de-capacidades.md) | Aprovado v1.0 — CAP-05, CAP-07 e CAP-08 marcadas como ciclos homologados (24/07/2026) |
+| [`CAP-001-mapa-de-capacidades.md`](CAP-001-mapa-de-capacidades.md) | Aprovado v1.0 — CAP-05/07/08 homologadas; **CAP-03 aberta** (25/07/2026, ciclo COA) |
 | [`adr/ADR-016-cria-tipo-documental-roadmap.md`](adr/ADR-016-cria-tipo-documental-roadmap.md) | Aceita v1.0 — tipo ROADMAP instituído |
 | [`adr/ADR-017-institui-cap-r-consolidacao-de-release.md`](adr/ADR-017-institui-cap-r-consolidacao-de-release.md) | Aceita v1.0 — classificação CAP-E / CAP-R instituída; nenhuma CAP-R aberta |
-| [`adr/ADR-018-mandato-cto-temporario.md`](adr/ADR-018-mandato-cto-temporario.md) | Aceita v1.0 — Mandato CTO Temporário (Cursor); checkpoint de retorno |
-| [`governance/mandato-cto-temporario-vigente.md`](governance/mandato-cto-temporario-vigente.md) | Operacional — espelho do mandato vigente |
-| [`learning/2026-07-25-checkpoint-pre-cto-temporario.md`](learning/2026-07-25-checkpoint-pre-cto-temporario.md) | Marco — ponto de retorno Git antes do mandato |
+| [`adr/ADR-018-mandato-cto-temporario.md`](adr/ADR-018-mandato-cto-temporario.md) | **Revogada v1.1** — nenhum trabalho técnico aberto sob o mandato |
+| [`governance/mandato-cto-temporario-vigente.md`](governance/mandato-cto-temporario-vigente.md) | Histórico — mandato revogado |
+| [`learning/2026-07-25-checkpoint-pre-cto-temporario.md`](learning/2026-07-25-checkpoint-pre-cto-temporario.md) | Histórico — checkpoint da transição abortada |
+| [`learning/2026-07-25-revogacao-mandato-cto-temporario.md`](learning/2026-07-25-revogacao-mandato-cto-temporario.md) | Marco — revogação e restabelecimento dos papéis |
+| [`vision/VIS-007-visao-do-ceo-mvp-2-0-ambiente-executivo-multiprojeto.md`](vision/VIS-007-visao-do-ceo-mvp-2-0-ambiente-executivo-multiprojeto.md) | **Aprovada para prosseguimento v0.2** — COA + Home conversacional (CAP-03) |
+| [`requirements/pacote-requisitos-ceo-mvp-2-0.md`](requirements/pacote-requisitos-ceo-mvp-2-0.md) | Em análise — inventário REQ-036…044 |
+| [`requirements/REQ-036-cadastro-de-contextos-operacionais-projeto.md`](requirements/REQ-036-cadastro-de-contextos-operacionais-projeto.md) … [`REQ-044-migracao-acervo-mvp-para-coa-mg2.md`](requirements/REQ-044-migracao-acervo-mvp-para-coa-mg2.md) | Em análise — pacote COA / CAP-03 |
+| [`architecture/ARQ-012-arquitetura-coa-home-executiva-conversacional.md`](architecture/ARQ-012-arquitetura-coa-home-executiva-conversacional.md) | Em análise v0.1 — componentes N–S; D1–D10 |
 | [`learning/2026-07-24-institucionalizacao-cap-r.md`](learning/2026-07-24-institucionalizacao-cap-r.md) | Marco — institucionalização da CAP-R |
 | [`roadmap/ROADMAP-001-plano-estrategico-do-sistema-ceo.md`](roadmap/ROADMAP-001-plano-estrategico-do-sistema-ceo.md) | Homologado v1.0 — plano estratégico até CEO 1.0; épicos E1–E7 |
 | [`learning/2026-07-24-institucionalizacao-roadmap.md`](learning/2026-07-24-institucionalizacao-roadmap.md) | Marco — institucionalização do tipo ROADMAP |
@@ -164,6 +169,17 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`cap-08/oportunidades-evolucao-arquivadas.md`](cap-08/oportunidades-evolucao-arquivadas.md) | Consolidado — EV-039…040 no backlog de evolução |
 | [`cap-08/relatorio-encerramento-cap-08.md`](cap-08/relatorio-encerramento-cap-08.md) | Relatório oficial de encerramento — CAP-08 concluída |
 | [`learning/2026-07-24-encerramento-cap-08-planejamento-executivo.md`](learning/2026-07-24-encerramento-cap-08-planejamento-executivo.md) | Marco — encerramento do ciclo CAP-08 |
+| [`vision/VIS-007-visao-do-ceo-mvp-2-0-ambiente-executivo-multiprojeto.md`](vision/VIS-007-visao-do-ceo-mvp-2-0-ambiente-executivo-multiprojeto.md) | Homologada v1.0 — CAP-03 **concluída**; congelada |
+| [`requirements/pacote-requisitos-ceo-mvp-2-0.md`](requirements/pacote-requisitos-ceo-mvp-2-0.md) | Homologado v1.0 — pacote REQ-036…044 |
+| [`requirements/REQ-036-cadastro-de-contextos-operacionais-projeto.md`](requirements/REQ-036-cadastro-de-contextos-operacionais-projeto.md) … [`REQ-044-migracao-acervo-mvp-para-coa-mg2.md`](requirements/REQ-044-migracao-acervo-mvp-para-coa-mg2.md) | Pacote CAP-03 (ver pacote) |
+| [`architecture/ARQ-012-arquitetura-coa-home-executiva-conversacional.md`](architecture/ARQ-012-arquitetura-coa-home-executiva-conversacional.md) | Homologada v1.0 — COA / N–T/S; **congelada**; não reabrir |
+| [`implementation/IMP-009-plano-de-implementacao-cap-03.md`](implementation/IMP-009-plano-de-implementacao-cap-03.md) | Homologado v1.0 — **ENCERRADO**; não reabrir |
+| [`validation/VAL-003-validacao-integrada-cap-03.md`](validation/VAL-003-validacao-integrada-cap-03.md) | Homologada v1.0 — **ENCERRADA** — 36 C / 0 NC / 3 OE |
+| [`cap-03/README.md`](cap-03/README.md) — Sede / baseline CAP-03 | **Homologada e concluída** — baseline do Sistema CEO |
+| [`cap-03/val-003-relatorio-consolidado.md`](cap-03/val-003-relatorio-consolidado.md) | Homologado — relatório VAL-003 |
+| [`cap-03/oportunidades-evolucao-arquivadas.md`](cap-03/oportunidades-evolucao-arquivadas.md) | Consolidado — OE-001…003 (editoriais) |
+| [`cap-03/relatorio-encerramento-cap-03.md`](cap-03/relatorio-encerramento-cap-03.md) | Relatório oficial de encerramento — CAP-03 concluída |
+| [`learning/2026-07-26-encerramento-cap-03-coa.md`](learning/2026-07-26-encerramento-cap-03-coa.md) | Marco — encerramento do ciclo CAP-03 |
 | [`requirements/pacote-requisitos-ceo-mvp-v0-1.md`](requirements/pacote-requisitos-ceo-mvp-v0-1.md) | Homologado — pacote REQ-016…032 |
 | [`requirements/REQ-016-painel-do-dia.md`](requirements/REQ-016-painel-do-dia.md) … [`REQ-032-respeito-ao-tempo-do-patrocinador.md`](requirements/REQ-032-respeito-ao-tempo-do-patrocinador.md) | Pacote MVP (ver pacote) |
 | [`architecture/ARQ-008-arquitetura-funcional-ceo-mvp-v0-1.md`](architecture/ARQ-008-arquitetura-funcional-ceo-mvp-v0-1.md) | Homologada v1.0 — módulos A–G; Dia de Trabalho |

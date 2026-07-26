@@ -1,27 +1,21 @@
-# Mandato vigente — CTO Temporário
+# Mandato de CTO Temporário — REVOGADO
 
-> **Vigente desde 25/07/2026.**  
-> Norma: ADR-018 Aceita v1.0; CON-001 disposição transitória (Mandato CTO Temporário).  
+> **Status: REVOGADO em 25/07/2026, antes de qualquer trabalho técnico sob o mandato.**
+> Norma: ADR-018 v1.1 Revogada; CON-001 v1.2.
 > Checkpoint: `checkpoint-pre-cto-temporario-2026-07-25`.  
-> Branch: `mandato-cto-temporario`.
+> Branch histórica: `mandato-cto-temporario` — sem autoridade vigente.
 
-## Quem é quem agora
+## Papéis restabelecidos
 
 | Papel | Agente | Observação |
 |-------|--------|------------|
-| Autoridade máxima | Usuário / Patrocinador | Aprova VIS/REQ/ARQ/homologações relevantes |
-| CTO temporário | Cursor | Requisitos, arquitetura, planejamento, QA — sob mandato |
-| Engenheiro | Cursor (mesmo agente) | Implementa após artefatos autorizados |
-| CTO titular | ChatGPT | Ausente; retoma ao regressar |
+| Autoridade máxima | Usuário / Patrocinador | Define visão/prioridades; aprova decisões e valida resultados |
+| CTO | ChatGPT | Requisitos, arquitetura, planejamento, revisões e QA |
+| Engenheiro | Cursor | Implementação, refatoração, testes, builds e commits; não decide arquitetura por conta própria |
 
-## Regras rápidas
+## Efeito da revogação
 
-1. Declarar o papel em cada ato (“CTO temporário” vs “Engenheiro”).  
-2. Não reabrir baselines MVP / CAP-05 / CAP-07 / CAP-08 sem ciclo formal.  
-3. Trabalho do mandato na branch `mandato-cto-temporario`.  
-4. Se perder a direção → voltar à tag do checkpoint.  
-5. Aprendizados da experiência podem ser salvos mesmo após reversão.
-
-## Encerramento
-
-Somente por ato do Usuário ou após avaliação com o CTO titular.
+1. Cursor não exerce atribuições de CTO.
+2. Nenhuma CAP, VIS, REQ, ARQ, IMP ou VAL foi aberta sob o mandato.
+3. Baselines MVP / CAP-05 / CAP-07 / CAP-08 permanecem inalteradas.
+4. Branch e tag permanecem somente para auditoria histórica.

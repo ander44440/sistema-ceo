@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CEO — Home Executiva · CAP-03</title>
+  <style>
+    :root {
+      --ink: #121816;
+      --muted: #5a635e;
+      --line: #d2d8d4;
+      --surface: #f7f8f6;
+      --panel: #ffffff;
+      --brand: #1e4d42;
+      --brand-soft: #e6f0ec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 80% 50% at 10% -10%, #d9e8e2 0%, transparent 55%),
+        var(--surface);
+      padding: 1.75rem 1.25rem 2.5rem;
+    }
+    .shell { max-width: 46rem; margin: 0 auto; }
+    .brand { margin: 0; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; color: var(--brand); }
+    .brand span { display: block; margin-top: 0.2rem; font-size: 1.35rem; letter-spacing: -0.02em; text-transform: none; font-weight: 650; color: var(--ink); }
+    .row { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; }
+    .badge { font-size: 0.7rem; padding: 0.25rem 0.55rem; border: 1px solid var(--brand); color: var(--brand); background: var(--panel); }
+    .saudacao { margin: 0.35rem 0 0; font-size: 0.95rem; color: var(--muted); }
+    .panel { background: var(--panel); border: 1px solid var(--line); padding: 1.35rem; box-shadow: 0 10px 36px rgba(18,24,22,0.06); margin-bottom: 0.85rem; }
+    .panel.principal { border-color: var(--brand); box-shadow: 0 12px 40px rgba(30,77,66,0.12); }
+    .convite { margin: 0 0 0.85rem; font-size: 1.15rem; font-weight: 650; letter-spacing: -0.02em; }
+    .label { margin: 0 0 0.35rem; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .seletor {
+      display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+    select, textarea, input[type="text"] {
+      font: inherit; font-size: 0.9rem; padding: 0.45rem 0.55rem;
+      border: 1px solid var(--line); background: #fff; width: 100%;
+    }
+    select { min-width: 12rem; width: auto; }
+    textarea { min-height: 4.5rem; resize: vertical; }
+    .campo { margin-bottom: 0.85rem; }
+    .campo:last-child { margin-bottom: 0; }
+    .valor {
+      border: 1px solid var(--line); padding: 0.7rem 0.8rem;
+      background: #fff; font-size: 0.92rem; line-height: 1.45;
+    }
+    .valor.soft { background: var(--brand-soft); border-left: 4px solid var(--brand); font-weight: 600; }
+    .valor.ausente { color: var(--muted); font-style: italic; }
+    .grid { display: grid; gap: 0.75rem; }
+    @media (min-width: 640px) {
+      .grid.tres { grid-template-columns: repeat(3, 1fr); }
+    }
+    ul.lista { margin: 0; padding-left: 1.1rem; font-size: 0.88rem; line-height: 1.45; }
+    ul.lista.vazia { list-style: none; padding-left: 0; color: var(--muted); font-style: italic; }
+    .historico { display: grid; gap: 0.55rem; max-height: 14rem; overflow: auto; margin-bottom: 0.85rem; }
+    .turno { border: 1px solid var(--line); padding: 0.65rem 0.75rem; font-size: 0.88rem; line-height: 1.4; background: #fff; }
+    .turno .u { font-weight: 600; margin-bottom: 0.25rem; }
+    .turno .r { color: var(--muted); }
+    .exemplos { margin: 0.5rem 0 0.85rem; padding: 0; list-style: none; display: grid; gap: 0.35rem; }
+    .exemplos button {
+      appearance: none; text-align: left; width: 100%;
+      border: 1px dashed var(--line); background: #fafbfa;
+      font: inherit; font-size: 0.82rem; color: var(--brand);
+      padding: 0.45rem 0.55rem; cursor: pointer;
+    }
+    .envio { display: grid; gap: 0.5rem; }
+    button.enviar {
+      appearance: none; border: 1px solid var(--brand); background: var(--brand);
+      color: #fff; font: inherit; font-size: 0.9rem; font-weight: 600;
+      padding: 0.75rem 0.85rem; cursor: pointer;
+    }
+    button.enviar:disabled { opacity: 0.45; cursor: not-allowed; }
+    .note {
+      margin: 0; font-size: 0.78rem; color: #5c4030;
+      border: 1px dashed var(--line); padding: 0.65rem 0.75rem; line-height: 1.4;
+    }
+    .link { font-size: 0.82rem; color: var(--brand); }
+    .menu {
+      display: flex; gap: 0.35rem; flex-wrap: wrap;
+      border-top: 1px solid var(--line); padding-top: 0.65rem; margin-top: 0.85rem;
+    }
+    .menu a {
+      flex: 1 1 auto; text-align: center; text-decoration: none;
+      font-size: 0.78rem; font-weight: 600; color: var(--muted);
+      border: 1px solid transparent; padding: 0.5rem 0.4rem;
+    }
+    .menu a:hover { color: var(--brand); }
+    .menu a.atual { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
+    .menu a .esq { display: block; font-size: 0.62rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.75; }
+    footer { margin-top: 1rem; font-size: 0.72rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="row">
+      <div>
+        <p class="brand">CEO<span>Sistema Executivo de Governança</span></p>
+        <p class="saudacao" id="saudacao">Home Executiva</p>
+      </div>
+      <span class="badge">CAP-03 · IMP-009 E6 · REQ-040/041</span>
+    </div>
+
+    <section class="panel">
+      <p class="label">Projeto ativo</p>
+      <div class="valor soft" id="projetoAtivo">—</div>
+      <div class="seletor">
+        <label class="label" for="seletorCoa" style="margin:0">Trocar COA</label>
+        <select id="seletorCoa" aria-label="Selecionar Contexto Operacional Ativo"></select>
+        <a class="link" href="./projetos.html">Gerenciar Projetos</a>
+      </div>
+    </section>
+
+    <section class="panel principal" aria-label="Conversa executiva">
+      <p class="label">Conversa · interface principal</p>
+      <p class="convite">Olá, CEO. Em que posso ajudá-lo hoje?</p>
+      <div class="historico" id="historico" aria-live="polite"></div>
+      <p class="label">Exemplos</p>
+      <ul class="exemplos" id="exemplos"></ul>
+      <form class="envio" id="formConversa">
+        <label class="label" for="entrada">Pergunta ou comando</label>
+        <textarea id="entrada" placeholder="Faça sua pergunta ou comando..." required></textarea>
+        <button type="submit" class="enviar" id="btnEnviar">Enviar</button>
+      </form>
+      <p class="note" id="msgConversa" style="margin-top:0.85rem"></p>
+    </section>
+
+    <section class="panel">
+      <p class="label">Resumo Executivo</p>
+      <div class="campo">
+        <p class="label">Objetivo</p>
+        <div class="valor" id="objetivo">—</div>
+      </div>
+      <div class="campo">
+        <p class="label">Situação atual</p>
+        <div class="valor" id="situacao">—</div>
+      </div>
+      <div class="campo">
+        <p class="label">Próximo passo recomendado</p>
+        <div class="valor" id="proximo">—</div>
+      </div>
+      <div class="campo">
+        <p class="label">Risco</p>
+        <div class="valor" id="risco">—</div>
+      </div>
+      <div class="campo">
+        <p class="label">Pendências</p>
+        <div class="valor" id="pendencias">—</div>
+      </div>
+      <div class="campo">
+        <p class="label">Última atividade · Ciclo de vida</p>
+        <div class="valor" id="meta">—</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="label">Blocos auxiliares (COA ativo)</p>
+      <div class="grid tres">
+        <div>
+          <p class="label">Decisões</p>
+          <ul class="lista" id="decisoes"></ul>
+        </div>
+        <div>
+          <p class="label">Conhecimentos</p>
+          <ul class="lista" id="conhecimentos"></ul>
+        </div>
+        <div>
+          <p class="label">Atividades</p>
+          <ul class="lista" id="atividades"></ul>
+        </div>
+      </div>
+    </section>
+
+    <p class="note">
+      Conversa determinística (REQ-041 / E6): sem LLM. Resumo dinâmico (E5). Navegação auxiliar (REQ-043 / E7) não altera o COA ativo.
+    </p>
+
+    <nav class="menu" id="menuInferior" aria-label="Navegação auxiliar"></nav>
+    <footer>Projeto CEO · docs/cap-03/home.html · IMP-009 E7 · 26/07/2026</footer>
+  </div>
+
+  <script src="./catalogo-coa.js"></script>
+  <script src="./sessao-coa.js"></script>
+  <script src="./politica-isolamento.js"></script>
+  <script src="./home-executiva.js"></script>
+  <script src="./conversa-executiva.js"></script>
+  <script src="./navegacao.js"></script>
+  <script src="./menu-inferior.js"></script>
+  <script>
+    (function () {
+      const storage = window.localStorage;
+      const catalogo = CeoCatalogoCOA.criar(storage);
+      const sessao = CeoSessaoCOA.criar({ catalogo: catalogo, storage: storage });
+      const politica = CeoPoliticaIsolamento.criar({ sessao: sessao, storage: storage });
+      const home = CeoHomeExecutiva.criar({
+        catalogo: catalogo,
+        sessao: sessao,
+        politica: politica
+      });
+      const conversa = CeoConversaExecutiva.criar({
+        sessao: sessao,
+        politica: politica,
+        home: home
+      });
+
+      const seletor = document.getElementById("seletorCoa");
+      const entrada = document.getElementById("entrada");
+      const btnEnviar = document.getElementById("btnEnviar");
+      const msgConversa = document.getElementById("msgConversa");
+
+      function marcarAusencia(el, texto) {
+        el.textContent = texto || "—";
+        if (texto && /Ausência explícita/i.test(texto)) {
+          el.classList.add("ausente");
+        } else {
+          el.classList.remove("ausente");
+        }
+      }
+
+      function preencherLista(el, itens, ausencia) {
+        el.innerHTML = "";
+        if (!itens || !itens.length) {
+          el.className = "lista vazia";
+          const li = document.createElement("li");
+          li.textContent = ausencia || "Nenhum item.";
+          el.appendChild(li);
+          return;
+        }
+        el.className = "lista";
+        itens.forEach(function (item) {
+          const li = document.createElement("li");
+          li.textContent = item.titulo || item.id;
+          el.appendChild(li);
+        });
+      }
+
+      function renderConversa() {
+        const s = conversa.montarSuperficie();
+        const hist = document.getElementById("historico");
+        hist.innerHTML = "";
+        if (!s.historico.length) {
+          const vazio = document.createElement("div");
+          vazio.className = "turno";
+          vazio.innerHTML = "<div class=\"r\">Nenhum turno neste COA ainda.</div>";
+          hist.appendChild(vazio);
+        } else {
+          s.historico.forEach(function (t) {
+            const box = document.createElement("div");
+            box.className = "turno";
+            box.innerHTML =
+              "<div class=\"u\">Você: " + escapeHtml(t.textoUsuario) + "</div>" +
+              "<div class=\"r\">CEO: " + escapeHtml(t.resposta) + "</div>";
+            hist.appendChild(box);
+          });
+        }
+
+        const ex = document.getElementById("exemplos");
+        ex.innerHTML = "";
+        s.exemplos.forEach(function (textoEx) {
+          const li = document.createElement("li");
+          const b = document.createElement("button");
+          b.type = "button";
+          b.textContent = textoEx;
+          b.addEventListener("click", function () {
+            entrada.value = textoEx;
+            entrada.focus();
+          });
+          li.appendChild(b);
+          ex.appendChild(li);
+        });
+
+        btnEnviar.disabled = !s.disponivel;
+        entrada.disabled = !s.disponivel;
+        msgConversa.textContent = s.mensagem || s.limitacao || "";
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function render(vista) {
+        const r = vista.resumo;
+        const b = vista.blocos;
+
+        document.getElementById("saudacao").textContent = r.projeto
+          ? "Posto de comando · " + r.projeto
+          : "Cadastre um Projeto para iniciar";
+
+        document.getElementById("projetoAtivo").textContent = r.projeto
+          ? r.projeto
+          : (r.mensagem || "Nenhum COA ativo");
+
+        marcarAusencia(document.getElementById("objetivo"), r.objetivo);
+        marcarAusencia(document.getElementById("situacao"), r.situacaoAtual);
+        marcarAusencia(document.getElementById("proximo"), r.proximoPasso);
+        marcarAusencia(document.getElementById("risco"), r.risco);
+        marcarAusencia(document.getElementById("pendencias"), r.pendencias);
+
+        document.getElementById("meta").textContent = r.coaAtivoId
+          ? (r.ultimaAtividade || "—") + " · " + (r.statusCicloVida || "—")
+          : "—";
+
+        preencherLista(document.getElementById("decisoes"), b.decisoesPendentes, b.ausencia);
+        preencherLista(document.getElementById("conhecimentos"), b.conhecimentosRecentes, b.ausencia);
+        preencherLista(document.getElementById("atividades"), b.atividadesRecentes, b.ausencia);
+
+        seletor.innerHTML = "";
+        if (!vista.seletorProjetos.length) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "Nenhum projeto cadastrado";
+          seletor.appendChild(opt);
+          seletor.disabled = true;
+        } else {
+          seletor.disabled = false;
+          vista.seletorProjetos.forEach(function (p) {
+            const opt = document.createElement("option");
+            opt.value = p.coaId;
+            opt.textContent = p.nome + (p.ativo ? " (ativo)" : "");
+            if (p.ativo) opt.selected = true;
+            seletor.appendChild(opt);
+          });
+        }
+
+        renderConversa();
+      }
+
+      seletor.addEventListener("change", function () {
+        if (!seletor.value) return;
+        const r = home.trocarCoa(seletor.value);
+        render(r.home);
+      });
+
+      document.getElementById("formConversa").addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        try {
+          conversa.enviar(entrada.value);
+          entrada.value = "";
+          render(home.montarHome());
+        } catch (erro) {
+          msgConversa.textContent = String(erro && erro.message ? erro.message : erro);
+        }
+      });
+
+      render(home.inicializar());
+      CeoMenuInferior.montar({ destinoAtual: "painel" });
+    })();
+  </script>
+</body>
+</html>

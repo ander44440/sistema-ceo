@@ -1,16 +1,18 @@
-# Checkpoint — Pré Mandato CTO Temporário (25/07/2026)
+# Checkpoint da Transição Abortada — 25/07/2026
 
-> **Status: Marco técnico e organizacional — ponto de retorno.**  
+> **Status: Histórico — transição abortada; não é o estado vigente.**
 > Tipo: aprendizado / continuidade (sem efeito normativo além do registrado).  
 > **Tag Git:** `checkpoint-pre-cto-temporario-2026-07-25`  
-> **Branch de trabalho do mandato:** `mandato-cto-temporario`  
-> Norma: CON-001 Art. 8º e Art. 11; ADR-018.
+> **Branch histórica:** `mandato-cto-temporario`
+> Norma vigente: CON-001 v1.2; ADR-018 v1.1 Revogada.
+>
+> **Correção de registro:** apesar do nome da tag, o commit marcado também contém a documentação que instituiu o mandato. Portanto, a tag registra a **transição**, não um estado documental anterior ao mandato. A revogação posterior na `main` é o estado correto para continuidade.
 
 ---
 
 ## Finalidade
 
-Preservar o estado do projeto **antes** do início do mandato de CTO temporário, de modo que:
+Registrar o estado técnico da transição para o mandato de CTO temporário, de modo que:
 
 1. seja possível **reverter tecnicamente** o repositório a este ponto;
 2. a avaliação do CTO original, ao retornar, tenha um marco auditável;
@@ -30,8 +32,8 @@ Preservar o estado do projeto **antes** do início do mandato de CTO temporário
 | CAP-08 | Homologada v1.0 — baseline; relatório de encerramento oficial |
 | ÉPICO-002 | Aberto; CAP-08 concluída; CAP-02 / CAP-03 **não** abertas |
 | ROADMAP-001 | Homologado — não alterar sem deliberação |
-| CTO titular (ChatGPT) | Ausente temporariamente |
-| CTO temporário (Cursor) | Autorizado pelo Usuário (ADR-018 / CON-001 disposição transitória) |
+| CTO | ChatGPT — papel permanente restabelecido |
+| Cursor | Engenheiro; mandato temporário **revogado** |
 
 ### Cadeias homologadas (não reabrir sem ciclo formal)
 
@@ -48,18 +50,9 @@ EV-033…040 — arquivadas nas sedes CAP-05/07/08; encaminhamento só via CAP-R
 
 ---
 
-## Como reverter (procedimento técnico)
+## Estado após a revogação
 
-Se o mandato perder a direção e o Usuário decidir retornar:
-
-```powershell
-git switch main
-git reset --hard checkpoint-pre-cto-temporario-2026-07-25
-# opcional: descartar ou arquivar a branch do mandato
-# git branch -D mandato-cto-temporario
-```
-
-**Atenção:** isso restaura arquivos e histórico do repositório neste ponto. Não desfaz automaticamente decisões externas, dados de uso ou tempo gasto. Aprendizados úteis devem ser **extraídos deliberadamente** (diário / OE / nota) antes ou depois da reversão.
+O projeto continua na branch `main`, com CON-001 v1.2 e ADR-018 revogada. **Não usar a tag para restaurar a governança**, pois ela contém a versão que instituiu o mandato. Consultar `2026-07-25-revogacao-mandato-cto-temporario.md`.
 
 ---
 
@@ -77,4 +70,4 @@ Combinado com o Usuário (25/07/2026): se o mandato não der certo, **ainda assi
 | Quando | 25/07/2026 |
 | Por quê | Criar ponto de retorno seguro antes do mandato de CTO temporário |
 | Baseado em quê | Autorização explícita do Usuário; ADR-018; CON-001 Art. 11 |
-| Resultado | Estado inventariado; tag e branch definidos; mandato pode iniciar |
+| Resultado | Transição registrada e posteriormente revogada; tag/branch preservadas somente para auditoria |

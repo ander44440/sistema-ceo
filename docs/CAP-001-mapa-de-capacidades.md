@@ -54,12 +54,14 @@
 
 * **Identificador:** CAP-03
 * **Nome:** Gestão de Projetos
+* **Ciclo:** **Homologada e concluída (26/07/2026)** — VIS-007 → REQ-036…044 → ARQ-012 → IMP-009 → VAL-003. **Baseline** em `docs/cap-03/`. **Não reabrir** REQ/ARQ/IMP/VAL.
 * **Objetivo:** Conduzir projetos de ponta a ponta preservando contexto e qualidade.
-* **Descrição:** Acompanhar múltiplos projetos em paralelo pelo fluxo obrigatório (Visão → Requisitos → Arquitetura → Fluxos → Implementação → Testes → Validação), mantendo o contexto entre sessões, etapas e agentes.
-* **Fora do Escopo:** Definir visão e prioridades (papel do Usuário — CON-001, Art. 6º); registrar decisões (CAP-05).
+* **Descrição:** Acompanhar múltiplos contextos operacionais pelo fluxo obrigatório, mantendo exatamente um COA ativo, isolamento entre contextos e a conversa como interface principal do Executivo Digital.
+* **Conceito fundador deste ciclo:** **Contexto Operacional Ativo (COA)** — o CEO opera sempre sobre exatamente um COA; Projeto é a especialização inicial.
+* **Fora do Escopo:** Definir visão e prioridades (papel do Usuário — CON-001, Art. 6º); registrar decisões (CAP-05); alterar o MVP v0.1 durante VAL-005.
 * **Pilares Fortalecidos:** Execução.
-* **Fontes Normativas:** CON-001 Art. 5º §2º; D0 (Objetivos); VIS-001 §4.
-* **Observações:** —
+* **Fontes Normativas:** CON-001 Art. 5º §2º; D0 (Objetivos); VIS-001 §4; VIS-007; Deliberação CTO 25–26/07/2026.
+* **Observações:** Necessidade descoberta em operação (Sistema CEO, MG2, Última Milha). OE OE-001…003 arquivadas (editoriais). Suite de referência: 72/72.
 
 ### CAP-04 — Gestão do Conhecimento
 

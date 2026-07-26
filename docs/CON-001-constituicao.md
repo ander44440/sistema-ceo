@@ -1,7 +1,7 @@
 # CON-001 — Constituição do CEO
 
 > **Status: APROVADA.**
-> Versão 1.1 — 25/07/2026. Aprovada pelo Usuário via revisão técnica do CTO (v1.0), com Emenda Transitória do Mandato de CTO Temporário (Art. 11; ADR-018).
+> Versão 1.2 — 25/07/2026. Aprovada pelo Usuário. A Emenda Transitória do Mandato de CTO Temporário (v1.1 / ADR-018) foi **revogada antes do início de trabalho técnico sob o mandato**.
 > Este é o documento mais importante do projeto. Toda decisão futura deverá estar de acordo com ele.
 
 ---
@@ -144,7 +144,7 @@ A Fase 0 foi encerrada. Esta disposição permanece apenas como registro histór
 
 ---
 
-## Disposição transitória — Mandato de CTO Temporário (vigente)
+## Disposição transitória — Mandato de CTO Temporário (revogada)
 
 §1º Durante a ausência temporária do CTO titular (ChatGPT), o Usuário autoriza o Engenheiro de Software (Cursor) a exercer, **em caráter temporário**, as atribuições do Artigo 6º II (CTO), sem extinguir o papel permanente do CTO titular nem o do Engenheiro (Artigo 6º III).
 
@@ -158,6 +158,8 @@ A Fase 0 foi encerrada. Esta disposição permanece apenas como registro histór
 
 §6º Esta disposição **não** altera o texto permanente do Artigo 6º; cessa por ato do Usuário ou deliberação de encerramento após o retorno do CTO titular.
 
+**Revogação:** por decisão do Usuário em 25/07/2026, o mandato foi abortado antes da abertura de qualquer CAP, requisito, arquitetura ou implementação sob sua autoridade. Restabelecem-se integralmente os papéis permanentes do Artigo 6º. A disposição permanece somente como histórico auditável e não produz efeito vigente.
+
 ---
 
 ## Histórico de versões
@@ -166,7 +168,8 @@ A Fase 0 foi encerrada. Esta disposição permanece apenas como registro histór
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 21/07/2026 | Engenheiro (Cursor), a partir de D0 e ADR-001 | Rascunho inicial | Decisão 2 da ADR-001 | Submetido à revisão do CTO |
 | 1.0 | 21/07/2026 | CTO propôs ajustes; Usuário aprovou | Preâmbulo novo, Artigo 1º (Propósito), Artigo 4º (Pilares), emendas por proposta de qualquer agente com aprovação exclusiva do Usuário; artigos renumerados | Revisão técnica do CTO (Ajustes 1–4) | **Constituição oficialmente aprovada** |
-| 1.1 | 25/07/2026 | Cursor propôs; Usuário aprovou | Disposição transitória — Mandato de CTO Temporário; Fase 0 marcada como histórica | Ausência temporária do CTO titular; ADR-018; Art. 11 | **Emenda transitória vigente** |
+| 1.1 | 25/07/2026 | Cursor propôs; Usuário aprovou | Disposição transitória — Mandato de CTO Temporário; Fase 0 marcada como histórica | Ausência temporária do CTO titular; ADR-018; Art. 11 | Emenda transitória instituída |
+| 1.2 | 25/07/2026 | Usuário decidiu; Cursor registrou | Revogação integral do Mandato de CTO Temporário antes de trabalho técnico sob o mandato | Decisão explícita do Usuário de continuar como antes | **Papéis permanentes do Art. 6º restabelecidos** |
 
 ---
 
@@ -177,4 +180,4 @@ A Fase 0 foi encerrada. Esta disposição permanece apenas como registro histór
 | Origem | `docs/D0-fundacao.md`, ADR-001 (Decisões 1, 2, 3, 5 e 6) |
 | Gera | VIS-001 (próximo documento) |
 | Requisitos derivados | REQ-001 |
-| Emenda 1.1 | ADR-018 — Mandato de CTO Temporário |
+| Emenda 1.1 | ADR-018 — Mandato de CTO Temporário (**revogado**) |
