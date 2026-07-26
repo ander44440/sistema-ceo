@@ -113,10 +113,12 @@ Ver [`oportunidades-evolucao-arquivadas.md`](oportunidades-evolucao-arquivadas.m
 | Campo | Valor |
 |-------|-------|
 | Branch | `main` |
-| Commit | `1dce17b6768bb9faff9c71c8411d43fecc8569f5` |
-| Mensagem | `docs: homologa CAP-03 (COA) como baseline oficial do Sistema CEO.` |
+| Commit (baseline CAP-03) | `1dce17b6768bb9faff9c71c8411d43fecc8569f5` |
+| Commit (registro do hash) | `db52bec51c458be9bd20608e96d9d7d0941e94b2` |
+| Tip publicado em `origin/main` | `db52bec51c458be9bd20608e96d9d7d0941e94b2` |
+| Mensagem (baseline) | `docs: homologa CAP-03 (COA) como baseline oficial do Sistema CEO.` |
 | Remote | `origin` (`https://github.com/ander44440/sistema-ceo.git`) |
-| Push | *(atualizado após publicação)* |
+| Push | **Publicado** em 26/07/2026 (`cf63776..db52bec` → `main`) |
 | Data | 26/07/2026 |
 
 ---

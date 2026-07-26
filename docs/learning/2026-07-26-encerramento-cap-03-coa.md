@@ -16,6 +16,8 @@ A CAP-03 concluiu o ciclo ADR-006 (VIS-007 → REQ-036…044 → ARQ-012 → IMP
 | Suite | 72 / 72 |
 | MVP | Intocado |
 | Commit baseline | `1dce17b6768bb9faff9c71c8411d43fecc8569f5` |
+| Tip `origin/main` | `db52bec51c458be9bd20608e96d9d7d0941e94b2` |
+| Push | Publicado 26/07/2026 |
 
 ## Próximo passo institucional
 
