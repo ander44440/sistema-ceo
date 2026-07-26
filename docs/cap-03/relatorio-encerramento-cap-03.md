@@ -113,9 +113,10 @@ Ver [`oportunidades-evolucao-arquivadas.md`](oportunidades-evolucao-arquivadas.m
 | Campo | Valor |
 |-------|-------|
 | Branch | `main` |
-| Commit | *(preenchido após o commit)* |
+| Commit | `1dce17b6768bb9faff9c71c8411d43fecc8569f5` |
+| Mensagem | `docs: homologa CAP-03 (COA) como baseline oficial do Sistema CEO.` |
 | Remote | `origin` (`https://github.com/ander44440/sistema-ceo.git`) |
-| Push | *(preenchido após o push)* |
+| Push | *(atualizado após publicação)* |
 | Data | 26/07/2026 |
 
 ---
