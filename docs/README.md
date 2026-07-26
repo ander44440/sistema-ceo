@@ -180,6 +180,12 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`cap-03/oportunidades-evolucao-arquivadas.md`](cap-03/oportunidades-evolucao-arquivadas.md) | Consolidado — OE-001…003 (editoriais) |
 | [`cap-03/relatorio-encerramento-cap-03.md`](cap-03/relatorio-encerramento-cap-03.md) | Relatório oficial de encerramento — CAP-03 concluída |
 | [`learning/2026-07-26-encerramento-cap-03-coa.md`](learning/2026-07-26-encerramento-cap-03-coa.md) | Marco — encerramento do ciclo CAP-03 |
+| [`product/README.md`](product/README.md) — Sede IPR-001 (Experiência e Desejabilidade) | F0 Homologada; tipo IPR experimental v0.x; F1 aberta |
+| [`product/IPR-001-experiencia-do-produto.md`](product/IPR-001-experiencia-do-produto.md) | F0 Homologada v0.2 — documento-mestre; F1 em curso |
+| [`product/principios-de-produto.md`](product/principios-de-produto.md) | Homologado — princípios normativos de produto (Gate IPR-001) |
+| [`product/design-system-roadmap.md`](product/design-system-roadmap.md) | Homologado — roadmap do design system (Gate IPR-001) |
+| [`product/benchmark/f1-benchmark-estrategico.md`](product/benchmark/f1-benchmark-estrategico.md) | Gate F1 APROVADO — fichas nominadas em revisão |
+| [`product/benchmark/fichas/README.md`](product/benchmark/fichas/README.md) | 3 fichas: Linear, Cursor, Notion |
 | [`requirements/pacote-requisitos-ceo-mvp-v0-1.md`](requirements/pacote-requisitos-ceo-mvp-v0-1.md) | Homologado — pacote REQ-016…032 |
 | [`requirements/REQ-016-painel-do-dia.md`](requirements/REQ-016-painel-do-dia.md) … [`REQ-032-respeito-ao-tempo-do-patrocinador.md`](requirements/REQ-032-respeito-ao-tempo-do-patrocinador.md) | Pacote MVP (ver pacote) |
 | [`architecture/ARQ-008-arquitetura-funcional-ceo-mvp-v0-1.md`](architecture/ARQ-008-arquitetura-funcional-ceo-mvp-v0-1.md) | Homologada v1.0 — módulos A–G; Dia de Trabalho |
