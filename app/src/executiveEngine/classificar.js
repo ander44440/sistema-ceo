@@ -107,6 +107,31 @@ export function classificarIntencao(texto) {
     };
   }
 
+  // Onda 03 E4 — classificar só o cabeçalho (antes de ":") para não
+  // confundir continuidade ("… | Abrir dia amanhã") com abrir_dia.
+  {
+    const cabeca = t.split(":")[0].trim();
+    if (/\b(encerrar|fechar)\s+(o\s+)?dia\b/.test(cabeca)) {
+      return {
+        id: "encerrar_dia",
+        capacidade: "memoria",
+        confianca: 0.96,
+        origem: "stub"
+      };
+    }
+    if (
+      /\babrir\s+(o\s+)?dia\b/.test(cabeca) ||
+      /\b(iniciar|come[cç]ar)\s+(o\s+)?dia\b/.test(cabeca)
+    ) {
+      return {
+        id: "abrir_dia",
+        capacidade: "memoria",
+        confianca: 0.96,
+        origem: "stub"
+      };
+    }
+  }
+
   if (
     /\b(registrar|criar|adicionar)\s+decis/.test(t) ||
     /^decis[aã]o\s*:/.test(t)

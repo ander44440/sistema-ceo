@@ -4,11 +4,19 @@
 
 import { carregarDocumento, gravarDocumento } from "./persistencia.js";
 import { montarPainelExecutivo } from "./estadoExecutivo.js";
+import {
+  copiarDiaExecutivo,
+  dataRefLocal,
+  diaExecutivoVazio,
+  garantirDiaNoProjeto,
+  obterUltimaContinuidadeDoProjeto
+} from "./diaExecutivo.js";
 
 const MAX_DECISOES = 50;
 const MAX_PENDENCIAS = 50;
 const MAX_PROXIMAS = 50;
 const MAX_HISTORICO = 40;
+const MAX_CONTINUIDADE = 60;
 
 /** @type {object | null} */
 let doc = null;
@@ -30,7 +38,9 @@ function workspaceVazio() {
     proximasAcoes: [],
     historicoResumido: [],
     /** Sugestão automática do motor — distinta das próximas ações registadas. */
-    proximoPassoSugerido: null
+    proximoPassoSugerido: null,
+    /** Fluxo Executivo Diário (Onda 03). */
+    diaExecutivo: diaExecutivoVazio()
   };
 }
 
@@ -99,6 +109,7 @@ function garantirDoc() {
     if (!p.proximasAcoes) p.proximasAcoes = [];
     if (!p.historicoResumido) p.historicoResumido = [];
     if (p.proximoPassoSugerido === undefined) p.proximoPassoSugerido = null;
+    garantirDiaNoProjeto(p);
   }
   persistir();
   return doc;
@@ -252,6 +263,7 @@ export function obterWorkspaceAtivo() {
     pendencias: JSON.parse(JSON.stringify(p.pendencias)),
     proximasAcoes: JSON.parse(JSON.stringify(p.proximasAcoes)),
     historicoResumido: JSON.parse(JSON.stringify(p.historicoResumido)),
+    diaExecutivo: copiarDiaExecutivo(p),
     proximoPasso:
       p.proximasAcoes[0]?.texto || p.proximoPassoSugerido || null
   };
@@ -377,6 +389,99 @@ function acrescentarHistorico(p, texto) {
   }
 }
 
+/**
+ * Snapshot do dia executivo do projeto ativo.
+ */
+export function obterDiaExecutivo() {
+  const p = projetoMutavel();
+  if (!p) return null;
+  return copiarDiaExecutivo(p);
+}
+
+/**
+ * Último registro de continuidade do projeto ativo.
+ */
+export function obterUltimaContinuidade() {
+  const p = projetoMutavel();
+  if (!p) return null;
+  return obterUltimaContinuidadeDoProjeto(p);
+}
+
+/**
+ * Lista de continuidade do projeto ativo (mais recente primeiro).
+ */
+export function listarContinuidade() {
+  const dia = obterDiaExecutivo();
+  return dia ? dia.continuidade.slice() : [];
+}
+
+/**
+ * Abre o dia executivo no projeto ativo.
+ * @param {{ intencaoDoDia?: string }} [opts]
+ */
+export function abrirDiaExecutivo(opts = {}) {
+  const p = projetoMutavel();
+  if (!p) return null;
+  const dia = garantirDiaNoProjeto(p);
+  const agora = agoraIso();
+  const intencao = String(opts.intencaoDoDia || "").trim() || null;
+
+  dia.status = "em_curso";
+  dia.abertoEm = agora;
+  dia.encerradoEm = null;
+  dia.intencaoDoDia = intencao;
+
+  acrescentarHistorico(p, "Dia aberto");
+  marcarAtividade(p);
+  persistir();
+  return copiarDiaExecutivo(p);
+}
+
+/**
+ * Encerra o dia e grava registro de continuidade.
+ * @param {{ oQueAndou?: string, oQueFica?: string, proximoPassoAmanha?: string }} dados
+ */
+export function encerrarDiaExecutivo(dados = {}) {
+  const p = projetoMutavel();
+  if (!p) return null;
+  const dia = garantirDiaNoProjeto(p);
+  const agora = agoraIso();
+  const oQueAndou = String(dados.oQueAndou || "").trim();
+  const oQueFica = String(dados.oQueFica || "").trim();
+  const proximoPassoAmanha = String(dados.proximoPassoAmanha || "").trim();
+
+  if (!oQueAndou && !oQueFica && !proximoPassoAmanha) {
+    return { ok: false, erro: "informe_continuidade", dia: copiarDiaExecutivo(p) };
+  }
+
+  const registro = {
+    id: novoId("cont"),
+    dataRef: dataRefLocal(),
+    oQueAndou: oQueAndou || "(não informado)",
+    oQueFica: oQueFica || "(não informado)",
+    proximoPassoAmanha: proximoPassoAmanha || "(não informado)",
+    projetoId: p.id,
+    registradoEm: agora
+  };
+
+  dia.continuidade.unshift(registro);
+  if (dia.continuidade.length > MAX_CONTINUIDADE) {
+    dia.continuidade.length = MAX_CONTINUIDADE;
+  }
+
+  dia.status = "encerrado";
+  dia.encerradoEm = agora;
+
+  if (proximoPassoAmanha) {
+    p.proximoPassoSugerido = proximoPassoAmanha;
+  }
+
+  acrescentarHistorico(p, "Dia encerrado");
+  marcarAtividade(p);
+  persistir();
+  return { ok: true, registro, dia: copiarDiaExecutivo(p) };
+}
+
 export function obterEstadoGabinete() {
   garantirDoc();
   return { ...doc.gabinete };
@@ -420,6 +525,11 @@ export const catalogoProjetos = {
   criarProjeto,
   obterWorkspaceAtivo,
   obterPainelExecutivo,
+  obterDiaExecutivo,
+  obterUltimaContinuidade,
+  listarContinuidade,
+  abrirDiaExecutivo,
+  encerrarDiaExecutivo,
   registrarDecisao,
   registrarPendencia,
   registrarProximaAcao,

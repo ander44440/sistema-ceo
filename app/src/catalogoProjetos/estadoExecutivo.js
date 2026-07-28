@@ -211,6 +211,65 @@ export function montarPainelExecutivo(projeto, opts = {}) {
 }
 
 /**
+ * Resumo do dia orientado à continuidade — reutiliza o painel (sem lógica paralela de estado).
+ * @param {object} projeto
+ * @param {{ ativo?: boolean, dia?: object|null, continuidade?: object|null }} [opts]
+ * @returns {string}
+ */
+export function gerarResumoDoDia(projeto, opts = {}) {
+  if (!projeto) return "Nenhum projeto ativo. Selecione um projeto para conduzir o dia.";
+
+  const painel = montarPainelExecutivo(projeto, { ativo: opts.ativo !== false });
+  if (!painel) return "Nenhum projeto ativo. Selecione um projeto para conduzir o dia.";
+
+  const dia = opts.dia || null;
+  const cont = opts.continuidade || null;
+  const status = dia?.status || "nao_iniciado";
+  const linhas = [];
+
+  if (status === "em_curso") {
+    linhas.push(`Dia em curso · ${projeto.nome}.`);
+    if (dia.intencaoDoDia) {
+      linhas.push(`Foco de hoje: ${dia.intencaoDoDia}.`);
+    }
+  } else if (status === "encerrado") {
+    linhas.push(`Dia encerrado · ${projeto.nome}. Abra o dia para retomar.`);
+  } else {
+    linhas.push(`Dia ainda não aberto · ${projeto.nome}.`);
+  }
+
+  linhas.push(`Situação do projeto: ${painel.estadoExecutivo}.`);
+
+  if (cont?.proximoPassoAmanha && cont.proximoPassoAmanha !== "(não informado)") {
+    linhas.push(`Continuidade: ${cont.proximoPassoAmanha}.`);
+  } else if (painel.proximaAcao) {
+    linhas.push(`Próximo passo: ${painel.proximaAcao}.`);
+  } else {
+    linhas.push("Ainda sem próximo passo claro — registre uma próxima ação.");
+  }
+
+  if (cont?.oQueFica && cont.oQueFica !== "(não informado)") {
+    linhas.push(`O que permanece: ${cont.oQueFica}.`);
+  } else if (painel.metricas.pendencias > 0) {
+    linhas.push(
+      painel.metricas.pendencias === 1
+        ? "Há 1 pendência aberta a acompanhar."
+        : `Há ${painel.metricas.pendencias} pendências abertas a acompanhar.`
+    );
+  }
+
+  if (painel.metricas.decisoes > 0) {
+    linhas.push(
+      painel.metricas.decisoes === 1
+        ? "1 decisão já registrada neste contexto."
+        : `${painel.metricas.decisoes} decisões já registradas neste contexto.`
+    );
+  }
+
+  return linhas.join("\n");
+}
+
+/**
  * Classe CSS auxiliar para o estado (sem redesenhar o shell).
  * @param {EstadoExecutivo} estado
  */

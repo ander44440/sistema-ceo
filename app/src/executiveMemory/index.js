@@ -6,8 +6,10 @@
 import {
   definirProximoPasso as catDefinirProximoPasso,
   listarProjetos,
+  obterDiaExecutivo,
   obterPainelExecutivo,
   obterProjetoAtivo,
+  obterUltimaContinuidade,
   obterWorkspaceAtivo,
   registrarAcaoHistorico,
   registrarDecisao as catRegistrarDecisao,
@@ -15,6 +17,7 @@ import {
   registrarProximaAcao as catRegistrarProximaAcao,
   selecionarProjetoPorRef
 } from "../catalogoProjetos/index.js";
+import { gerarResumoDoDia } from "../catalogoProjetos/estadoExecutivo.js";
 
 /**
  * @typedef {object} EstadoMemoria
@@ -158,6 +161,8 @@ export function atualizarAposInstrucao(evento) {
 
   if (
     intencaoId === "consultar_estado" ||
+    intencaoId === "abrir_dia" ||
+    intencaoId === "encerrar_dia" ||
     intencaoId === "pergunta_data" ||
     intencaoId === "pergunta_hora" ||
     intencaoId === "pergunta_identidade" ||
@@ -261,39 +266,25 @@ function derivarProximoPasso({ capacidade, ok, instrucao }) {
 }
 
 /**
- * Resumo executivo do projeto ativo.
+ * Resumo executivo do projeto ativo (inclui status do dia — Onda 03).
  * @returns {string}
  */
 export function resumirEstado() {
-  const painel = obterPainelExecutivo();
   const ativo = obterProjetoAtivo();
-  if (!painel || !ativo) {
+  if (!ativo) {
     return "Nenhum projeto ativo no gabinete.";
   }
 
-  const linhas = [];
-  linhas.push("Estado atual do gabinete — Memória Executiva");
-  linhas.push("");
-  linhas.push(`Projeto ativo: ${ativo.nome}`);
-  linhas.push(`Estado executivo: ${painel.estadoExecutivo}`);
-  linhas.push("");
-  linhas.push(painel.resumoExecutivo);
-  linhas.push("");
+  const dia = obterDiaExecutivo();
+  const continuidade = obterUltimaContinuidade();
+  const resumoDia = gerarResumoDoDia(ativo, { dia, continuidade });
 
-  const px = (ativo.proximasAcoes || []).slice(0, 3);
-  if (px.length) {
-    linhas.push(
-      `Próximas ações: ${px.map((a) => a.texto).join(" | ")}`
-    );
-  }
+  const painel = obterPainelExecutivo();
+  const linhas = [resumoDia];
 
-  const recentes = (painel.linhaDoTempo || []).slice(0, 3);
-  if (recentes.length) {
-    linhas.push(
-      `Linha do tempo: ${recentes
-        .map((e) => e.rotulo)
-        .join(" · ")}`
-    );
+  if (painel?.resumoExecutivo) {
+    linhas.push("");
+    linhas.push(painel.resumoExecutivo);
   }
 
   return linhas.join("\n");

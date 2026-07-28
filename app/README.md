@@ -1,7 +1,8 @@
 # CEO — Aplicação permanente
 
-> **Status: Em construção — ciclo pós-deliberação CTO (26/07/2026).**  
-> Deliberação: [`../docs/learning/2026-07-26-inicio-construcao-ceo.md`](../docs/learning/2026-07-26-inicio-construcao-ceo.md)  
+> **Status: Gabinete Executivo — Ondas Operacionais 01–03 homologadas (28/07/2026).**  
+> Deliberação de construção: [`../docs/learning/2026-07-26-inicio-construcao-ceo.md`](../docs/learning/2026-07-26-inicio-construcao-ceo.md)  
+> Encerramento Onda 03: [`../docs/product/marco-encerramento-onda-03.md`](../docs/product/marco-encerramento-onda-03.md)  
 > Domínio: cópia de runtime CAP-03 em `public/legacy/` (baseline `docs/cap-03/` **congelada**).
 
 ## Como correr
@@ -14,17 +15,29 @@ npm run dev
 
 Abrir o URL do Vite (por omissão http://localhost:5173).
 
+## Ondas Operacionais
+
+| Onda | Entrega | Estado |
+|------|---------|--------|
+| 01 | Catálogo de projetos + persistência do gabinete | ✅ |
+| 02 | Dashboard executivo, estado e linha do tempo | ✅ |
+| 03 | Fluxo Executivo Diário (abrir / trabalhar / encerrar / continuidade) | ✅ Encerrada |
+| Próxima | — | ⏸ Deliberação CTO |
+
+Validação Onda 03: `node scripts/validar-onda03-e5.mjs`
+
 ## O que esta versão entrega
 
 | Critério | Estado |
 |----------|--------|
 | Abrir no navegador | `npm run dev` |
 | Layout permanente | Shell sticky + nav fixa |
-| Navegar módulos | Painel · Projetos · Conversas · Memória · Configurações |
-| Dashboard Executivo | Resumo com seed MG2 simulado |
-| Conversa com o CEO | Determinística (CAP-03); slot para LLM |
-| Infra incremental | `runtime.registrarConector(moduloId, …)` |
+| Navegar módulos | Centro · Projetos · Conversa · Capacidades · Conhecimento · Configurações |
+| Centro de Situação | Faixa do Dia + estado/resumo/ações do projeto ativo |
+| Fluxo do dia | Abrir → trabalhar → encerrar com continuidade (D01–D07) |
+| Conversa com o CEO | Engine determinística + slot LLM (contingência se LLM falhar) |
+| Persistência local | `localStorage` — `ceo.onda01.gabinete.v1` |
 
 ## Alinhamento
 
-REQ-037/038/039/040/041/043 · ARQ-012 · F5 (conversa centro, lente COA, sem seletor de meios).
+REQ-037/038/039/040/041/043 · ARQ-012 · ADR-015 · F5 (conversa centro, lente COA) · Ondas 01–03.

@@ -7,6 +7,12 @@ import {
   listarMensagens,
   temHistorico
 } from "../conversa/store.js";
+import { htmlFaixaDoDia, ligarFaixaDoDia } from "./faixaDoDia.js";
+import {
+  cardsPrioridadeDoPainel,
+  htmlRailDiaAtivo,
+  obterVistaDiaAtivo
+} from "./painelDiaAtivo.js";
 
 function escaparHtml(texto) {
   return String(texto)
@@ -60,24 +66,6 @@ function saudacaoPorHora() {
   return "Boa noite";
 }
 
-function riscoSessao(mem) {
-  const pens = (mem.pendencias || []).filter((p) => p.status === "aberta").length;
-  const dec = (mem.decisoes || []).length;
-  if (pens >= 5) return { label: "Elevado", nivel: 78, tom: "danger" };
-  if (pens >= 2 || dec >= 2) return { label: "Moderado", nivel: 54, tom: "warn" };
-  if ((mem.ultimasAcoes || []).length) return { label: "Controlado", nivel: 28, tom: "ok" };
-  return { label: "Estável", nivel: 18, tom: "ok" };
-}
-
-function metricasStub(mem) {
-  const base = Math.min(96, 70 + (mem.ultimasAcoes || []).length * 3);
-  return [
-    { nome: "Eficiência", valor: Math.min(96, base + 4), tom: "ok" },
-    { nome: "Execução", valor: Math.min(98, base + 8), tom: "ok" },
-    { nome: "Conformidade", valor: Math.max(62, base - 12), tom: "warn" }
-  ];
-}
-
 /**
  * Centro de Situação — UX inspirada na referência do posto de comando.
  */
@@ -98,47 +86,18 @@ export function montarCentroSituacao() {
   root.setAttribute("aria-label", "Centro de Situação");
 
   let enviando = false;
+  /** @type {"abrir"|"encerrar"|null} */
+  let painelDia = null;
 
   function pintar() {
     const mem = lerMemoria();
+    const vista = obterVistaDiaAtivo();
     const ultima = (mem.ultimasAcoes || [])[0];
-    const pens = (mem.pendencias || []).filter((p) => p.status === "aberta");
-    const decisoes = mem.decisoes || [];
     const projetos = mem.projetosAtivos || [];
     const acoes = (mem.ultimasAcoes || []).slice(0, 5);
-    const risco = riscoSessao(mem);
-    const kpis = metricasStub(mem);
     const msgs = listarMensagens().slice(-3);
-
-    const nCrit = pens.filter((p) =>
-      /crític|critic|urgente|bloque/i.test(p.texto)
-    ).length;
-    const cardsPrioridade = [
-      {
-        tom: "danger",
-        n: nCrit || (pens.length ? Math.min(pens.length, 3) : 0),
-        titulo: "Criticidades",
-        desc: pens.length ? "Exigem ação imediata" : "Nenhuma criticidade aberta"
-      },
-      {
-        tom: "warn",
-        n: pens.length,
-        titulo: "Pendências",
-        desc: pens.length ? "Aguardando deliberação" : "Quadro limpo nesta sessão"
-      },
-      {
-        tom: "ok",
-        n: decisoes.length,
-        titulo: "Decisões",
-        desc: decisoes.length ? "Registadas na sessão" : "Sem decisões ainda"
-      },
-      {
-        tom: "brand",
-        n: projetos.length,
-        titulo: "Projetos",
-        desc: projetos.length ? "Em acompanhamento" : "Sem projetos ativos"
-      }
-    ];
+    const cardsPrioridade = cardsPrioridadeDoPainel(vista.painel);
+    const ativoId = vista.projeto?.id;
 
     root.innerHTML = `
       <div class="cs-layout">
@@ -155,6 +114,8 @@ export function montarCentroSituacao() {
               }</span>
             </div>
           </header>
+
+          ${htmlFaixaDoDia(painelDia)}
 
           <section class="cs-chat" aria-label="Conversa com o Executivo Digital">
             <div class="cs-chat-head">
@@ -181,10 +142,10 @@ export function montarCentroSituacao() {
               <button type="submit" class="cs-send" id="cs-enviar">Enviar</button>
             </form>
             <div class="cs-chips">
-              <button type="button" class="cs-chip" data-cmd="Abrir projeto Motoboy Game 2">Abrir Projeto</button>
-              <button type="button" class="cs-chip" data-cmd="Analisar pendências da sessão">Analisar Pendências</button>
+              <button type="button" class="cs-chip" data-dia-acao="abrir">Abrir o dia</button>
+              <button type="button" class="cs-chip" data-dia-acao="encerrar">Encerrar o dia</button>
               <button type="button" class="cs-chip" data-cmd="Qual é o estado atual?">Resumo Executivo</button>
-              <button type="button" class="cs-chip" data-cmd="Consultar conhecimento do contexto ativo">Buscar no Acervo</button>
+              <button type="button" class="cs-chip" data-cmd="Abrir projeto Motoboy Game 2">Abrir Projeto</button>
             </div>
           </section>
 
@@ -197,8 +158,8 @@ export function montarCentroSituacao() {
                 .map(
                   (c) => `
                 <article class="cs-prio cs-prio--${c.tom}">
-                  <p class="cs-prio-n">${c.n}</p>
-                  <h3>${c.titulo}</h3>
+                  <p class="cs-prio-n">${typeof c.n === "number" ? c.n : escaparHtml(String(c.n))}</p>
+                  <h3>${escaparHtml(c.titulo)}</h3>
                   <p>${escaparHtml(c.desc)}</p>
                   <button type="button" class="cs-prio-link" data-cmd="Qual é o estado atual?">Ver agora →</button>
                 </article>`
@@ -234,42 +195,7 @@ export function montarCentroSituacao() {
         </div>
 
         <aside class="cs-rail" aria-label="Inteligência e acompanhamento">
-          <article class="cs-panel">
-            <p class="cs-kicker">Inteligência Executiva</p>
-            <p class="cs-intel-text">${escaparHtml(
-              mem.proximoPasso ||
-                "Ainda sem leitura consolidada. Use a conversa para eu analisar a organização."
-            )}</p>
-            <div class="cs-gauge cs-gauge--${risco.tom}" style="--gauge:${risco.nivel}">
-              <div class="cs-gauge-arc" aria-hidden="true"></div>
-              <div class="cs-gauge-label">
-                <strong>${risco.label}</strong>
-                <span>Risco geral</span>
-              </div>
-            </div>
-            <div class="cs-kpis">
-              ${kpis
-                .map(
-                  (k) => `
-                <div>
-                  <span>${k.nome}</span>
-                  <strong class="is-${k.tom}">${k.valor}%</strong>
-                </div>`
-                )
-                .join("")}
-            </div>
-          </article>
-
-          <article class="cs-panel">
-            <p class="cs-kicker">Agenda do Dia</p>
-            <ul class="cs-agenda">
-              <li><i class="is-brand"></i><div><strong>10:30</strong><span>Revisão do posto de comando</span></div></li>
-              <li><i class="is-warn"></i><div><strong>14:00</strong><span>${escaparHtml(
-                mem.proximoPasso || "Deliberar próximo passo"
-              )}</span></div></li>
-              <li><i class="is-ok"></i><div><strong>16:30</strong><span>Fecho executivo da sessão</span></div></li>
-            </ul>
-          </article>
+          ${htmlRailDiaAtivo(vista)}
 
           <article class="cs-panel">
             <p class="cs-kicker">Projetos Acompanhados</p>
@@ -277,44 +203,24 @@ export function montarCentroSituacao() {
               ${
                 projetos.length
                   ? projetos
-                      .map((p, idx) => {
-                        const pct = [68, 42, 75][idx % 3];
-                        const tom = ["ok", "brand", "warn"][idx % 3];
+                      .map((p) => {
                         const inicial = p.nome.slice(0, 1).toUpperCase();
+                        const ativo = p.id === ativoId;
                         return `
-                    <li>
+                    <li class="${ativo ? "is-ativo" : ""}">
                       <div class="cs-proj-avatar">${escaparHtml(inicial)}</div>
                       <div class="cs-proj-body">
                         <strong>${escaparHtml(p.nome)}</strong>
-                        <span>Em acompanhamento</span>
-                        <div class="cs-bar"><span class="is-${tom}" style="width:${pct}%"></span></div>
+                        <span>${ativo ? "Projeto ativo" : "Em catálogo"}</span>
                       </div>
                       <div class="cs-proj-meta">
-                        <strong>${pct}%</strong>
+                        ${ativo ? "<strong>ATIVO</strong>" : "<strong>—</strong>"}
                         <i class="cs-online-dot" title="Online"></i>
                       </div>
                     </li>`;
                       })
                       .join("")
-                  : `
-                <li class="cs-projects-empty">
-                  <div class="cs-proj-avatar">C</div>
-                  <div class="cs-proj-body">
-                    <strong>CEO</strong>
-                    <span>Posto de comando</span>
-                    <div class="cs-bar"><span class="is-brand" style="width:35%"></span></div>
-                  </div>
-                  <div class="cs-proj-meta"><strong>35%</strong><i class="cs-online-dot"></i></div>
-                </li>
-                <li class="cs-projects-empty">
-                  <div class="cs-proj-avatar">M</div>
-                  <div class="cs-proj-body">
-                    <strong>Motoboy Game 2</strong>
-                    <span>Contexto operacional</span>
-                    <div class="cs-bar"><span class="is-ok" style="width:12%"></span></div>
-                  </div>
-                  <div class="cs-proj-meta"><strong>—</strong><i class="cs-online-dot"></i></div>
-                </li>`
+                  : `<li class="cs-activity-empty">Nenhum projeto no catálogo.</li>`
               }
             </ul>
           </article>
@@ -326,11 +232,20 @@ export function montarCentroSituacao() {
   }
 
   function ligarEventos() {
+    ligarFaixaDoDia(root, {
+      getPainel: () => painelDia,
+      setPainel: (v) => {
+        painelDia = v;
+      },
+      repintar: pintar
+    });
+
     const form = root.querySelector("#cs-form");
     const input = root.querySelector("#cs-input");
     const btn = root.querySelector("#cs-enviar");
 
     function syncBtn() {
+      if (!btn || !input) return;
       btn.disabled = enviando || !input.value.trim();
     }
 
@@ -374,12 +289,14 @@ export function montarCentroSituacao() {
       }
     }
 
-    form.addEventListener("submit", (ev) => {
-      ev.preventDefault();
-      enviar();
-    });
-    input.addEventListener("input", syncBtn);
-    syncBtn();
+    if (form && input && btn) {
+      form.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        enviar();
+      });
+      input.addEventListener("input", syncBtn);
+      syncBtn();
+    }
 
     root.querySelectorAll("[data-cmd]").forEach((el) => {
       el.addEventListener("click", () => enviar(el.getAttribute("data-cmd")));

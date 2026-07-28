@@ -654,6 +654,190 @@
   box-shadow: 0 0 0 3px var(--ok-soft);
 }
 
+/* Fluxo Executivo Diário — Onda 03 E2 */
+.cs-dia {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, 14px);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  padding: 0.85rem 1rem;
+}
+
+.cs-dia-faixa {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.cs-dia-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin-top: 0.2rem;
+}
+
+.cs-dia-titulo strong {
+  font-size: 1.05rem;
+}
+
+.cs-dia-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.cs-dia-badge--idle {
+  color: var(--muted-strong);
+}
+
+.cs-dia-badge--andamento {
+  color: var(--brand-mid, #7aa2ff);
+}
+
+.cs-dia-badge--encerrado {
+  color: #6fbf8a;
+}
+
+.cs-dia-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted-strong);
+  line-height: 1.4;
+}
+
+.cs-dia-ctas {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.cs-dia-btn {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.cs-dia-btn:hover {
+  border-color: var(--brand-mid, #7aa2ff);
+}
+
+.cs-dia-btn.is-primary {
+  border-color: color-mix(in srgb, var(--brand-mid, #7aa2ff) 55%, var(--line));
+  background: color-mix(in srgb, var(--brand-mid, #7aa2ff) 14%, transparent);
+}
+
+.cs-dia-painel {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cs-dia-painel-desc {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+  color: var(--muted-strong);
+}
+
+.cs-dia-label {
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+
+.cs-dia-painel input {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.cs-dia-acoes {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin-top: 0.55rem;
+}
+
+.cs-estado-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin: 0.35rem 0 0.65rem;
+}
+
+.cs-estado-linha span {
+  font-size: 0.85rem;
+  color: var(--muted-strong);
+}
+
+.cs-estado-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.cs-estado-badge--estavel {
+  color: #6fbf8a;
+}
+
+.cs-estado-badge--andamento {
+  color: var(--brand-mid, #7aa2ff);
+}
+
+.cs-estado-badge--atencao {
+  color: #d4a017;
+}
+
+.cs-estado-badge--critico {
+  color: #e07070;
+}
+
+.cs-resumo-dia {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cs-resumo-linha {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--muted-strong);
+}
+
+.cs-agenda-empty span {
+  color: var(--muted);
+}
+
+.cs-projects li.is-ativo {
+  border-color: color-mix(in srgb, var(--brand-mid, #7aa2ff) 45%, var(--line));
+}
+
 @media (max-width: 1180px) {
   .cs-prio-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -180,8 +180,12 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`cap-03/oportunidades-evolucao-arquivadas.md`](cap-03/oportunidades-evolucao-arquivadas.md) | Consolidado — OE-001…003 (editoriais) |
 | [`cap-03/relatorio-encerramento-cap-03.md`](cap-03/relatorio-encerramento-cap-03.md) | Relatório oficial de encerramento — CAP-03 concluída |
 | [`learning/2026-07-26-encerramento-cap-03-coa.md`](learning/2026-07-26-encerramento-cap-03-coa.md) | Marco — encerramento do ciclo CAP-03 |
-| [`product/README.md`](product/README.md) — Sede IPR-001 (Experiência e Desejabilidade) | F0 Homologada; tipo IPR experimental v0.x; F1 aberta |
-| [`product/IPR-001-experiencia-do-produto.md`](product/IPR-001-experiencia-do-produto.md) | F0 Homologada v0.2 — documento-mestre; F1 em curso |
+| [`product/README.md`](product/README.md) — Sede IPR-001 (Experiência e Desejabilidade) | F0–F6 concluídas; Ondas 01–03 homologadas |
+| [`product/IPR-001-experiencia-do-produto.md`](product/IPR-001-experiencia-do-produto.md) | Documento-mestre; F6 + Onda 03 encerradas |
+| [`product/marco-encerramento-f6.md`](product/marco-encerramento-f6.md) | Encerramento oficial F6 (28/07/2026) |
+| [`product/marco-encerramento-onda-03.md`](product/marco-encerramento-onda-03.md) | Encerramento oficial Onda Operacional 03 (28/07/2026) |
+| [`product/relatorio-final-onda-03.md`](product/relatorio-final-onda-03.md) | Relatório final Onda 03 — Fluxo Executivo Diário |
+| [`learning/2026-07-28-encerramento-onda-03-fluxo-executivo-diario.md`](learning/2026-07-28-encerramento-onda-03-fluxo-executivo-diario.md) | Marco — encerramento Onda 03 |
 | [`product/principios-de-produto.md`](product/principios-de-produto.md) | Homologado — princípios normativos de produto (Gate IPR-001) |
 | [`product/design-system-roadmap.md`](product/design-system-roadmap.md) | Homologado — roadmap do design system (Gate IPR-001) |
 | [`product/benchmark/f1-benchmark-estrategico.md`](product/benchmark/f1-benchmark-estrategico.md) | Gate F1 APROVADO — fichas nominadas em revisão |
