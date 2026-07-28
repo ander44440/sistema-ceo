@@ -18,7 +18,9 @@
 | **Construção (`app/`)** | 🟢 Gabinete — Ondas **01–03** homologadas |
 | **F7+** | ⏸ Aguarda deliberação CTO |
 | **Onda Operacional 03** | ✅ Encerrada — [`marco-encerramento-onda-03.md`](marco-encerramento-onda-03.md) |
-| **Próxima Onda Operacional** | ⏸ Aguarda deliberação específica |
+| **Ciclo de validação operacional** | 🟢 Ativo — [`../learning/2026-07-28-ciclo-validacao-operacional-pos-onda-03.md`](../learning/2026-07-28-ciclo-validacao-operacional-pos-onda-03.md) |
+| **Núcleo Executivo (estudo v0)** | ✅ Homologado — [`estudo-nucleo-executivo-v0.md`](estudo-nucleo-executivo-v0.md) |
+| **Próxima Onda / F7 / 03.1** | ⏸ Aguarda deliberação pós-uso |
 
 ## Pacote F6 (homologado)
 

@@ -186,6 +186,9 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`product/marco-encerramento-onda-03.md`](product/marco-encerramento-onda-03.md) | Encerramento oficial Onda Operacional 03 (28/07/2026) |
 | [`product/relatorio-final-onda-03.md`](product/relatorio-final-onda-03.md) | Relatório final Onda 03 — Fluxo Executivo Diário |
 | [`learning/2026-07-28-encerramento-onda-03-fluxo-executivo-diario.md`](learning/2026-07-28-encerramento-onda-03-fluxo-executivo-diario.md) | Marco — encerramento Onda 03 |
+| [`learning/2026-07-28-ciclo-validacao-operacional-pos-onda-03.md`](learning/2026-07-28-ciclo-validacao-operacional-pos-onda-03.md) | Deliberação — ciclo de validação operacional (sem Onda 04/F7) |
+| [`product/estudo-nucleo-executivo-v0.md`](product/estudo-nucleo-executivo-v0.md) | Núcleo Executivo — estudo homologado v0 (28/07/2026) |
+| [`learning/2026-07-28-homologacao-nucleo-executivo-v0.md`](learning/2026-07-28-homologacao-nucleo-executivo-v0.md) | Marco — Gate de homologação do Núcleo Executivo v0 |
 | [`product/principios-de-produto.md`](product/principios-de-produto.md) | Homologado — princípios normativos de produto (Gate IPR-001) |
 | [`product/design-system-roadmap.md`](product/design-system-roadmap.md) | Homologado — roadmap do design system (Gate IPR-001) |
 | [`product/benchmark/f1-benchmark-estrategico.md`](product/benchmark/f1-benchmark-estrategico.md) | Gate F1 APROVADO — fichas nominadas em revisão |

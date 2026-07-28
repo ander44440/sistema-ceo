@@ -16,7 +16,9 @@
 | 01 — Catálogo / gabinete | ✅ | persistência `ceo.onda01.gabinete.v1` |
 | 02 — Dashboard executivo | ✅ | estado / linha do tempo |
 | 03 — Fluxo Executivo Diário | ✅ Encerrada (28/07/2026) | [`marco-encerramento-onda-03.md`](marco-encerramento-onda-03.md) · [`relatorio-final-onda-03.md`](relatorio-final-onda-03.md) · [`../learning/2026-07-28-encerramento-onda-03-fluxo-executivo-diario.md`](../learning/2026-07-28-encerramento-onda-03-fluxo-executivo-diario.md) |
-| Próxima | ⏸ | Deliberação CTO |
+| **Validação operacional** | 🟢 Ativa | [`../learning/2026-07-28-ciclo-validacao-operacional-pos-onda-03.md`](../learning/2026-07-28-ciclo-validacao-operacional-pos-onda-03.md) — uso diário MG2; sem Onda 04 / F7 / 03.1 |
+| **Núcleo Executivo v0** | ✅ Homologado | [`estudo-nucleo-executivo-v0.md`](estudo-nucleo-executivo-v0.md) · [`../learning/2026-07-28-homologacao-nucleo-executivo-v0.md`](../learning/2026-07-28-homologacao-nucleo-executivo-v0.md) |
+| Próxima (03.1 / 04 / F7) | ⏸ | Deliberação CTO após o ciclo de uso |
 
 ## Estrutura F6 (encerrada)
 
@@ -43,4 +45,5 @@
 | F6 — Ecossistema Executivo | ✅ Encerrada (28/07/2026) |
 | F7+ | ⏸ Somente por deliberação CTO |
 | Ondas Operacionais 01–03 | ✅ Homologadas |
-| Próxima Onda Operacional | ⏸ Somente por deliberação específica |
+| Ciclo de validação operacional | 🟢 Ativo (uso diário MG2) |
+| Onda 03.1 / Onda 04 / F7 | ⏸ Somente por deliberação pós-ciclo |
