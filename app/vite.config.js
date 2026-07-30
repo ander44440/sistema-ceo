@@ -1,12 +1,13 @@
 import { defineConfig, loadEnv } from "vite";
 import { ceoLlmPlugin } from "./server/ceoLlmPlugin.js";
+import { executionQueuePlugin } from "./server/executionQueuePlugin.js";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   return {
     root: ".",
     publicDir: "public",
-    plugins: [ceoLlmPlugin(env)],
+    plugins: [ceoLlmPlugin(env), executionQueuePlugin()],
     server: {
       port: 5173,
       open: true

@@ -12,6 +12,7 @@ import { capacidadeNavegacao } from "./capacidades/navegacao.js";
 import { capacidadeIa } from "./capacidades/ia.js";
 import { capacidadeFerramentas } from "./capacidades/ferramentas.js";
 import { capacidadeMemoria } from "./capacidades/memoria.js";
+import { capacidadeFila } from "./capacidades/fila.js";
 import {
   atualizarAposInstrucao,
   lerMemoria,
@@ -26,7 +27,8 @@ const CAPACIDADES_INICIAIS = [
   capacidadeNavegacao,
   capacidadeIa,
   capacidadeFerramentas,
-  capacidadeMemoria
+  capacidadeMemoria,
+  capacidadeFila
 ];
 
 /**

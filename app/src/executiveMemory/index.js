@@ -166,7 +166,9 @@ export function atualizarAposInstrucao(evento) {
     intencaoId === "pergunta_data" ||
     intencaoId === "pergunta_hora" ||
     intencaoId === "pergunta_identidade" ||
-    intencaoId === "analisar_pendencias"
+    intencaoId === "analisar_pendencias" ||
+    intencaoId === "publicar_job_fila" ||
+    intencaoId === "listar_jobs_fila"
   ) {
     return obterEstado();
   }

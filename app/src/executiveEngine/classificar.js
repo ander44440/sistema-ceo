@@ -133,6 +133,32 @@ export function classificarIntencao(texto) {
   }
 
   if (
+    /\b(publicar|criar|despachar|enviar)\s+job\b/.test(t) ||
+    /^job\s*:/.test(t) ||
+    /\b(publicar|despachar|enviar).*\bpara\s+a\s+fila\b/.test(t)
+  ) {
+    return {
+      id: "publicar_job_fila",
+      capacidade: "fila",
+      confianca: 0.93,
+      origem: "stub"
+    };
+  }
+
+  if (
+    /\b(listar|ver|mostrar|consultar)\s+(jobs?|fila)\b/.test(t) ||
+    /\bjobs?\s+pendentes\b/.test(t) ||
+    /\b(listar|ver|mostrar|consultar)\s+fila\s+de\s+execu/.test(t)
+  ) {
+    return {
+      id: "listar_jobs_fila",
+      capacidade: "fila",
+      confianca: 0.92,
+      origem: "stub"
+    };
+  }
+
+  if (
     /\b(registrar|criar|adicionar)\s+decis/.test(t) ||
     /^decis[aã]o\s*:/.test(t)
   ) {

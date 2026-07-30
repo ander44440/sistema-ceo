@@ -8,6 +8,7 @@ import {
   textoInstrucao
 } from "../resposta.js";
 import { obterCoaAtivo } from "../coaSessao.js";
+import { obterResumoIdentidadeCeo } from "../constituicaoCeo.js";
 import { montarMensagensLlm } from "../promptGovernanca.js";
 import { deliberarComLlm, obterStatusLlm } from "../llmCliente.js";
 
@@ -36,11 +37,7 @@ function respostaLocal(intencaoId, texto) {
     case "pergunta_hora":
       return `Agora são ${formatarHoraAgora()}.`;
     case "pergunta_identidade":
-      return (
-        "Sou o CEO — o Executivo Digital deste posto de comando. " +
-        "Acompanho o COA ativo, a memória da sessão e conduzo o trabalho consigo. " +
-        "A escolha do modelo de linguagem é minha responsabilidade, não sua."
-      );
+      return obterResumoIdentidadeCeo();
     case "saudacao": {
       const t = String(texto || "").toLowerCase();
       if (/bom dia/.test(t)) return "Bom dia. Estou online — em que posso avançar consigo agora?";

@@ -1,0 +1,26 @@
+---
+description: Fila de Execução CEO (REQ-045) — descobrir e consumir Jobs pending sem copiar/colar
+alwaysApply: true
+---
+
+# Fila de Execução (ponte CEO → Cursor)
+
+Existe uma Execution Queue local em `executive/queue/` (REQ-045).
+
+## Quando verificar
+
+- O utilizador disser «consuma a fila», «próximo job», «despacho do CEO» ou mencionar `JOB-`.
+- O utilizador pedir implementação/alteração técnica que possa ter sido despachada pelo CEO.
+- No início de trabalho técnico neste repositório, se `executive/queue/PROXIMO.md` indicar um Job pending.
+
+## O que fazer
+
+1. Ler `executive/queue/PROXIMO.md` (ou Jobs `pending` em `executive/queue/JOB-*.json`).
+2. Se houver Job pending, seguir o skill `consumir-fila-execucao` (marcar running → executar → completed/failed).
+3. Não pedir ao utilizador para colar o conteúdo do Job se o ficheiro já o contém.
+
+## O que não fazer
+
+- Não assumir RabbitMQ/cloud.
+- Não alterar a Constituição/Governança/Briefing do LLM por causa da fila.
+- Não executar Jobs `completed`/`cancelled`.
