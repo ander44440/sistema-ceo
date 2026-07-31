@@ -2,15 +2,15 @@
 
 Servidor HTTP Node (Hono) para as APIs `/api/ceo/*` em produção (alvo Railway).
 
-## Estado atual (E3)
+## Estado atual (E4)
 
 - Entrypoint: `npm start` → `src/index.js`
 - Porta: `process.env.PORT` ou **8787**
 - Rotas:
-  - `GET /health` → `{ ok: true, service: "ceo-api" }`
-  - `GET /api/ceo/llm-status`
-  - `POST /api/ceo/deliberar`
-- Fila e onboarding **ainda nos plugins Vite** em `app/`
+  - `GET /health`
+  - `GET /api/ceo/llm-status` · `POST /api/ceo/deliberar`
+  - `GET /api/ceo/queue/pending` · `GET|POST /api/ceo/queue/jobs` · `PATCH /api/ceo/queue/jobs/:id`
+- Onboarding **ainda no plugin Vite** em `app/`
 
 ## Local
 
@@ -18,8 +18,6 @@ Servidor HTTP Node (Hono) para as APIs `/api/ceo/*` em produção (alvo Railway)
 cd server
 npm install
 npm start
-# GET  http://localhost:8787/health
-# GET  http://localhost:8787/api/ceo/llm-status
 ```
 
 Carrega automaticamente `server/.env` e `app/.env` (sem sobrescrever variáveis já definidas no shell).
@@ -29,6 +27,7 @@ Carrega automaticamente `server/.env` e `app/.env` (sem sobrescrever variáveis 
 | Variável | Obrigatória | Descrição |
 |----------|-------------|-----------|
 | `PORT` | Não (default 8787) | Porta HTTP (Railway) |
+| `CEO_DATA_ROOT` | Não | Raiz com `executive/` (default: pai de `server/`) |
 | `CEO_LLM_API_KEY` | Sim (ou `OPENAI_API_KEY` / `CEO_OPENAI_API_KEY`) | Chave do provedor |
 | `CEO_LLM_BASE_URL` | Não | Default `https://api.openai.com/v1` |
 | `CEO_LLM_MODEL` | Não | Default `gpt-4o-mini` |

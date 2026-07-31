@@ -16,5 +16,6 @@ serve(
   },
   (info) => {
     console.log(`[ceo-api] listening on http://localhost:${info.port}`);
+    console.log(`[ceo-api] data root: ${config.repoRoot}`);
   },
 );

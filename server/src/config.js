@@ -41,9 +41,18 @@ export function carregarEnvLocal() {
   }
 }
 
+/** Raiz do repo CEO (pai de executive/). Override: CEO_DATA_ROOT. */
+export function resolverRepoRoot(env = process.env) {
+  if (env.CEO_DATA_ROOT && String(env.CEO_DATA_ROOT).trim()) {
+    return resolve(String(env.CEO_DATA_ROOT).trim());
+  }
+  return resolve(__dirname, '../..');
+}
+
 export function fromEnv(env = process.env) {
   const port = Number(env.PORT);
   return {
     port: Number.isFinite(port) && port > 0 ? port : 8787,
+    repoRoot: resolverRepoRoot(env),
   };
 }
