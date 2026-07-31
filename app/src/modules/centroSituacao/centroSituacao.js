@@ -79,7 +79,7 @@ export function montarCentroSituacao() {
       criarMensagem({
         papel: "ceo",
         texto:
-          "Olá. Sou o CEO — o Executivo Digital desta organização. Em que posso ajudar você hoje?"
+          "Sou o CEO — o Executivo Digital desta organização. Acompanho o trabalho em curso. Qual é o objetivo de agora?"
       })
     );
   }
@@ -109,7 +109,7 @@ export function montarCentroSituacao() {
           <header class="cs-hero">
             <div class="cs-hero-copy">
               <h1>${saudacaoPorHora()}, CEO.</h1>
-              <p>O posto de comando está ativo. Eu acompanho a organização e conduzo o próximo passo consigo.</p>
+              <p>Posto de comando ativo. Continuo a acompanhar a organização — vamos seguir.</p>
             </div>
             <div class="cs-hero-meta">
               <strong>${formatarData()}</strong>
@@ -128,7 +128,7 @@ export function montarCentroSituacao() {
               <div class="cs-wave" aria-hidden="true"></div>
               <div>
                 <strong>CEO · Executivo Digital</strong>
-                <p>Olá, CEO. Em que posso ajudar você hoje?</p>
+                <p>Pronto. Qual frente atacamos agora?</p>
               </div>
             </div>
             <div class="cs-chat-log" id="cs-log">

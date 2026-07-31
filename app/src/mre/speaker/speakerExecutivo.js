@@ -49,7 +49,7 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
       : [];
 
   if (estado === "solicitar_dados" && perguntas.length === 0) {
-    perguntas.push("Que informação essencial falta para decidir?");
+    perguntas.push("Qual informação bloqueia a próxima decisão?");
   }
 
   const rotulo = ROTULO_ESTADO[estado] || estado;
@@ -58,14 +58,18 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
       ? " Com a informação disponível, avanço com cautela."
       : "";
 
+  // Redação PX-001 E2 / PX-011 — mesmos campos deliberativos; só a prosa muda.
   const textoChat = [
     `Sobre: ${objetivo}.`,
     `${rotulo}: ${recomendacao}.${cautela}`,
     `Porquê: ${encurtar(justificativa, preferencias.brevidade ? 180 : 320)}`,
     `Próximo gesto: ${acaoDesc}.`,
-    perguntas.length ? `Perguntas: ${perguntas.join(" ")}` : null,
+    perguntas.length ? `Para avançar: ${perguntas.join(" ")}` : null,
     lacunas.length && estado !== "solicitar_dados"
       ? `Lacunas residuais: ${lacunas.join("; ")}.`
+      : null,
+    estado === "aprovar" || estado === "delegar" || estado === "monitorar"
+      ? "Quando quiser, seguimos."
       : null
   ]
     .filter(Boolean)
@@ -74,8 +78,11 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
   const guiãoVoz = [
     `Sobre ${objetivo}.`,
     `${rotulo}. ${recomendacao}.`,
-    `A seguir: ${acaoDesc}.`,
-    perguntas.length ? perguntas.slice(0, 2).join(" ") : null
+    `Próximo gesto: ${acaoDesc}.`,
+    perguntas.length ? perguntas.slice(0, 2).join(" ") : null,
+    estado === "aprovar" || estado === "delegar" || estado === "monitorar"
+      ? "Vamos seguir."
+      : null
   ]
     .filter(Boolean)
     .join(" ");
@@ -94,7 +101,7 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
     texto = guiãoVoz;
     guião = guiãoVoz;
   } else if (canal === "centro_situacao") {
-    texto = `${rotulo}: ${recomendacao}. Próximo: ${acaoDesc}.`;
+    texto = `${rotulo}: ${recomendacao}. Próximo gesto: ${acaoDesc}.`;
     destaquesOut = destaques;
   } else {
     guião = null;

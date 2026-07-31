@@ -45,10 +45,16 @@ function respostaLocal(intencaoId, texto) {
       return obterResumoIdentidadeCeo();
     case "saudacao": {
       const t = String(texto || "").toLowerCase();
-      if (/bom dia/.test(t)) return "Bom dia. Estou online — em que posso avançar consigo agora?";
-      if (/boa tarde/.test(t)) return "Boa tarde. Estou online — em que posso avançar consigo agora?";
-      if (/boa noite/.test(t)) return "Boa noite. Estou online — em que posso avançar consigo agora?";
-      return "Olá. Estou online — em que posso avançar consigo agora?";
+      if (/bom dia/.test(t)) {
+        return "Bom dia. Qual é o objetivo de agora?";
+      }
+      if (/boa tarde/.test(t)) {
+        return "Boa tarde. Qual é o objetivo de agora?";
+      }
+      if (/boa noite/.test(t)) {
+        return "Boa noite. Qual é o objetivo de agora?";
+      }
+      return "Pronto. Vamos continuar de onde paramos ou surgiu uma nova prioridade?";
     }
     default:
       return null;
@@ -57,9 +63,9 @@ function respostaLocal(intencaoId, texto) {
 
 function fallbackSemLlm(texto, motivo) {
   return (
-    `Quero responder com fluidez a «${citacaoCurta(texto)}», mas o motor de linguagem ainda não está disponível (${motivo}).\n\n` +
-    "Configure `CEO_LLM_API_KEY` em `app/.env` (veja `.env.example`), reinicie `npm run dev`, e volte a tentar.\n\n" +
-    "Enquanto isso, posso ajudar com: data/hora, estado atual da sessão, projetos e navegação."
+    `Não consigo deliberar com fluidez sobre «${citacaoCurta(texto)}»: motor de linguagem indisponível (${motivo}).\n\n` +
+    "Configure `CEO_LLM_API_KEY` em `app/.env` (veja `.env.example`), reinicie o servidor e volte a tentar.\n\n" +
+    "Enquanto isso, seguimos no local: data/hora, estado da sessão, projetos e navegação. Qual frente atacamos agora?"
   );
 }
 
@@ -77,7 +83,7 @@ export const capacidadeIa = Object.freeze({
       return {
         ok: true,
         capacidade: "ia",
-        mensagem: "Não recebi instrução. Envie uma pergunta ou um objetivo concreto.",
+        mensagem: "Não recebi instrução. Qual é o objetivo de agora?",
         modo: "local",
         dados: { intencao, memoria: mem, coa, rota: "deterministica" }
       };

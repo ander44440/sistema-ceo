@@ -10,8 +10,8 @@ import { VoiceFactory } from "../../onboarding/voice/VoiceFactory.js";
 
 const MENSAGEM_BOAS_VINDAS =
   "Sou o CEO — o Executivo Digital desta organização. " +
-  "Acompanho o contexto ativo, as decisões em curso e o progresso do trabalho. " +
-  "Estou pronto para receber suas instruções e conduzi-las com você.";
+  "Acompanho o contexto ativo e conduzo os objetivos consigo. " +
+  "Qual é o objetivo de agora?";
 
 /** Serviço interno de voz — transparente na UI principal. */
 const voiceOut = VoiceFactory.create();
