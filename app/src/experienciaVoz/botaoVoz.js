@@ -35,6 +35,9 @@ const ACOES = Object.freeze({
  */
 function acaoEfetiva(orch) {
   const snap = orch.snapshot();
+  if (snap.textoPendente && snap.estado === ESTADO_VOZ.ERRO) {
+    return "Ouvir resposta (pendente)";
+  }
   if (
     snap.estado === ESTADO_VOZ.ATIVA &&
     snap.enabled &&
@@ -105,8 +108,15 @@ export function executarGestoBotaoVoz(orch, deps = {}) {
       const auth = autorizar();
       if (!auth.ok) {
         orch.marcarErro(auth.motivo);
-      } else {
-        orch.desbloquearSessao();
+        return orch.snapshot();
+      }
+      orch.desbloquearSessao();
+      // Mesmo gesto: se há resposta pendente, fala agora (recovery pós-await)
+      if (orch.textoPendente()) {
+        return ouvirPendenteCeo(orch, {
+          motor: deps.motor,
+          autorizarBrowser: autorizar
+        }).then(() => orch.snapshot());
       }
     }
     return orch.snapshot();
@@ -132,9 +142,10 @@ export function executarGestoBotaoVoz(orch, deps = {}) {
       return orch.snapshot();
     }
     if (snap.textoPendente) {
-      return ouvirPendenteCeo(orch, { motor: deps.motor }).then(() =>
-        orch.snapshot()
-      );
+      return ouvirPendenteCeo(orch, {
+        motor: deps.motor,
+        autorizarBrowser: autorizar
+      }).then(() => orch.snapshot());
     }
     try {
       interromperFalaCeo(orch);

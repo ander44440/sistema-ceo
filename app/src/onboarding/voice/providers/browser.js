@@ -1,7 +1,34 @@
 /**
  * Browser VoiceProvider — Web Speech API como fallback de desenvolvimento (REQ-047).
  * Único módulo autorizado a usar speechSynthesis.
+ * PX-002 E6: onerror propaga falha (não engole); interrupted/canceled = stop limpo.
  */
+
+/**
+ * @param {string} [tipo]
+ * @returns {string}
+ */
+function mensagemErroTts(tipo) {
+  switch (String(tipo || "")) {
+    case "not-allowed":
+      return "O browser bloqueou a fala após a rede. Toque no botão de voz para ouvir.";
+    case "network":
+      return "Falha de rede na síntese de voz. O texto mantém-se no ecrã.";
+    case "synthesis-failed":
+    case "synthesis-unavailable":
+      return "A síntese de voz falhou neste dispositivo. O texto mantém-se no ecrã.";
+    case "language-unavailable":
+    case "voice-unavailable":
+      return "Voz do sistema indisponível. O texto mantém-se no ecrã.";
+    case "audio-busy":
+    case "audio-hardware":
+      return "Áudio do dispositivo ocupado ou indisponível. Tente de novo pelo botão de voz.";
+    default:
+      return tipo
+        ? `Falha na voz (${tipo}). Toque no botão para ouvir a resposta.`
+        : "A síntese de voz falhou. Toque no botão de voz para ouvir.";
+  }
+}
 
 /**
  * @param {string} lang
@@ -110,7 +137,7 @@ export function createBrowserProvider(config) {
     const pauseMs = config.personality?.pauseBetweenParagraphsMs ?? 280;
 
     for (let i = 0; i < chunks.length; i++) {
-      await new Promise((resolve, reject) => {
+      const resultado = await new Promise((resolve, reject) => {
         const u = new SpeechSynthesisUtterance(chunks[i]);
         u.lang = config.language || "pt-BR";
         u.rate = config.speed ?? 0.95;
@@ -120,11 +147,22 @@ export function createBrowserProvider(config) {
         atual = u;
         u.onend = () => {
           atual = null;
-          resolve();
+          resolve({ ok: true });
         };
-        u.onerror = () => {
+        u.onerror = (ev) => {
           atual = null;
-          resolve();
+          const tipo = String((ev && ev.error) || "");
+          // stop()/cancel() → interrupted|canceled: fim limpo, não é falha de UX
+          if (tipo === "interrupted" || tipo === "canceled") {
+            resolve({ ok: true, interrompido: true });
+            return;
+          }
+          reject(
+            new Error(
+              mensagemErroTts(tipo) ||
+                "A síntese de voz falhou. O texto mantém-se no ecrã."
+            )
+          );
         };
         try {
           synth.speak(u);
@@ -132,6 +170,9 @@ export function createBrowserProvider(config) {
           reject(err);
         }
       });
+      if (resultado && resultado.interrompido) {
+        return;
+      }
       if (i < chunks.length - 1 && pauseMs > 0) {
         await new Promise((r) => setTimeout(r, pauseMs));
       }

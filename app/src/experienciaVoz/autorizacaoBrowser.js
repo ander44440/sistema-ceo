@@ -1,6 +1,6 @@
 /**
- * Unlock / warm-up do browser para TTS (PX-002 E1 §6).
- * Não produz fala audível significativa — só mantém a cadeia de gesto.
+ * Unlock / warm-up do browser para TTS (PX-002 E1 §6 / E6).
+ * Mantém a cadeia de gesto — sem cancel imediato (invalidava iOS/Android).
  */
 
 /**
@@ -19,19 +19,13 @@ export function tentarAutorizacaoBrowser() {
     if (typeof synth.resume === "function") {
       synth.resume();
     }
-    const u = new globalThis.SpeechSynthesisUtterance(" ");
+    // Utterance mínima inaudível. NÃO cancelar no microtask —
+    // cancel prematuro quebrava a authorization chain (diagnóstico PX-002 E4).
+    const u = new globalThis.SpeechSynthesisUtterance("\u200B");
     u.volume = 0;
     u.rate = 2;
     u.pitch = 1;
     synth.speak(u);
-    // Cancela após enfileirar — o gesto já contou para a activation chain.
-    queueMicrotask(() => {
-      try {
-        synth.cancel();
-      } catch {
-        /* ignore */
-      }
-    });
     return { ok: true };
   } catch (err) {
     return {

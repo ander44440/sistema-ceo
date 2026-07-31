@@ -80,7 +80,7 @@ test("ativa locked → enfileira sem falar", async () => {
   assert.equal(m.calls.speak.length, 0);
 });
 
-test("erro de síntese → Erro + conversa não quebra", async () => {
+test("erro de síntese → Erro + pendente para Ouvir (E6)", async () => {
   _resetMotorVozParaTestes();
   const o = criarOrquestradorVoz({ storage: memoriaStorage() });
   o.ativarComGesto();
@@ -91,7 +91,9 @@ test("erro de síntese → Erro + conversa não quebra", async () => {
   });
   assert.equal(r.falou, false);
   assert.equal(r.motivo, "erro-sintese");
+  assert.equal(r.enfileirado, true);
   assert.equal(o.estado(), ESTADO_VOZ.ERRO);
+  assert.equal(o.textoPendente(), "Texto");
   assert.match(o.mensagemErro(), /TTS offline/);
 });
 
@@ -106,4 +108,21 @@ test("prepararGestoEnvio desbloqueia se preferência Ativa", async () => {
   prepararGestoEnvio(o, { autorizarBrowser: () => ({ ok: true }) });
   assert.equal(o.sessaoDesbloqueada(), true);
   _resetMotorVozParaTestes();
+});
+
+test("Erro + pendente no botão → ouve no mesmo gesto (E6)", async () => {
+  _resetMotorVozParaTestes();
+  const { executarGestoBotaoVoz } = await import("./botaoVoz.js");
+  const o = criarOrquestradorVoz({ storage: memoriaStorage() });
+  o.ativarComGesto();
+  o.enfileirarPendente("Ouça isto");
+  o.marcarErro("bloqueado pós-await");
+  const m = motorMock();
+  const snap = await executarGestoBotaoVoz(o, {
+    autorizarBrowser: () => ({ ok: true }),
+    motor: m
+  });
+  assert.equal(m.calls.speak.includes("Ouça isto"), true);
+  assert.equal(o.textoPendente(), null);
+  assert.equal(snap.estado, ESTADO_VOZ.ATIVA);
 });

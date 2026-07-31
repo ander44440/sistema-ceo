@@ -1,6 +1,7 @@
 /**
- * Ponte Orquestrador ↔ Voice Engine (PX-002 E4).
+ * Ponte Orquestrador ↔ Voice Engine (PX-002 E4/E6).
  * Decide se a resposta do CEO é falada; nunca altera texto/MRE/prompts.
+ * E6: falha pós-await → fila “Ouvir” + erro explícito (sem silêncio opaco).
  */
 
 import { VoiceFactory } from "../onboarding/voice/VoiceFactory.js";
@@ -68,6 +69,7 @@ export function interromperFalaCeo(orch = obterOrquestradorVozSessao()) {
 /**
  * Gesto síncrono de envio (Enter / Enviar): unlock + warm-up se preferência Ativa.
  * Deve correr **antes** do await da deliberação.
+ * Não cancela a engine antes do warm-up (exceto se já Falando).
  * @param {ReturnType<typeof obterOrquestradorVozSessao>} [orch]
  * @param {{ autorizarBrowser?: () => { ok: boolean, motivo?: string } }} [deps]
  */
@@ -79,12 +81,6 @@ export function prepararGestoEnvio(
 
   if (orch.estado() === ESTADO_VOZ.FALANDO) {
     interromperFalaCeo(orch);
-  } else {
-    try {
-      motorVoz().stop();
-    } catch {
-      /* ignore */
-    }
   }
 
   if (orch.preferenciaAtiva()) {
@@ -105,7 +101,21 @@ export function prepararGestoEnvio(
 }
 
 /**
+ * Após falha de TTS: guarda texto para “Ouvir” no gesto + estado Erro visível.
+ * @param {ReturnType<typeof obterOrquestradorVozSessao>} orch
+ * @param {string} texto
+ * @param {string} mensagem
+ */
+function falhaComPendente(orch, texto, mensagem) {
+  orch.enfileirarPendente(texto);
+  orch.marcarErro(mensagem);
+  console.warn("[experienciaVoz]", mensagem);
+  notificar(orch);
+}
+
+/**
  * Após resposta do CEO: fala só se Ativa + sessão unlocked.
+ * Se o browser bloquear após o await, enfileira para Ouvir no gesto.
  * @param {string} texto
  * @param {{ orquestrador?: ReturnType<typeof obterOrquestradorVozSessao>, motor?: { speak: Function, stop: Function } }} [opts]
  */
@@ -129,7 +139,10 @@ export async function reproduzirRespostaCeo(texto, opts = {}) {
   }
 
   if (snap.estado === ESTADO_VOZ.ERRO) {
-    return { falou: false, motivo: "erro", erro: snap.mensagemErro };
+    // Mantém texto disponível para Ouvir no gesto
+    orch.enfileirarPendente(t);
+    notificar(orch);
+    return { falou: false, motivo: "erro", erro: snap.mensagemErro, enfileirado: true };
   }
 
   if (!snap.sessaoDesbloqueada) {
@@ -140,10 +153,12 @@ export async function reproduzirRespostaCeo(texto, opts = {}) {
 
   const inicio = orch.iniciarFala();
   if (!inicio.ok) {
-    orch.marcarErro(inicio.erro || "Não foi possível iniciar a fala.");
-    console.warn("[experienciaVoz] iniciarFala:", inicio.erro);
-    notificar(orch);
-    return { falou: false, motivo: "iniciar", erro: inicio.erro };
+    falhaComPendente(
+      orch,
+      t,
+      inicio.erro || "Não foi possível iniciar a fala. Toque no botão para ouvir."
+    );
+    return { falou: false, motivo: "iniciar", erro: inicio.erro, enfileirado: true };
   }
   notificar(orch);
 
@@ -157,28 +172,38 @@ export async function reproduzirRespostaCeo(texto, opts = {}) {
   } catch (err) {
     const msg =
       (err && err.message) ||
-      "A voz falhou nesta resposta. O texto mantém-se no ecrã.";
+      "A voz não reproduziu. Toque no botão de voz para ouvir esta resposta.";
     try {
       voz.stop();
     } catch {
       /* ignore */
     }
-    orch.marcarErro(msg);
-    console.warn("[experienciaVoz] síntese:", msg, err);
-    notificar(orch);
-    return { falou: false, motivo: "erro-sintese", erro: msg };
+    falhaComPendente(orch, t, msg);
+    return { falou: false, motivo: "erro-sintese", erro: msg, enfileirado: true };
   }
 }
 
 /**
- * Consome texto pendente e fala no gesto do botão “Ouvir”.
+ * Consome texto pendente e fala **no gesto** do botão “Ouvir”.
  * @param {ReturnType<typeof obterOrquestradorVozSessao>} [orch]
- * @param {{ motor?: { speak: Function, stop: Function } }} [opts]
+ * @param {{ motor?: { speak: Function, stop: Function }, autorizarBrowser?: () => { ok: boolean, motivo?: string } }} [opts]
  */
 export async function ouvirPendenteCeo(
   orch = obterOrquestradorVozSessao(),
   opts = {}
 ) {
+  const autorizar = opts.autorizarBrowser || tentarAutorizacaoBrowser;
+  const auth = autorizar();
+  if (!auth.ok) {
+    orch.marcarErro(
+      auth.motivo ||
+        "O browser bloqueou a fala. Toque novamente para autorizar."
+    );
+    notificar(orch);
+    return { falou: false, motivo: "autorizacao", erro: auth.motivo };
+  }
+  orch.desbloquearSessao();
+
   const consumo = orch.consumirPendente();
   if (!consumo.ok) {
     return { falou: false, motivo: "sem-pendente", erro: consumo.erro };
