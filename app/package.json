@@ -20,7 +20,8 @@
     "test:mre:ncs:b4": "node --test src/mre/ncs/ncs.b4.test.js",
     "test:mre:ncs": "node --test src/mre/ncs/ncs.b1.test.js src/mre/ncs/ncs.b2.test.js src/mre/ncs/ncs.b3.test.js src/mre/ncs/ncs.b4.test.js",
     "test:mre": "node --test src/mre/parecer/validarParecerExecutivo.test.js src/mre/pipeline/pipeline07.test.js src/mre/aprendizado/aprendizado.test.js src/mre/bloco2.test.js src/mre/bloco3.test.js src/mre/ncs/ncs.b1.test.js src/mre/ncs/ncs.b2.test.js src/mre/ncs/ncs.b3.test.js src/mre/ncs/ncs.b4.test.js",
-    "test:voz": "node --test src/experienciaVoz/orquestrador.test.js src/experienciaVoz/botaoVoz.test.js src/experienciaVoz/reproduzirResposta.test.js src/experienciaVoz/e6.tts.test.js"
+    "test:voz": "node --test src/experienciaVoz/orquestrador.test.js src/experienciaVoz/botaoVoz.test.js src/experienciaVoz/reproduzirResposta.test.js src/experienciaVoz/e6.tts.test.js",
+    "test:cn": "node --test src/conversacaoNatural/conversacaoNatural.test.js"
   },
   "devDependencies": {
     "vite": "^6.0.0"

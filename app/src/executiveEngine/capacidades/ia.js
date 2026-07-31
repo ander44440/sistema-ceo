@@ -1,6 +1,7 @@
 /**
  * Capacidade: IA — motor de deliberação.
  * Rotas determinísticas locais; deliberativas via MRE + Speaker (Bloco 2).
+ * PX-003 E2: prosa passa pela Conversação Natural (MRE inalterado).
  */
 import {
   citacaoCurta,
@@ -16,6 +17,7 @@ import {
   executarRotaDeliberativa
 } from "../../mre/integracaoNucleo.js";
 import { flagMre } from "../../mre/roteamentoDeliberativo.js";
+import { naturalizarRespostaNucleo } from "../../conversacaoNatural/index.js";
 
 function formatarDataAgora() {
   const agora = new Date();
@@ -69,111 +71,55 @@ function fallbackSemLlm(texto, motivo) {
   );
 }
 
-export const capacidadeIa = Object.freeze({
-  id: "ia",
-  nome: "IA",
-  descricao: "Motor de deliberação e interpretação semântica.",
-  async executar(ctx) {
-    const texto = textoInstrucao(ctx);
-    const mem = snapshotMemoria(ctx);
-    const intencao = ctx.intencao || {};
-    const coa = obterCoaAtivo();
+/**
+ * Execução bruta (antes da Conversação Natural).
+ * @param {object} ctx
+ */
+async function executarBruto(ctx) {
+  const texto = textoInstrucao(ctx);
+  const mem = snapshotMemoria(ctx);
+  const intencao = ctx.intencao || {};
+  const coa = obterCoaAtivo();
 
-    if (!texto) {
-      return {
-        ok: true,
-        capacidade: "ia",
-        mensagem: "Não recebi instrução. Qual é o objetivo de agora?",
-        modo: "local",
-        dados: { intencao, memoria: mem, coa, rota: "deterministica" }
-      };
-    }
+  if (!texto) {
+    return {
+      ok: true,
+      capacidade: "ia",
+      mensagem: "Não recebi instrução. Qual é o objetivo de agora?",
+      modo: "local",
+      dados: { intencao, memoria: mem, coa, rota: "deterministica" }
+    };
+  }
 
-    const localIds = new Set([
-      "pergunta_data",
-      "pergunta_hora",
-      "pergunta_identidade",
-      "saudacao"
-    ]);
-    if (localIds.has(intencao.id)) {
-      return {
-        ok: true,
-        capacidade: "ia",
-        mensagem: respostaLocal(intencao.id, texto),
-        modo: "local",
-        dados: {
-          instrucao: texto,
-          intencao,
-          memoria: mem,
-          coa,
-          rota: "deterministica"
-        }
-      };
-    }
-
-    if (ehRotaDeliberativa(intencao) && flagMre.ativo) {
-      const status = await obterStatusLlm();
-      if (!status || !status.configurado) {
-        return {
-          ok: true,
-          capacidade: "ia",
-          mensagem: fallbackSemLlm(texto, "chave não configurada — MRE indisponível"),
-          modo: "fallback",
-          dados: {
-            instrucao: texto,
-            intencao,
-            memoria: mem,
-            coa,
-            llm: status,
-            rota: "deliberativa-sem-llm"
-          }
-        };
+  const localIds = new Set([
+    "pergunta_data",
+    "pergunta_hora",
+    "pergunta_identidade",
+    "saudacao"
+  ]);
+  if (localIds.has(intencao.id)) {
+    return {
+      ok: true,
+      capacidade: "ia",
+      mensagem: respostaLocal(intencao.id, texto),
+      modo: "local",
+      dados: {
+        instrucao: texto,
+        intencao,
+        memoria: mem,
+        coa,
+        rota: "deterministica"
       }
+    };
+  }
 
-      try {
-        const mreOut = await executarRotaDeliberativa(
-          { ...ctx, coaAtivo: coa },
-          { canal: ctx.canalSpeaker || "chat" }
-        );
-        return {
-          ...mreOut,
-          capacidade: "ia",
-          dados: {
-            ...(mreOut.dados || {}),
-            instrucao: texto,
-            intencao,
-            memoria: mem,
-            coa,
-            llm: status
-          }
-        };
-      } catch (err) {
-        return {
-          ok: true,
-          capacidade: "ia",
-          mensagem: fallbackSemLlm(
-            texto,
-            err && err.message ? err.message : "falha no MRE"
-          ),
-          modo: "fallback",
-          dados: {
-            instrucao: texto,
-            intencao,
-            memoria: mem,
-            coa,
-            erro: err && err.message,
-            rota: "deliberativa-erro"
-          }
-        };
-      }
-    }
-
+  if (ehRotaDeliberativa(intencao) && flagMre.ativo) {
     const status = await obterStatusLlm();
     if (!status || !status.configurado) {
       return {
         ok: true,
         capacidade: "ia",
-        mensagem: fallbackSemLlm(texto, "chave não configurada"),
+        mensagem: fallbackSemLlm(texto, "chave não configurada — MRE indisponível"),
         modo: "fallback",
         dados: {
           instrucao: texto,
@@ -181,38 +127,26 @@ export const capacidadeIa = Object.freeze({
           memoria: mem,
           coa,
           llm: status,
-          rota: "legado"
+          rota: "deliberativa-sem-llm"
         }
       };
     }
 
     try {
-      const messages = montarMensagensLlm({
-        instrucao: texto,
-        historico: ctx.historico || [],
-        memoria: mem,
-        coa,
-        intencao
-      });
-
-      const saida = await deliberarComLlm({ messages, temperature: 0.45 });
-
+      const mreOut = await executarRotaDeliberativa(
+        { ...ctx, coaAtivo: coa },
+        { canal: ctx.canalSpeaker || "chat" }
+      );
       return {
-        ok: true,
+        ...mreOut,
         capacidade: "ia",
-        mensagem: saida.texto,
-        modo: "llm",
         dados: {
+          ...(mreOut.dados || {}),
           instrucao: texto,
           intencao,
           memoria: mem,
           coa,
-          rota: "legado-llm",
-          llm: {
-            modelo: saida.modelo,
-            uso: saida.uso,
-            origem: saida.origem
-          }
+          llm: status
         }
       };
     } catch (err) {
@@ -221,7 +155,7 @@ export const capacidadeIa = Object.freeze({
         capacidade: "ia",
         mensagem: fallbackSemLlm(
           texto,
-          err && err.message ? err.message : "falha na chamada"
+          err && err.message ? err.message : "falha no MRE"
         ),
         modo: "fallback",
         dados: {
@@ -230,9 +164,89 @@ export const capacidadeIa = Object.freeze({
           memoria: mem,
           coa,
           erro: err && err.message,
-          rota: "legado-erro"
+          rota: "deliberativa-erro"
         }
       };
     }
+  }
+
+  const status = await obterStatusLlm();
+  if (!status || !status.configurado) {
+    return {
+      ok: true,
+      capacidade: "ia",
+      mensagem: fallbackSemLlm(texto, "chave não configurada"),
+      modo: "fallback",
+      dados: {
+        instrucao: texto,
+        intencao,
+        memoria: mem,
+        coa,
+        llm: status,
+        rota: "legado"
+      }
+    };
+  }
+
+  try {
+    const messages = montarMensagensLlm({
+      instrucao: texto,
+      historico: ctx.historico || [],
+      memoria: mem,
+      coa,
+      intencao
+    });
+
+    const saida = await deliberarComLlm({ messages, temperature: 0.45 });
+
+    return {
+      ok: true,
+      capacidade: "ia",
+      mensagem: saida.texto,
+      modo: "llm",
+      dados: {
+        instrucao: texto,
+        intencao,
+        memoria: mem,
+        coa,
+        rota: "legado-llm",
+        llm: {
+          modelo: saida.modelo,
+          uso: saida.uso,
+          origem: saida.origem
+        }
+      }
+    };
+  } catch (err) {
+    return {
+      ok: true,
+      capacidade: "ia",
+      mensagem: fallbackSemLlm(
+        texto,
+        err && err.message ? err.message : "falha na chamada"
+      ),
+      modo: "fallback",
+      dados: {
+        instrucao: texto,
+        intencao,
+        memoria: mem,
+        coa,
+        erro: err && err.message,
+        rota: "legado-erro"
+      }
+    };
+  }
+}
+
+export const capacidadeIa = Object.freeze({
+  id: "ia",
+  nome: "IA",
+  descricao: "Motor de deliberação e interpretação semântica.",
+  async executar(ctx) {
+    const bruto = await executarBruto(ctx);
+    return naturalizarRespostaNucleo(bruto, {
+      ...ctx,
+      instrucao: textoInstrucao(ctx)
+    });
   }
 });
