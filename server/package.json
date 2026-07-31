@@ -1,0 +1,18 @@
+{
+  "name": "ceo-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Backend de Produção do Sistema CEO (BP-001)",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.3",
+    "hono": "^4.7.10"
+  }
+}
