@@ -37,17 +37,36 @@ const ROTAS = Object.freeze([
     path: "#/configuracoes",
     titulo: "Configurações",
     descricao: "Preferências e infraestrutura da aplicação."
+  }),
+  /** Fora da navegação principal — só URL direta. */
+  Object.freeze({
+    id: "dev-voice",
+    path: "#/dev/voice",
+    titulo: "Dev · Voice",
+    descricao: "Teste interno do Voice Engine (REQ-047).",
+    nav: false
+  }),
+  Object.freeze({
+    id: "settings-voice",
+    path: "#/settings/voice",
+    titulo: "Settings · Voice",
+    descricao: "Atalho de desenvolvimento para o Voice Engine.",
+    nav: false
   })
 ]);
 
 const DEFAULT_ID = "dashboard";
 
-/** @type {{ id: string, path: string, titulo: string, descricao: string }} */
+/** @type {{ id: string, path: string, titulo: string, descricao: string, nav?: boolean }} */
 let rotaAtual = ROTAS[0];
 const listeners = new Set();
 
 function resolverPorHash() {
-  const raw = (location.hash || "").replace(/^#\/?/, "");
+  const raw = (location.hash || "").replace(/^#\/?/, "").toLowerCase();
+  const byPath = ROTAS.find(
+    (r) => r.path.replace(/^#\/?/, "").toLowerCase() === raw
+  );
+  if (byPath) return byPath;
   const id = (raw.split("/")[0] || DEFAULT_ID).toLowerCase();
   return ROTAS.find((r) => r.id === id) || ROTAS[0];
 }
@@ -56,7 +75,13 @@ function publicar() {
   for (const fn of listeners) fn(rotaAtual);
 }
 
+/** Rotas visíveis na navegação do shell. */
 export function listarRotas() {
+  return ROTAS.filter((r) => r.nav !== false);
+}
+
+/** Todas as rotas (incl. desenvolvimento). */
+export function listarTodasRotas() {
   return ROTAS.slice();
 }
 
@@ -65,7 +90,10 @@ export function obterRota() {
 }
 
 export function navegar(destinoId) {
-  const alvo = ROTAS.find((r) => r.id === destinoId) || ROTAS[0];
+  const alvo =
+    ROTAS.find((r) => r.id === destinoId) ||
+    ROTAS.find((r) => r.path.includes(destinoId)) ||
+    ROTAS[0];
   if (location.hash !== alvo.path) {
     location.hash = alvo.path;
   } else {

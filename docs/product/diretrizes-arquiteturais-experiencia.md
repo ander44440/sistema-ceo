@@ -1,6 +1,7 @@
 # Diretrizes Arquiteturais de Experiência — Promovidas da F1
 
-> **Status: Vigente — deliberação do Gate de Encerramento da F1 (CTO, 26/07/2026).**  
+> **Status: Vigente — deliberação do Gate de Encerramento da F1 (CTO, 26/07/2026). Integradas à Fundação Conceitual (F2 concluída).**  
+> Ver índice: [`fundacao-conceitual-experiencia.md`](fundacao-conceitual-experiencia.md).
 > Natureza: **diretrizes arquiteturais normativas** derivadas do Benchmark Estratégico (IPR-001 / F1).  
 > Precedência: subordinadas a CON-001, VIS-007, P1–P6 e REQ-037/039/041; prevalecem sobre preferências de implementação e tendências de mercado.  
 > Origem: HP-001, HP-002 e HP-003 — **promovidas** no Gate de Encerramento da F1.  

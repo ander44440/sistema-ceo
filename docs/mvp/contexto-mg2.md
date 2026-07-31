@@ -13,6 +13,9 @@ No CEO MVP v0.1 existe **exatamente um** contexto ativo de trabalho:
 
 Todo foco, próximo passo, decisão, conhecimento e continuidade do Dia de Trabalho do MVP referem-se **exclusivamente** a este contexto.
 
+**Briefing operacional curado (lastro para uso diário):** [`briefing-operacional-mg2.md`](briefing-operacional-mg2.md)  
+*(Deliberação CTO 30/07/2026 — Opção A; não substitui este enunciado de identidade.)*
+
 ---
 
 ## Observável (critério REQ-017)

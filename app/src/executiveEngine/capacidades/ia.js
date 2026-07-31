@@ -1,6 +1,6 @@
 /**
  * Capacidade: IA — motor de deliberação.
- * Usa LLM real quando configurado; factos locais (data/hora) continuam determinísticos.
+ * Rotas determinísticas locais; deliberativas via MRE + Speaker (Bloco 2).
  */
 import {
   citacaoCurta,
@@ -11,6 +11,11 @@ import { obterCoaAtivo } from "../coaSessao.js";
 import { obterResumoIdentidadeCeo } from "../constituicaoCeo.js";
 import { montarMensagensLlm } from "../promptGovernanca.js";
 import { deliberarComLlm, obterStatusLlm } from "../llmCliente.js";
+import {
+  ehRotaDeliberativa,
+  executarRotaDeliberativa
+} from "../../mre/integracaoNucleo.js";
+import { flagMre } from "../../mre/roteamentoDeliberativo.js";
 
 function formatarDataAgora() {
   const agora = new Date();
@@ -74,15 +79,15 @@ export const capacidadeIa = Object.freeze({
         capacidade: "ia",
         mensagem: "Não recebi instrução. Envie uma pergunta ou um objetivo concreto.",
         modo: "local",
-        dados: { intencao, memoria: mem, coa }
+        dados: { intencao, memoria: mem, coa, rota: "deterministica" }
       };
     }
 
-    // Factos locais — precisos e baratos; não dependem do LLM.
     const localIds = new Set([
       "pergunta_data",
       "pergunta_hora",
-      "pergunta_identidade"
+      "pergunta_identidade",
+      "saudacao"
     ]);
     if (localIds.has(intencao.id)) {
       return {
@@ -90,28 +95,88 @@ export const capacidadeIa = Object.freeze({
         capacidade: "ia",
         mensagem: respostaLocal(intencao.id, texto),
         modo: "local",
-        dados: { instrucao: texto, intencao, memoria: mem, coa }
+        dados: {
+          instrucao: texto,
+          intencao,
+          memoria: mem,
+          coa,
+          rota: "deterministica"
+        }
       };
+    }
+
+    if (ehRotaDeliberativa(intencao) && flagMre.ativo) {
+      const status = await obterStatusLlm();
+      if (!status || !status.configurado) {
+        return {
+          ok: true,
+          capacidade: "ia",
+          mensagem: fallbackSemLlm(texto, "chave não configurada — MRE indisponível"),
+          modo: "fallback",
+          dados: {
+            instrucao: texto,
+            intencao,
+            memoria: mem,
+            coa,
+            llm: status,
+            rota: "deliberativa-sem-llm"
+          }
+        };
+      }
+
+      try {
+        const mreOut = await executarRotaDeliberativa(
+          { ...ctx, coaAtivo: coa },
+          { canal: ctx.canalSpeaker || "chat" }
+        );
+        return {
+          ...mreOut,
+          capacidade: "ia",
+          dados: {
+            ...(mreOut.dados || {}),
+            instrucao: texto,
+            intencao,
+            memoria: mem,
+            coa,
+            llm: status
+          }
+        };
+      } catch (err) {
+        return {
+          ok: true,
+          capacidade: "ia",
+          mensagem: fallbackSemLlm(
+            texto,
+            err && err.message ? err.message : "falha no MRE"
+          ),
+          modo: "fallback",
+          dados: {
+            instrucao: texto,
+            intencao,
+            memoria: mem,
+            coa,
+            erro: err && err.message,
+            rota: "deliberativa-erro"
+          }
+        };
+      }
     }
 
     const status = await obterStatusLlm();
     if (!status || !status.configurado) {
-      // Saudação curta local se LLM não estiver ligado; resto explica configuração.
-      if (intencao.id === "saudacao") {
-        return {
-          ok: true,
-          capacidade: "ia",
-          mensagem: respostaLocal("saudacao", texto),
-          modo: "local",
-          dados: { instrucao: texto, intencao, memoria: mem, coa, llm: status }
-        };
-      }
       return {
         ok: true,
         capacidade: "ia",
         mensagem: fallbackSemLlm(texto, "chave não configurada"),
         modo: "fallback",
-        dados: { instrucao: texto, intencao, memoria: mem, coa, llm: status }
+        dados: {
+          instrucao: texto,
+          intencao,
+          memoria: mem,
+          coa,
+          llm: status,
+          rota: "legado"
+        }
       };
     }
 
@@ -136,6 +201,7 @@ export const capacidadeIa = Object.freeze({
           intencao,
           memoria: mem,
           coa,
+          rota: "legado-llm",
           llm: {
             modelo: saida.modelo,
             uso: saida.uso,
@@ -157,7 +223,8 @@ export const capacidadeIa = Object.freeze({
           intencao,
           memoria: mem,
           coa,
-          erro: err && err.message
+          erro: err && err.message,
+          rota: "legado-erro"
         }
       };
     }

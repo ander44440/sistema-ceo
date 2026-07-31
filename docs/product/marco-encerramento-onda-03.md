@@ -65,9 +65,10 @@ D08 (chips) permanece superfície auxiliar; OE1 anota inconsistência visual vs.
 
 | Regra | Estado |
 |-------|--------|
-| Próxima Onda Operacional | **Somente** por deliberação formal do CTO |
-| Refinamento OE1–OE5 | Opcional; não abre onda por si |
-| App `app/` | Gabinete com Ondas **01–03** homologadas |
+| Ciclo de validação operacional | 🟢 **Ativo** — [`../learning/2026-07-28-ciclo-validacao-operacional-pos-onda-03.md`](../learning/2026-07-28-ciclo-validacao-operacional-pos-onda-03.md) |
+| Onda 03.1 / Onda 04 / F7 | ⏸ Somente após deliberação pós-ciclo de uso |
+| Refinamento OE1–OE5 | Registrado; **não** tratar automaticamente |
+| App `app/` | Gabinete com Ondas **01–03** homologadas — uso diário MG2 |
 
 ---
 

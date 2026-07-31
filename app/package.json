@@ -7,7 +7,19 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:mre:parecer": "node --test src/mre/parecer/validarParecerExecutivo.test.js",
+    "test:mre:pipeline": "node --test src/mre/pipeline/pipeline07.test.js",
+    "test:mre:aprendizado": "node --test src/mre/aprendizado/aprendizado.test.js",
+    "test:mre:bloco1": "node --test src/mre/parecer/validarParecerExecutivo.test.js src/mre/pipeline/pipeline07.test.js src/mre/aprendizado/aprendizado.test.js",
+    "test:mre:bloco2": "node --test src/mre/bloco2.test.js",
+    "test:mre:bloco3": "node --test src/mre/bloco3.test.js",
+    "test:mre:ncs:b1": "node --test src/mre/ncs/ncs.b1.test.js",
+    "test:mre:ncs:b2": "node --test src/mre/ncs/ncs.b2.test.js",
+    "test:mre:ncs:b3": "node --test src/mre/ncs/ncs.b3.test.js",
+    "test:mre:ncs:b4": "node --test src/mre/ncs/ncs.b4.test.js",
+    "test:mre:ncs": "node --test src/mre/ncs/ncs.b1.test.js src/mre/ncs/ncs.b2.test.js src/mre/ncs/ncs.b3.test.js src/mre/ncs/ncs.b4.test.js",
+    "test:mre": "node --test src/mre/parecer/validarParecerExecutivo.test.js src/mre/pipeline/pipeline07.test.js src/mre/aprendizado/aprendizado.test.js src/mre/bloco2.test.js src/mre/bloco3.test.js src/mre/ncs/ncs.b1.test.js src/mre/ncs/ncs.b2.test.js src/mre/ncs/ncs.b3.test.js src/mre/ncs/ncs.b4.test.js"
   },
   "devDependencies": {
     "vite": "^6.0.0"

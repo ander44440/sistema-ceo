@@ -13,6 +13,10 @@ import {
   htmlRailDiaAtivo,
   obterVistaDiaAtivo
 } from "./painelDiaAtivo.js";
+import {
+  htmlBlocoDeliberacao,
+  lerDestaquesDeliberacao
+} from "../../mre/canais/centroSituacaoDeliberacao.js";
 
 function escaparHtml(texto) {
   return String(texto)
@@ -116,6 +120,8 @@ export function montarCentroSituacao() {
           </header>
 
           ${htmlFaixaDoDia(painelDia)}
+
+          ${htmlBlocoDeliberacao(lerDestaquesDeliberacao())}
 
           <section class="cs-chat" aria-label="Conversa com o Executivo Digital">
             <div class="cs-chat-head">

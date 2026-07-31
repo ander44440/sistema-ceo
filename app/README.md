@@ -16,6 +16,8 @@ npm run dev
 
 Abrir o URL do Vite (por omissão http://localhost:5173).
 
+Voice Engine (infra interna): `#/dev/voice` ou `#/settings/voice` — não aparece na navegação.
+
 ## Ondas Operacionais
 
 | Onda | Entrega | Estado |

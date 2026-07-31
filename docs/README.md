@@ -57,6 +57,52 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`adr/ADR-016-cria-tipo-documental-roadmap.md`](adr/ADR-016-cria-tipo-documental-roadmap.md) | Aceita v1.0 — tipo ROADMAP instituído |
 | [`adr/ADR-017-institui-cap-r-consolidacao-de-release.md`](adr/ADR-017-institui-cap-r-consolidacao-de-release.md) | Aceita v1.0 — classificação CAP-E / CAP-R instituída; nenhuma CAP-R aberta |
 | [`adr/ADR-018-mandato-cto-temporario.md`](adr/ADR-018-mandato-cto-temporario.md) | **Revogada v1.1** — nenhum trabalho técnico aberto sob o mandato |
+| [`adr/ADR-019-motor-de-raciocinio-executivo.md`](adr/ADR-019-motor-de-raciocinio-executivo.md) | **Aceita para modelagem v0.1** — MRE; modelagem REQ-048…051 **encerrada** (ver ARQ-013) |
+| [`requirements/REQ-048-parecer-executivo-schema.md`](requirements/REQ-048-parecer-executivo-schema.md) | **Aprovado v0.1** — contrato formal do ParecerExecutivo |
+| [`requirements/REQ-049-pipeline-motor-raciocinio-executivo.md`](requirements/REQ-049-pipeline-motor-raciocinio-executivo.md) | **Aprovado v0.1** — pipeline operacional do MRE |
+| [`requirements/REQ-050-speaker-executivo.md`](requirements/REQ-050-speaker-executivo.md) | **Aprovado v0.1** — Speaker Executivo (comunicação do parecer) |
+| [`requirements/REQ-051-aprendizado-executivo.md`](requirements/REQ-051-aprendizado-executivo.md) | **Aprovado v0.1** — Aprendizado Executivo (retenção pós-deliberação) |
+| [`architecture/ARQ-013-consolidacao-motor-raciocinio-executivo.md`](architecture/ARQ-013-consolidacao-motor-raciocinio-executivo.md) | **Homologada / aprovada v1.0** — mapa oficial MRE; Gate ARQ ok |
+| [`implementation/IMP-010-plano-de-implementacao-mre.md`](implementation/IMP-010-plano-de-implementacao-mre.md) | **Aprovado v0.1** — plano incremental F1–F9 do MRE |
+| [`implementation/IMP-011-contrato-validacao-parecer-executivo.md`](implementation/IMP-011-contrato-validacao-parecer-executivo.md) | **Imp. concluída** — Bloco 1 / F1; aguarda validação conjunta |
+| [`implementation/IMP-012-pipeline-mre-estagios-0-7.md`](implementation/IMP-012-pipeline-mre-estagios-0-7.md) | **Imp. concluída** — Bloco 1 / F2; aguarda validação conjunta |
+| [`implementation/IMP-013-aprendizado-executivo-estagio-8.md`](implementation/IMP-013-aprendizado-executivo-estagio-8.md) | **Imp. concluída** — Bloco 1 / F3; aguarda validação conjunta |
+| [`implementation/evidencias/BLOCO-1-relatorio-consolidado.md`](implementation/evidencias/BLOCO-1-relatorio-consolidado.md) | Relatório consolidado Bloco 1 — **33 testes pass** |
+| [`implementation/IMP-014-integracao-nucleo-mre.md`](implementation/IMP-014-integracao-nucleo-mre.md) | **Imp. concluída** — Bloco 2 / F4 — Núcleo → MRE |
+| [`implementation/IMP-015-speaker-executivo.md`](implementation/IMP-015-speaker-executivo.md) | **Imp. concluída** — Bloco 2 / F5 — Speaker |
+| [`implementation/IMP-016-canais-chat-voice-centro.md`](implementation/IMP-016-canais-chat-voice-centro.md) | **Imp. concluída** — Bloco 2 / F6 — canais |
+| [`implementation/evidencias/BLOCO-2-relatorio-consolidado.md`](implementation/evidencias/BLOCO-2-relatorio-consolidado.md) | Relatório consolidado Bloco 2 — **12 testes pass** |
+| [`implementation/IMP-017-despacho-fila-execucao.md`](implementation/IMP-017-despacho-fila-execucao.md) | **Imp. concluída** — Bloco 3 / F7 — Fila |
+| [`implementation/IMP-018-persistencia-retencao-gate.md`](implementation/IMP-018-persistencia-retencao-gate.md) | **Imp. concluída** — Bloco 3 / F8 — retenção + Gate |
+| [`implementation/IMP-019-fecho-imp-preparacao-val.md`](implementation/IMP-019-fecho-imp-preparacao-val.md) | **Imp. concluída** — Bloco 3 / F9 — fecho + prep VAL |
+| [`implementation/evidencias/BLOCO-3-relatorio-consolidado.md`](implementation/evidencias/BLOCO-3-relatorio-consolidado.md) | Relatório consolidado Bloco 3 — **14 testes pass** |
+| [`validation/VAL-MRE-esboco.md`](validation/VAL-MRE-esboco.md) | **Substituído** — histórico; ver VAL-009 |
+| [`validation/VAL-009-validacao-motor-raciocinio-executivo.md`](validation/VAL-009-validacao-motor-raciocinio-executivo.md) | **Homologada v1.0** — Gate Final 30/07/2026; P2 cumprido; 28 C / 0 NC / 4 OE |
+| [`learning/2026-07-30-p8-preparacao-producao-mre.md`](learning/2026-07-30-p8-preparacao-producao-mre.md) | **P8** — preparação; autorização **Go** (ver P10) |
+| [`learning/2026-07-30-p9-ensaio-operacional-mre.md`](learning/2026-07-30-p9-ensaio-operacional-mre.md) | **P9** — ensaio R1 concluído |
+| [`learning/2026-07-30-p10-pacote-autorizacao-producao-mre.md`](learning/2026-07-30-p10-pacote-autorizacao-producao-mre.md) | **P10 Gate Final** — **Go**; Produção MRE **AUTORIZADA** 30/07/2026 (R1) |
+| [`learning/2026-07-30-relatorio-consolidado-p9-p10.md`](learning/2026-07-30-relatorio-consolidado-p9-p10.md) | Relatório consolidado P9+P10 |
+| [`learning/2026-07-30-checkpoint-fases-mre.md`](learning/2026-07-30-checkpoint-fases-mre.md) | **Checkpoint oficial** — MRE R1 + IMP-020 NCS B1–B4 (`flagNcs` off) |
+| [`learning/2026-07-30-observacao-parecer-consultivo-vs-acao-executiva.md`](learning/2026-07-30-observacao-parecer-consultivo-vs-acao-executiva.md) | **Insumo** — lacuna de produto (parecer consultivo vs ação); **sem** implementação |
+| [`learning/2026-07-30-lacuna-conhecimento-operacional-coa-mg2.md`](learning/2026-07-30-lacuna-conhecimento-operacional-coa-mg2.md) | **Insumo** — CEO sem lastro operacional do MG2; briefing mínimo proposto; **sem** implementação |
+| [`learning/2026-07-30-comunicado-cto-lacuna-conhecimento-coa-mg2.md`](learning/2026-07-30-comunicado-cto-lacuna-conhecimento-coa-mg2.md) | **Comunicado ao CTO** — lacuna COA MG2; **respondido** (Opção C) |
+| [`learning/2026-07-30-deliberacao-cto-opcao-c-briefing-curado-mg2.md`](learning/2026-07-30-deliberacao-cto-opcao-c-briefing-curado-mg2.md) | **Deliberação CTO** — Opção C; Gate A (Briefing Curado); B condicionada |
+| [`learning/2026-07-30-confirmacao-intermedia-cto-gate-briefing-mg2.md`](learning/2026-07-30-confirmacao-intermedia-cto-gate-briefing-mg2.md) | Confirmação intermédia CTO (pré-parecer final) |
+| [`learning/2026-07-30-parecer-tecnico-briefing-operacional-mg2.md`](learning/2026-07-30-parecer-tecnico-briefing-operacional-mg2.md) | Parecer técnico (Engenheiro) — APROVADO COM OE |
+| [`learning/2026-07-30-parecer-final-cto-gate-briefing-mg2-encerrado.md`](learning/2026-07-30-parecer-final-cto-gate-briefing-mg2-encerrado.md) | **Gate CTO ENCERRADO** — Opção A homologada em uso; B condicionada |
+| [`learning/2026-07-30-diagnostico-falha-llm-tls-mre.md`](learning/2026-07-30-diagnostico-falha-llm-tls-mre.md) | Diagnóstico — falha MRE por TLS SSL (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`) |
+| [`learning/2026-07-30-evidencia-briefing-insuficiente-caminho-mre.md`](learning/2026-07-30-evidencia-briefing-insuficiente-caminho-mre.md) | Evidência — Briefing A insuficiente no MRE (pré-B1) |
+| [`learning/2026-07-30-b1-briefing-entrada-mre-autorizado.md`](learning/2026-07-30-b1-briefing-entrada-mre-autorizado.md) | **B1 feito** — factos do briefing na entrada MRE; validado |
+| [`mvp/briefing-operacional-mg2.md`](mvp/briefing-operacional-mg2.md) | **Briefing Curado v1.0** — mitigação operacional ativa (Gate encerrado) |
+| [`vision/VIS-008-natureza-cognitiva-da-solicitacao-no-mre.md`](vision/VIS-008-natureza-cognitiva-da-solicitacao-no-mre.md) | **Rascunho v0.1** — natureza cognitiva pré-deliberação (análise conjunta; sem REQ) |
+| [`requirements/REQ-052-natureza-cognitiva-da-solicitacao-mre.md`](requirements/REQ-052-natureza-cognitiva-da-solicitacao-mre.md) | **Rascunho v0.1** — REQ derivado da VIS-008 (revisão conjunta; sem IMP) |
+| [`architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md`](architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md) | **Rascunho v0.1** — ARQ da NCS no limiar MRE (revisão conjunta; sem IMP) |
+| [`implementation/IMP-020-natureza-cognitiva-da-solicitacao-ncs.md`](implementation/IMP-020-natureza-cognitiva-da-solicitacao-ncs.md) | **Rascunho v0.1** — plano IMP da NCS; C1–C8 materializados (B1–B4); produção NCS **não** declarada |
+| [`implementation/IMP-020-blocos-de-implementacao.md`](implementation/IMP-020-blocos-de-implementacao.md) | Decomposição B1–B4; **B1–B4 implementados** (gates internos) |
+| [`implementation/evidencias/IMP-020-B1-evidencia.md`](implementation/evidencias/IMP-020-B1-evidencia.md) | Evidência gate B1 (C1/C3/C4) |
+| [`implementation/evidencias/IMP-020-B2-evidencia.md`](implementation/evidencias/IMP-020-B2-evidencia.md) | Evidência gate B2 (C2) |
+| [`implementation/evidencias/IMP-020-B3-evidencia.md`](implementation/evidencias/IMP-020-B3-evidencia.md) | Evidência gate B3 (C5/C6) |
+| [`implementation/evidencias/IMP-020-B4-evidencia.md`](implementation/evidencias/IMP-020-B4-evidencia.md) | Evidência gate B4 (C7/C8); rollback `flagNcs` |
 | [`governance/mandato-cto-temporario-vigente.md`](governance/mandato-cto-temporario-vigente.md) | Histórico — mandato revogado |
 | [`learning/2026-07-25-checkpoint-pre-cto-temporario.md`](learning/2026-07-25-checkpoint-pre-cto-temporario.md) | Histórico — checkpoint da transição abortada |
 | [`learning/2026-07-25-revogacao-mandato-cto-temporario.md`](learning/2026-07-25-revogacao-mandato-cto-temporario.md) | Marco — revogação e restabelecimento dos papéis |

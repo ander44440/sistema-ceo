@@ -1,8 +1,8 @@
 # Design System — Roadmap Inicial
 
-> **Status: Homologado — Gate IPR-001 APROVADO (CTO, 26/07/2026). Parte da F0; F2 aberta na capacidade F2-01 (mapa conceitual antes das fundações visuais detalhadas).**  
-> Natureza: roadmap de **especificação** — nenhum token, arquivo de estilo ou componente é produzido pela IPR-001; a materialização ocorrerá em ciclos ADR-006 futuros.  
-> Norma: IPR-001; [`principios-de-produto.md`](principios-de-produto.md); [`diretrizes-arquiteturais-experiencia.md`](diretrizes-arquiteturais-experiencia.md) (DA-001…003); [`F2-01-arquitetura-conceitual-experiencia.md`](F2-01-arquitetura-conceitual-experiencia.md).
+> **Status: Homologado — Gate IPR-001. Fundação Conceitual F2 concluída; execução de fundações visuais permanece sob F3+/deliberação (não bloqueia o mapa de capacidades).**  
+> Natureza: roadmap de **especificação** — nenhum token ou componente é produzido pela IPR-001 neste momento.  
+> Norma: [`fundacao-conceitual-experiencia.md`](fundacao-conceitual-experiencia.md); [`principios-de-produto.md`](principios-de-produto.md); [`F2-04-principios-da-experiencia.md`](F2-04-principios-da-experiencia.md).
 
 ---
 

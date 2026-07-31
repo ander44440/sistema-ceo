@@ -6,11 +6,25 @@ import {
   temHistorico
 } from "./store.js";
 import { executiveEngine } from "../../executiveEngine/index.js";
+import { VoiceFactory } from "../../onboarding/voice/VoiceFactory.js";
 
 const MENSAGEM_BOAS_VINDAS =
   "Sou o CEO — o Executivo Digital desta organização. " +
   "Acompanho o contexto ativo, as decisões em curso e o progresso do trabalho. " +
   "Estou pronto para receber suas instruções e conduzi-las com você.";
+
+/** Serviço interno de voz — transparente na UI principal. */
+const voiceOut = VoiceFactory.create();
+
+function falarCeo(texto) {
+  if (!texto || texto === "…") return;
+  try {
+    voiceOut.stop();
+    void voiceOut.speak(String(texto));
+  } catch {
+    /* voz opcional — UI permanece funcional */
+  }
+}
 
 function escaparHtml(texto) {
   return String(texto)
@@ -133,6 +147,7 @@ export function montarConversa() {
     enviando = true;
     sincronizarBotao();
     definirEstado("Núcleo Executivo em ação…");
+    voiceOut.stop();
 
     acrescentarMensagem(
       criarMensagem({
@@ -166,6 +181,12 @@ export function montarConversa() {
         estado: resposta.ok ? "pronta" : "erro",
         papel: resposta.ok ? "ceo" : "sistema"
       });
+      // IMP-016: Voice consome guião/texto do ComunicadoExecutivo quando existir
+      if (resposta.ok) {
+        const textoVoz =
+          (resposta.dados && resposta.dados.textoVoz) || resposta.mensagem;
+        falarCeo(textoVoz);
+      }
       definirEstado(
         resposta.ok
           ? `Via ${resposta.capacidade || "núcleo"} · pronto`

@@ -126,7 +126,8 @@ export function criarFilaExecucao(rootDir) {
       criadoEm: agora,
       iniciadoEm: null,
       concluidoEm: null,
-      resultado: null
+      resultado: null,
+      ...(entrada.parecerId ? { parecerId: String(entrada.parecerId) } : {})
     };
     escreverJob(job);
     atualizarProximoMd(listarPorEstado("pending"));

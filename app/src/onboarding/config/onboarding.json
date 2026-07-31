@@ -1,0 +1,84 @@
+{
+  "versao": "1.0",
+  "idioma": "pt-BR",
+  "tts": {
+    "rate": 1,
+    "pitch": 1,
+    "lang": "pt-BR"
+  },
+  "stt": {
+    "lang": "pt-BR",
+    "continuous": true,
+    "interimResults": true,
+    "silenceMsAntesDeResponder": 900
+  },
+  "mensagens": {
+    "abertura": "Olá.\n\nEu sou seu CEO Digital.\n\nAntes de começar a trabalhar com você, preciso conhecer seu ambiente.\n\nVou conduzir uma conversa rápida para entender como posso atuar da melhor maneira possível.",
+    "confirmacaoResumo": "Esse resumo está correto?",
+    "salvo": "Perfil guardado. Estou pronto para trabalhar consigo.",
+    "correcao": "Sem problema. Diga o que deseja corrigir, ou use os botões de campo para regravar uma resposta.",
+    "encerrado": "Onboarding encerrado. Pode reiniciar quando quiser.",
+    "microfoneIndisponivel": "Não consegui aceder ao microfone ou ao reconhecimento de voz neste browser. Pode usar o campo de texto como alternativa.",
+    "aguardandoInicio": "Toque em Iniciar Conversa para começar."
+  },
+  "perguntas": [
+    {
+      "id": "atividade",
+      "campo": "atividade",
+      "texto": "Como você define sua atividade hoje?"
+    },
+    {
+      "id": "empresa_ou_projeto",
+      "campo": "empresa_ou_projeto",
+      "texto": "Você possui empresa, projeto ou ambos?"
+    },
+    {
+      "id": "objetivos",
+      "campo": "objetivos",
+      "texto": "Qual é seu principal objetivo?"
+    },
+    {
+      "id": "projetos",
+      "campo": "projetos",
+      "texto": "Quais projetos estão em andamento?"
+    },
+    {
+      "id": "prioridade",
+      "campo": "prioridade",
+      "texto": "Qual é sua prioridade hoje?"
+    },
+    {
+      "id": "equipe",
+      "campo": "equipe",
+      "texto": "Você trabalha sozinho ou possui equipe?"
+    },
+    {
+      "id": "preferencias",
+      "campo": "preferencias",
+      "texto": "Como prefere trabalhar comigo?"
+    },
+    {
+      "id": "regras",
+      "campo": "regras",
+      "texto": "Existe alguma regra que eu nunca devo quebrar?"
+    }
+  ],
+  "resumoCampos": [
+    "atividade",
+    "objetivos",
+    "projetos",
+    "prioridade",
+    "preferencias",
+    "regras"
+  ],
+  "rotulosResumo": {
+    "atividade": "Atividade",
+    "objetivos": "Objetivos",
+    "projetos": "Projetos",
+    "prioridade": "Prioridade",
+    "preferencias": "Forma de trabalho",
+    "regras": "Regras",
+    "empresa_ou_projeto": "Empresa ou projeto",
+    "equipe": "Equipe"
+  }
+}

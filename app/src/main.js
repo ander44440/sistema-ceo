@@ -4,6 +4,7 @@ import { renderModulo } from "./modules/placeholders.js";
 import { montarConversa } from "./modules/conversa/conversa.js";
 import { montarCentroSituacao } from "./modules/centroSituacao/centroSituacao.js";
 import { montarProjetos } from "./modules/projetos/projetos.js";
+import { montarDevVoice } from "./modules/dev/voice.js";
 import { executiveEngine } from "./executiveEngine/index.js";
 import {
   atualizarEstadoGabinete,
@@ -12,11 +13,13 @@ import {
   obterProjetoAtivo
 } from "./catalogoProjetos/index.js";
 
-async function boot() {
+function boot() {
+  const root = document.getElementById("app");
+  if (!root) return;
+
   inicializarCatalogo();
   executiveEngine.inicializar();
 
-  const root = document.getElementById("app");
   const shell = montarShell(root);
 
   const gabinete = obterEstadoGabinete();
@@ -27,7 +30,6 @@ async function boot() {
       : "CEO Online · Gabinete Executivo"
   );
 
-  // Restaura rota do gabinete antes do router publicar (simula retomar o dia).
   const hashVazio =
     !location.hash ||
     location.hash === "#" ||
@@ -40,7 +42,10 @@ async function boot() {
   iniciarRouter();
 
   onRota((rota) => {
-    atualizarEstadoGabinete({ rotaId: rota.id });
+    // Rotas de desenvolvimento não poluem o estado do gabinete.
+    if (rota.nav !== false) {
+      atualizarEstadoGabinete({ rotaId: rota.id });
+    }
     shell.atualizarNav();
     shell.workspace.classList.remove("is-conversa", "is-centro");
 
@@ -66,6 +71,12 @@ async function boot() {
     if (rota.id === "projetos") {
       shell.renderModule(montarProjetos());
       document.title = `CEO — ${rota.titulo}`;
+      return;
+    }
+
+    if (rota.id === "dev-voice" || rota.id === "settings-voice") {
+      shell.renderModule(montarDevVoice());
+      document.title = "CEO — Dev · Voice Engine";
       return;
     }
 
