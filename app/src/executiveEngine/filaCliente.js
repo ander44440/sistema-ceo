@@ -2,8 +2,10 @@
  * Cliente da Fila de Execução — browser → /api/ceo/queue/*
  */
 
+import { ceoApiUrl } from "../ceoApiBase.js";
+
 export async function publicarJobFila(pedido) {
-  const resp = await fetch("/api/ceo/queue/jobs", {
+  const resp = await fetch(ceoApiUrl("/api/ceo/queue/jobs"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(pedido)
@@ -16,7 +18,7 @@ export async function publicarJobFila(pedido) {
 }
 
 export async function listarJobsPendentes() {
-  const resp = await fetch("/api/ceo/queue/pending");
+  const resp = await fetch(ceoApiUrl("/api/ceo/queue/pending"));
   const data = await resp.json().catch(() => ({}));
   if (!resp.ok || !data.ok) {
     throw new Error((data && data.mensagem) || "Falha ao listar Jobs pendentes.");

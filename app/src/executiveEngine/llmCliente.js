@@ -2,6 +2,8 @@
  * Cliente do motor de linguagem — apenas via /api/ceo/* (chave no servidor).
  */
 
+import { ceoApiUrl } from "../ceoApiBase.js";
+
 let cacheStatus = null;
 let cacheEm = 0;
 
@@ -9,7 +11,7 @@ export async function obterStatusLlm() {
   const agora = Date.now();
   if (cacheStatus && agora - cacheEm < 15000) return cacheStatus;
   try {
-    const resp = await fetch("/api/ceo/llm-status");
+    const resp = await fetch(ceoApiUrl("/api/ceo/llm-status"));
     const data = await resp.json();
     cacheStatus = data;
     cacheEm = agora;
@@ -25,7 +27,7 @@ export async function obterStatusLlm() {
  * @param {{ messages: Array<{role:string,content:string}>, temperature?: number }} pedido
  */
 export async function deliberarComLlm(pedido) {
-  const resp = await fetch("/api/ceo/deliberar", {
+  const resp = await fetch(ceoApiUrl("/api/ceo/deliberar"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

@@ -1,6 +1,8 @@
 /**
- * Persistência JSON — ficheiros via API local + fallback localStorage.
+ * Persistencia JSON — ficheiros via API local + fallback localStorage.
  */
+
+import { ceoApiUrl } from "../ceoApiBase.js";
 
 const LS_PERFIL = "ceo.onboarding.perfil.v1";
 const LS_TRANS = "ceo.onboarding.transcricao.v1";
@@ -17,14 +19,16 @@ async function tryFetch(url, opts) {
 }
 
 export function criarStorage() {
-  async function salvar({ perfil, transcricao }) {
+  async function salvar(payload) {
+    const perfil = payload.perfil;
+    const transcricao = payload.transcricao;
     if (perfil) {
       localStorage.setItem(LS_PERFIL, JSON.stringify(perfil));
     }
     if (transcricao) {
       localStorage.setItem(LS_TRANS, JSON.stringify(transcricao));
     }
-    await tryFetch("/api/ceo/onboarding/salvar", {
+    await tryFetch(ceoApiUrl("/api/ceo/onboarding/salvar"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ perfil, transcricao })
@@ -33,7 +37,7 @@ export function criarStorage() {
   }
 
   async function carregar() {
-    const remoto = await tryFetch("/api/ceo/onboarding/carregar");
+    const remoto = await tryFetch(ceoApiUrl("/api/ceo/onboarding/carregar"));
     if (remoto && remoto.perfil) {
       return {
         perfil: remoto.perfil,
