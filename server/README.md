@@ -29,6 +29,7 @@ Carrega automaticamente `server/.env` e `app/.env` (sem sobrescrever variáveis 
 |----------|-------------|-----------|
 | `PORT` | Não (default 8787) | Porta HTTP (Railway) |
 | `CEO_DATA_ROOT` | Não | Raiz com `executive/` (default: pai de `server/`) |
+| `CEO_ALLOWED_ORIGIN` | Não (prod: sim) | Origem do front (ex. `https://sistema-ceo.vercel.app`). Ausente → só localhost/127.0.0.1 |
 | `CEO_LLM_API_KEY` | Sim (ou `OPENAI_API_KEY` / `CEO_OPENAI_API_KEY`) | Chave do provedor |
 | `CEO_LLM_BASE_URL` | Não | Default `https://api.openai.com/v1` |
 | `CEO_LLM_MODEL` | Não | Default `gpt-4o-mini` |
