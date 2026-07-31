@@ -2,7 +2,7 @@
 
 Servidor HTTP Node (Hono) para as APIs `/api/ceo/*` em produção (alvo Railway).
 
-## Estado atual (E4)
+## Estado atual (E5)
 
 - Entrypoint: `npm start` → `src/index.js`
 - Porta: `process.env.PORT` ou **8787**
@@ -10,7 +10,8 @@ Servidor HTTP Node (Hono) para as APIs `/api/ceo/*` em produção (alvo Railway)
   - `GET /health`
   - `GET /api/ceo/llm-status` · `POST /api/ceo/deliberar`
   - `GET /api/ceo/queue/pending` · `GET|POST /api/ceo/queue/jobs` · `PATCH /api/ceo/queue/jobs/:id`
-- Onboarding **ainda no plugin Vite** em `app/`
+  - `GET /api/ceo/onboarding/carregar` · `POST /api/ceo/onboarding/salvar`
+- Plugins Vite em `app/` permanecem ativos (convivência temporária)
 
 ## Local
 
