@@ -1,4 +1,5 @@
 import { listarRotas, navegar, obterRota } from "./router.js";
+import { montarBotaoVoz } from "./experienciaVoz/botaoVoz.js";
 
 const NAV_ICONS = Object.freeze({
   dashboard:
@@ -81,6 +82,7 @@ export function montarShell(root) {
             <span class="shell-status-dot" aria-hidden="true"></span>
             <span id="system-status">CEO Online · Executivo Digital ativo</span>
           </div>
+          <div id="shell-voice-host" class="shell-voice-host"></div>
           <button type="button" class="shell-icon-btn" id="action-notif" aria-label="Notificações">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 13 6 9Z" stroke="currentColor" stroke-width="1.6"/><path d="M10 18a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6"/></svg>
             <span class="shell-badge">3</span>
@@ -109,6 +111,8 @@ export function montarShell(root) {
   const toggle = root.querySelector("#menu-toggle");
   const backdrop = root.querySelector("#shell-backdrop");
   const statusEl = root.querySelector("#system-status");
+  const voiceHost = root.querySelector("#shell-voice-host");
+  const vozUi = voiceHost ? montarBotaoVoz(voiceHost) : null;
 
   function fecharNav() {
     shellEl.classList.remove("is-nav-open");
@@ -212,6 +216,7 @@ export function montarShell(root) {
   return {
     workspace,
     atualizarNav,
+    voz: vozUi,
     definirStatus(texto) {
       statusEl.textContent = texto;
     },

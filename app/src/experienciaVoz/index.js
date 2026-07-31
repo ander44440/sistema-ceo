@@ -1,5 +1,5 @@
 /**
- * Fachada Experiência de Voz (PX-002 E2).
+ * Fachada Experiência de Voz (PX-002).
  */
 
 export {
@@ -8,3 +8,10 @@ export {
   criarOrquestradorVoz,
   criarPreferenciaVoz
 } from "./orquestrador.js";
+export { obterOrquestradorVozSessao } from "./sessao.js";
+export {
+  montarBotaoVoz,
+  executarGestoBotaoVoz,
+  pintarBotaoVoz
+} from "./botaoVoz.js";
+export { tentarAutorizacaoBrowser } from "./autorizacaoBrowser.js";
