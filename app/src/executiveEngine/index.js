@@ -19,6 +19,7 @@ import {
   resumirEstado
 } from "../executiveMemory/index.js";
 import { inicializarCoaSessao, obterCoaAtivo } from "./coaSessao.js";
+import { naturalizarRespostaNucleo } from "../conversacaoNatural/index.js";
 
 const CAPACIDADES_INICIAIS = [
   capacidadeDashboard,
@@ -108,15 +109,18 @@ export const executiveEngine = {
     const capacidade = obterCapacidade(intencao.capacidade);
 
     if (!capacidade) {
-      const resposta = {
-        ok: false,
-        mensagem: `Nenhuma capacidade registrada para "${intencao.capacidade}".`,
-        intencao,
-        capacidade: intencao.capacidade,
-        dados: null,
-        origem: "executiveEngine",
-        modo: "stub"
-      };
+      const resposta = naturalizarRespostaNucleo(
+        {
+          ok: false,
+          mensagem: `Nenhuma capacidade registrada para "${intencao.capacidade}".`,
+          intencao,
+          capacidade: intencao.capacidade,
+          dados: null,
+          origem: "executiveEngine",
+          modo: "stub"
+        },
+        { instrucao: texto, historico, intencao }
+      );
       atualizarAposInstrucao({
         instrucao: texto,
         intencao,
@@ -133,7 +137,7 @@ export const executiveEngine = {
         contextoCapacidade({ texto, historico, intencao })
       );
 
-      const resposta = {
+      let resposta = {
         ok: resultado.ok !== false,
         mensagem:
           resultado.mensagem ||
@@ -144,6 +148,16 @@ export const executiveEngine = {
         origem: "executiveEngine",
         modo: resultado.modo || "stub"
       };
+
+      // PX-003 E3 — toda prosa ao utilizador passa pela Conversação Natural
+      resposta = naturalizarRespostaNucleo(resposta, {
+        instrucao: texto,
+        historico,
+        intencao,
+        memoria: lerMemoria,
+        coaAtivo: obterCoaAtivo(),
+        canalSpeaker: "chat"
+      });
 
       const memoria = atualizarAposInstrucao({
         instrucao: texto,
@@ -162,19 +176,22 @@ export const executiveEngine = {
 
       return resposta;
     } catch (err) {
-      const resposta = {
-        ok: false,
-        mensagem:
-          "Falha ao executar a capacidade " +
-          capacidade.id +
-          ": " +
-          (err && err.message ? err.message : "erro desconhecido"),
-        intencao,
-        capacidade: capacidade.id,
-        dados: null,
-        origem: "executiveEngine",
-        modo: "stub"
-      };
+      const resposta = naturalizarRespostaNucleo(
+        {
+          ok: false,
+          mensagem:
+            "Falha ao executar a capacidade " +
+            capacidade.id +
+            ": " +
+            (err && err.message ? err.message : "erro desconhecido"),
+          intencao,
+          capacidade: capacidade.id,
+          dados: null,
+          origem: "executiveEngine",
+          modo: "stub"
+        },
+        { instrucao: texto, historico, intencao }
+      );
       atualizarAposInstrucao({
         instrucao: texto,
         intencao,

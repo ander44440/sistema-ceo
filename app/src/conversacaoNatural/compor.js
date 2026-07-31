@@ -12,6 +12,7 @@ import {
   proximaAberturaPergunta,
   proximoFecho
 } from "./variacao.js";
+import { sanitizarProsaUsuario } from "./sanitizarProsa.js";
 
 const PROSA_DECISAO = Object.freeze({
   aprovar: (r) => `${r}`,
@@ -67,11 +68,12 @@ export function comporDeliberacao(parecer, ctxImediato, opts = {}) {
   }
 
   if (acaoDesc) {
-    camadas.B = `Próximo gesto: ${acaoDesc}.`;
+    camadas.B = `Sugiro ${acaoDesc.replace(/\.$/, "")}.`;
   }
 
   if (pediuDetalhe || confianca < limiarPorque) {
-    camadas.C = `Porquê: ${encurtar(justificativa, canal === "voz" ? 140 : 220)}`;
+    const j = encurtar(justificativa, canal === "voz" ? 140 : 220);
+    camadas.C = j ? (j.endsWith(".") ? j : `${j}.`) : null;
   }
 
   let perguntas =
@@ -84,7 +86,7 @@ export function comporDeliberacao(parecer, ctxImediato, opts = {}) {
   perguntas = filtrarPerguntasJaFeitas(perguntas, ctxImediato);
 
   if (perguntas.length) {
-    camadas.D = `Para avançar: ${perguntas.slice(0, canal === "voz" ? 1 : 2).join(" ")}`;
+    camadas.D = perguntas.slice(0, canal === "voz" ? 1 : 2).join(" ");
   } else if (lacunas.length && estado !== "solicitar_dados" && pediuDetalhe) {
     camadas.D = `Atenção: ${encurtar(lacunas.join("; "), 120)}.`;
   }
@@ -114,11 +116,15 @@ export function comporDeliberacao(parecer, ctxImediato, opts = {}) {
         : ["E", "A", "B", "C", "D", "F"];
 
   const partes = ordem.map((k) => camadas[k]).filter(Boolean);
-  const texto = partes.join(canal === "voz" ? " " : "\n\n");
-  const guiãoVoz = ["A", "B", "D", "E"]
-    .map((k) => camadas[k])
-    .filter(Boolean)
-    .join(" ");
+  const texto = sanitizarProsaUsuario(
+    partes.join(canal === "voz" ? " " : "\n\n")
+  );
+  const guiãoVoz = sanitizarProsaUsuario(
+    ["A", "B", "D", "E"]
+      .map((k) => camadas[k])
+      .filter(Boolean)
+      .join(" ")
+  );
 
   return {
     texto,
@@ -165,6 +171,19 @@ export function comporPorTipo(tipo, args = {}) {
     };
   }
 
+  if (tipo === TIPO_TURNO.FECHO) {
+    const frente = ctxImediato?.frenteAtiva;
+    const texto = frente
+      ? `Encerro o ponto aqui. Contexto de ${frente} preservado.`
+      : `Feito. ${proximoFecho()}`;
+    return {
+      texto,
+      guiãoVoz: texto,
+      camadasUsadas: { fecho: texto },
+      perguntas: []
+    };
+  }
+
   if (tipo === TIPO_TURNO.ESPELHO && parecer) {
     const obj =
       ctxImediato?.objetivoAtual ||
@@ -183,8 +202,8 @@ export function comporPorTipo(tipo, args = {}) {
     return comporDeliberacao(parecer, ctxImediato, { canal, pediuDetalhe });
   }
 
-  // LLM / local sem parecer: preservar prosa, só âncora de fio se útil
-  let texto = String(mensagemOriginal || "").trim();
+  // LLM / local sem parecer: preservar prosa, sanitizar templates, âncora se útil
+  let texto = sanitizarProsaUsuario(mensagemOriginal);
   const camadasUsadas = { prosa: texto };
   if (
     ctxImediato?.frenteAtiva &&
@@ -193,7 +212,7 @@ export function comporPorTipo(tipo, args = {}) {
   ) {
     const e = ancoraFio(ctxImediato.frenteAtiva);
     if (e) {
-      texto = `${e}\n\n${texto}`;
+      texto = sanitizarProsaUsuario(`${e}\n\n${texto}`);
       camadasUsadas.E = e;
     }
   }

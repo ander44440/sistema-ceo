@@ -1,5 +1,5 @@
 /**
- * Camada de Conversação Natural (PX-003 E2).
+ * Camada de Conversação Natural (PX-003 E2/E3).
  * Entre deliberação/capacidade e superfícies — não delibera; não altera o MRE.
  */
 
@@ -9,23 +9,18 @@ import {
 } from "./contextoImediato.js";
 import { comporPorTipo } from "./compor.js";
 import { TIPO_TURNO, classificarTipoTurno } from "./tiposTurno.js";
+import { sanitizarProsaUsuario } from "./sanitizarProsa.js";
 import { _resetVariacaoParaTestes } from "./variacao.js";
 
 export { TIPO_TURNO, classificarTipoTurno } from "./tiposTurno.js";
 export { extrairContextoImediato } from "./contextoImediato.js";
+export { sanitizarProsaUsuario, expoeEstruturaDeliberacao } from "./sanitizarProsa.js";
 export { _resetVariacaoParaTestes };
 
 const GERADOR = "conversacao-natural-v1";
 
 /**
  * @param {object} entrada
- * @param {string} [entrada.mensagem] — prosa antes (Speaker / LLM / local)
- * @param {boolean} [entrada.ok]
- * @param {string} [entrada.modo]
- * @param {object} [entrada.dados]
- * @param {Array} [entrada.historico]
- * @param {string} [entrada.instrucao]
- * @param {string} [entrada.canal]
  */
 export function aplicarConversacaoNatural(entrada = {}) {
   const dados = entrada.dados || {};
@@ -52,7 +47,9 @@ export function aplicarConversacaoNatural(entrada = {}) {
     dados,
     intencaoId: dados.intencao?.id || entrada.intencaoId,
     pedidoAmbiguo,
-    forcarAbertura: dados.intencao?.id === "saudacao"
+    forcarAbertura: dados.intencao?.id === "saudacao" || entrada.forcarAbertura,
+    forcarFecho: entrada.forcarFecho,
+    instrucao
   });
 
   const composto = comporPorTipo(tipoTurno, {
@@ -63,9 +60,12 @@ export function aplicarConversacaoNatural(entrada = {}) {
     pediuDetalhe
   });
 
+  const texto = sanitizarProsaUsuario(composto.texto);
+  const guiãoVoz = sanitizarProsaUsuario(composto.guiãoVoz || composto.texto);
+
   return {
-    texto: composto.texto,
-    guiãoVoz: composto.guiãoVoz || composto.texto,
+    texto,
+    guiãoVoz,
     tipoTurno,
     camadas: composto.camadasUsadas,
     perguntas: composto.perguntas || [],
@@ -84,41 +84,64 @@ export function aplicarConversacaoNatural(entrada = {}) {
 }
 
 /**
- * Aplica CN a uma resposta do Núcleo (capacidade IA) sem alterar o MRE.
+ * Aplica CN a qualquer resposta do Núcleo antes das superfícies.
+ * Idempotente se já naturalizada (re-sanitiza a prosa ao utilizador).
  * @param {object} resposta
- * @param {object} ctx — ctx do executiveEngine
+ * @param {object} ctx
  */
 export function naturalizarRespostaNucleo(resposta, ctx = {}) {
   if (!resposta || typeof resposta !== "object") return resposta;
+
+  if (resposta.dados?.conversacaoNatural?.gerador === GERADOR) {
+    const limpa = sanitizarProsaUsuario(resposta.mensagem);
+    return {
+      ...resposta,
+      mensagem: limpa,
+      dados: {
+        ...resposta.dados,
+        textoVoz: sanitizarProsaUsuario(
+          resposta.dados.textoVoz || limpa
+        )
+      }
+    };
+  }
 
   const cn = aplicarConversacaoNatural({
     mensagem: resposta.mensagem,
     ok: resposta.ok,
     modo: resposta.modo,
-    dados: resposta.dados,
+    dados: {
+      ...(resposta.dados || {}),
+      intencao: resposta.dados?.intencao || resposta.intencao || ctx.intencao
+    },
     historico: ctx.historico || [],
     instrucao: ctx.instrucao || resposta.dados?.instrucao,
     canal: ctx.canalSpeaker || "chat",
-    memoria: typeof ctx.memoria === "function" ? ctx.memoria() : ctx.memoria,
-    coa: resposta.dados?.coa,
-    intencaoId: resposta.dados?.intencao?.id
+    memoria:
+      typeof ctx.memoria === "function"
+        ? ctx.memoria()
+        : ctx.memoria || resposta.dados?.memoria,
+    coa: resposta.dados?.coa || ctx.coaAtivo,
+    intencaoId:
+      resposta.dados?.intencao?.id ||
+      resposta.intencao?.id ||
+      ctx.intencao?.id
   });
 
   const comunicado = resposta.dados?.comunicado
     ? {
         ...resposta.dados.comunicado,
         texto: cn.texto,
-        guiãoVoz:
-          resposta.dados.comunicado.canal === "voz" || cn.guiãoVoz
-            ? cn.guiãoVoz
-            : resposta.dados.comunicado.guiãoVoz,
+        guiãoVoz: cn.guiãoVoz,
         metadados: {
           ...(resposta.dados.comunicado.metadados || {}),
           gerador: GERADOR,
           tipoTurno: cn.tipoTurno,
           camadas: cn.camadas,
           speakerAntes: resposta.dados.comunicado.metadados?.gerador || null,
-          textoSpeakerAntes: cn.textoAntes
+          textoSpeakerAntes:
+            resposta.dados.comunicado.metadados?.textoSpeakerAntes ||
+            cn.textoAntes
         }
       }
     : undefined;
@@ -140,6 +163,29 @@ export function naturalizarRespostaNucleo(resposta, ctx = {}) {
       }
     }
   };
+}
+
+/**
+ * Boas-vindas de superfície (Centro / Conversa) via CN — sem template longo.
+ * @param {{ frenteAtiva?: string|null, cumprimento?: string }} [opts]
+ */
+export function textoBoasVindasNatural(opts = {}) {
+  const cumprimento = opts.cumprimento || "";
+  const cn = aplicarConversacaoNatural({
+    ok: true,
+    modo: "local",
+    mensagem: cumprimento
+      ? `${cumprimento}. Qual é o objetivo de agora?`
+      : "Pronto. Qual é o objetivo de agora?",
+    forcarAbertura: true,
+    dados: {
+      intencao: { id: "saudacao" },
+      coa: opts.frenteAtiva ? { nome: opts.frenteAtiva } : null,
+      rota: "deterministica"
+    },
+    instrucao: "olá"
+  });
+  return cn.texto;
 }
 
 function detectarPedidoAmbiguo(instrucao, parecer) {

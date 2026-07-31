@@ -17,10 +17,32 @@ import {
   htmlRailDiaAtivo,
   obterVistaDiaAtivo
 } from "./painelDiaAtivo.js";
-import {
-  htmlBlocoDeliberacao,
-  lerDestaquesDeliberacao
-} from "../../mre/canais/centroSituacaoDeliberacao.js";
+import { lerDestaquesDeliberacao } from "../../mre/canais/centroSituacaoDeliberacao.js";
+import { textoBoasVindasNatural } from "../../conversacaoNatural/index.js";
+import { sanitizarProsaUsuario } from "../../conversacaoNatural/sanitizarProsa.js";
+
+function htmlDeliberacaoNatural(dados) {
+  if (!dados || !Array.isArray(dados.destaques) || !dados.destaques.length) {
+    return "";
+  }
+  const destaques = dados.destaques
+    .map((d) => sanitizarProsaUsuario(String(d)))
+    .filter((d) => d && !/^Decisão\s*:/i.test(d));
+  if (!destaques.length) return "";
+  const itens = destaques
+    .map(
+      (d) =>
+        `<li>${String(d)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")}</li>`
+    )
+    .join("");
+  return `<section class="centro-deliberacao" aria-label="Último avanço">
+    <h3>Último avanço</h3>
+    <ul>${itens}</ul>
+  </section>`;
+}
 
 function escaparHtml(texto) {
   return String(texto)
@@ -82,8 +104,10 @@ export function montarCentroSituacao() {
     acrescentarMensagem(
       criarMensagem({
         papel: "ceo",
-        texto:
-          "Sou o CEO — o Executivo Digital desta organização. Acompanho o trabalho em curso. Qual é o objetivo de agora?"
+        texto: textoBoasVindasNatural({
+          cumprimento: saudacaoPorHora(),
+          frenteAtiva: lerMemoria()?.projetoAtivo?.nome || null
+        })
       })
     );
   }
@@ -125,7 +149,7 @@ export function montarCentroSituacao() {
 
           ${htmlFaixaDoDia(painelDia)}
 
-          ${htmlBlocoDeliberacao(lerDestaquesDeliberacao())}
+          ${htmlDeliberacaoNatural(lerDestaquesDeliberacao())}
 
           <section class="cs-chat" aria-label="Conversa com o Executivo Digital">
             <div class="cs-chat-head">

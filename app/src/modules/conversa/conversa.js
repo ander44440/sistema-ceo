@@ -6,15 +6,13 @@ import {
   temHistorico
 } from "./store.js";
 import { executiveEngine } from "../../executiveEngine/index.js";
+import { textoBoasVindasNatural } from "../../conversacaoNatural/index.js";
 import {
   prepararGestoEnvio,
   reproduzirRespostaCeo
 } from "../../experienciaVoz/reproduzirResposta.js";
 
-const MENSAGEM_BOAS_VINDAS =
-  "Sou o CEO — o Executivo Digital desta organização. " +
-  "Acompanho o contexto ativo e conduzo os objetivos consigo. " +
-  "Qual é o objetivo de agora?";
+const MENSAGEM_BOAS_VINDAS = textoBoasVindasNatural();
 
 function escaparHtml(texto) {
   return String(texto)
@@ -82,7 +80,7 @@ export function montarConversa() {
         <h1>Conversa</h1>
         <p class="conversa-subtitulo">Canal principal com o Executivo Digital</p>
       </div>
-      <p class="conversa-estado" id="conversa-estado" aria-live="polite">Pronto para instruções</p>
+      <p class="conversa-estado" id="conversa-estado" aria-live="polite">À escuta do próximo passo</p>
     </header>
 
     <div class="conversa-historico" id="conversa-historico" role="log" aria-relevant="additions" aria-label="Histórico da conversa"></div>
@@ -94,7 +92,7 @@ export function montarConversa() {
         name="instrucao"
         rows="2"
         maxlength="8000"
-        placeholder="Envie uma instrução, objetivo ou pedido de trabalho…"
+        placeholder="Objetivo, decisão ou próximo passo…"
         aria-describedby="conversa-hint"
       ></textarea>
       <div class="conversa-composer-bar">

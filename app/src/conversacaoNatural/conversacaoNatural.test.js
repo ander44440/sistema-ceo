@@ -99,7 +99,7 @@ test("Antes × Depois 2 — bloqueio solicitar_dados", () => {
     instrucao: "Posso avançar LOD?"
   });
   assert.equal(cn.tipoTurno, TIPO_TURNO.BLOQUEIO);
-  assert.match(cn.texto, /Para avançar|preciso|Preciso/i);
+  assert.match(cn.texto, /preciso|Sprint|Resultado/i);
   assert.ok(!/Lacunas residuais/i.test(cn.texto));
   assert.ok(!/Sobre:/.test(cn.texto));
 });

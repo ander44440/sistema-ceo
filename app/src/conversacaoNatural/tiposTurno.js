@@ -11,6 +11,8 @@ export const TIPO_TURNO = Object.freeze({
   SISTEMA: "sistema"
 });
 
+const LOCAL_ABERTURA = new Set(["saudacao"]);
+
 /**
  * @param {object} entrada
  * @param {object} [entrada.parecer]
@@ -19,11 +21,13 @@ export const TIPO_TURNO = Object.freeze({
  * @param {string} [entrada.rota]
  * @param {string} [entrada.intencaoId]
  * @param {boolean} [entrada.pedidoAmbiguo]
+ * @param {string} [entrada.instrucao]
  */
 export function classificarTipoTurno(entrada = {}) {
   const modo = String(entrada.modo || "");
   const rota = String(entrada.rota || entrada.dados?.rota || "");
   const intencaoId = entrada.intencaoId || entrada.dados?.intencao?.id;
+  const instrucao = String(entrada.instrucao || entrada.dados?.instrucao || "");
 
   if (
     modo === "fallback" ||
@@ -33,6 +37,15 @@ export function classificarTipoTurno(entrada = {}) {
     rota.includes("sem-llm")
   ) {
     return TIPO_TURNO.SISTEMA;
+  }
+
+  if (
+    entrada.forcarFecho ||
+    /^(tchau|obrigad[oa]|encerrar|até logo|ate logo|fim do dia|pode fechar|encerrar o dia)\b/i.test(
+      instrucao.trim()
+    )
+  ) {
+    return TIPO_TURNO.FECHO;
   }
 
   if (intencaoId === "saudacao" || entrada.forcarAbertura) {
@@ -56,7 +69,7 @@ export function classificarTipoTurno(entrada = {}) {
     return TIPO_TURNO.DELIBERACAO;
   }
 
-  if (modo === "local" && intencaoId) {
+  if (modo === "local" && LOCAL_ABERTURA.has(intencaoId)) {
     return TIPO_TURNO.ABERTURA;
   }
 
