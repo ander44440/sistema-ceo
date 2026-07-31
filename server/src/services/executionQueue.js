@@ -15,6 +15,12 @@ const ESTADOS = new Set([
   'cancelled',
 ]);
 
+/** Remove BOM UTF-8 se presente — não altera o ficheiro em disco. */
+function textoSemBom(raw) {
+  const s = String(raw ?? '');
+  return s.charCodeAt(0) === 0xfeff ? s.slice(1) : s;
+}
+
 /**
  * @param {string} rootDir — raiz do repo CEO (pai de executive/)
  */
@@ -40,7 +46,7 @@ export function criarFilaExecucao(rootDir) {
   function lerJob(id) {
     const p = caminhoJob(id);
     if (!fs.existsSync(p)) return null;
-    return JSON.parse(fs.readFileSync(p, 'utf8'));
+    return JSON.parse(textoSemBom(fs.readFileSync(p, 'utf8')));
   }
 
   function escreverJob(job) {
