@@ -1,6 +1,10 @@
 import { lerMemoria } from "../../executiveMemory/index.js";
 import { executiveEngine } from "../../executiveEngine/index.js";
 import {
+  prepararGestoEnvio,
+  reproduzirRespostaCeo
+} from "../../experienciaVoz/reproduzirResposta.js";
+import {
   acrescentarMensagem,
   atualizarMensagem,
   criarMensagem,
@@ -260,6 +264,8 @@ export function montarCentroSituacao() {
       if (!texto || enviando) return;
       enviando = true;
       syncBtn();
+      // Gesto de envio: unlock de sessão (se voz Ativa) antes do await
+      prepararGestoEnvio();
 
       acrescentarMensagem(criarMensagem({ papel: "usuario", texto }));
       input.value = "";
@@ -279,6 +285,12 @@ export function montarCentroSituacao() {
           estado: resposta.ok ? "pronta" : "erro",
           papel: resposta.ok ? "ceo" : "sistema"
         });
+        // PX-002 E4: mesmo comportamento de voz que a Conversa
+        if (resposta.ok) {
+          const textoVoz =
+            (resposta.dados && resposta.dados.textoVoz) || resposta.mensagem;
+          void reproduzirRespostaCeo(textoVoz);
+        }
       } catch (err) {
         atualizarMensagem(placeholder.id, {
           papel: "sistema",

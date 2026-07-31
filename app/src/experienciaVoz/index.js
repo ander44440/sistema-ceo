@@ -15,3 +15,10 @@ export {
   pintarBotaoVoz
 } from "./botaoVoz.js";
 export { tentarAutorizacaoBrowser } from "./autorizacaoBrowser.js";
+export {
+  prepararGestoEnvio,
+  reproduzirRespostaCeo,
+  interromperFalaCeo,
+  ouvirPendenteCeo,
+  onMudancaEstadoVoz
+} from "./reproduzirResposta.js";

@@ -6,25 +6,15 @@ import {
   temHistorico
 } from "./store.js";
 import { executiveEngine } from "../../executiveEngine/index.js";
-import { VoiceFactory } from "../../onboarding/voice/VoiceFactory.js";
+import {
+  prepararGestoEnvio,
+  reproduzirRespostaCeo
+} from "../../experienciaVoz/reproduzirResposta.js";
 
 const MENSAGEM_BOAS_VINDAS =
   "Sou o CEO — o Executivo Digital desta organização. " +
   "Acompanho o contexto ativo e conduzo os objetivos consigo. " +
   "Qual é o objetivo de agora?";
-
-/** Serviço interno de voz — transparente na UI principal. */
-const voiceOut = VoiceFactory.create();
-
-function falarCeo(texto) {
-  if (!texto || texto === "…") return;
-  try {
-    voiceOut.stop();
-    void voiceOut.speak(String(texto));
-  } catch {
-    /* voz opcional — UI permanece funcional */
-  }
-}
 
 function escaparHtml(texto) {
   return String(texto)
@@ -147,7 +137,8 @@ export function montarConversa() {
     enviando = true;
     sincronizarBotao();
     definirEstado("Núcleo Executivo em ação…");
-    voiceOut.stop();
+    // Gesto de envio: unlock de sessão (se voz Ativa) antes do await
+    prepararGestoEnvio();
 
     acrescentarMensagem(
       criarMensagem({
@@ -181,11 +172,11 @@ export function montarConversa() {
         estado: resposta.ok ? "pronta" : "erro",
         papel: resposta.ok ? "ceo" : "sistema"
       });
-      // IMP-016: Voice consome guião/texto do ComunicadoExecutivo quando existir
+      // PX-002 E4: TTS só via Orquestrador (Ativa + unlocked)
       if (resposta.ok) {
         const textoVoz =
           (resposta.dados && resposta.dados.textoVoz) || resposta.mensagem;
-        falarCeo(textoVoz);
+        void reproduzirRespostaCeo(textoVoz);
       }
       definirEstado(
         resposta.ok

@@ -1,10 +1,15 @@
 /**
- * Botão de voz — integração UI ↔ Orquestrador (PX-002 E3).
- * Não dispara fala automática do CEO; só estados + unlock.
+ * Botão de voz — integração UI ↔ Orquestrador (PX-002 E3/E4).
+ * Estados + unlock; E4 liga interromper/ouvir pendente ao motor TTS.
  */
 
 import { ESTADO_VOZ } from "./estados.js";
 import { tentarAutorizacaoBrowser } from "./autorizacaoBrowser.js";
+import {
+  interromperFalaCeo,
+  onMudancaEstadoVoz,
+  ouvirPendenteCeo
+} from "./reproduzirResposta.js";
 import { obterOrquestradorVozSessao } from "./sessao.js";
 
 const ROTULOS = Object.freeze({
@@ -71,7 +76,8 @@ export function pintarBotaoVoz(btn, orch) {
 /**
  * Trata um gesto no botão (click / Enter / Space).
  * @param {ReturnType<typeof obterOrquestradorVozSessao>} orch
- * @param {{ autorizarBrowser?: () => { ok: boolean, motivo?: string } }} [deps]
+ * @param {{ autorizarBrowser?: () => { ok: boolean, motivo?: string }, motor?: { speak: Function, stop: Function } }} [deps]
+ * @returns {Promise<object>|object} snapshot (Promise se consumir pendente / falar)
  */
 export function executarGestoBotaoVoz(orch, deps = {}) {
   const autorizar = deps.autorizarBrowser || tentarAutorizacaoBrowser;
@@ -107,8 +113,7 @@ export function executarGestoBotaoVoz(orch, deps = {}) {
   }
 
   if (snap.estado === ESTADO_VOZ.FALANDO) {
-    orch.interromperFala();
-    return orch.snapshot();
+    return interromperFalaCeo(orch);
   }
 
   if (snap.estado === ESTADO_VOZ.OUVINDO) {
@@ -127,8 +132,14 @@ export function executarGestoBotaoVoz(orch, deps = {}) {
       return orch.snapshot();
     }
     if (snap.textoPendente) {
-      orch.consumirPendente();
-      return orch.snapshot();
+      return ouvirPendenteCeo(orch, { motor: deps.motor }).then(() =>
+        orch.snapshot()
+      );
+    }
+    try {
+      interromperFalaCeo(orch);
+    } catch {
+      /* ignore */
     }
     orch.desativar();
     return orch.snapshot();
@@ -161,12 +172,23 @@ export function montarBotaoVoz(host) {
   }
 
   btn.addEventListener("click", () => {
-    executarGestoBotaoVoz(orch);
-    atualizar();
+    const r = executarGestoBotaoVoz(orch);
+    if (r && typeof r.then === "function") {
+      void r.finally(atualizar);
+    } else {
+      atualizar();
+    }
   });
+
+  const off = onMudancaEstadoVoz(() => atualizar());
 
   host.appendChild(btn);
   atualizar();
 
-  return { botao: btn, orquestrador: orch, atualizar };
+  return {
+    botao: btn,
+    orquestrador: orch,
+    atualizar,
+    destruir: () => off()
+  };
 }
