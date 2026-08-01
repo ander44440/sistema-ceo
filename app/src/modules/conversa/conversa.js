@@ -158,12 +158,18 @@ export function montarConversa() {
     pintarHistorico();
 
     try {
-      const resposta = await executiveEngine.executar({
-        texto,
-        historico: listarMensagens()
-          .filter((m) => m.id !== placeholder.id)
-          .map((m) => ({ papel: m.papel, texto: m.texto }))
-      });
+      const { publicarJobFila } = await import(
+        "../../executiveEngine/filaCliente.js"
+      );
+      const resposta = await executiveEngine.executar(
+        {
+          texto,
+          historico: listarMensagens()
+            .filter((m) => m.id !== placeholder.id)
+            .map((m) => ({ papel: m.papel, texto: m.texto }))
+        },
+        { publicarJob: publicarJobFila }
+      );
 
       atualizarMensagem(placeholder.id, {
         texto: resposta.mensagem,

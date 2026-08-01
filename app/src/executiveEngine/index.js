@@ -22,6 +22,10 @@ import {
 import { inicializarCoaSessao, obterCoaAtivo } from "./coaSessao.js";
 import { naturalizarRespostaNucleo } from "../conversacaoNatural/index.js";
 import { consultarCto as consultarCtoApi, novoConsultaId } from "../ctoConnector/cliente.js";
+import {
+  primeiroPassoClassificar
+} from "../classificadorIntencao/integracaoNucleo.js";
+import { executarPorDestino } from "../classificadorIntencao/destinos.js";
 
 const CAPACIDADES_INICIAIS = [
   capacidadeDashboard,
@@ -99,112 +103,123 @@ export const executiveEngine = {
   },
 
   /**
-   * Recebe instrução → classifica intenção → encaminha → atualiza memória → resposta.
+   * Recebe instrução → Classificador (primeiro) → destino C1–C4 (IMP-057 E5).
+   * Sem fallback silencioso que ignore a classificação.
    *
    * @param {string | InstrucaoEntrada} entrada
+   * @param {import("../classificadorIntencao/integracaoNucleo.js").DepsE4} [deps]
    * @returns {Promise<RespostaExecutiva>}
    */
-  async executar(entrada) {
+  async executar(entrada, deps = {}) {
     this.inicializar();
 
     const { texto, historico } = normalizarInstrucao(entrada);
+    const coa = obterCoaAtivo();
+    const rota = primeiroPassoClassificar(texto, {
+      frenteActiva: Boolean(coa)
+    });
+    const classificacao = rota.classificacao;
     const intencao = classificarIntencao(texto);
-    const capacidade = obterCapacidade(intencao.capacidade);
 
-    if (!capacidade) {
-      const resposta = naturalizarRespostaNucleo(
-        {
-          ok: false,
-          mensagem: `Nenhuma capacidade registrada para "${intencao.capacidade}".`,
-          intencao,
-          capacidade: intencao.capacidade,
-          dados: null,
-          origem: "executiveEngine",
-          modo: "stub"
-        },
-        { instrucao: texto, historico, intencao }
-      );
-      atualizarAposInstrucao({
-        instrucao: texto,
-        intencao,
-        capacidade: intencao.capacidade,
-        ok: false,
-        mensagem: resposta.mensagem,
-        dados: null
-      });
-      return resposta;
+    const anexarClassificacao = (resposta) => {
+      const baseDados =
+        resposta.dados && typeof resposta.dados === "object"
+          ? { ...resposta.dados }
+          : {};
+      // Classificação sempre preservada (E5-CA4) — mesmo em falha do destino
+      baseDados.classificacao = classificacao;
+      baseDados.encaminhamento = {
+        destino: rota.destino,
+        ok: rota.ok,
+        idClasse: rota.rota?.id || null
+      };
+      return { ...resposta, intencao: resposta.intencao || intencao, dados: baseDados };
+    };
+
+    let publicarJob = deps.publicarJob;
+    if (
+      typeof publicarJob !== "function" &&
+      rota.destino === "motor_execucao"
+    ) {
+      try {
+        const base = import.meta.env?.VITE_CEO_API_BASE;
+        if (base) {
+          const { publicarJobFila } = await import("./filaCliente.js");
+          publicarJob = publicarJobFila;
+        }
+      } catch {
+        publicarJob = undefined;
+      }
     }
 
+    // E5-CA1: C2 nunca recebe publicador — zero Job automático nesta via
+    const depsDestino =
+      rota.destino === "nucleo_mre"
+        ? { ...deps, publicarJob: undefined }
+        : { ...deps, publicarJob };
+
+    let respostaBruta;
     try {
-      const resultado = await capacidade.executar(
-        contextoCapacidade({ texto, historico, intencao })
-      );
-
-      let resposta = {
-        ok: resultado.ok !== false,
-        mensagem:
-          resultado.mensagem ||
-          "Execução concluída sem mensagem textual.",
-        intencao,
-        capacidade: capacidade.id,
-        dados: resultado.dados != null ? resultado.dados : null,
-        origem: "executiveEngine",
-        modo: resultado.modo || "stub"
-      };
-
-      // PX-003 E3 — toda prosa ao utilizador passa pela Conversação Natural
-      resposta = naturalizarRespostaNucleo(resposta, {
-        instrucao: texto,
+      respostaBruta = await executarPorDestino({
+        texto,
         historico,
         intencao,
-        memoria: lerMemoria,
-        coaAtivo: obterCoaAtivo(),
-        canalSpeaker: "chat"
+        classificacao,
+        rota,
+        obterCapacidade,
+        contextoCapacidade,
+        deps: depsDestino,
+        conduzirMotorPadrao: (parecer, motorDeps) =>
+          this.conduzirMotorExecucao(parecer, motorDeps),
+        naturalizar: (r) =>
+          naturalizarRespostaNucleo(r, {
+            instrucao: texto,
+            historico,
+            intencao: r.intencao || intencao,
+            memoria: lerMemoria,
+            coaAtivo: obterCoaAtivo(),
+            canalSpeaker: "chat"
+          })
       });
-
-      const memoria = atualizarAposInstrucao({
-        instrucao: texto,
-        intencao,
-        capacidade: capacidade.id,
-        ok: resposta.ok,
-        mensagem: resposta.mensagem,
-        dados: resposta.dados
-      });
-
-      if (resposta.dados && typeof resposta.dados === "object") {
-        resposta.dados = { ...resposta.dados, memoria };
-      } else {
-        resposta.dados = { memoria };
-      }
-
-      return resposta;
     } catch (err) {
-      const resposta = naturalizarRespostaNucleo(
-        {
-          ok: false,
-          mensagem:
-            "Falha ao executar a capacidade " +
-            capacidade.id +
-            ": " +
-            (err && err.message ? err.message : "erro desconhecido"),
-          intencao,
-          capacidade: capacidade.id,
-          dados: null,
-          origem: "executiveEngine",
-          modo: "stub"
-        },
-        { instrucao: texto, historico, intencao }
-      );
-      atualizarAposInstrucao({
-        instrucao: texto,
-        intencao,
-        capacidade: capacidade.id,
+      // Falha inesperada — classificação ainda anexada; sem reroute silencioso
+      respostaBruta = {
         ok: false,
-        mensagem: resposta.mensagem,
-        dados: null
-      });
-      return resposta;
+        mensagem:
+          "Falha ao executar destino «" +
+          rota.destino +
+          "»: " +
+          (err && err.message ? err.message : "erro desconhecido"),
+        intencao,
+        capacidade: null,
+        dados: {
+          classificacaoRespeitada: true,
+          mreFallback: false,
+          erroDestino: err && err.message ? err.message : String(err)
+        },
+        origem: "executiveEngine",
+        modo: "destino_falha"
+      };
     }
+
+    const resposta = anexarClassificacao(respostaBruta);
+
+    const memoria = atualizarAposInstrucao({
+      instrucao: texto,
+      intencao: resposta.intencao,
+      capacidade: resposta.capacidade,
+      ok: resposta.ok,
+      mensagem: resposta.mensagem,
+      dados: resposta.dados
+    });
+
+    if (resposta.dados && typeof resposta.dados === "object") {
+      resposta.dados = { ...resposta.dados, memoria };
+    } else {
+      resposta.dados = { memoria };
+    }
+
+    return resposta;
   },
 
   /** Consulta directa do estado actual da sessão. */

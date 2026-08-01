@@ -104,6 +104,11 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`requirements/REQ-055-painel-orquestracao-tempo-real.md`](requirements/REQ-055-painel-orquestracao-tempo-real.md) | **Homologada v0.1** — Painel de Orquestração; Progressividade |
 | [`implementation/IMP-055-painel-orquestracao-tempo-real.md`](implementation/IMP-055-painel-orquestracao-tempo-real.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 em produção |
 | [`architecture/ARQ-017-motor-de-execucao.md`](architecture/ARQ-017-motor-de-execucao.md) | **Homologada v0.1** — Motor de Execução; fluxo Intenção→Encerramento |
+| [`architecture/ARQ-018-classificacao-de-intencao.md`](architecture/ARQ-018-classificacao-de-intencao.md) | **Homologada v0.1** — Classificação de Intenção; quatro classes; Classificador primeiro |
+| [`requirements/REQ-057-classificacao-de-intencao.md`](requirements/REQ-057-classificacao-de-intencao.md) | **Homologada v0.1** — Classificação de Intenção; CAP-07; alinhada à ARQ-018 |
+| [`implementation/IMP-057-classificacao-de-intencao.md`](implementation/IMP-057-classificacao-de-intencao.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 em produção |
+| [`implementation/evidencias/IMP-057-matriz-ca-na.md`](implementation/evidencias/IMP-057-matriz-ca-na.md) | Matriz CA/NA REQ-057 — evidências IMP-057 |
+| [`implementation/evidencias/IMP-057-relatorio-consolidado.md`](implementation/evidencias/IMP-057-relatorio-consolidado.md) | Relatório consolidado E6+E7 + fecho IMP-057 |
 | [`requirements/REQ-056-motor-de-execucao.md`](requirements/REQ-056-motor-de-execucao.md) | **Homologada v0.1** — Motor de Execução; CAP-11 |
 | [`implementation/IMP-056-motor-de-execucao.md`](implementation/IMP-056-motor-de-execucao.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 |
 | [`implementation/evidencias/IMP-056-matriz-ca-na.md`](implementation/evidencias/IMP-056-matriz-ca-na.md) | Matriz CA/NA REQ-056 — evidências IMP-056 |

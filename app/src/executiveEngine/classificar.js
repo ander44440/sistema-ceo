@@ -1,59 +1,45 @@
 /**
- * Classificação de intenção — stub determinístico (sem IA).
+ * Classificação de intenção — adapter do Classificador canónico (IMP-057 E4).
+ * Um único limiar/caminho: `classificadorIntencao` → Intencao legada (capacidade).
  */
+
+import { classificar as classificarCanonico } from "../classificadorIntencao/regras.js";
+import { ID_POR_CLASSE } from "../classificadorIntencao/dominio.js";
+import { normalizarTexto } from "../classificadorIntencao/lexicon.js";
+
+export { normalizarTexto };
 
 /**
  * @typedef {object} Intencao
  * @property {string} id
  * @property {string} capacidade
  * @property {number} confianca
- * @property {"stub"} origem
+ * @property {"classificador_canonico"|"stub"} origem
+ * @property {string} [classe]
+ * @property {string} [destino]
+ * @property {object} [classificacao]
  */
-
-/** Normaliza abreviações e ruído comum de chat. */
-export function normalizarTexto(texto) {
-  return String(texto || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .replace(/\bhj\b/g, "hoje")
-    .replace(/\btbm\b/g, "também")
-    .replace(/\bpq\b/g, "porque")
-    .replace(/\bvc\b/g, "você")
-    .replace(/\bq\b/g, "que")
-    .replace(/[?？]+$/g, "")
-    .trim();
-}
 
 /**
+ * Mapa texto → capacidade registada (C1/C2/C4 e legado operacional).
+ * C3 não usa capacidade — o Núcleo chama o Motor.
  * @param {string} texto
- * @returns {Intencao}
+ * @returns {{ id: string, capacidade: string, confianca: number }}
  */
-export function classificarIntencao(texto) {
+export function mapearCapacidadePorTexto(texto) {
   const t = normalizarTexto(texto);
 
   if (!t) {
-    return {
-      id: "instrucao_vazia",
-      capacidade: "ia",
-      confianca: 1,
-      origem: "stub"
-    };
+    return { id: "instrucao_vazia", capacidade: "ia", confianca: 1 };
   }
 
   if (
     /^(ol[aá]|oi|bom dia|boa tarde|boa noite|hey|hello)([!. ]|$)/.test(t) ||
     /^(ol[aá]|oi|bom dia|boa tarde|boa noite)\b/.test(t)
   ) {
-    return {
-      id: "saudacao",
-      capacidade: "ia",
-      confianca: 0.95,
-      origem: "stub"
-    };
+    return { id: "saudacao", capacidade: "ia", confianca: 0.95 };
   }
 
-  // Perguntas factuais simples — responder direto, sem “menu executivo”.
   if (
     /\b(que dia (e|é)|qual (e|é) (o )?dia|data de hoje|hoje e que dia|hoje é que dia)\b/.test(
       t
@@ -61,24 +47,14 @@ export function classificarIntencao(texto) {
     /\bdia (e|é) hoje\b/.test(t) ||
     /^data$/.test(t)
   ) {
-    return {
-      id: "pergunta_data",
-      capacidade: "ia",
-      confianca: 0.98,
-      origem: "stub"
-    };
+    return { id: "pergunta_data", capacidade: "ia", confianca: 0.98 };
   }
 
   if (
     /\b(que horas|qual (e|é) a hora|hora atual|horas sao|horas são)\b/.test(t) ||
     /^hora$/.test(t)
   ) {
-    return {
-      id: "pergunta_hora",
-      capacidade: "ia",
-      confianca: 0.98,
-      origem: "stub"
-    };
+    return { id: "pergunta_hora", capacidade: "ia", confianca: 0.98 };
   }
 
   if (
@@ -86,12 +62,7 @@ export function classificarIntencao(texto) {
       t
     )
   ) {
-    return {
-      id: "pergunta_identidade",
-      capacidade: "ia",
-      confianca: 0.95,
-      origem: "stub"
-    };
+    return { id: "pergunta_identidade", capacidade: "ia", confianca: 0.95 };
   }
 
   if (
@@ -99,36 +70,19 @@ export function classificarIntencao(texto) {
     /\bestado\s+atual\b/.test(t) ||
     /\b(resumo\s+(executivo|da\s+sess[aã]o)|mem[oó]ria\s+executiva)\b/.test(t)
   ) {
-    return {
-      id: "consultar_estado",
-      capacidade: "memoria",
-      confianca: 0.95,
-      origem: "stub"
-    };
+    return { id: "consultar_estado", capacidade: "memoria", confianca: 0.95 };
   }
 
-  // Onda 03 E4 — classificar só o cabeçalho (antes de ":") para não
-  // confundir continuidade ("… | Abrir dia amanhã") com abrir_dia.
   {
     const cabeca = t.split(":")[0].trim();
     if (/\b(encerrar|fechar)\s+(o\s+)?dia\b/.test(cabeca)) {
-      return {
-        id: "encerrar_dia",
-        capacidade: "memoria",
-        confianca: 0.96,
-        origem: "stub"
-      };
+      return { id: "encerrar_dia", capacidade: "memoria", confianca: 0.96 };
     }
     if (
       /\babrir\s+(o\s+)?dia\b/.test(cabeca) ||
       /\b(iniciar|come[cç]ar)\s+(o\s+)?dia\b/.test(cabeca)
     ) {
-      return {
-        id: "abrir_dia",
-        capacidade: "memoria",
-        confianca: 0.96,
-        origem: "stub"
-      };
+      return { id: "abrir_dia", capacidade: "memoria", confianca: 0.96 };
     }
   }
 
@@ -139,12 +93,7 @@ export function classificarIntencao(texto) {
     /\bcto\s*:\s*\S+/.test(t) ||
     /\bpergunte?\s+ao\s+cto\b/.test(t)
   ) {
-    return {
-      id: "consultar_cto",
-      capacidade: "consultar_cto",
-      confianca: 0.94,
-      origem: "stub"
-    };
+    return { id: "consultar_cto", capacidade: "consultar_cto", confianca: 0.94 };
   }
 
   if (
@@ -152,12 +101,7 @@ export function classificarIntencao(texto) {
     /^job\s*:/.test(t) ||
     /\b(publicar|despachar|enviar).*\bpara\s+a\s+fila\b/.test(t)
   ) {
-    return {
-      id: "publicar_job_fila",
-      capacidade: "fila",
-      confianca: 0.93,
-      origem: "stub"
-    };
+    return { id: "publicar_job_fila", capacidade: "fila", confianca: 0.93 };
   }
 
   if (
@@ -165,36 +109,21 @@ export function classificarIntencao(texto) {
     /\bjobs?\s+pendentes\b/.test(t) ||
     /\b(listar|ver|mostrar|consultar)\s+fila\s+de\s+execu/.test(t)
   ) {
-    return {
-      id: "listar_jobs_fila",
-      capacidade: "fila",
-      confianca: 0.92,
-      origem: "stub"
-    };
+    return { id: "listar_jobs_fila", capacidade: "fila", confianca: 0.92 };
   }
 
   if (
     /\b(registrar|criar|adicionar)\s+decis/.test(t) ||
     /^decis[aã]o\s*:/.test(t)
   ) {
-    return {
-      id: "registrar_decisao",
-      capacidade: "memoria",
-      confianca: 0.92,
-      origem: "stub"
-    };
+    return { id: "registrar_decisao", capacidade: "memoria", confianca: 0.92 };
   }
 
   if (
     /\b(registrar|criar|adicionar)\s+pend/.test(t) ||
     /^pend[eê]ncia\s*:/.test(t)
   ) {
-    return {
-      id: "registrar_pendencia",
-      capacidade: "memoria",
-      confianca: 0.92,
-      origem: "stub"
-    };
+    return { id: "registrar_pendencia", capacidade: "memoria", confianca: 0.92 };
   }
 
   if (
@@ -204,8 +133,7 @@ export function classificarIntencao(texto) {
     return {
       id: "registrar_proxima_acao",
       capacidade: "memoria",
-      confianca: 0.92,
-      origem: "stub"
+      confianca: 0.92
     };
   }
 
@@ -213,8 +141,7 @@ export function classificarIntencao(texto) {
     return {
       id: "analisar_pendencias",
       capacidade: "memoria",
-      confianca: 0.85,
-      origem: "stub"
+      confianca: 0.85
     };
   }
 
@@ -224,76 +151,140 @@ export function classificarIntencao(texto) {
       t
     )
   ) {
+    return { id: "navegar", capacidade: "navegacao", confianca: 0.8 };
+  }
+
+  if (
+    /\b(abrir projeto|ativar (o )?coa|trocar (para o )?projeto|definir coa)\b/.test(
+      t
+    ) ||
+    (/^\s*(projeto|coa)\b/.test(t) && t.length < 80)
+  ) {
+    return { id: "atuar_em_projetos", capacidade: "projetos", confianca: 0.8 };
+  }
+
+  if (
+    /\b(dashboard|painel|visão executiva|visao executiva|posto de comando|centro de situa)/.test(
+      t
+    )
+  ) {
     return {
-      id: "navegar",
-      capacidade: "navegacao",
-      confianca: 0.8,
-      origem: "stub"
+      id: "consultar_dashboard",
+      capacidade: "dashboard",
+      confianca: 0.7
     };
   }
 
   if (
-    /\b(abrir projeto|ativar (o )?coa|trocar (para o )?projeto|definir coa)\b/.test(t) ||
-    (/^\s*(projeto|coa)\b/.test(t) && t.length < 80)
+    /\b(conhecimento|patrim[oó]nio|documento|acervo|buscar no acervo)\b/.test(t)
   ) {
-    return {
-      id: "atuar_em_projetos",
-      capacidade: "projetos",
-      confianca: 0.8,
-      origem: "stub"
-    };
-  }
-
-  if (/\b(dashboard|painel|visão executiva|visao executiva|posto de comando|centro de situa)/.test(t)) {
-    return {
-      id: "consultar_dashboard",
-      capacidade: "dashboard",
-      confianca: 0.7,
-      origem: "stub"
-    };
-  }
-
-  if (/\b(conhecimento|patrim[oó]nio|documento|acervo|buscar no acervo)\b/.test(t)) {
     return {
       id: "consultar_conhecimento",
       capacidade: "conhecimento",
-      confianca: 0.75,
-      origem: "stub"
+      confianca: 0.75
     };
   }
 
   if (/\b(ferramenta|tool|integra[cç][aã]o|conectar)\b/.test(t)) {
-    return {
-      id: "usar_ferramenta",
-      capacidade: "ferramentas",
-      confianca: 0.65,
-      origem: "stub"
-    };
+    return { id: "usar_ferramenta", capacidade: "ferramentas", confianca: 0.65 };
   }
 
-  if (/\b(prioriz|planej|decid|analis|revis|organiz|próximo passo|proximo passo|objetivo|motoboy|mg2)\b/.test(t)) {
-    return {
-      id: "deliberar_objetivo",
-      capacidade: "ia",
-      confianca: 0.7,
-      origem: "stub"
-    };
+  if (
+    /\b(prioriz|planej|decid|analis|revis|organiz|próximo passo|proximo passo|objetivo|motoboy|mg2)\b/.test(
+      t
+    )
+  ) {
+    return { id: "deliberar_objetivo", capacidade: "ia", confianca: 0.7 };
   }
 
-  // Pergunta genérica (começa por que/qual/quando/onde/como/por que)
   if (/^(que|qual|quando|onde|como|por que|porque|quem)\b/.test(t)) {
+    return { id: "pergunta_aberta", capacidade: "ia", confianca: 0.5 };
+  }
+
+  return { id: "deliberar", capacidade: "ia", confianca: 0.4 };
+}
+
+/**
+ * @param {string} texto
+ * @returns {Intencao}
+ */
+export function classificarIntencao(texto) {
+  const saida = classificarCanonico(texto);
+  const idClasse = ID_POR_CLASSE[saida.classe] || "C?";
+
+  if (saida.classe === "trabalho_executivo" && !saida.precisaClarificacao) {
     return {
-      id: "pergunta_aberta",
-      capacidade: "ia",
-      confianca: 0.5,
-      origem: "stub"
+      id: "trabalho_executivo",
+      capacidade: "motor_execucao",
+      confianca: saida.confianca,
+      origem: "classificador_canonico",
+      classe: saida.classe,
+      destino: saida.destino,
+      classificacao: saida,
+      idClasse
     };
   }
 
+  if (saida.precisaClarificacao || saida.destino === "clarificacao") {
+    return {
+      id: "clarificacao",
+      capacidade: "ia",
+      confianca: saida.confianca,
+      origem: "classificador_canonico",
+      classe: saida.classe,
+      destino: "clarificacao",
+      classificacao: saida,
+      idClasse,
+      precisaClarificacao: true
+    };
+  }
+
+  const mapa = mapearCapacidadePorTexto(texto);
+
+  if (saida.classe === "conhecimento_geral") {
+    const locais = new Set([
+      "saudacao",
+      "pergunta_data",
+      "pergunta_hora",
+      "pergunta_identidade",
+      "pergunta_aberta",
+      "instrucao_vazia"
+    ]);
+    const id = locais.has(mapa.id) ? mapa.id : "resposta_leve";
+    return {
+      id,
+      capacidade: "ia",
+      confianca: saida.confianca,
+      origem: "classificador_canonico",
+      classe: saida.classe,
+      destino: saida.destino,
+      classificacao: saida,
+      idClasse
+    };
+  }
+
+  if (saida.classe === "comando_operacional") {
+    return {
+      id: mapa.id,
+      capacidade: mapa.capacidade,
+      confianca: saida.confianca,
+      origem: "classificador_canonico",
+      classe: saida.classe,
+      destino: saida.destino,
+      classificacao: saida,
+      idClasse
+    };
+  }
+
+  // C2 — conversa de projecto → IA/MRE
   return {
-    id: "deliberar",
+    id: mapa.capacidade === "ia" ? mapa.id : "deliberar_objetivo",
     capacidade: "ia",
-    confianca: 0.4,
-    origem: "stub"
+    confianca: saida.confianca,
+    origem: "classificador_canonico",
+    classe: saida.classe,
+    destino: saida.destino,
+    classificacao: saida,
+    idClasse
   };
 }
