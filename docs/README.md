@@ -103,6 +103,10 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-016-painel-orquestracao-tempo-real.md`](architecture/ARQ-016-painel-orquestracao-tempo-real.md) | **Homologada v0.2** — Painel de Orquestração; Progressividade; Conversa central |
 | [`requirements/REQ-055-painel-orquestracao-tempo-real.md`](requirements/REQ-055-painel-orquestracao-tempo-real.md) | **Homologada v0.1** — Painel de Orquestração; Progressividade |
 | [`implementation/IMP-055-painel-orquestracao-tempo-real.md`](implementation/IMP-055-painel-orquestracao-tempo-real.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 em produção |
+| [`architecture/ARQ-017-motor-de-execucao.md`](architecture/ARQ-017-motor-de-execucao.md) | **Homologada v0.1** — Motor de Execução; fluxo Intenção→Encerramento |
+| [`requirements/REQ-056-motor-de-execucao.md`](requirements/REQ-056-motor-de-execucao.md) | **Homologada v0.1** — Motor de Execução; CAP-11 |
+| [`implementation/IMP-056-motor-de-execucao.md`](implementation/IMP-056-motor-de-execucao.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 |
+| [`implementation/evidencias/IMP-056-matriz-ca-na.md`](implementation/evidencias/IMP-056-matriz-ca-na.md) | Matriz CA/NA REQ-056 — evidências IMP-056 |
 | [`learning/ANCORA-MESTRA.md`](learning/ANCORA-MESTRA.md) | **Âncora Mestra** — Painel Orquestração + Conector CTO em produção; autonomia local V2 |
 | [`learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md`](learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md) | Checkpoint — Dispatcher V2 operacional |
 | [`architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md`](architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md) | **Rascunho v0.1** — ARQ da NCS no limiar MRE (revisão conjunta; sem IMP) |

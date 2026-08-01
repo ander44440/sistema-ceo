@@ -30,7 +30,15 @@
     "test:orquestracao:e4": "node --test src/orquestracao/e4.test.js",
     "test:orquestracao:e5": "node --test src/orquestracao/e5.test.js",
     "test:orquestracao:e6": "node --test src/orquestracao/e6.test.js",
-    "test:orquestracao:e7": "node --test src/orquestracao/e7.test.js"
+    "test:orquestracao:e7": "node --test src/orquestracao/e7.test.js",
+    "test:motor:e1": "node --test src/motorExecucao/dominio.test.js",
+    "test:motor:e2": "node --test src/motorExecucao/politicaAprovacao.test.js",
+    "test:motor:e3": "node --test src/motorExecucao/ponteParecerJob.test.js",
+    "test:motor:e4": "node --test src/motorExecucao/integracaoOrquestrador.test.js",
+    "test:motor:e5": "node --test src/motorExecucao/resultadoEncerramento.test.js",
+    "test:motor:e6": "node --test src/motorExecucao/fronteiras.test.js",
+    "test:motor:e7": "node --test src/motorExecucao/e7.test.js",
+    "test:motor": "node --test src/motorExecucao/dominio.test.js src/motorExecucao/politicaAprovacao.test.js src/motorExecucao/ponteParecerJob.test.js src/motorExecucao/integracaoOrquestrador.test.js src/motorExecucao/resultadoEncerramento.test.js src/motorExecucao/fronteiras.test.js src/motorExecucao/e7.test.js"
   },
   "devDependencies": {
     "vite": "^6.0.0"

@@ -261,7 +261,34 @@ export const executiveEngine = {
   registrar: registrarCapacidade,
   obterCapacidade,
   listarCapacidades,
-  capacidadesCanonicas: CAPACIDADES_CANONICAS
+  capacidadesCanonicas: CAPACIDADES_CANONICAS,
+
+  /**
+   * Motor de Execução (IMP-056 E4) — condução pós-parecer.
+   * Não inicia Agent/SDK; handoff lógico ao Dispatcher após Job pending.
+   * @param {object} parecer
+   * @param {object} [deps]
+   */
+  async conduzirMotorExecucao(parecer, deps = {}) {
+    this.inicializar();
+    const { conduzirAposParecer } = await import(
+      "../motorExecucao/integracaoOrquestrador.js"
+    );
+    return conduzirAposParecer(parecer, deps);
+  },
+
+  /**
+   * Motor E5 — processa Job terminal → Resultado + Encerramento (sem Agent/SDK).
+   * @param {object} ciclo
+   * @param {object} job
+   */
+  async processarResultadoMotor(ciclo, job) {
+    this.inicializar();
+    const { processarResultadoEEncerrar } = await import(
+      "../motorExecucao/resultadoEncerramento.js"
+    );
+    return processarResultadoEEncerrar(ciclo, job);
+  }
 };
 
 export { registrarCapacidade, listarCapacidades, obterCapacidade };
