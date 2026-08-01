@@ -136,11 +136,15 @@ export async function executarDestinoC2(ctx) {
         : "deliberar_objetivo"
   };
 
+  const lastroConsciencia =
+    ctx.deps && ctx.deps.lastroConsciencia ? ctx.deps.lastroConsciencia : null;
+
   const resultado = await capacidadeIa.executar(
     ctx.contextoCapacidade({
       texto: ctx.texto,
       historico: ctx.historico,
-      intencao: intencaoC2
+      intencao: intencaoC2,
+      ...(lastroConsciencia ? { lastroConsciencia } : {})
     })
   );
 

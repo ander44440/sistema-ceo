@@ -18,6 +18,10 @@ import {
 } from "../../mre/integracaoNucleo.js";
 import { flagMre } from "../../mre/roteamentoDeliberativo.js";
 import { naturalizarRespostaNucleo } from "../../conversacaoNatural/index.js";
+import {
+  comporProsaLastro,
+  garantirReflexoEstadoExecutivo
+} from "../../conscienciaOperacional/influenciaDeliberacao.js";
 
 function formatarDataAgora() {
   const agora = new Date();
@@ -114,8 +118,28 @@ async function executarBruto(ctx) {
   }
 
   if (ehRotaDeliberativa(intencao) && flagMre.ativo) {
+    const lastro = ctx.lastroConsciencia || null;
     const status = await obterStatusLlm();
     if (!status || !status.configurado) {
+      // IMP-059 E4: com lastro operacional, contextualizar mesmo sem LLM
+      const prosaLastro = comporProsaLastro(lastro, texto);
+      if (prosaLastro) {
+        return {
+          ok: true,
+          capacidade: "ia",
+          mensagem: prosaLastro,
+          modo: "consciencia_operacional",
+          dados: {
+            instrucao: texto,
+            intencao,
+            memoria: mem,
+            coa,
+            llm: status,
+            lastroConsciencia: lastro,
+            rota: "deliberativa-consciencia-sem-llm"
+          }
+        };
+      }
       return {
         ok: true,
         capacidade: "ia",
@@ -134,11 +158,25 @@ async function executarBruto(ctx) {
 
     try {
       const mreOut = await executarRotaDeliberativa(
-        { ...ctx, coaAtivo: coa },
-        { canal: ctx.canalSpeaker || "chat" }
+        {
+          ...ctx,
+          coaAtivo: coa,
+          ...(lastro ? { lastroConsciencia: lastro } : {})
+        },
+        {
+          canal: ctx.canalSpeaker || "chat",
+          // Consciência não escreve na Fila (E4-CA4); MRE pode ainda receber publicarJob via deps
+          skipFila: ctx.skipFilaConsciencia === true ? true : undefined
+        }
+      );
+      const reflexo = garantirReflexoEstadoExecutivo(
+        mreOut.mensagem,
+        lastro,
+        texto
       );
       return {
         ...mreOut,
+        mensagem: reflexo.mensagem,
         capacidade: "ia",
         dados: {
           ...(mreOut.dados || {}),
@@ -146,17 +184,21 @@ async function executarBruto(ctx) {
           intencao,
           memoria: mem,
           coa,
-          llm: status
+          llm: status,
+          conscienciaInfluencia: reflexo,
+          ...(lastro ? { lastroConsciencia: lastro } : {})
         }
       };
     } catch (err) {
+      const fallback = fallbackSemLlm(
+        texto,
+        err && err.message ? err.message : "falha no MRE"
+      );
+      const reflexo = garantirReflexoEstadoExecutivo(fallback, lastro, texto);
       return {
         ok: true,
         capacidade: "ia",
-        mensagem: fallbackSemLlm(
-          texto,
-          err && err.message ? err.message : "falha no MRE"
-        ),
+        mensagem: reflexo.mensagem,
         modo: "fallback",
         dados: {
           instrucao: texto,
@@ -164,7 +206,8 @@ async function executarBruto(ctx) {
           memoria: mem,
           coa,
           erro: err && err.message,
-          rota: "deliberativa-erro"
+          rota: "deliberativa-erro",
+          conscienciaInfluencia: reflexo
         }
       };
     }

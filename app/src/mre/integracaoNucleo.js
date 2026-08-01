@@ -13,6 +13,11 @@ import { executarDeliberacaoMre } from "./executarDeliberacao.js";
 import { ehRotaDeliberativa } from "./roteamentoDeliberativo.js";
 import { aplicarEfeitosPosDeliberacao } from "./posDeliberacao/efeitosPosDeliberacao.js";
 import { criarStoreRetencaoMemoria } from "./posDeliberacao/persistirRetencao.js";
+import {
+  blocoContextoEntradaMre,
+  schemaHintConsciencia,
+  garantirReflexoEstadoExecutivo
+} from "../conscienciaOperacional/influenciaDeliberacao.js";
 
 /** Store de retenção da sessão (browser/Node). */
 let storeRetencaoSessao = criarStoreRetencaoMemoria();
@@ -59,6 +64,14 @@ export function montarEntradaMre(ctx) {
   }
   if (painel?.proximoPasso) factos.push(`Painel próximo passo: ${painel.proximoPasso}`);
 
+  // IMP-059 E3/E4 — lastro do Estado Executivo (só se o Núcleo recebeu contexto relevante)
+  const lastro = ctx.lastroConsciencia;
+  if (lastro && Array.isArray(lastro.factosOficiais)) {
+    for (const f of lastro.factosOficiais) {
+      if (f) factos.push(f);
+    }
+  }
+
   const resumoBriefing =
     factosBriefing.length > 0
       ? `Briefing COA: ${factosBriefing.slice(0, 3).join(" | ")}`
@@ -96,8 +109,13 @@ export function montarEntradaMre(ctx) {
         }
       : null;
 
+  let mensagem = enriquecerMensagemComBriefing(texto, factosBriefing);
+  mensagem = enriquecerMensagemComConsciencia(mensagem, lastro, (l) =>
+    blocoContextoEntradaMre(l, texto)
+  );
+
   return {
-    mensagem: enriquecerMensagemComBriefing(texto, factosBriefing),
+    mensagem,
     coaId: coa?.id ?? mem?.projetoAtivo?.id ?? null,
     intencao: ctx.intencao || null,
     snapshotPainel,
@@ -124,6 +142,17 @@ function enriquecerMensagemComBriefing(texto, factosBriefing) {
 }
 
 /**
+ * @param {string} texto
+ * @param {object|null|undefined} lastro
+ * @param {(lastro: object) => string} blocoFn
+ */
+function enriquecerMensagemComConsciencia(texto, lastro, blocoFn) {
+  if (!lastro || lastro.temContextoRelevante !== true) return texto;
+  if (typeof blocoFn !== "function") return texto;
+  return `${texto}\n\n${blocoFn(lastro)}`;
+}
+
+/**
  * @param {object} ctx
  * @param {object} [deps]
  */
@@ -131,43 +160,66 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
   const canal = deps.canal || "chat";
   const entrada = montarEntradaMre(ctx);
   const chamarLlmBase = deps.chamarLlm || criarChamarLlmCeo();
+  const lastro = ctx.lastroConsciencia || null;
+  const temLastroConsciencia = Boolean(
+    lastro && lastro.temContextoRelevante === true
+  );
   const temLastroBriefing = (entrada.factosOficiais || []).some((f) =>
     /WorldLab2|Briefing|COA MG2|Motoboy Game 2/i.test(String(f))
   );
 
-  /** B1 — reforço só no adaptador do Núcleo (não altera ficheiros do motor MRE). */
-  const chamarLlm = temLastroBriefing
-    ? async (pedido) => {
-        if (pedido?.estagio === "6_decisao") {
-          return chamarLlmBase({
-            ...pedido,
-            schemaHint:
-              `${pedido.schemaHint || ""} ` +
-              "O dossier/factosOficiais já trazem o Briefing Curado do COA. " +
-              "Se a pergunta for diagnóstico / o que se sabe do projeto e os factos bastam, " +
-              "use estado=aprovar e uma recomendação que sintetize factos concretos " +
-              "(WorldLab2, performance, outdoors, próximo passo). " +
-              "Proibido solicitar_dados apenas porque a mensagem do utilizador é curta " +
-              "ou não repete esses factos."
-          });
+  /**
+   * B1 + IMP-059 E4 — reforço no adaptador do Núcleo (não altera o motor MRE).
+   * Autonomia deliberativa preservada; lastro é contexto obrigatório na recomendação.
+   */
+  const chamarLlm =
+    temLastroBriefing || temLastroConsciencia
+      ? async (pedido) => {
+          if (pedido?.estagio === "6_decisao") {
+            let hint = pedido.schemaHint || "";
+            if (temLastroBriefing) {
+              hint +=
+                " O dossier/factosOficiais já trazem o Briefing Curado do COA. " +
+                "Se a pergunta for diagnóstico / o que se sabe do projeto e os factos bastam, " +
+                "use estado=aprovar e uma recomendação que sintetize factos concretos " +
+                "(WorldLab2, performance, outdoors, próximo passo). " +
+                "Proibido solicitar_dados apenas porque a mensagem do utilizador é curta " +
+                "ou não repete esses factos.";
+            }
+            if (temLastroConsciencia) {
+              hint +=
+                " " + schemaHintConsciencia(lastro, ctx.instrucao || "");
+            }
+            return chamarLlmBase({ ...pedido, schemaHint: hint });
+          }
+          return chamarLlmBase(pedido);
         }
-        return chamarLlmBase(pedido);
-      }
-    : chamarLlmBase;
+      : chamarLlmBase;
 
   const resultado = await executarDeliberacaoMre(entrada, {
     chamarLlm,
-    preferirSolicitarDados: temLastroBriefing ? false : undefined,
+    preferirSolicitarDados:
+      temLastroBriefing || temLastroConsciencia ? false : undefined,
     metadados: { origem: "nucleo", intencaoId: ctx.intencao?.id }
   });
 
   if (!resultado.ok || !resultado.parecer) {
+    const falha =
+      "Não foi possível concluir a deliberação executiva com parecer válido.";
+    const reflexoFalha = garantirReflexoEstadoExecutivo(
+      falha,
+      lastro,
+      ctx.instrucao || ""
+    );
     return {
       ok: false,
-      mensagem:
-        "Não foi possível concluir a deliberação executiva com parecer válido.",
+      mensagem: reflexoFalha.mensagem,
       modo: "mre-falha",
-      dados: { mre: resultado, rota: "deliberativa" }
+      dados: {
+        mre: resultado,
+        rota: "deliberativa",
+        conscienciaInfluencia: reflexoFalha
+      }
     };
   }
 
@@ -186,6 +238,15 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
   }
 
   const comunicado = falado.comunicado;
+  const reflexo = garantirReflexoEstadoExecutivo(
+    comunicado.texto,
+    lastro,
+    ctx.instrucao || ""
+  );
+  if (reflexo.aplicada) {
+    comunicado.texto = reflexo.mensagem;
+  }
+
   try {
     const { registarDestaquesDeliberacao } = await import(
       "./canais/centroSituacaoDeliberacao.js"
@@ -196,6 +257,7 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
   }
 
   // F7 + F8 — efeitos pós-parecer (não bloqueiam a mensagem se falharem)
+  // IMP-059 E4: a camada Consciência não publica Jobs; o MRE mantém efeitos próprios.
   let efeitos = null;
   try {
     const publicarJob =
@@ -228,7 +290,8 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
       textoVoz: textoParaVoz(comunicado),
       parecerId: resultado.parecer.id,
       referenciaDecisao: comunicado.referenciaDecisao,
-      efeitosPosDeliberacao: efeitos
+      efeitosPosDeliberacao: efeitos,
+      conscienciaInfluencia: reflexo
     }
   };
 }

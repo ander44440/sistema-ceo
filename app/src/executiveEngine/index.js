@@ -35,6 +35,11 @@ import {
   aplicarMensagemGateNaResposta
 } from "../continuidadeGate/integracaoConversa.js";
 import { conduzirAposDecisaoGate } from "../motorExecucao/integracaoOrquestrador.js";
+import {
+  consultarEstadoExecutivoAntesDeResponder,
+  metadadoConscienciaParaDados
+} from "../conscienciaOperacional/consultarAntesDeResponder.js";
+import { criarLeitoresConscienciaPadrao } from "../conscienciaOperacional/leitoresPadrao.js";
 
 const CAPACIDADES_INICIAIS = [
   capacidadeDashboard,
@@ -87,8 +92,14 @@ function registrarPadrao() {
   }
 }
 
-function contextoCapacidade({ texto, historico, intencao }) {
-  return {
+function contextoCapacidade({
+  texto,
+  historico,
+  intencao,
+  lastroConsciencia = null
+}) {
+  /** @type {Record<string, unknown>} */
+  const ctx = {
     instrucao: texto,
     historico,
     intencao,
@@ -96,6 +107,11 @@ function contextoCapacidade({ texto, historico, intencao }) {
     memoria: lerMemoria,
     coaAtivo: obterCoaAtivo()
   };
+  // IMP-059 E3: lastro só quando há contexto operacional relevante
+  if (lastroConsciencia) {
+    ctx.lastroConsciencia = lastroConsciencia;
+  }
+  return ctx;
 }
 
 /**
@@ -117,7 +133,9 @@ export const executiveEngine = {
    *
    * @param {string | InstrucaoEntrada} entrada
    * @param {import("../classificadorIntencao/integracaoNucleo.js").DepsE4 & {
-   *   storeContinuidade?: import("../continuidadeGate/contexto.js").StoreContextoGate
+   *   storeContinuidade?: import("../continuidadeGate/contexto.js").StoreContextoGate,
+   *   leitoresConsciencia?: import("../conscienciaOperacional/agregarEstado.js").LeitoresFontes,
+   *   agoraConsciencia?: () => string
    * }} [deps]
    * @returns {Promise<RespostaExecutiva>}
    */
@@ -221,6 +239,20 @@ export const executiveEngine = {
     const classificacao = rota.classificacao;
     const intencao = classificarIntencao(texto);
 
+    // IMP-059 E3/E4: Continuidade já foi tratada acima — consulta só no caminho deliberativo/executivo
+    const leitoresConsciencia =
+      deps.leitoresConsciencia ||
+      criarLeitoresConscienciaPadrao({ storeContinuidade: store });
+    const consultaConsciencia = await consultarEstadoExecutivoAntesDeResponder({
+      classe: classificacao.classe,
+      idClasse: classificacao.idClasse || rota.rota?.id || null,
+      continuidadeConsumiu: false,
+      leitores: leitoresConsciencia,
+      agora: deps.agoraConsciencia
+    });
+    const metaConsciencia = metadadoConscienciaParaDados(consultaConsciencia);
+    const lastroConsciencia = consultaConsciencia.lastroParaNucleo;
+
     const anexarClassificacao = (resposta) => {
       const baseDados =
         resposta.dados && typeof resposta.dados === "object"
@@ -233,6 +265,10 @@ export const executiveEngine = {
         ok: rota.ok,
         idClasse: rota.rota?.id || null
       };
+      // Metadado só quando a consulta obrigatória correu (C2/C3) — C1/C4 intactos
+      if (consultaConsciencia.consultado) {
+        baseDados.conscienciaOperacional = metaConsciencia;
+      }
       return { ...resposta, intencao: resposta.intencao || intencao, dados: baseDados };
     };
 
@@ -253,10 +289,25 @@ export const executiveEngine = {
     }
 
     // E5-CA1: C2 nunca recebe publicador — zero Job automático nesta via
+    // IMP-059 E3: lastro ao Núcleo só se relevante (senão deps idênticas ao comportamento actual)
     const depsDestino =
       rota.destino === "nucleo_mre"
-        ? { ...deps, publicarJob: undefined }
-        : { ...deps, publicarJob };
+        ? {
+            ...deps,
+            publicarJob: undefined,
+            ...(lastroConsciencia ? { lastroConsciencia } : {})
+          }
+        : {
+            ...deps,
+            publicarJob,
+            ...(lastroConsciencia ? { lastroConsciencia } : {})
+          };
+
+    const contextoCapacidadeComLastro = (parcial) =>
+      contextoCapacidade({
+        ...parcial,
+        lastroConsciencia: lastroConsciencia || parcial.lastroConsciencia || null
+      });
 
     const conduzirMotorPadrao = envolverConduzirMotorComContinuidade(
       store,
@@ -273,7 +324,7 @@ export const executiveEngine = {
         classificacao,
         rota,
         obterCapacidade,
-        contextoCapacidade,
+        contextoCapacidade: contextoCapacidadeComLastro,
         deps: depsDestino,
         conduzirMotorPadrao,
         naturalizar: (r) =>

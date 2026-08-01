@@ -106,9 +106,21 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-017-motor-de-execucao.md`](architecture/ARQ-017-motor-de-execucao.md) | **Homologada v0.1** — Motor de Execução; fluxo Intenção→Encerramento |
 | [`architecture/ARQ-018-classificacao-de-intencao.md`](architecture/ARQ-018-classificacao-de-intencao.md) | **Homologada v0.1** — Classificação de Intenção; quatro classes; Classificador primeiro |
 | [`architecture/ARQ-019-continuidade-do-gate-de-execucao.md`](architecture/ARQ-019-continuidade-do-gate-de-execucao.md) | **Homologada v0.1** — Continuidade do Gate de Execução; retoma pós-decisão humana |
+| [`architecture/ARQ-020-consciencia-operacional.md`](architecture/ARQ-020-consciencia-operacional.md) | **Homologada v0.1** — Consciência Operacional; Estado Executivo Atual antes de C2/C3 |
 | [`requirements/REQ-057-classificacao-de-intencao.md`](requirements/REQ-057-classificacao-de-intencao.md) | **Homologada v0.1** — Classificação de Intenção; CAP-07; alinhada à ARQ-018 |
 | [`requirements/REQ-058-continuidade-do-gate-de-execucao.md`](requirements/REQ-058-continuidade-do-gate-de-execucao.md) | **Homologada v0.1** — Continuidade do Gate de Execução; CAP-11; alinhada à ARQ-019 |
+| [`requirements/REQ-059-consciencia-operacional.md`](requirements/REQ-059-consciencia-operacional.md) | **Homologada v0.1** — Consciência Operacional; CAP-01; alinhada à ARQ-020 |
 | [`implementation/IMP-058-continuidade-do-gate-de-execucao.md`](implementation/IMP-058-continuidade-do-gate-de-execucao.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 |
+| [`implementation/IMP-059-consciencia-operacional.md`](implementation/IMP-059-consciencia-operacional.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 |
+| [`implementation/evidencias/IMP-059-E1-evidencia.md`](implementation/evidencias/IMP-059-E1-evidencia.md) | Evidência IMP-059 E1 — domínio Estado Executivo F1–F8 / P1–P7 |
+| [`implementation/evidencias/IMP-059-E2-evidencia.md`](implementation/evidencias/IMP-059-E2-evidencia.md) | Evidência IMP-059 E2 — agregador read-only / degradação por fonte |
+| [`implementation/evidencias/IMP-059-E3-evidencia.md`](implementation/evidencias/IMP-059-E3-evidencia.md) | Evidência IMP-059 E3 — consulta obrigatória C2/C3 + lastro Núcleo |
+| [`implementation/evidencias/IMP-059-E4-evidencia.md`](implementation/evidencias/IMP-059-E4-evidencia.md) | Evidência IMP-059 E4 — influência MRE / demos Job+Gate |
+| [`implementation/evidencias/IMP-059-E5-evidencia.md`](implementation/evidencias/IMP-059-E5-evidencia.md) | Evidência IMP-059 E5 — prosa canónica contextualizada |
+| [`implementation/evidencias/IMP-059-E6-evidencia.md`](implementation/evidencias/IMP-059-E6-evidencia.md) | Evidência IMP-059 E6 — fronteiras / read-only |
+| [`implementation/evidencias/IMP-059-E7-evidencia.md`](implementation/evidencias/IMP-059-E7-evidencia.md) | Evidência IMP-059 E7 — documentação |
+| [`implementation/evidencias/IMP-059-matriz-ca-na.md`](implementation/evidencias/IMP-059-matriz-ca-na.md) | Matriz CA/NA REQ-059 — evidências IMP-059 |
+| [`implementation/evidencias/IMP-059-relatorio-consolidado.md`](implementation/evidencias/IMP-059-relatorio-consolidado.md) | Relatório consolidado E1–E7 + fecho IMP-059 |
 | [`implementation/evidencias/IMP-058-E1-evidencia.md`](implementation/evidencias/IMP-058-E1-evidencia.md) | Evidência IMP-058 E1 — domínio / estados / Gate pendente |
 | [`implementation/evidencias/IMP-058-E2-evidencia.md`](implementation/evidencias/IMP-058-E2-evidencia.md) | Evidência IMP-058 E2 — léxico / reconhecimento determinístico |
 | [`implementation/evidencias/IMP-058-E3-evidencia.md`](implementation/evidencias/IMP-058-E3-evidencia.md) | Evidência IMP-058 E3 — store contexto / Gate activo |
