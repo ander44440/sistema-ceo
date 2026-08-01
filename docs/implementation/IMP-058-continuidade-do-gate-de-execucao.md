@@ -355,6 +355,7 @@ Commit **só** quando:
 | 0.1 | 01/08/2026 | Engenheiro (Cursor) | E5 fluxos + P10 Motor | Autorização de execução E5 | Aguarda Gate E5 |
 | 0.1 | 01/08/2026 | Engenheiro (Cursor) | E6+E7 fronteiras + docs + fecho | Autorização conjunta E6/E7 | Aguarda Gate fecho |
 | 0.1 | 01/08/2026 | Patrocinador | Homologação IMP-058 | Gate de fecho E1–E7 | **Homologada** |
+| 0.1 | 01/08/2026 | Engenheiro (Cursor) | Commit + push + deploy + smoke produção | Encerramento autorizado | `f4c22ae` · Vercel READY |
 
 ---
 
