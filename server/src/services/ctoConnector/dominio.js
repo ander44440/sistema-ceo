@@ -132,21 +132,51 @@ function temCampoProibido(obj) {
   return false;
 }
 
+/** Normaliza aliases comuns do modelo para os campos canónicos do schema. */
+export function normalizarCorpoEstruturado(schemaId, corpo) {
+  if (!corpo || typeof corpo !== "object") return corpo;
+  const c = { ...corpo };
+  if (schemaId === "cto.parecer_v1") {
+    if (typeof c.conclusao !== "string") {
+      const alt =
+        c.conclusão || c.conclusion || c.parecer || c.resumo || c.veredito;
+      if (typeof alt === "string" && alt.trim()) c.conclusao = alt.trim();
+    }
+  }
+  if (schemaId === "cto.gate_v1" && typeof c.decisao !== "string") {
+    const alt = c.decisão || c.decision || c.gate;
+    if (typeof alt === "string") c.decisao = alt.trim();
+  }
+  if (schemaId === "cto.revisao_artefacto_v1" && typeof c.veredicto !== "string") {
+    const alt = c.veredito || c.verdicto || c.resultado;
+    if (typeof alt === "string") c.veredicto = alt.trim();
+  }
+  if (
+    schemaId === "cto.duvida_normativa_v1" &&
+    typeof c.interpretacao !== "string"
+  ) {
+    const alt = c.interpretação || c.interpretation || c.resposta;
+    if (typeof alt === "string") c.interpretacao = alt.trim();
+  }
+  return c;
+}
+
 /**
  * @param {string} schemaId
  * @param {unknown} corpo
  */
 export function validarCorpoSchema(schemaId, corpo) {
-  if (!corpo || typeof corpo !== "object") {
+  const normalizado = normalizarCorpoEstruturado(schemaId, corpo);
+  if (!normalizado || typeof normalizado !== "object") {
     return { ok: false, mensagem: "corpoEstruturado em falta." };
   }
-  if (temCampoProibido(corpo)) {
+  if (temCampoProibido(normalizado)) {
     return {
       ok: false,
       mensagem: "corpoEstruturado contém campos de implementação proibidos."
     };
   }
-  const c = /** @type {Record<string, unknown>} */ (corpo);
+  const c = /** @type {Record<string, unknown>} */ (normalizado);
   switch (schemaId) {
     case "cto.parecer_v1":
       if (typeof c.conclusao !== "string" || !c.conclusao.trim()) {
@@ -249,10 +279,11 @@ export function montarResultadoDeParsed(pacote, parsed, rastreioBase) {
     };
   }
   if (estado === "ok") {
-    const vs = validarCorpoSchema(
+    const corpoNorm = normalizarCorpoEstruturado(
       pacote.expectativaSchema,
       parsed.corpoEstruturado
     );
+    const vs = validarCorpoSchema(pacote.expectativaSchema, corpoNorm);
     if (!vs.ok) {
       return {
         ok: false,
@@ -264,6 +295,7 @@ export function montarResultadoDeParsed(pacote, parsed, rastreioBase) {
         }
       };
     }
+    parsed.corpoEstruturado = corpoNorm;
   }
   /** @type {Record<string, unknown>} */
   const resultado = {
@@ -291,6 +323,32 @@ export function montarResultadoDeParsed(pacote, parsed, rastreioBase) {
 }
 
 export function montarMensagensCto(pacote, { correcaoSchema = false } = {}) {
+  function esquemaCorpoHint(schemaId) {
+    switch (schemaId) {
+      case "cto.parecer_v1":
+        return {
+          conclusao: "string obrigatória",
+          alternativas: "opcional array",
+          riscos: "opcional",
+          condicoes: "opcional"
+        };
+      case "cto.revisao_artefacto_v1":
+        return {
+          veredicto: "aprovado|aprovado_com_oe|rejeitado",
+          oes: "opcional array"
+        };
+      case "cto.gate_v1":
+        return {
+          decisao: "go|no_go|condicionado",
+          checklist: "opcional array"
+        };
+      case "cto.duvida_normativa_v1":
+        return { interpretacao: "string obrigatória", refs: "opcional array" };
+      default:
+        return `conforme ${schemaId}`;
+    }
+  }
+
   const userPayload = {
     consultaId: pacote.consultaId,
     tipo: pacote.tipo,
@@ -306,7 +364,7 @@ export function montarMensagensCto(pacote, { correcaoSchema = false } = {}) {
       papelConfirmado: "CTO",
       estado: "ok|recusa",
       resumo: "string",
-      corpoEstruturado: `conforme ${pacote.expectativaSchema}`,
+      corpoEstruturado: esquemaCorpoHint(pacote.expectativaSchema),
       opcoes: "opcional",
       recomendacao: "opcional",
       riscos: "opcional",
