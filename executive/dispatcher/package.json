@@ -1,0 +1,19 @@
+{
+  "name": "ceo-fila-dispatcher",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Dispatcher local REQ-053 — observa a Fila REQ-045 e acorda o Cursor Agent",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "once": "node src/index.js --once",
+    "dry-run": "node src/index.js --once --dry-run",
+    "test": "node --test src/dispatcher.test.js"
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.0"
+  }
+}

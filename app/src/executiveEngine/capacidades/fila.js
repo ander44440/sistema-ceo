@@ -58,7 +58,8 @@ export const capacidadeFila = Object.freeze({
             acao: `Jobs pendentes:\n${lista}`,
             contexto: resumirContexto(mem),
             proximo:
-              "No Cursor, peça «consuma a fila» ou abra executive/queue/PROXIMO.md.",
+              "Com o dispatcher V2 a correr (executive/dispatcher), o Agent consome sozinho; " +
+              "senão, no Cursor: «consuma a fila».",
             limite: "A fila não executa trabalho — só despacha."
           }),
           dados: { jobs, intencao, memoria: mem }
@@ -86,11 +87,11 @@ export const capacidadeFila = Object.freeze({
             "Não invoquei nenhum executor — a Queue é o único canal.",
           contexto: resumirContexto(mem),
           proximo:
-            "Abra o Cursor neste repositório e diga «consuma a fila do CEO» " +
-            "(ou deixe o agente seguir a regra da fila ao iniciar trabalho técnico).",
+            "Se o dispatcher V2 (REQ-053) estiver a observar a fila no PC, o Agent é acordado sozinho. " +
+            "Senão: no Cursor diga «consuma a fila do CEO».",
           limite:
-            "V1 sem custo: o Cursor consome a fila ao ser aberto/instruído; " +
-            "não há worker pago em background."
+            "V2 local: watcher + Cursor SDK com PC ligado (executive/dispatcher). " +
+            "Sem cloud 24/7 nem mensageria paga."
         }),
         dados: { job, intencao, memoria: mem, jaPersistido: true }
       };

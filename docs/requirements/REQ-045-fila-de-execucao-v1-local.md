@@ -27,7 +27,7 @@ ADR-015 (uso diário MG2); REQ-030 (CEO não substitui ferramentas de execução
 
 ## Fora do escopo
 
-* Dispatcher autónomo em background 24/7 sem abrir o Cursor.
+* Dispatcher autónomo em background 24/7 sem abrir o Cursor *(consumo local com PC ligado: ver **REQ-053**)*.
 * Executores além do Cursor.
 * Filas cloud ou mensageria paga.
 * Publicação automática de Job a partir de qualquer deliberação LLM (V1: publicação explícita por instrução).

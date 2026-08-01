@@ -43,8 +43,12 @@ $j.iniciadoEm = (Get-Date).ToUniversalTime().ToString("o")
 
 (Repetir no fim com `completed`/`failed` + `resultado` + `concluidoEm`.)
 
+## Dispatcher V2 (REQ-053)
+
+Um watcher em `executive/dispatcher/` pode acordar este Agent quando há `pending`. Nesse caso: executar o protocolo acima de imediato — o utilizador **não** precisa de repetir «consuma a fila».
+
 ## Princípios
 
 - O CEO governa; você executa.
 - A Queue transporta; você não decide prioridade estratégica.
-- Zero serviços pagos: só ficheiros locais.
+- Zero serviços pagos de mensageria: só ficheiros locais (+ Cursor SDK no PC do patrocinador para V2).

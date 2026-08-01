@@ -13,6 +13,9 @@ dist/
 !.env.example
 !**/.env.example
 
+# Dispatcher local (REQ-053) — logs/pid
+executive/dispatcher/logs/
+
 # SO / editores
 .DS_Store
 Thumbs.db
@@ -33,3 +36,4 @@ coverage/
 __pycache__/
 *.pyc
 .Python
+.vercel
