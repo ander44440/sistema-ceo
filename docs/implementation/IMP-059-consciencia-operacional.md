@@ -352,6 +352,7 @@ Commit **só** quando:
 | 0.1 | 01/08/2026 | Engenheiro (Cursor) | E4 integração Núcleo/MRE | Autorização de execução E4 | Aguarda Gate E4 |
 | 0.1 | 01/08/2026 | Engenheiro (Cursor) | E5+E6+E7 prosa / fronteiras / docs | Autorização conjunta E5–E7 | Aguarda Gate fecho |
 | 0.1 | 01/08/2026 | Patrocinador | Homologação IMP-059 | Gate de fecho E1–E7 | **Homologada** |
+| 0.1 | 01/08/2026 | Engenheiro (Cursor) | Commit + push + deploy + smoke produção | Encerramento autorizado | `de9fe81` · Vercel READY |
 
 ---
 

@@ -121,6 +121,7 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`implementation/evidencias/IMP-059-E7-evidencia.md`](implementation/evidencias/IMP-059-E7-evidencia.md) | Evidência IMP-059 E7 — documentação |
 | [`implementation/evidencias/IMP-059-matriz-ca-na.md`](implementation/evidencias/IMP-059-matriz-ca-na.md) | Matriz CA/NA REQ-059 — evidências IMP-059 |
 | [`implementation/evidencias/IMP-059-relatorio-consolidado.md`](implementation/evidencias/IMP-059-relatorio-consolidado.md) | Relatório consolidado E1–E7 + fecho IMP-059 |
+| [`implementation/evidencias/IMP-059-homologacao-producao.md`](implementation/evidencias/IMP-059-homologacao-producao.md) | Homologação em produção IMP-059 — commit `de9fe81` · Vercel READY |
 | [`implementation/evidencias/IMP-058-E1-evidencia.md`](implementation/evidencias/IMP-058-E1-evidencia.md) | Evidência IMP-058 E1 — domínio / estados / Gate pendente |
 | [`implementation/evidencias/IMP-058-E2-evidencia.md`](implementation/evidencias/IMP-058-E2-evidencia.md) | Evidência IMP-058 E2 — léxico / reconhecimento determinístico |
 | [`implementation/evidencias/IMP-058-E3-evidencia.md`](implementation/evidencias/IMP-058-E3-evidencia.md) | Evidência IMP-058 E3 — store contexto / Gate activo |
