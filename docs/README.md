@@ -97,8 +97,11 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`vision/VIS-008-natureza-cognitiva-da-solicitacao-no-mre.md`](vision/VIS-008-natureza-cognitiva-da-solicitacao-no-mre.md) | **Rascunho v0.1** — natureza cognitiva pré-deliberação (análise conjunta; sem REQ) |
 | [`requirements/REQ-052-natureza-cognitiva-da-solicitacao-mre.md`](requirements/REQ-052-natureza-cognitiva-da-solicitacao-mre.md) | **Rascunho v0.1** — REQ derivado da VIS-008 (revisão conjunta; sem IMP) |
 | [`requirements/REQ-053-dispatcher-fila-execucao-v2-local.md`](requirements/REQ-053-dispatcher-fila-execucao-v2-local.md) | **Homologada v0.1** — Dispatcher V2; frente encerrada 01/08/2026 |
-| [`learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md`](learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md) | Checkpoint CTO — V2 operacional; 3 Jobs validados; autostart Windows |
-| [`learning/ANCORA-MESTRA.md`](learning/ANCORA-MESTRA.md) | **Âncora Mestra** — autonomia local V2; REQ-053 homologada; V3 no backlog |
+| [`requirements/REQ-054-conector-cto.md`](requirements/REQ-054-conector-cto.md) | **Homologada v0.1** — Conector CTO |
+| [`implementation/IMP-054-conector-cto.md`](implementation/IMP-054-conector-cto.md) | **Homologada** — frente encerrada 01/08/2026; produção |
+| [`architecture/ARQ-015-cto-connector.md`](architecture/ARQ-015-cto-connector.md) | **Homologada v0.2** — CTO Connector; Opção B (chave partilhada); Gate ARQ fechado |
+| [`learning/ANCORA-MESTRA.md`](learning/ANCORA-MESTRA.md) | **Âncora Mestra** — Conector CTO em produção; autonomia local V2; V3 backlog |
+| [`learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md`](learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md) | Checkpoint — Dispatcher V2 operacional |
 | [`architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md`](architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md) | **Rascunho v0.1** — ARQ da NCS no limiar MRE (revisão conjunta; sem IMP) |
 | [`implementation/IMP-020-natureza-cognitiva-da-solicitacao-ncs.md`](implementation/IMP-020-natureza-cognitiva-da-solicitacao-ncs.md) | **Rascunho v0.1** — plano IMP da NCS; C1–C8 materializados (B1–B4); produção NCS **não** declarada |
 | [`implementation/IMP-020-blocos-de-implementacao.md`](implementation/IMP-020-blocos-de-implementacao.md) | Decomposição B1–B4; **B1–B4 implementados** (gates internos) |

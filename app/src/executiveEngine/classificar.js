@@ -133,6 +133,21 @@ export function classificarIntencao(texto) {
   }
 
   if (
+    /(?:consultar|consulta|pedir|pe[cç]a|parecer)\s+(?:o\s+|ao\s+|do\s+)?cto\b/.test(
+      t
+    ) ||
+    /\bcto\s*:\s*\S+/.test(t) ||
+    /\bpergunte?\s+ao\s+cto\b/.test(t)
+  ) {
+    return {
+      id: "consultar_cto",
+      capacidade: "consultar_cto",
+      confianca: 0.94,
+      origem: "stub"
+    };
+  }
+
+  if (
     /\b(publicar|criar|despachar|enviar)\s+job\b/.test(t) ||
     /^job\s*:/.test(t) ||
     /\b(publicar|despachar|enviar).*\bpara\s+a\s+fila\b/.test(t)

@@ -9,6 +9,7 @@ Servidor HTTP Node (Hono) para as APIs `/api/ceo/*` em produção (alvo Railway)
 - Rotas:
   - `GET /health`
   - `GET /api/ceo/llm-status` · `POST /api/ceo/deliberar`
+  - `POST /api/ceo/cto/consultar` (REQ-054 — Conector CTO; canal ≠ deliberar)
   - `GET /api/ceo/queue/pending` · `GET|POST /api/ceo/queue/jobs` · `PATCH /api/ceo/queue/jobs/:id`
   - `GET /api/ceo/onboarding/carregar` · `POST /api/ceo/onboarding/salvar`
 - Plugins Vite em `app/` permanecem ativos (convivência temporária)
@@ -33,6 +34,7 @@ Carrega automaticamente `server/.env` e `app/.env` (sem sobrescrever variáveis 
 | `CEO_LLM_API_KEY` | Sim (ou `OPENAI_API_KEY` / `CEO_OPENAI_API_KEY`) | Chave do provedor |
 | `CEO_LLM_BASE_URL` | Não | Default `https://api.openai.com/v1` |
 | `CEO_LLM_MODEL` | Não | Default `gpt-4o-mini` |
+| `CEO_CTO_MODEL` | Não | Override de modelo só para `/api/ceo/cto/*` (mesma chave) |
 | `CEO_LLM_TLS_INSECURE` | Não | `1` desativa verificação TLS (só local) |
 
 ## Relação com o frontend

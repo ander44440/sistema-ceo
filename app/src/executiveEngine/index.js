@@ -13,6 +13,7 @@ import { capacidadeIa } from "./capacidades/ia.js";
 import { capacidadeFerramentas } from "./capacidades/ferramentas.js";
 import { capacidadeMemoria } from "./capacidades/memoria.js";
 import { capacidadeFila } from "./capacidades/fila.js";
+import { capacidadeConsultarCto } from "./capacidades/consultarCto.js";
 import {
   atualizarAposInstrucao,
   lerMemoria,
@@ -20,6 +21,7 @@ import {
 } from "../executiveMemory/index.js";
 import { inicializarCoaSessao, obterCoaAtivo } from "./coaSessao.js";
 import { naturalizarRespostaNucleo } from "../conversacaoNatural/index.js";
+import { consultarCto as consultarCtoApi, novoConsultaId } from "../ctoConnector/cliente.js";
 
 const CAPACIDADES_INICIAIS = [
   capacidadeDashboard,
@@ -29,7 +31,8 @@ const CAPACIDADES_INICIAIS = [
   capacidadeIa,
   capacidadeFerramentas,
   capacidadeMemoria,
-  capacidadeFila
+  capacidadeFila,
+  capacidadeConsultarCto
 ];
 
 /**
@@ -204,7 +207,7 @@ export const executiveEngine = {
     }
   },
 
-  /** Consulta direta do estado atual da sessão. */
+  /** Consulta directa do estado actual da sessão. */
   consultarEstado() {
     return {
       ok: true,
@@ -212,6 +215,44 @@ export const executiveEngine = {
       estado: lerMemoria(),
       origem: "executiveEngine",
       modo: "stub"
+    };
+  },
+
+  /**
+   * Consulta programática ao CTO (REQ-054) — não usa MRE.
+   * @param {Partial<object> & { pergunta: string, expectativaSchema?: string, tipo?: string }} parcial
+   */
+  async consultarCto(parcial) {
+    this.inicializar();
+    const coa = obterCoaAtivo();
+    const mem = lerMemoria();
+    const pacote = {
+      consultaId: parcial.consultaId || novoConsultaId(),
+      tipo: parcial.tipo || "parecer_arquitetural",
+      pergunta: String(parcial.pergunta || "").trim(),
+      contextoExecutivo: parcial.contextoExecutivo || {
+        situacao: String(parcial.pergunta || "").slice(0, 240),
+        normaAplicavel: ["CON-001 Art. 6º II", "REQ-054"],
+        estado: resumirEstado(),
+        evidencia: coa ? `COA: ${coa.nome || coa.id}` : "—",
+        pedidoFormato: parcial.expectativaSchema || "cto.parecer_v1"
+      },
+      artefactosRef: parcial.artefactosRef || [],
+      restricoes: parcial.restricoes,
+      expectativaSchema: parcial.expectativaSchema || "cto.parecer_v1",
+      prioridade: parcial.prioridade || "normal",
+      coaId: parcial.coaId || (coa && coa.id) || null,
+      projeto: parcial.projeto || (coa && coa.nome) || null
+    };
+    const resultado = await consultarCtoApi(pacote);
+    return {
+      ok:
+        resultado &&
+        (resultado.estado === "ok" || resultado.estado === "recusa"),
+      resultadoCto: resultado,
+      pacote,
+      origem: "executiveEngine",
+      canal: "cto"
     };
   },
 

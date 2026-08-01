@@ -57,6 +57,14 @@ export function configDeEnv(env = process.env) {
   };
 }
 
+/** Override opcional de modelo para canal CTO (REQ-054 Opção B — sem nova chave). */
+export function configDeEnvCto(env = process.env) {
+  const base = configDeEnv(env);
+  const override = String(env.CEO_CTO_MODEL || '').trim();
+  if (override) return { ...base, model: override };
+  return base;
+}
+
 export async function chamarLlm(cfg, body) {
   const url = `${cfg.base}/chat/completions`;
   let resp;
@@ -68,7 +76,7 @@ export async function chamarLlm(cfg, body) {
         Authorization: `Bearer ${cfg.key}`,
       },
       body: JSON.stringify({
-        model: cfg.model,
+        model: body.model || cfg.model,
         temperature: body.temperature ?? 0.4,
         max_tokens: body.max_tokens ?? 900,
         messages: body.messages,
@@ -78,6 +86,7 @@ export async function chamarLlm(cfg, body) {
     const e = new Error(mensagemErroRede(err));
     e.status = 502;
     e.cause = err;
+    e.codigoTransporte = 'rede';
     throw e;
   }
 
@@ -87,6 +96,7 @@ export async function chamarLlm(cfg, body) {
       (data && data.error && data.error.message) || `HTTP ${resp.status}`;
     const err = new Error(detalhe);
     err.status = resp.status;
+    err.codigoTransporte = 'http';
     throw err;
   }
 

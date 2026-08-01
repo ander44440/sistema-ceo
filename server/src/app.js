@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { registrarCors } from './middleware/cors.js';
 import { registrarHealth } from './routes/health.js';
 import { registrarLlm } from './routes/llm.js';
+import { registrarCto } from './routes/cto.js';
 import { registrarQueue } from './routes/queue.js';
 import { registrarOnboarding } from './routes/onboarding.js';
 import { resolverRepoRoot } from './config.js';
@@ -16,6 +17,7 @@ export function createApp(env = process.env) {
   registrarCors(app, env);
   registrarHealth(app);
   registrarLlm(app, env);
+  registrarCto(app, env);
   registrarQueue(app, { repoRoot });
   registrarOnboarding(app, { repoRoot });
   return app;
