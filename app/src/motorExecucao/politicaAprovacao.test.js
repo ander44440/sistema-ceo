@@ -142,7 +142,14 @@ test("E2-CA3: rejeitado ou adiado impede transição para Criação do Job", () 
   );
   const adiado = avancarAposGate(outra.ciclo, "adiado", ctxPolitica);
   assert.equal(adiado.ok, true);
-  assert.equal(adiado.ciclo.etapa, "Encerramento");
+  assert.equal(adiado.ciclo.etapa, "Aprovacao");
+  assert.equal(adiado.permanecePendente, true);
+  assert.equal(adiado.ciclo.jobId, undefined);
+
+  assert.equal(
+    validarTransicao("Aprovacao", "Encerramento", ctxAdiado).ok,
+    false
+  );
 
   const aprovado = avancarAposGate(gate.ciclo, "aprovado", ctxPolitica, {
     jobId: "JOB-E2-001"

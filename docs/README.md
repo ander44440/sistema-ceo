@@ -105,7 +105,19 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`implementation/IMP-055-painel-orquestracao-tempo-real.md`](implementation/IMP-055-painel-orquestracao-tempo-real.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 em produção |
 | [`architecture/ARQ-017-motor-de-execucao.md`](architecture/ARQ-017-motor-de-execucao.md) | **Homologada v0.1** — Motor de Execução; fluxo Intenção→Encerramento |
 | [`architecture/ARQ-018-classificacao-de-intencao.md`](architecture/ARQ-018-classificacao-de-intencao.md) | **Homologada v0.1** — Classificação de Intenção; quatro classes; Classificador primeiro |
+| [`architecture/ARQ-019-continuidade-do-gate-de-execucao.md`](architecture/ARQ-019-continuidade-do-gate-de-execucao.md) | **Homologada v0.1** — Continuidade do Gate de Execução; retoma pós-decisão humana |
 | [`requirements/REQ-057-classificacao-de-intencao.md`](requirements/REQ-057-classificacao-de-intencao.md) | **Homologada v0.1** — Classificação de Intenção; CAP-07; alinhada à ARQ-018 |
+| [`requirements/REQ-058-continuidade-do-gate-de-execucao.md`](requirements/REQ-058-continuidade-do-gate-de-execucao.md) | **Homologada v0.1** — Continuidade do Gate de Execução; CAP-11; alinhada à ARQ-019 |
+| [`implementation/IMP-058-continuidade-do-gate-de-execucao.md`](implementation/IMP-058-continuidade-do-gate-de-execucao.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 |
+| [`implementation/evidencias/IMP-058-E1-evidencia.md`](implementation/evidencias/IMP-058-E1-evidencia.md) | Evidência IMP-058 E1 — domínio / estados / Gate pendente |
+| [`implementation/evidencias/IMP-058-E2-evidencia.md`](implementation/evidencias/IMP-058-E2-evidencia.md) | Evidência IMP-058 E2 — léxico / reconhecimento determinístico |
+| [`implementation/evidencias/IMP-058-E3-evidencia.md`](implementation/evidencias/IMP-058-E3-evidencia.md) | Evidência IMP-058 E3 — store contexto / Gate activo |
+| [`implementation/evidencias/IMP-058-E4-evidencia.md`](implementation/evidencias/IMP-058-E4-evidencia.md) | Evidência IMP-058 E4 — integração Conversa → Motor |
+| [`implementation/evidencias/IMP-058-E5-evidencia.md`](implementation/evidencias/IMP-058-E5-evidencia.md) | Evidência IMP-058 E5 — Aprovado/Rejeitado/Adiado + P10 |
+| [`implementation/evidencias/IMP-058-E6-evidencia.md`](implementation/evidencias/IMP-058-E6-evidencia.md) | Evidência IMP-058 E6 — fronteiras / regressão |
+| [`implementation/evidencias/IMP-058-E7-evidencia.md`](implementation/evidencias/IMP-058-E7-evidencia.md) | Evidência IMP-058 E7 — documentação |
+| [`implementation/evidencias/IMP-058-matriz-ca-na.md`](implementation/evidencias/IMP-058-matriz-ca-na.md) | Matriz CA/NA REQ-058 — evidências IMP-058 |
+| [`implementation/evidencias/IMP-058-relatorio-consolidado.md`](implementation/evidencias/IMP-058-relatorio-consolidado.md) | Relatório consolidado E6+E7 + fecho IMP-058 |
 | [`implementation/IMP-057-classificacao-de-intencao.md`](implementation/IMP-057-classificacao-de-intencao.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 em produção |
 | [`implementation/evidencias/IMP-057-matriz-ca-na.md`](implementation/evidencias/IMP-057-matriz-ca-na.md) | Matriz CA/NA REQ-057 — evidências IMP-057 |
 | [`implementation/evidencias/IMP-057-relatorio-consolidado.md`](implementation/evidencias/IMP-057-relatorio-consolidado.md) | Relatório consolidado E6+E7 + fecho IMP-057 |

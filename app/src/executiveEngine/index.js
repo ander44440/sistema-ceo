@@ -26,6 +26,15 @@ import {
   primeiroPassoClassificar
 } from "../classificadorIntencao/integracaoNucleo.js";
 import { executarPorDestino } from "../classificadorIntencao/destinos.js";
+import {
+  obterStoreContinuidadePadrao,
+  decidirInterceptacaoContinuidade,
+  continuarAposDecisaoGate,
+  responderClarificacaoGate,
+  envolverConduzirMotorComContinuidade,
+  aplicarMensagemGateNaResposta
+} from "../continuidadeGate/integracaoConversa.js";
+import { conduzirAposDecisaoGate } from "../motorExecucao/integracaoOrquestrador.js";
 
 const CAPACIDADES_INICIAIS = [
   capacidadeDashboard,
@@ -103,17 +112,108 @@ export const executiveEngine = {
   },
 
   /**
-   * Recebe instrução → Classificador (primeiro) → destino C1–C4 (IMP-057 E5).
-   * Sem fallback silencioso que ignore a classificação.
+   * Recebe instrução → Continuidade do Gate (se pendente) → Classificador → destino.
+   * IMP-058 E4: decisão de Gate antes do Classificador; sem repetir o C3.
    *
    * @param {string | InstrucaoEntrada} entrada
-   * @param {import("../classificadorIntencao/integracaoNucleo.js").DepsE4} [deps]
+   * @param {import("../classificadorIntencao/integracaoNucleo.js").DepsE4 & {
+   *   storeContinuidade?: import("../continuidadeGate/contexto.js").StoreContextoGate
+   * }} [deps]
    * @returns {Promise<RespostaExecutiva>}
    */
   async executar(entrada, deps = {}) {
     this.inicializar();
 
     const { texto, historico } = normalizarInstrucao(entrada);
+    const store =
+      deps.storeContinuidade || obterStoreContinuidadePadrao();
+
+    const interceptacao = decidirInterceptacaoContinuidade(texto, store);
+
+    if (interceptacao === "continuidade") {
+      let publicarJobCont = deps.publicarJob;
+      if (typeof publicarJobCont !== "function") {
+        try {
+          const base = import.meta.env?.VITE_CEO_API_BASE;
+          if (base) {
+            const { publicarJobFila } = await import("./filaCliente.js");
+            publicarJobCont = publicarJobFila;
+          }
+        } catch {
+          publicarJobCont = undefined;
+        }
+      }
+
+      const outCont = await continuarAposDecisaoGate({
+        texto,
+        store,
+        conduzirMotor: (parecer, motorDeps) =>
+          this.conduzirMotorAposDecisaoGate(parecer, motorDeps.decisaoAprovacao, motorDeps),
+        publicarJob: publicarJobCont,
+        registro: deps.registro || store.registroJobs
+      });
+
+      const respostaCont = {
+        ok: outCont.ok !== false,
+        mensagem: outCont.mensagem,
+        intencao: outCont.intencao,
+        capacidade: outCont.capacidade ?? null,
+        dados: {
+          ...(outCont.dados || {}),
+          classificacao: null,
+          encaminhamento: {
+            destino: "continuidade_gate",
+            ok: true,
+            idClasse: null
+          }
+        },
+        origem: "executiveEngine",
+        modo: outCont.modo || "continuidade_gate"
+      };
+
+      const memoriaCont = atualizarAposInstrucao({
+        instrucao: texto,
+        intencao: respostaCont.intencao,
+        capacidade: respostaCont.capacidade,
+        ok: respostaCont.ok,
+        mensagem: respostaCont.mensagem,
+        dados: respostaCont.dados
+      });
+      respostaCont.dados = { ...respostaCont.dados, memoria: memoriaCont };
+      return respostaCont;
+    }
+
+    if (interceptacao === "clarificacao") {
+      const outClar = responderClarificacaoGate(store, texto);
+      const respostaClar = {
+        ok: true,
+        mensagem: outClar.mensagem,
+        intencao: outClar.intencao,
+        capacidade: null,
+        dados: {
+          ...(outClar.dados || {}),
+          classificacao: null,
+          encaminhamento: {
+            destino: "continuidade_gate_clarificacao",
+            ok: true,
+            idClasse: null
+          }
+        },
+        origem: "executiveEngine",
+        modo: outClar.modo
+      };
+      const memoriaClar = atualizarAposInstrucao({
+        instrucao: texto,
+        intencao: respostaClar.intencao,
+        capacidade: null,
+        ok: true,
+        mensagem: respostaClar.mensagem,
+        dados: respostaClar.dados
+      });
+      respostaClar.dados = { ...respostaClar.dados, memoria: memoriaClar };
+      return respostaClar;
+    }
+
     const coa = obterCoaAtivo();
     const rota = primeiroPassoClassificar(texto, {
       frenteActiva: Boolean(coa)
@@ -158,6 +258,12 @@ export const executiveEngine = {
         ? { ...deps, publicarJob: undefined }
         : { ...deps, publicarJob };
 
+    const conduzirMotorPadrao = envolverConduzirMotorComContinuidade(
+      store,
+      (parecer, motorDeps) => this.conduzirMotorExecucao(parecer, motorDeps),
+      texto
+    );
+
     let respostaBruta;
     try {
       respostaBruta = await executarPorDestino({
@@ -169,8 +275,7 @@ export const executiveEngine = {
         obterCapacidade,
         contextoCapacidade,
         deps: depsDestino,
-        conduzirMotorPadrao: (parecer, motorDeps) =>
-          this.conduzirMotorExecucao(parecer, motorDeps),
+        conduzirMotorPadrao,
         naturalizar: (r) =>
           naturalizarRespostaNucleo(r, {
             instrucao: texto,
@@ -202,7 +307,14 @@ export const executiveEngine = {
       };
     }
 
-    const resposta = anexarClassificacao(respostaBruta);
+    let resposta = anexarClassificacao(respostaBruta);
+    const conducaoMotor =
+      resposta.dados && resposta.dados.motor && typeof resposta.dados.motor === "object"
+        ? resposta.dados.motor
+        : null;
+    if (conducaoMotor && conducaoMotor.aguardandoGate === true) {
+      resposta = aplicarMensagemGateNaResposta(resposta, conducaoMotor);
+    }
 
     const memoria = atualizarAposInstrucao({
       instrucao: texto,
@@ -290,6 +402,17 @@ export const executiveEngine = {
       "../motorExecucao/integracaoOrquestrador.js"
     );
     return conduzirAposParecer(parecer, deps);
+  },
+
+  /**
+   * Continuidade do Gate (IMP-058 E4) — retoma Motor após decisão humana.
+   * @param {object} parecer
+   * @param {import("../motorExecucao/dominio.js").DecisaoAprovacao} decisao
+   * @param {object} [deps]
+   */
+  async conduzirMotorAposDecisaoGate(parecer, decisao, deps = {}) {
+    this.inicializar();
+    return conduzirAposDecisaoGate(parecer, decisao, deps);
   },
 
   /**

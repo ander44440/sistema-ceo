@@ -212,10 +212,35 @@ export async function conduzirAposParecer(parecer, deps = {}) {
         const fim = avancarAposGate(ciclo, decisao, contexto);
         if (fim.ok) ciclo = fim.ciclo;
       }
+      if (decisao === "adiado") {
+        // IMP-058 P10: Gate permanece pendente; sem Job
+        const specAdiado = extrairJobSpec(parecer);
+        const pedidoGateAdiado = montarPedidoGate(
+          specAdiado.ok
+            ? `${specAdiado.job.titulo}: ${specAdiado.job.descricao}`
+            : "Despacho proposto pelo parecer",
+          contexto,
+          {
+            resumoDespacho: specAdiado.ok ? specAdiado.job.titulo : undefined,
+            parecerId
+          }
+        );
+        return {
+          ...baseNeg,
+          motivo: "gate_adiado",
+          aguardandoGate: true,
+          gatePermanecerPendente: true,
+          gate: {
+            pedido: pedidoGateAdiado,
+            decisoes: ["aprovado", "rejeitado", "adiado"]
+          },
+          ciclo,
+          avaliacao
+        };
+      }
       return {
         ...baseNeg,
-        motivo:
-          decisao === "rejeitado" ? "gate_rejeitado" : "gate_adiado",
+        motivo: "gate_rejeitado",
         ciclo,
         avaliacao
       };

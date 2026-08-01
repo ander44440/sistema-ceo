@@ -225,6 +225,12 @@ test("ARQ-017 §3.4: intenção clara, despacho e encerramento", () => {
     false
   );
   assert.equal(
+    validarTransicao("Aprovacao", "Encerramento", {
+      decisaoAprovacao: "adiado"
+    }).ok,
+    false
+  );
+  assert.equal(
     validarTransicao("Resultado", "Encerramento", { estadoJob: "running" }).ok,
     false
   );

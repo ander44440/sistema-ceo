@@ -41,12 +41,21 @@
     "test:motor": "node --test src/motorExecucao/dominio.test.js src/motorExecucao/politicaAprovacao.test.js src/motorExecucao/ponteParecerJob.test.js src/motorExecucao/integracaoOrquestrador.test.js src/motorExecucao/resultadoEncerramento.test.js src/motorExecucao/fronteiras.test.js src/motorExecucao/e7.test.js",
     "test:classificador:e1": "node --test src/classificadorIntencao/dominio.test.js",
     "test:classificador:e2": "node --test src/classificadorIntencao/regras.test.js",
+    "test:classificador:e21": "node --test src/classificadorIntencao/e21.test.js",
     "test:classificador:e3": "node --test src/classificadorIntencao/encaminhador.test.js",
     "test:classificador:e4": "node --test src/classificadorIntencao/integracaoNucleo.test.js",
     "test:classificador:e5": "node --test src/classificadorIntencao/destinos.test.js",
     "test:classificador:e6": "node --test src/classificadorIntencao/fronteiras.test.js",
     "test:classificador:e7": "node --test src/classificadorIntencao/e7.test.js",
-    "test:classificador": "node --test src/classificadorIntencao/dominio.test.js src/classificadorIntencao/regras.test.js src/classificadorIntencao/encaminhador.test.js src/classificadorIntencao/integracaoNucleo.test.js src/classificadorIntencao/destinos.test.js src/classificadorIntencao/fronteiras.test.js src/classificadorIntencao/e7.test.js"
+    "test:classificador": "node --test src/classificadorIntencao/dominio.test.js src/classificadorIntencao/regras.test.js src/classificadorIntencao/e21.test.js src/classificadorIntencao/encaminhador.test.js src/classificadorIntencao/integracaoNucleo.test.js src/classificadorIntencao/destinos.test.js src/classificadorIntencao/fronteiras.test.js src/classificadorIntencao/e7.test.js",
+    "test:continuidade-gate:e1": "node --test src/continuidadeGate/dominio.test.js",
+    "test:continuidade-gate:e2": "node --test src/continuidadeGate/reconhecerDecisao.test.js",
+    "test:continuidade-gate:e3": "node --test src/continuidadeGate/contexto.test.js",
+    "test:continuidade-gate:e4": "node --test src/continuidadeGate/integracaoConversa.test.js",
+    "test:continuidade-gate:e5": "node --test src/continuidadeGate/e5.test.js",
+    "test:continuidade-gate:e6": "node --test src/continuidadeGate/fronteiras.test.js",
+    "test:continuidade-gate:e7": "node --test src/continuidadeGate/e7.test.js",
+    "test:continuidade-gate": "node --test src/continuidadeGate/dominio.test.js src/continuidadeGate/reconhecerDecisao.test.js src/continuidadeGate/contexto.test.js src/continuidadeGate/integracaoConversa.test.js src/continuidadeGate/e5.test.js src/continuidadeGate/fronteiras.test.js src/continuidadeGate/e7.test.js"
   },
   "devDependencies": {
     "vite": "^6.0.0"

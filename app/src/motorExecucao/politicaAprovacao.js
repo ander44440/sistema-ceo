@@ -301,7 +301,10 @@ export function avancarAposPlano(ciclo, contextoPolitica, opts = {}) {
 }
 
 /**
- * Após Gate em etapa Aprovacao: aprovado → CriacaoDoJob; rejeitado/adiado → Encerramento.
+ * Após Gate em etapa Aprovacao:
+ * - aprovado → CriacaoDoJob
+ * - rejeitado → Encerramento
+ * - adiado → permanece em Aprovacao (IMP-058 P10 / REQ-058 RF8)
  * @param {import("./dominio.js").CicloMotor} ciclo
  * @param {import("./dominio.js").DecisaoAprovacao} decisao
  * @param {ContextoPolitica} contextoPolitica
@@ -324,7 +327,23 @@ export function avancarAposGate(ciclo, decisao, contextoPolitica, opts = {}) {
     decisaoAprovacao: decisao
   });
 
-  if (decisao === "rejeitado" || decisao === "adiado") {
+  if (decisao === "adiado") {
+    return {
+      ok: true,
+      ciclo: base.ciclo,
+      avaliacao: avaliarPolitica(contextoPolitica),
+      permanecePendente: true,
+      resultadoGate: {
+        decisao,
+        motivo: opts.motivo || "adiado_mantem_gate",
+        decididoEm: new Date().toISOString(),
+        exigeAprovacao: true,
+        gatilhos: gatilhosDisparados(contextoPolitica)
+      }
+    };
+  }
+
+  if (decisao === "rejeitado") {
     const t = validarTransicaoCiclo("Aprovacao", "Encerramento", ctxCiclo);
     if (!t.ok) return t;
     const avancado = avancarCiclo(base.ciclo, "Encerramento", ctxCiclo);

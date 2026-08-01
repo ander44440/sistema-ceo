@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { test } from "node:test";
+import { test, beforeEach } from "node:test";
 
 import { executiveEngine } from "../executiveEngine/index.js";
 import { classificarIntencao } from "../executiveEngine/classificar.js";
@@ -17,9 +17,14 @@ import {
   validarSaida,
   montarSaida
 } from "./index.js";
+import { resetStoreContinuidadePadrao } from "../continuidadeGate/integracaoConversa.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootSrc = join(__dirname, "..");
+
+beforeEach(() => {
+  resetStoreContinuidadePadrao();
+});
 
 function ler(rel) {
   return readFileSync(join(rootSrc, rel), "utf8");
@@ -189,6 +194,7 @@ test("E6 demo regressão C1–C4 (fecho)", async () => {
   const c3 = await executiveEngine.executar(
     "Quero que você resolva os bugs do projeto."
   );
+  resetStoreContinuidadePadrao();
   const c4 = await executiveEngine.executar("listar jobs");
 
   console.log("\n--- DEMO E6/E7 C1–C4 ---");

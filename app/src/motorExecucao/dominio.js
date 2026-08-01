@@ -97,7 +97,7 @@ export const TRANSICOES_JOB = Object.freeze({
  * Transições de ciclo permitidas na V1 (grafo mínimo).
  * Atalhos: Plano → CriacaoDoJob (se isento de aprovação);
  * Plano → Encerramento (comunicação-only, sem despacho);
- * Aprovacao → Encerramento (rejeitado/adiado).
+ * Aprovacao → Encerramento (rejeitado). Adiado permanece em Aprovacao (IMP-058 P10).
  * @type {Readonly<Record<EtapaCiclo, ReadonlyArray<EtapaCiclo>>>}
  */
 export const TRANSICOES_CICLO = Object.freeze({
@@ -265,14 +265,11 @@ export function validarTransicaoCiclo(de, para, ctx = {}) {
       }
     }
     if (de === "Aprovacao") {
-      if (
-        ctx.decisaoAprovacao !== "rejeitado" &&
-        ctx.decisaoAprovacao !== "adiado"
-      ) {
+      if (ctx.decisaoAprovacao !== "rejeitado") {
         return {
           ok: false,
           mensagem:
-            "Aprovacao → Encerramento só com rejeitado ou adiado."
+            "Aprovacao → Encerramento só com rejeitado (adiado permanece pendente — IMP-058 P10)."
         };
       }
     }

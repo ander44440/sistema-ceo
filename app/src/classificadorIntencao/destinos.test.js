@@ -2,7 +2,7 @@
  * IMP-057 E5 — Destinos C1–C4 (ligação real, anti-fallback).
  */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test, beforeEach } from "node:test";
 
 import { executiveEngine } from "../executiveEngine/index.js";
 import {
@@ -14,6 +14,7 @@ import {
   CAPACIDADES_C4
 } from "./destinos.js";
 import { criarPublicadorFilaMemoria } from "../motorExecucao/ponteParecerJob.js";
+import { resetStoreContinuidadePadrao } from "../continuidadeGate/integracaoConversa.js";
 
 const FIX = {
   C1: "Bom dia",
@@ -21,6 +22,10 @@ const FIX = {
   C3: "Quero que você resolva os bugs do projeto.",
   C4: "listar jobs"
 };
+
+beforeEach(() => {
+  resetStoreContinuidadePadrao();
+});
 
 test("E5: mapa CAPACIDADES_C4 não inclui motor nem ia deliberativa", () => {
   assert.ok(CAPACIDADES_C4.includes("fila"));
@@ -149,6 +154,8 @@ test("E5 demo C1–C4", async () => {
     }
   });
   const c3 = await executiveEngine.executar(FIX.C3);
+  // Demo compara destinos isolados: limpar Gate da Continuidade entre C3 e C4.
+  resetStoreContinuidadePadrao();
   const c4 = await executiveEngine.executar(FIX.C4);
 
   console.log("\n--- DEMO E5 ---");
