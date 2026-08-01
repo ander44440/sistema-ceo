@@ -22,7 +22,15 @@
     "test:mre": "node --test src/mre/parecer/validarParecerExecutivo.test.js src/mre/pipeline/pipeline07.test.js src/mre/aprendizado/aprendizado.test.js src/mre/bloco2.test.js src/mre/bloco3.test.js src/mre/ncs/ncs.b1.test.js src/mre/ncs/ncs.b2.test.js src/mre/ncs/ncs.b3.test.js src/mre/ncs/ncs.b4.test.js",
     "test:voz": "node --test src/experienciaVoz/orquestrador.test.js src/experienciaVoz/botaoVoz.test.js src/experienciaVoz/reproduzirResposta.test.js src/experienciaVoz/e6.tts.test.js",
     "test:cn": "node --test src/conversacaoNatural/conversacaoNatural.test.js src/conversacaoNatural/e3.integracao.test.js",
-    "test:cto": "node --test src/ctoConnector/ctoConnector.test.js"
+    "test:cto": "node --test src/ctoConnector/ctoConnector.test.js",
+    "test:orquestracao": "node --test src/orquestracao/dominio.test.js src/orquestracao/agregador.test.js src/orquestracao/ui.test.js src/orquestracao/e4.test.js src/orquestracao/e5.test.js src/orquestracao/e6.test.js src/orquestracao/e7.test.js",
+    "test:orquestracao:e1": "node --test src/orquestracao/dominio.test.js",
+    "test:orquestracao:e2": "node --test src/orquestracao/agregador.test.js",
+    "test:orquestracao:e3": "node --test src/orquestracao/ui.test.js",
+    "test:orquestracao:e4": "node --test src/orquestracao/e4.test.js",
+    "test:orquestracao:e5": "node --test src/orquestracao/e5.test.js",
+    "test:orquestracao:e6": "node --test src/orquestracao/e6.test.js",
+    "test:orquestracao:e7": "node --test src/orquestracao/e7.test.js"
   },
   "devDependencies": {
     "vite": "^6.0.0"

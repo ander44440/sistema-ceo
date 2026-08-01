@@ -100,7 +100,10 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`requirements/REQ-054-conector-cto.md`](requirements/REQ-054-conector-cto.md) | **Homologada v0.1** — Conector CTO |
 | [`implementation/IMP-054-conector-cto.md`](implementation/IMP-054-conector-cto.md) | **Homologada** — frente encerrada 01/08/2026; produção |
 | [`architecture/ARQ-015-cto-connector.md`](architecture/ARQ-015-cto-connector.md) | **Homologada v0.2** — CTO Connector; Opção B (chave partilhada); Gate ARQ fechado |
-| [`learning/ANCORA-MESTRA.md`](learning/ANCORA-MESTRA.md) | **Âncora Mestra** — Conector CTO em produção; autonomia local V2; V3 backlog |
+| [`architecture/ARQ-016-painel-orquestracao-tempo-real.md`](architecture/ARQ-016-painel-orquestracao-tempo-real.md) | **Homologada v0.2** — Painel de Orquestração; Progressividade; Conversa central |
+| [`requirements/REQ-055-painel-orquestracao-tempo-real.md`](requirements/REQ-055-painel-orquestracao-tempo-real.md) | **Homologada v0.1** — Painel de Orquestração; Progressividade |
+| [`implementation/IMP-055-painel-orquestracao-tempo-real.md`](implementation/IMP-055-painel-orquestracao-tempo-real.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 em produção |
+| [`learning/ANCORA-MESTRA.md`](learning/ANCORA-MESTRA.md) | **Âncora Mestra** — Painel Orquestração + Conector CTO em produção; autonomia local V2 |
 | [`learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md`](learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md) | Checkpoint — Dispatcher V2 operacional |
 | [`architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md`](architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md) | **Rascunho v0.1** — ARQ da NCS no limiar MRE (revisão conjunta; sem IMP) |
 | [`implementation/IMP-020-natureza-cognitiva-da-solicitacao-ncs.md`](implementation/IMP-020-natureza-cognitiva-da-solicitacao-ncs.md) | **Rascunho v0.1** — plano IMP da NCS; C1–C8 materializados (B1–B4); produção NCS **não** declarada |

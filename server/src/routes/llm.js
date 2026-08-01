@@ -5,6 +5,7 @@
  */
 
 import { chamarLlm, configDeEnv } from '../services/llm.js';
+import { sinaisRuntimeGlobal } from '../services/orquestracao/sinaisRuntime.js';
 
 export function registrarLlm(app, env = process.env) {
   app.get('/api/ceo/llm-status', (c) => {
@@ -32,6 +33,7 @@ export function registrarLlm(app, env = process.env) {
       );
     }
 
+    sinaisRuntimeGlobal.inicioCicloCeo();
     try {
       const body = await c.req.json().catch(() => null);
       if (!body || !Array.isArray(body.messages) || !body.messages.length) {
@@ -75,6 +77,8 @@ export function registrarLlm(app, env = process.env) {
         },
         status,
       );
+    } finally {
+      sinaisRuntimeGlobal.fimCicloCeo();
     }
   });
 }

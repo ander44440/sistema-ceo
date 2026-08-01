@@ -10,6 +10,7 @@ import {
   chamarLlm
 } from "./llmTransport.js";
 import { criarExecutarConsultaCto } from "./ctoConnector/index.js";
+import { sinaisRuntimeGlobal } from "../src/orquestracao/sinaisRuntime.js";
 
 function lerJson(req) {
   return new Promise((resolve, reject) => {
@@ -62,11 +63,17 @@ function criarHandler(env) {
     }
 
     if (req.method === "POST" && path === "/api/ceo/cto/consultar") {
+      sinaisRuntimeGlobal.inicioConsultaCto();
+      sinaisRuntimeGlobal.inicioCicloCeo();
       try {
         const body = await lerJson(req);
         const out = await executarCto(body);
+        sinaisRuntimeGlobal.fimConsultaCto(
+          out && out.body && out.body.estado ? out.body.estado : null
+        );
         return enviarJson(res, out.httpStatus, out.body);
       } catch (err) {
+        sinaisRuntimeGlobal.fimConsultaCto("erro_transporte");
         return enviarJson(res, 500, {
           estado: "erro_transporte",
           codigo: "CTO_INTERNO",
@@ -77,6 +84,8 @@ function criarHandler(env) {
             criadoEm: new Date().toISOString()
           }
         });
+      } finally {
+        sinaisRuntimeGlobal.fimCicloCeo();
       }
     }
 
@@ -94,6 +103,7 @@ function criarHandler(env) {
       });
     }
 
+    sinaisRuntimeGlobal.inicioCicloCeo();
     try {
       const body = await lerJson(req);
       if (!body || !Array.isArray(body.messages) || !body.messages.length) {
@@ -126,6 +136,8 @@ function criarHandler(env) {
         codigo: "LLM_FALHOU",
         mensagem: err && err.message ? err.message : "Falha ao contactar o modelo."
       });
+    } finally {
+      sinaisRuntimeGlobal.fimCicloCeo();
     }
   };
 }

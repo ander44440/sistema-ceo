@@ -5,6 +5,7 @@
 
 import { chamarLlm, configDeEnvCto } from '../services/llm.js';
 import { criarExecutarConsultaCto } from '../services/ctoConnector/index.js';
+import { sinaisRuntimeGlobal } from '../services/orquestracao/sinaisRuntime.js';
 
 export function registrarCto(app, env = process.env) {
   const executarCto = criarExecutarConsultaCto({
@@ -14,11 +15,15 @@ export function registrarCto(app, env = process.env) {
   });
 
   app.post('/api/ceo/cto/consultar', async (c) => {
+    sinaisRuntimeGlobal.inicioConsultaCto();
+    sinaisRuntimeGlobal.inicioCicloCeo();
     try {
       const body = await c.req.json().catch(() => null);
       const out = await executarCto(body);
+      sinaisRuntimeGlobal.fimConsultaCto(out?.body?.estado || null);
       return c.json(out.body, out.httpStatus);
     } catch (err) {
+      sinaisRuntimeGlobal.fimConsultaCto('erro_transporte');
       return c.json(
         {
           estado: 'erro_transporte',
@@ -32,6 +37,8 @@ export function registrarCto(app, env = process.env) {
         },
         500,
       );
+    } finally {
+      sinaisRuntimeGlobal.fimCicloCeo();
     }
   });
 }

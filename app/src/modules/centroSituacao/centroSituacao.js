@@ -20,6 +20,10 @@ import {
 import { lerDestaquesDeliberacao } from "../../mre/canais/centroSituacaoDeliberacao.js";
 import { textoBoasVindasNatural } from "../../conversacaoNatural/index.js";
 import { sanitizarProsaUsuario } from "../../conversacaoNatural/sanitizarProsa.js";
+import {
+  htmlPainelOrquestracao,
+  ligarPainelOrquestracao
+} from "../../orquestracao/ui.js";
 
 function htmlDeliberacaoNatural(dados) {
   if (!dados || !Array.isArray(dados.destaques) || !dados.destaques.length) {
@@ -120,8 +124,14 @@ export function montarCentroSituacao() {
   let enviando = false;
   /** @type {"abrir"|"encerrar"|null} */
   let painelDia = null;
+  /** @type {null | (() => void)} */
+  let pararPainelOrq = null;
 
   function pintar() {
+    if (pararPainelOrq) {
+      pararPainelOrq();
+      pararPainelOrq = null;
+    }
     const mem = lerMemoria();
     const vista = obterVistaDiaAtivo();
     const ultima = (mem.ultimasAcoes || [])[0];
@@ -182,6 +192,8 @@ export function montarCentroSituacao() {
               <button type="button" class="cs-chip" data-cmd="Abrir projeto Motoboy Game 2">Abrir Projeto</button>
             </div>
           </section>
+
+          ${htmlPainelOrquestracao()}
 
           <section class="cs-prioridades" aria-label="Prioridades do dia">
             <div class="cs-section-head">
@@ -263,6 +275,7 @@ export function montarCentroSituacao() {
     `;
 
     ligarEventos();
+    pararPainelOrq = ligarPainelOrquestracao(root);
   }
 
   function ligarEventos() {

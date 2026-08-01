@@ -10,6 +10,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ciclo } from "./ciclo.js";
+import { listarPendentes } from "./listPending.js";
+import { pulsarHeartbeat } from "./heartbeat.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DISPATCHER_ROOT = path.resolve(__dirname, "..");
@@ -74,7 +76,16 @@ async function main() {
   );
 
   if (args.once || args.dryRun) {
+    const pending = listarPendentes(queueDir);
+    await pulsarHeartbeat(repoRoot, {
+      estado: args.dryRun ? "idle" : "busy",
+      pending: pending.length
+    });
     const r = await ciclo(ctx);
+    await pulsarHeartbeat(repoRoot, {
+      estado: r === "error" ? "error" : "idle",
+      pending: listarPendentes(queueDir).length
+    });
     process.exitCode = r === "error" || r === "skipped_no_key" ? 1 : 0;
     return;
   }
@@ -86,9 +97,19 @@ async function main() {
     if (emCurso) return;
     emCurso = true;
     try {
+      const pending = listarPendentes(queueDir);
+      await pulsarHeartbeat(repoRoot, {
+        estado: pending.length ? "busy" : "idle",
+        pending: pending.length
+      });
       await ciclo(ctx);
+      await pulsarHeartbeat(repoRoot, {
+        estado: "idle",
+        pending: listarPendentes(queueDir).length
+      });
     } catch (err) {
       console.error("[dispatcher] erro no ciclo:", err);
+      await pulsarHeartbeat(repoRoot, { estado: "error", pending: 0 });
     } finally {
       emCurso = false;
     }
