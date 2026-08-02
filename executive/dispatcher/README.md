@@ -38,6 +38,13 @@ Variáveis úteis:
 | `CEO_REPO_ROOT` | raiz do repo (pai de `executive/`) | Checkout onde o Agent corre |
 | `DISPATCHER_POLL_MS` | `15000` | Intervalo do watcher |
 | `CURSOR_MODEL` | `composer-2.5` | Modelo do Agent |
+| `CEO_API_BASE` | — | Base HTTP para **heartbeat** do Painel (`POST …/orquestracao/heartbeat`). **Não** lista nem publica Jobs. Sem isto, o Painel remoto mostra Dispatcher Erro / `heartbeat_expirado`. |
+
+## Fila oficial (IMP-060 / REQ-053)
+
+* Fonte **única** de Jobs: `executive/queue/` no PC (`CEO_REPO_ROOT`).
+* O Dispatcher **não** chama `/api/ceo/queue/*` (Railway ou outro).
+* Heartbeat remoto é só sinal de «watcher vivo» para o Painel (BP-001); a contagem Agent «há trabalho na fila» no Painel remoto pode ainda reflectir a loja da API até IMP-060 E5.
 
 ## Lock
 

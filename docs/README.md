@@ -107,6 +107,16 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-018-classificacao-de-intencao.md`](architecture/ARQ-018-classificacao-de-intencao.md) | **Homologada v0.1** — Classificação de Intenção; quatro classes; Classificador primeiro |
 | [`architecture/ARQ-019-continuidade-do-gate-de-execucao.md`](architecture/ARQ-019-continuidade-do-gate-de-execucao.md) | **Homologada v0.1** — Continuidade do Gate de Execução; retoma pós-decisão humana |
 | [`architecture/ARQ-020-consciencia-operacional.md`](architecture/ARQ-020-consciencia-operacional.md) | **Homologada v0.1** — Consciência Operacional; Estado Executivo Atual antes de C2/C3 |
+| [`architecture/ARQ-021-restauracao-fila-oficial-mvp.md`](architecture/ARQ-021-restauracao-fila-oficial-mvp.md) | **Homologada v0.1** — Restauração da Fila Oficial do MVP; mesma fila produtor/consumidor |
+| [`requirements/REQ-060-restauracao-fila-oficial-mvp.md`](requirements/REQ-060-restauracao-fila-oficial-mvp.md) | **Homologada v0.1** — Restauração da Fila Oficial do MVP; CAP-11; alinhada à ARQ-021 |
+| [`implementation/IMP-060-restauracao-fila-oficial-mvp.md`](implementation/IMP-060-restauracao-fila-oficial-mvp.md) | **Encerramento autorizado** — Restauração da Fila Oficial do MVP; E1–E6; commit/deploy em curso |
+| [`implementation/evidencias/IMP-060-E1-inventario.md`](implementation/evidencias/IMP-060-E1-inventario.md) | Inventário IMP-060 E1 — pontos `/api/ceo/queue/*` e cutover Railway |
+| [`implementation/evidencias/IMP-060-E2-relatorio.md`](implementation/evidencias/IMP-060-E2-relatorio.md) | Relatório IMP-060 E2 — publicação na fila oficial `executive/queue` |
+| [`implementation/evidencias/IMP-060-E3-relatorio.md`](implementation/evidencias/IMP-060-E3-relatorio.md) | Relatório IMP-060 E3 — Dispatcher consome fila oficial + heartbeat |
+| [`implementation/evidencias/IMP-060-E4-relatorio.md`](implementation/evidencias/IMP-060-E4-relatorio.md) | Relatório IMP-060 E4 — Railway despromovida no ciclo Job MVP |
+| [`implementation/evidencias/IMP-060-E5-relatorio.md`](implementation/evidencias/IMP-060-E5-relatorio.md) | Relatório IMP-060 E5 — Painel e Consciência na fila oficial |
+| [`implementation/evidencias/IMP-060-E6-homologacao.md`](implementation/evidencias/IMP-060-E6-homologacao.md) | Homologação IMP-060 E6 — T1–T8 · recomendação HOMOLOGAR |
+| [`architecture/ARQ-021-fila-oficial-operacao.md`](architecture/ARQ-021-fila-oficial-operacao.md) | Operação mínima fila oficial (ARQ-021 / REQ-060) |
 | [`requirements/REQ-057-classificacao-de-intencao.md`](requirements/REQ-057-classificacao-de-intencao.md) | **Homologada v0.1** — Classificação de Intenção; CAP-07; alinhada à ARQ-018 |
 | [`requirements/REQ-058-continuidade-do-gate-de-execucao.md`](requirements/REQ-058-continuidade-do-gate-de-execucao.md) | **Homologada v0.1** — Continuidade do Gate de Execução; CAP-11; alinhada à ARQ-019 |
 | [`requirements/REQ-059-consciencia-operacional.md`](requirements/REQ-059-consciencia-operacional.md) | **Homologada v0.1** — Consciência Operacional; CAP-01; alinhada à ARQ-020 |

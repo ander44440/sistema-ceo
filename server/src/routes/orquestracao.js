@@ -18,7 +18,6 @@ import {
   validarCorpoHeartbeat,
 } from '../services/orquestracao/heartbeat.js';
 import { sinaisRuntimeGlobal } from '../services/orquestracao/sinaisRuntime.js';
-import { criarFilaExecucao } from '../services/executionQueue.js';
 import { configDeEnvCto } from '../services/llm.js';
 import { resolverRepoRoot } from '../config.js';
 
@@ -28,11 +27,12 @@ import { resolverRepoRoot } from '../config.js';
  */
 export function registrarOrquestracao(app, env = process.env) {
   const repoRoot = resolverRepoRoot(env);
-  const fila = criarFilaExecucao(repoRoot);
+  // IMP-060 E5: Jobs oficiais só em executive/queue no PC — não usar FS Railway.
+  // Heartbeat do Dispatcher (POST) permanece neste host para sinal remoto.
   const agregador = criarAgregadorOrquestracao({
     deps: {
       repoRoot,
-      listarPorEstado: (estado) => fila.listarPorEstado(estado),
+      listarPorEstado: () => [],
       llmConfigurado: () => Boolean(configDeEnvCto(env).configurado),
       sinais: sinaisRuntimeGlobal,
       healthOk: () => true,

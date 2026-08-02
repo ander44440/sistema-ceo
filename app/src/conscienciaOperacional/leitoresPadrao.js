@@ -1,10 +1,15 @@
 /**
- * Leitores padrão somente leitura F1–F8 — IMP-059 E4.
+ * Leitores padrão somente leitura F1–F8 — IMP-059 E4 / IMP-060 E5.
  * Não escrevem em Fila, Motor, Dispatcher nem Continuidade.
+ * F1/F2: fila oficial local (ceoQueueApiUrl → executive/queue), não cutover remoto.
  */
 
 import { obterStoreContinuidadePadrao } from "../continuidadeGate/integracaoConversa.js";
 import { obterCoaAtivo } from "../executiveEngine/coaSessao.js";
+import {
+  jobFilaParaResumoConsciencia,
+  listarJobsPorEstado
+} from "../executiveEngine/filaCliente.js";
 
 /**
  * @typedef {import("./agregarEstado.js").LeitoresFontes} LeitoresFontes
@@ -35,13 +40,27 @@ export function criarLeitoresConscienciaPadrao(deps = {}) {
       if (typeof deps.jobsPendentes === "function") {
         return (await deps.jobsPendentes()) || [];
       }
-      return [];
+      try {
+        const jobs = await listarJobsPorEstado("pending");
+        return jobs
+          .map((j) => jobFilaParaResumoConsciencia(j, "pending"))
+          .filter(Boolean);
+      } catch {
+        return [];
+      }
     },
     F2: async () => {
       if (typeof deps.jobsEmExecucao === "function") {
         return (await deps.jobsEmExecucao()) || [];
       }
-      return [];
+      try {
+        const jobs = await listarJobsPorEstado("running");
+        return jobs
+          .map((j) => jobFilaParaResumoConsciencia(j, "running"))
+          .filter(Boolean);
+      } catch {
+        return [];
+      }
     },
     F3: async () => {
       if (!store || typeof store.obterGatePendenteMaisRecente !== "function") {

@@ -1,6 +1,6 @@
 /**
- * Escreve heartbeat do watcher — IMP-055 E6 / REQ-053.
- * Ficheiro local + opcional POST ao backend (CEO_API_BASE).
+ * Escreve heartbeat do watcher — IMP-055 E6 / REQ-053 / IMP-060 E3.
+ * Ficheiro local + POST ao backend de sinal (CEO_API_BASE) — NÃO é fila de Jobs.
  */
 
 import fs from "node:fs";
@@ -12,10 +12,12 @@ import path from "node:path";
  *   estado?: string,
  *   pending?: number,
  *   pid?: number,
- *   apiBase?: string | null
+ *   apiBase?: string | null,
+ *   log?: (msg: string) => void
  * }} [opts]
  */
 export async function pulsarHeartbeat(repoRoot, opts = {}) {
+  const log = opts.log || (() => {});
   const logsDir = path.join(repoRoot, "executive", "dispatcher", "logs");
   fs.mkdirSync(logsDir, { recursive: true });
   const payload = {
@@ -31,16 +33,30 @@ export async function pulsarHeartbeat(repoRoot, opts = {}) {
   const base = (opts.apiBase || process.env.CEO_API_BASE || "")
     .trim()
     .replace(/\/$/, "");
-  if (base) {
-    try {
-      await fetch(`${base}/api/ceo/orquestracao/heartbeat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-    } catch {
-      /* PC offline da API — ficheiro local basta para Vite local */
-    }
+  if (!base) {
+    log(
+      "[dispatcher] aviso: CEO_API_BASE vazio — heartbeat só local; Painel remoto mostra Erro/TTL"
+    );
+    return { ...payload, remoto: false, motivoRemoto: "sem_ceo_api_base" };
   }
-  return payload;
+
+  try {
+    const resp = await fetch(`${base}/api/ceo/orquestracao/heartbeat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) {
+      log(
+        `[dispatcher] aviso: heartbeat remoto HTTP ${resp.status} (${base})`
+      );
+      return { ...payload, remoto: false, motivoRemoto: `http_${resp.status}` };
+    }
+    return { ...payload, remoto: true };
+  } catch (err) {
+    log(
+      `[dispatcher] aviso: heartbeat remoto falhou — ${err && err.message ? err.message : err}`
+    );
+    return { ...payload, remoto: false, motivoRemoto: "rede" };
+  }
 }

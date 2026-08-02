@@ -17,7 +17,8 @@ function lerJson(req) {
     req.on("data", (c) => chunks.push(c));
     req.on("end", () => {
       try {
-        const raw = Buffer.concat(chunks).toString("utf8") || "{}";
+        let raw = Buffer.concat(chunks).toString("utf8") || "{}";
+        if (raw.charCodeAt(0) === 0xfeff) raw = raw.slice(1);
         resolve(JSON.parse(raw));
       } catch (err) {
         reject(err);

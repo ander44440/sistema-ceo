@@ -39,7 +39,10 @@ export function criarFilaExecucao(rootDir) {
   function lerJob(id) {
     const p = caminhoJob(id);
     if (!fs.existsSync(p)) return null;
-    return JSON.parse(fs.readFileSync(p, "utf8"));
+    let raw = fs.readFileSync(p, "utf8");
+    // PowerShell Set-Content -Encoding utf8 pode prefixar BOM — não invalidar a fila
+    if (raw.charCodeAt(0) === 0xfeff) raw = raw.slice(1);
+    return JSON.parse(raw);
   }
 
   function escreverJob(job) {

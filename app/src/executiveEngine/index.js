@@ -150,13 +150,11 @@ export const executiveEngine = {
 
     if (interceptacao === "continuidade") {
       let publicarJobCont = deps.publicarJob;
+      // IMP-060 E2: fila oficial local via publicarJobFila — sem depender de Railway/VITE_CEO_API_BASE
       if (typeof publicarJobCont !== "function") {
         try {
-          const base = import.meta.env?.VITE_CEO_API_BASE;
-          if (base) {
-            const { publicarJobFila } = await import("./filaCliente.js");
-            publicarJobCont = publicarJobFila;
-          }
+          const { publicarJobFila } = await import("./filaCliente.js");
+          publicarJobCont = publicarJobFila;
         } catch {
           publicarJobCont = undefined;
         }
@@ -273,16 +271,15 @@ export const executiveEngine = {
     };
 
     let publicarJob = deps.publicarJob;
+    // IMP-060 E2: injectar publicador da fila oficial quando ausente (Centro/Conversa/etc.)
+    // Motor continua a usar só deps.publicarJob — contrato preservado (REQ-060 RF9).
     if (
       typeof publicarJob !== "function" &&
       rota.destino === "motor_execucao"
     ) {
       try {
-        const base = import.meta.env?.VITE_CEO_API_BASE;
-        if (base) {
-          const { publicarJobFila } = await import("./filaCliente.js");
-          publicarJob = publicarJobFila;
-        }
+        const { publicarJobFila } = await import("./filaCliente.js");
+        publicarJob = publicarJobFila;
       } catch {
         publicarJob = undefined;
       }

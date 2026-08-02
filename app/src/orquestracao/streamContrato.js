@@ -1,7 +1,9 @@
 /**
- * Contrato SSE do Painel de Orquestração — IMP-055 E5.
+ * Contrato SSE do Painel de Orquestração — IMP-055 E5 / IMP-060 E5.
  * Eventos: snapshot | no.atualizado | pulse (ARQ-016).
  */
+
+import { ceoPainelApiUrl } from "../ceoApiBase.js";
 
 export const PATH_SNAPSHOT = "/api/ceo/orquestracao/snapshot";
 export const PATH_STREAM = "/api/ceo/orquestracao/stream";
@@ -112,22 +114,13 @@ export function criarDebounce(fn, ms = DEBOUNCE_UI_MS) {
 }
 
 /**
- * Resolve URL absoluta/relativa do stream.
+ * Resolve URL do stream SSE — API local MVP (IMP-060 E5), não Railway.
  * @param {string} [baseOverride]
  */
 export function urlStreamOrquestracao(baseOverride) {
-  let base = "";
-  if (typeof baseOverride === "string") {
-    base = baseOverride.replace(/\/$/, "");
-  } else {
-    try {
-      const env = import.meta && import.meta.env;
-      base = String((env && env.VITE_CEO_API_BASE) || "")
-        .trim()
-        .replace(/\/$/, "");
-    } catch {
-      base = "";
-    }
+  if (typeof baseOverride === "string" && baseOverride.trim()) {
+    const base = baseOverride.replace(/\/$/, "");
+    return `${base}${PATH_STREAM}`;
   }
-  return base ? `${base}${PATH_STREAM}` : PATH_STREAM;
+  return ceoPainelApiUrl(PATH_STREAM);
 }

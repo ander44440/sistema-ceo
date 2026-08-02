@@ -27,10 +27,18 @@ export async function despacharAgent(opts) {
       model: { id: model },
       local: { cwd: repoRoot }
     });
+    const erroSdk =
+      result &&
+      result.error &&
+      typeof result.error === "object" &&
+      typeof result.error.message === "string"
+        ? result.error.message
+        : null;
     return {
       ok: result.status === "finished",
       status: result.status,
-      result: result.result,
+      result: result.result || erroSdk || null,
+      error: erroSdk,
       runId: result.id,
       durationMs: result.durationMs
     };
@@ -40,6 +48,7 @@ export async function despacharAgent(opts) {
         ok: false,
         status: "startup_error",
         result: err.message,
+        error: err.message,
         retryable: err.isRetryable
       };
     }

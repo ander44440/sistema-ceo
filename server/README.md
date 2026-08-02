@@ -2,17 +2,20 @@
 
 Servidor HTTP Node (Hono) para as APIs `/api/ceo/*` em produção (alvo Railway).
 
-## Estado atual (E5)
+## Estado atual
 
 - Entrypoint: `npm start` → `src/index.js`
 - Porta: `process.env.PORT` ou **8787**
-- Rotas:
+- Rotas online (BP-001):
   - `GET /health`
   - `GET /api/ceo/llm-status` · `POST /api/ceo/deliberar`
   - `POST /api/ceo/cto/consultar` (REQ-054 — Conector CTO; canal ≠ deliberar)
-  - `GET /api/ceo/queue/pending` · `GET|POST /api/ceo/queue/jobs` · `PATCH /api/ceo/queue/jobs/:id`
-  - `GET /api/ceo/onboarding/carregar` · `POST /api/ceo/onboarding/salvar`
-- Plugins Vite em `app/` permanecem ativos (convivência temporária)
+  - `GET|POST /api/ceo/onboarding/*`
+  - Orquestração: snapshot / stream / **heartbeat** (sinal Dispatcher)
+- **Fila MVP (IMP-060 E4):** `/api/ceo/queue/*` neste host responde **410** (`FILA_MVP_LOCAL`).  
+  Fonte oficial de Jobs: `executive/queue/` no PC (plugin Vite / companion).  
+  Railway **não** é fonte de verdade do ciclo `pending` → `completed` / `failed`.
+- Plugin Vite `executionQueuePlugin` em `app/` = API local da fila oficial
 
 ## Local
 

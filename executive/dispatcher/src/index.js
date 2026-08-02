@@ -1,5 +1,8 @@
 /**
- * CLI — Dispatcher local da Fila de Execução (REQ-053).
+ * CLI — Dispatcher local da Fila de Execução (REQ-053 / IMP-060 E3).
+ *
+ * Consome exclusivamente executive/queue/ no PC.
+ * Heartbeat → sinal do Painel (CEO_API_BASE); nunca lista Jobs na Railway.
  *
  * Uso:
  *   node src/index.js [--once] [--dry-run]
@@ -17,10 +20,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DISPATCHER_ROOT = path.resolve(__dirname, "..");
 const DEFAULT_REPO_ROOT = path.resolve(DISPATCHER_ROOT, "..", "..");
 
+/** Intervalo de pulse remoto — Painel TTL = 60s (ARQ orquestração). */
+const HEARTBEAT_PULSE_MS = 20_000;
+
 function carregarDotEnv(dir) {
   const p = path.join(dir, ".env");
   if (!fs.existsSync(p)) return;
-  const texto = fs.readFileSync(p, "utf8");
+  let texto = fs.readFileSync(p, "utf8");
+  if (texto.charCodeAt(0) === 0xfeff) texto = texto.slice(1);
   for (const linha of texto.split(/\r?\n/)) {
     const t = linha.trim();
     if (!t || t.startsWith("#")) continue;
@@ -59,6 +66,9 @@ async function main() {
   );
   const model = process.env.CURSOR_MODEL || "composer-2.5";
   const apiKey = (process.env.CURSOR_API_KEY || "").trim() || null;
+  const apiBase = (process.env.CEO_API_BASE || "").trim().replace(/\/$/, "");
+
+  const log = (m) => console.log(m);
 
   const ctx = {
     queueDir,
@@ -66,26 +76,31 @@ async function main() {
     apiKey,
     model,
     dryRun: args.dryRun,
-    log: (m) => console.log(m)
+    log
   };
 
   console.log(`[dispatcher] repo=${repoRoot}`);
-  console.log(`[dispatcher] queue=${queueDir}`);
+  console.log(`[dispatcher] queue=${queueDir} (fila oficial MVP — só FS local)`);
   console.log(
     `[dispatcher] mode=${args.dryRun ? "dry-run" : args.once ? "once" : "watch"} model=${model}`
   );
+  console.log(
+    `[dispatcher] heartbeat API=${apiBase || "(só ficheiro local — definir CEO_API_BASE para Painel remoto)"}`
+  );
+
+  const pulse = async (estado) => {
+    const pending = listarPendentes(queueDir);
+    return pulsarHeartbeat(repoRoot, {
+      estado: estado || (pending.length ? "busy" : "idle"),
+      pending: pending.length,
+      log
+    });
+  };
 
   if (args.once || args.dryRun) {
-    const pending = listarPendentes(queueDir);
-    await pulsarHeartbeat(repoRoot, {
-      estado: args.dryRun ? "idle" : "busy",
-      pending: pending.length
-    });
+    await pulse(args.dryRun ? "idle" : "busy");
     const r = await ciclo(ctx);
-    await pulsarHeartbeat(repoRoot, {
-      estado: r === "error" ? "error" : "idle",
-      pending: listarPendentes(queueDir).length
-    });
+    await pulse(r === "error" ? "error" : "idle");
     process.exitCode = r === "error" || r === "skipped_no_key" ? 1 : 0;
     return;
   }
@@ -97,29 +112,32 @@ async function main() {
     if (emCurso) return;
     emCurso = true;
     try {
-      const pending = listarPendentes(queueDir);
-      await pulsarHeartbeat(repoRoot, {
-        estado: pending.length ? "busy" : "idle",
-        pending: pending.length
-      });
+      await pulse(undefined);
       await ciclo(ctx);
-      await pulsarHeartbeat(repoRoot, {
-        estado: "idle",
-        pending: listarPendentes(queueDir).length
-      });
+      await pulse("idle");
     } catch (err) {
       console.error("[dispatcher] erro no ciclo:", err);
-      await pulsarHeartbeat(repoRoot, { estado: "error", pending: 0 });
+      await pulsarHeartbeat(repoRoot, {
+        estado: "error",
+        pending: 0,
+        log
+      });
     } finally {
       emCurso = false;
     }
   };
+
+  // Pulse independente do Agent (TTL Painel 60s) — IMP-060 E3
+  const hbTimer = setInterval(() => {
+    void pulse(emCurso ? "busy" : undefined);
+  }, HEARTBEAT_PULSE_MS);
 
   await tick();
   const timer = setInterval(tick, pollMs);
 
   const shutdown = () => {
     clearInterval(timer);
+    clearInterval(hbTimer);
     console.log("[dispatcher] encerrado");
     process.exit(0);
   };

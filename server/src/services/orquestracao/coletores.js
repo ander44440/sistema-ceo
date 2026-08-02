@@ -1,6 +1,6 @@
 /**
- * Coletores V1 — IMP-055 E6.
- * Só leitura de sinais; sem escrita em Fila/Jobs.
+ * Coletores V1 — paridade app/src/orquestracao/coletores.js (IMP-055 E6 / IMP-060 E5).
+ * No host Railway: listarPorEstado deve ser vazio (fila oficial = PC).
  */
 
 import {
@@ -9,9 +9,9 @@ import {
   mapearCeo,
   mapearAgent,
   mapearDispatcher,
-  mapearSpeaker
-} from "./mapeadores.js";
-import { avaliarHeartbeat } from "./heartbeat.js";
+  mapearSpeaker,
+} from './mapeadores.js';
+import { avaliarHeartbeat } from './heartbeat.js';
 
 /**
  * @param {{
@@ -23,7 +23,6 @@ import { avaliarHeartbeat } from "./heartbeat.js";
  *   agoraMs?: () => number,
  *   ttlMs?: number
  * }} deps
- * @returns {Record<string, () => Promise<object>>}
  */
 export function criarFontesColetores(deps) {
   const agoraMs = deps.agoraMs || (() => Date.now());
@@ -32,32 +31,32 @@ export function criarFontesColetores(deps) {
 
   async function coletorBackend() {
     let ok = true;
-    if (typeof deps.healthOk === "function") {
+    if (typeof deps.healthOk === 'function') {
       ok = Boolean(await Promise.resolve(deps.healthOk()));
     }
     const m = mapearBackend({ ok });
     return {
       estado: m.estado,
-      origemSinal: "health",
-      detalhe: m.detalhe
+      origemSinal: 'health',
+      detalhe: m.detalhe,
     };
   }
 
   async function coletorCto() {
     const snap = sinais ? sinais.ler() : { cto: {} };
     const configurado =
-      typeof deps.llmConfigurado === "function"
+      typeof deps.llmConfigurado === 'function'
         ? Boolean(deps.llmConfigurado())
         : true;
     const m = mapearCto({
       configurado,
       emVoo: Boolean(snap.cto && snap.cto.emVoo),
-      ultimoEstado: snap.cto && snap.cto.ultimoEstado
+      ultimoEstado: snap.cto && snap.cto.ultimoEstado,
     });
     return {
       estado: m.estado,
-      origemSinal: "cto-connector",
-      detalhe: m.detalhe
+      origemSinal: 'cto-connector',
+      detalhe: m.detalhe,
     };
   }
 
@@ -66,8 +65,8 @@ export function criarFontesColetores(deps) {
     const m = mapearCeo(snap.ceo || {});
     return {
       estado: m.estado,
-      origemSinal: "nucleo",
-      detalhe: m.detalhe
+      origemSinal: 'nucleo',
+      detalhe: m.detalhe,
     };
   }
 
@@ -75,39 +74,46 @@ export function criarFontesColetores(deps) {
     let pending = [];
     let running = [];
     let failed = [];
+    let completed = [];
     try {
-      pending = listar("pending") || [];
-      running = listar("running") || [];
-      failed = listar("failed") || [];
+      pending = listar('pending') || [];
+      running = listar('running') || [];
+      failed = listar('failed') || [];
+      completed = listar('completed') || [];
     } catch {
       return {
-        estado: "Erro",
-        origemSinal: "fila",
-        detalhe: { motivo: "fila_ilegivel" }
+        estado: 'Erro',
+        origemSinal: 'fila_oficial',
+        detalhe: { motivo: 'fila_ilegivel' },
       };
     }
-    const ultimoFailed = failed.length
-      ? failed[failed.length - 1]
-      : null;
-    // failed "recente": existe failed e não há pending/running a mascarar
-    const failedRecente = Boolean(ultimoFailed) && !pending.length && !running.length;
+    const ultimoFailed = failed.length ? failed[failed.length - 1] : null;
+    const failedRecente =
+      Boolean(ultimoFailed) && !pending.length && !running.length;
     const m = mapearAgent({
       pending: pending.length,
       running: running.length,
       failedRecente,
-      ultimoFailedId: ultimoFailed && ultimoFailed.id
+      ultimoFailedId: ultimoFailed && ultimoFailed.id,
     });
     return {
       estado: m.estado,
-      origemSinal: "fila",
-      detalhe: m.detalhe
+      origemSinal: 'fila_oficial',
+      detalhe: {
+        ...m.detalhe,
+        pending: pending.length,
+        running: running.length,
+        completed: completed.length,
+        failed: failed.length,
+        fonte: 'executive/queue',
+      },
     };
   }
 
   async function coletorDispatcher() {
     let pendingCount = 0;
     try {
-      pendingCount = (listar("pending") || []).length;
+      pendingCount = (listar('pending') || []).length;
     } catch {
       pendingCount = 0;
     }
@@ -116,15 +122,15 @@ export function criarFontesColetores(deps) {
       fresco: hb.fresco,
       idadeMs: hb.idadeMs,
       estadoWatcher: hb.estadoWatcher,
-      pending: Math.max(pendingCount, hb.pending || 0)
+      pending: Math.max(pendingCount, hb.pending || 0),
     });
     return {
       estado: m.estado,
-      origemSinal: "dispatcher-heartbeat",
+      origemSinal: 'dispatcher-heartbeat',
       detalhe: {
         ...m.detalhe,
-        desdeQuando: hb.em || undefined
-      }
+        desdeQuando: hb.em || undefined,
+      },
     };
   }
 
@@ -133,8 +139,8 @@ export function criarFontesColetores(deps) {
     const m = mapearSpeaker(snap.speaker || {});
     return {
       estado: m.estado,
-      origemSinal: "speaker-heuristico",
-      detalhe: m.detalhe
+      origemSinal: 'speaker-heuristico',
+      detalhe: m.detalhe,
     };
   }
 
@@ -144,6 +150,6 @@ export function criarFontesColetores(deps) {
     ceo: coletorCeo,
     agent: coletorAgent,
     dispatcher: coletorDispatcher,
-    speaker: coletorSpeaker
+    speaker: coletorSpeaker,
   };
 }

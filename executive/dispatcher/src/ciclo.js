@@ -72,8 +72,9 @@ export async function ciclo(ctx) {
       );
       return "dispatched";
     }
+    const detalhe = out.error || out.result || "(sem detalhe)";
     log(
-      `[dispatcher] Agent não concluído: status=${out.status} — ${out.result || ""}`
+      `[dispatcher] Agent não concluído: status=${out.status} — ${detalhe}`
     );
     return "error";
   } finally {

@@ -1,32 +1,25 @@
 /**
- * Cliente HTTP do Painel de Orquestração — IMP-055 E3/E5.
+ * Cliente HTTP do Painel de Orquestração — IMP-055 E3/E5 / IMP-060 E5.
  * Snapshot GET (só leitura). Stream SSE em tempoReal.js.
+ * Origem: API local MVP (`ceoPainelApiUrl`) — mesma pasta executive/queue — nunca Railway.
  */
 
+import { ceoPainelApiUrl } from "../ceoApiBase.js";
 import { NOS_V1, montarNo, extrairVistaPrincipal } from "./dominio.js";
 import { PATH_SNAPSHOT, INTERVALO_POLLING_MS } from "./streamContrato.js";
 
 export { PATH_SNAPSHOT, INTERVALO_POLLING_MS };
 
 /**
- * Resolve URL do snapshot (Vite: VITE_CEO_API_BASE; Node/test: path relativo).
+ * Resolve URL do snapshot (API local MVP / companion; não VITE_CEO_API_BASE).
  * @param {string} [baseOverride]
  */
 export function urlSnapshotOrquestracao(baseOverride) {
-  let base = "";
-  if (typeof baseOverride === "string") {
-    base = baseOverride.replace(/\/$/, "");
-  } else {
-    try {
-      const env = import.meta && import.meta.env;
-      base = String((env && env.VITE_CEO_API_BASE) || "")
-        .trim()
-        .replace(/\/$/, "");
-    } catch {
-      base = "";
-    }
+  if (typeof baseOverride === "string" && baseOverride.trim()) {
+    const base = baseOverride.replace(/\/$/, "");
+    return `${base}${PATH_SNAPSHOT}`;
   }
-  return base ? `${base}${PATH_SNAPSHOT}` : PATH_SNAPSHOT;
+  return ceoPainelApiUrl(PATH_SNAPSHOT);
 }
 
 /**

@@ -20,7 +20,10 @@ export function listarPendentes(queueDir) {
   const pending = [];
   for (const f of files) {
     try {
-      const job = JSON.parse(fs.readFileSync(path.join(queueDir, f), "utf8"));
+      let raw = fs.readFileSync(path.join(queueDir, f), "utf8");
+      // PowerShell UTF-8 BOM — mesma fila oficial que o plugin Vite (IMP-060 E3)
+      if (raw.charCodeAt(0) === 0xfeff) raw = raw.slice(1);
+      const job = JSON.parse(raw);
       if (job && job.estado === "pending") pending.push(job);
     } catch {
       // ficheiro ilegível — ignorar neste ciclo

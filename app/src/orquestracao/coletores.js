@@ -75,14 +75,16 @@ export function criarFontesColetores(deps) {
     let pending = [];
     let running = [];
     let failed = [];
+    let completed = [];
     try {
       pending = listar("pending") || [];
       running = listar("running") || [];
       failed = listar("failed") || [];
+      completed = listar("completed") || [];
     } catch {
       return {
         estado: "Erro",
-        origemSinal: "fila",
+        origemSinal: "fila_oficial",
         detalhe: { motivo: "fila_ilegivel" }
       };
     }
@@ -99,8 +101,15 @@ export function criarFontesColetores(deps) {
     });
     return {
       estado: m.estado,
-      origemSinal: "fila",
-      detalhe: m.detalhe
+      origemSinal: "fila_oficial",
+      detalhe: {
+        ...m.detalhe,
+        pending: pending.length,
+        running: running.length,
+        completed: completed.length,
+        failed: failed.length,
+        fonte: "executive/queue"
+      }
     };
   }
 

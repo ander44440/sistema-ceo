@@ -117,7 +117,7 @@ test("E6-CA1: agregador com coletores — 6 nós com origem real", async () => {
   assert.equal(porId.backend.estado, "Disponivel");
   assert.equal(porId.backend.origemSinal, "health");
   assert.equal(porId.agent.estado, "Executando");
-  assert.equal(porId.agent.origemSinal, "fila");
+  assert.equal(porId.agent.origemSinal, "fila_oficial");
   assert.equal(porId.dispatcher.estado, "Disponivel");
   assert.equal(porId.dispatcher.origemSinal, "dispatcher-heartbeat");
   assert.equal(porId.speaker.origemSinal, "speaker-heuristico");
