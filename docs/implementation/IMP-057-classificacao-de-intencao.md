@@ -1,9 +1,10 @@
 # IMP-057 — Classificação de Intenção
 
-> **Status: Homologada — frente encerrada** (01/08/2026).  
-> Norma: **REQ-057** (homologada); **ARQ-018 v0.1** (homologada).  
-> **Natureza:** plano + implementação E1–E7.  
-> **Commit/push/deploy:** autorizados no encerramento.
+> **Status: Homologada (v1.0) — Emenda E2.2 em encerramento (commit/push/deploy)** (01/08/2026).  
+> Norma: **REQ-057** (homologada); **ARQ-018 v0.1** (homologada) — **não alteradas**.  
+> **Natureza:** plano + implementação E1–E7 + Emenda E2.1 (código) + Emenda E2.2 (código).  
+> **Emenda E2.1:** incluída no mesmo delta de código (preservada; CA-E2.1 verdes).  
+> **Emenda E2.2:** encerramento autorizado — commit/push/deploy + homologação em produção.
 
 ---
 
@@ -121,6 +122,172 @@ com encaminhamento correcto (C1 resposta leve; C2 frente activa sem Job automát
 * E2-CA5: Função pura (sem `fetch`, Fila, SDK).
 
 **Homologação E2:** suite de fixtures + revisão da tabela lexicon.
+
+---
+
+### Emenda E2.1 — Priorização de Intenções Executivas
+
+> **Status:** Implementada — aguarda homologação do patrocinador (01/08/2026).  
+> **Âmbito:** regras de classificação **C2 × C3** (motor de regras / lexicon — etapa E2).  
+> **Origem:** validação prática pós-IMP-057 (diagnóstico: «Sugiro…» em pedidos imperativos classificados como C2).  
+> **Código:** `ehIntencaoExecutivaE21` / lexicon C3 + testes `e21.test.js`.  
+> **Não altera:** ARQ-018; REQ-057; Motor de Execução.
+
+#### Objectivo
+
+Ajustar o Classificador para que **intenções executivas** (verbo imperativo dirigido ao CEO + acção potencialmente executável) sejam **sempre** `trabalho_executivo` (C3) → destino `motor_execucao`, **mesmo com frente activa**, sem rebaixamento a C2 por RF8/RF9 ou boost de projecto.
+
+#### Regra obrigatória (E2.1)
+
+Se a mensagem contiver **simultaneamente**:
+
+1. um **verbo imperativo** dirigido ao CEO; **e**  
+2. uma **acção potencialmente executável**;
+
+a classificação deverá ser **obrigatoriamente C3** (`trabalho_executivo`), **independentemente da frente activa**.
+
+*Consequências de encaminhamento (já homologadas E3–E5):* C3 → `motor_execucao`; sem fecho consultivo «Sugiro…» (E4).
+
+*Não aplica* quando a mensagem é **interrogativa / deliberativa** (pedido de opinião, priorização, explicação) — permanece C2 quando o lexicon/contexto assim o determinar.
+
+#### Exemplos obrigatórios → C3
+
+| # | Mensagem |
+|---|----------|
+| 1 | Resolva os bugs. |
+| 2 | Corrija esse problema. |
+| 3 | Faça um diagnóstico. |
+| 4 | Analise este projeto. |
+| 5 | Implemente esta funcionalidade. |
+| 6 | Acione o CTO. |
+| 7 | Acione o Engenheiro. |
+| 8 | Delegue esta tarefa. |
+| 9 | Execute esta análise. |
+| 10 | Gere um relatório. |
+| 11 | Crie um Job. |
+| 12 | Investigue este erro. |
+
+#### Exemplos obrigatórios → permanecem C2
+
+| # | Mensagem |
+|---|----------|
+| A | Como devemos priorizar os bugs? |
+| B | O que você acha dessa arquitetura? |
+| C | Qual seria a melhor estratégia? |
+| D | Explique esse módulo. |
+
+#### Entregáveis (após Gate — não nesta abertura)
+
+* Actualizar lexicon / `temVerboExecucao` / `resolverEmpates` para materializar a regra E2.1.  
+* Garantir que `frenteActiva === true` **não** force C2 quando a regra E2.1 dispara.  
+* Suite de testes com **todos** os exemplos C3 e C2 acima.  
+* Evidência em `docs/implementation/evidencias/` (após implementação autorizada).
+
+#### Critérios de aceite E2.1
+
+* **CA-E2.1-1:** Todos os verbos/exemplos executivos da tabela C3 acima resultam em `classe === trabalho_executivo` (destino `motor_execucao`, salvo clarificação por limiar — e estes exemplos **não** devem cair abaixo do limiar por empate C2).  
+* **CA-E2.1-2:** A frente activa **nunca** poderá rebaixar uma intenção que cumpra a regra E2.1 para C2 (`conversa_projeto`).  
+* **CA-E2.1-3:** Os testes automatizados incluem **todos** os exemplos C3 e C2 listados nesta emenda.
+
+#### Homologação E2.1
+
+Gate do patrocinador sobre **este texto de emenda**. Código só após autorização explícita de implementação da E2.1.
+
+---
+
+### Emenda E2.2 — Cobertura de Classificação
+
+> **Status:** Encerramento em curso — commit/push/deploy + homologação produção (01/08/2026).  
+> **Âmbito:** regras de classificação **C1** e **C2** (motor de regras / lexicon — etapa E2).  
+> **Origem:** clarificações indevidas quando a intenção é classificável com segurança (conhecimento geral ou deliberação de projecto).  
+> **Código:** `app/src/classificadorIntencao/{lexicon,regras,e22.test}.js` (+ exports).  
+> **Evidência:** `docs/implementation/evidencias/IMP-057-E22-relatorio.md`; prod → `IMP-057-E22-homologacao-producao.md`.  
+> **Não altera:** ARQ-018; REQ-057; Motor; Continuidade do Gate; Consciência Operacional (IMP-059).
+
+#### Objectivo
+
+Eliminar **clarificações indevidas** quando a intenção puder ser classificada com segurança — cobrindo (1) conhecimento geral / explicações → **C1** obrigatório e (2) perguntas deliberativas de projecto com padrões lexicais explícitos → **C2** obrigatório (com contexto de projecto).
+
+#### Regra obrigatória — C1 (conhecimento geral)
+
+Mensagens cujo valor esperado é **conhecimento, definição, explicação ou facto** (sem pedido de trabalho executivo e sem deliberação de prioridade/capacidade do projecto) deverão ser classificadas como **C1** (`conhecimento_geral`) → destino `resposta_leve`.
+
+**Domínios / intenções cobertos (lista mínima V1):**
+
+| Domínio / tipo |
+|----------------|
+| Receita |
+| Culinária |
+| História |
+| Ciência |
+| Matemática |
+| Programação |
+| Tecnologia |
+| Pessoas |
+| Lugares |
+| Definições |
+| Explicações |
+
+**Exemplos obrigatórios → C1** (nunca Clarificação):
+
+| # | Mensagem |
+|---|----------|
+| 1 | Me dê uma receita de bolo de laranja. |
+| 2 | Quem foi Albert Einstein? |
+| 3 | O que é Docker? |
+| 4 | Explique REST. |
+
+*Todos os exemplos da tabela são **obrigatoriamente C1**.*
+
+#### Regra obrigatória — C2 (conversa de projecto)
+
+Perguntas **deliberativas** iniciadas por (ou semanticamente equivalentes a) um dos padrões abaixo, **quando houver contexto de projecto** (frente activa / COA / referência ao projecto em curso), deverão ser classificadas como **C2** (`conversa_projeto`) → destino `nucleo_mre`.
+
+**Padrões lexicais mínimos (início / núcleo da pergunta):**
+
+| Padrão |
+|--------|
+| Como devemos… |
+| Você concorda… |
+| O que você acha… |
+| Quais capacidades… |
+| Qual prioridade… |
+| Como organizar… |
+| O que falta… |
+
+**Exemplos obrigatórios → C2** (com contexto de projecto; nunca Clarificação):
+
+| # | Mensagem |
+|---|----------|
+| A | Como devemos priorizar o MG2? |
+| B | Você concorda com a arquitetura atual? |
+| C | Quais capacidades ainda faltam para o CEO? |
+| D | O que você acha da arquitetura do Motor? |
+
+*Estes exemplos (e os padrões acima com contexto de projecto) são **obrigatoriamente C2**.*
+
+#### Critério transversal (E2.2)
+
+Os exemplos obrigatórios C1 e os padrões/exemplos C2 desta emenda **nunca** devem cair em **Clarificação** (`precisaClarificacao` / destino `clarificacao`) por limiar ou empate — a classificação segura prevalece.
+
+#### Entregáveis (implementados)
+
+* Lexicon / regras E2: cobertura C1 (domínios + exemplos) e C2 (padrões deliberativos + contexto de projecto).  
+* Exemplos obrigatórios **não** disparam clarificação.  
+* Suite `e22.test.js` + `npm run test:classificador:e22` / `test:classificador`.  
+* Evidência: `docs/implementation/evidencias/IMP-057-E22-relatorio.md`.  
+* Convive com Emenda E2.1: imperativo+acção continua C3; E2.2 não rebaixa C3.
+
+#### Critérios de aceite E2.2
+
+* **CA-E2.2-1:** Todos os exemplos obrigatórios C1 da tabela resultam em `classe === conhecimento_geral` (destino `resposta_leve`) e **não** em Clarificação.  
+* **CA-E2.2-2:** Mensagens que casam com os padrões C2 desta emenda **e** têm contexto de projecto resultam em `classe === conversa_projeto` (destino `nucleo_mre`) e **não** em Clarificação.  
+* **CA-E2.2-3:** Os testes automatizados incluem **todos** os exemplos C1 e C2 listados nesta emenda.  
+* **CA-E2.2-4:** Nenhum exemplo desta emenda é reclassificado como C3 por efeito colateral da E2.1 (interrogativas/deliberativas permanecem fora da regra imperativo+acção).
+
+#### Homologação E2.2
+
+Gate do patrocinador sobre **implementação + CA-E2.2-1…4 + suite verde**. Sem commit até autorização explícita.
 
 ---
 
@@ -243,10 +410,13 @@ com encaminhamento correcto (C1 resposta leve; C2 frente activa sem Job automát
 ## 7. Ordem e dependências entre etapas
 
 ```text
-E1 → E2 → E3 → E4 → E5
-                ↘ E6 (pode iniciar após E4; fecha após E5)
+E1 → E2 → [Emenda E2.1] → [Emenda E2.2] → E3 → E4 → E5
+                              ↘ E6 (pode iniciar após E4; fecha após E5)
 E1…E6 → E7
 ```
+
+**Emenda E2.1** (pós-homologação v1.0): ajusta regras C2×C3 do motor E2; implementação **só** após Gate da emenda (não reabre E3–E7 salvo impacto de regressão nos testes E2).  
+**Emenda E2.2** (pós-homologação v1.0): cobertura C1/C2 para eliminar Clarificação indevida; **implementada** — aguarda Gate / commit.
 
 Cada etapa exige **homologação interna** antes de avançar código da seguinte.
 
@@ -303,7 +473,8 @@ Commit **só** quando:
 | Risco | Mitigação |
 |-------|-----------|
 | Stub + canónico em paralelo | E4-CA3 / E6-CA2 / RF15 |
-| Falsos positivos C3 | E2 empates; preferir C2; Gate Motor |
+| Falsos positivos C3 | E2 empates; preferir C2; Gate Motor; **E2.1** restringe: imperativo+acção → C3 obrigatório |
+| Frente activa rebaixa C3→C2 | **Emenda E2.1** CA-E2.1-2 |
 | C3 respondido com «Sugiro…» (parecer sem Motor) | E4-CA5–CA8; E5-CA2 / E5-CA5 |
 | Scope creep LLM | RES8; E2 regras primeiro |
 | C4 vs C3 em “jobs” | Fixtures E2/E5; RF10 |
@@ -329,12 +500,13 @@ Commit **só** quando:
 | 0.3 | 01/08/2026 | Engenheiro (Cursor) | Implementação E4 — hook Núcleo + C3→Motor | Materializar v0.2; anti-«Sugiro» em C3 | E4 homologável |
 | 0.4 | 01/08/2026 | Engenheiro (Cursor) | Implementação E5 — destinos C1–C4 reais + anti-fallback | Ligar classificação às capacidades; E5-CA1–CA5 | E5 homologável |
 | 0.5 | 01/08/2026 | Engenheiro (Cursor) | E6 fronteiras + E7 docs/matriz + relatório consolidado | Fechar IMP-057 para Gate técnico | Homologação consolidada |
-| 1.0 | 01/08/2026 | Engenheiro (Cursor) | Encerramento — commit/push/deploy/prod | IMP-057 Homologada pelo patrocinador | **Frente encerrada** |
+| 1.0 | 01/08/2026 | Engenheiro (Cursor) | Encerramento — commit/push/deploy/prod | IMP-057 Homologada pelo patrocinador | Frente encerrada (v1.0) |
+| 1.1 | 01/08/2026 | Engenheiro (Cursor) | **Emenda E2.1** — Priorização de Intenções Executivas | Validação prática: imperativo+acção → C3; frente activa não rebaixa | Emenda aberta |
+| 1.2 | 01/08/2026 | Engenheiro (Cursor) | Implementação E2.1 (regras/lexicon/testes) | Materializar CA-E2.1-1…3; demos Núcleo | Aguarda homologação |
+| 1.3 | 01/08/2026 | Engenheiro (Cursor) | **Emenda E2.2** — Cobertura de Classificação (docs) | Eliminar Clarificação indevida em C1/C2 seguros | Texto aberto |
+| 1.4 | 01/08/2026 | Engenheiro (Cursor) | Implementação E2.2 (lexicon/regras/testes) | Materializar CA-E2.2-1…4; demos obrigatórios | Implementada |
+| 1.5 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E2.2 — commit/push/deploy/prod | Autorização do patrocinador | Em curso |
 
 ---
 
-*Nenhuma linha de código do Classificador canónico sob esta IMP até homologação do plano e autorização explícita da E1.*
-
----
-
-**Pedido de Gate:** IMP-057 **v0.2** — secção **E4** (Integração Núcleo + regra C3→Motor / anti-«Sugiro») pronta para homologação do patrocinador. E3 permanece em pausa até Gate desta emenda (ou ordem em contrário).
+**Pedido de Gate (pós-prod):** após homologação em produção da Emenda E2.2 — aguardar próximo Gate; **não** abrir nova frente.

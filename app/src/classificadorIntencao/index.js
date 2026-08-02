@@ -25,6 +25,11 @@ export {
   desambiguarJobs,
   calcularConfianca,
   resolverEmpates,
+  ehIntencaoExecutivaE21,
+  ehPerguntaDeliberativa,
+  ehConhecimentoGeralE22,
+  ehDeliberacaoProjetoE22,
+  temContextoProjetoE22,
   normalizarTexto
 } from "./regras.js";
 

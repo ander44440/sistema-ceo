@@ -132,7 +132,9 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`implementation/evidencias/IMP-058-matriz-ca-na.md`](implementation/evidencias/IMP-058-matriz-ca-na.md) | Matriz CA/NA REQ-058 — evidências IMP-058 |
 | [`implementation/evidencias/IMP-058-relatorio-consolidado.md`](implementation/evidencias/IMP-058-relatorio-consolidado.md) | Relatório consolidado E6+E7 + fecho IMP-058 |
 | [`implementation/evidencias/IMP-058-homologacao-producao.md`](implementation/evidencias/IMP-058-homologacao-producao.md) | Homologação em produção IMP-058 — commit `f4c22ae` · Vercel READY |
-| [`implementation/IMP-057-classificacao-de-intencao.md`](implementation/IMP-057-classificacao-de-intencao.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 em produção |
+| [`implementation/IMP-057-classificacao-de-intencao.md`](implementation/IMP-057-classificacao-de-intencao.md) | **Homologada v1.0** — Emenda E2.2 em encerramento (deploy/prod) |
+| [`implementation/evidencias/IMP-057-E22-abertura.md`](implementation/evidencias/IMP-057-E22-abertura.md) | Abertura Emenda E2.2 — Cobertura de Classificação |
+| [`implementation/evidencias/IMP-057-E22-relatorio.md`](implementation/evidencias/IMP-057-E22-relatorio.md) | Relatório homologação Emenda E2.2 (implementação) |
 | [`implementation/evidencias/IMP-057-matriz-ca-na.md`](implementation/evidencias/IMP-057-matriz-ca-na.md) | Matriz CA/NA REQ-057 — evidências IMP-057 |
 | [`implementation/evidencias/IMP-057-relatorio-consolidado.md`](implementation/evidencias/IMP-057-relatorio-consolidado.md) | Relatório consolidado E6+E7 + fecho IMP-057 |
 | [`requirements/REQ-056-motor-de-execucao.md`](requirements/REQ-056-motor-de-execucao.md) | **Homologada v0.1** — Motor de Execução; CAP-11 |

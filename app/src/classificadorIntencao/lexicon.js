@@ -20,7 +20,7 @@ export function normalizarTexto(texto) {
     .trim();
 }
 
-/** C1 — conhecimento geral / saudação / factos sem projecto. */
+/** C1 — conhecimento geral / saudação / factos sem projecto (+ Emenda E2.2). */
 export const LEXICO_C1 = Object.freeze([
   Object.freeze({
     id: "saudacao",
@@ -49,8 +49,43 @@ export const LEXICO_C1 = Object.freeze([
   }),
   Object.freeze({
     id: "definicao_generica",
-    re: /^o que [eé] (um |uma )?(adr|req|imp|api|llm)\b/,
-    peso: 0.75
+    re: /^o que [eé] (um |uma )?(adr|req|imp|api|llm|docker|rest|http|json|sql)\b/,
+    peso: 0.92
+  }),
+  Object.freeze({
+    id: "definicao_o_que_e",
+    re: /^o que [eé] (?!voc[eê]\b)(?!tu\b)(?!o\s+ceo\b)\S+/,
+    peso: 0.88
+  }),
+  Object.freeze({
+    id: "receita_culinaria",
+    re: /\b(receita|bolo|culin[aá]ria|cozinhar|ingredientes?)\b/,
+    peso: 0.92
+  }),
+  Object.freeze({
+    id: "historia_pessoas",
+    re: /\bquem foi\b|\b(hist[oó]ria|hist[oó]rico)\b.*\b(de|do|da)\b/,
+    peso: 0.9
+  }),
+  Object.freeze({
+    id: "ciencia_matematica",
+    re: /\b(ci[eê]ncia|f[ií]sica|qu[ií]mica|biologia|matem[aá]tica|equa[cç][aã]o|teorema)\b/,
+    peso: 0.88
+  }),
+  Object.freeze({
+    id: "programacao_tecnologia",
+    re: /\b(programa[cç][aã]o|algoritmo|linguagem\s+de\s+programa|framework|docker|kubernetes|rest|graphql|typescript|javascript)\b/,
+    peso: 0.88
+  }),
+  Object.freeze({
+    id: "lugares",
+    re: /\b(onde fica|onde [eé]|capital de|localiza[cç][aã]o de)\b/,
+    peso: 0.88
+  }),
+  Object.freeze({
+    id: "explicacao_conceito",
+    re: /\b(explique|explica|defina|definir)\b(?!.*\b(esse|este|esta|isso|nosso|projeto|m[oó]dulo|sistema|mg2|motor|ceo)\b)/,
+    peso: 0.9
   })
 ]);
 
@@ -133,12 +168,12 @@ export const LEXICO_C4 = Object.freeze([
   })
 ]);
 
-/** C3 — trabalho executivo / despacho / implementação. */
+/** C3 — trabalho executivo / despacho / implementação (incl. Emenda E2.1). */
 export const LEXICO_C3 = Object.freeze([
   Object.freeze({
     id: "implementa",
     re: /\b(implementa(r)?|implemente)\b/,
-    peso: 0.9
+    peso: 0.92
   }),
   Object.freeze({
     id: "despacha",
@@ -147,18 +182,18 @@ export const LEXICO_C3 = Object.freeze([
   }),
   Object.freeze({
     id: "cria_job_trabalho",
-    re: /\b(cria(r)?|cria)\s+(um\s+)?jobs?\s+(para|de)\b/,
+    re: /\b(cria(r)?|crie|cria)\s+(um\s+)?jobs?\b/,
     peso: 0.93
   }),
   Object.freeze({
     id: "corrige_codigo",
-    re: /\b(corrige|corrigir|fix)\b.*\b(c[oó]digo|bug|erro|lod|build)\b/,
-    peso: 0.85
+    re: /\b(corrija|corrige|corrigir|fix)\b.*\b(c[oó]digo|bug|erro|problema|lod|build)\b/,
+    peso: 0.9
   }),
   Object.freeze({
     id: "resolve_bugs",
-    re: /\b(resolv[ae]|resolver|arranja(r)?)\b.*\b(bugs?|erros?|falhas?)\b/,
-    peso: 0.9
+    re: /\b(resolv[ae]|resolver|arranja(r)?)\b.*\b(bugs?|erros?|falhas?|problemas?)\b/,
+    peso: 0.92
   }),
   Object.freeze({
     id: "bugs_projeto",
@@ -166,18 +201,48 @@ export const LEXICO_C3 = Object.freeze([
     peso: 0.78
   }),
   Object.freeze({
+    id: "faz_diagnostico",
+    re: /\b(fa[cç]a|faz|fazer)\b.*\b(diagn[oó]stico|an[aá]lise|relat[oó]rio)\b/,
+    peso: 0.9
+  }),
+  Object.freeze({
+    id: "analise_projeto",
+    re: /\b(analis[ae]|analisar)\b.*\b(projeto|sistema|c[oó]digo|erro|situa[cç][aã]o)\b/,
+    peso: 0.9
+  }),
+  Object.freeze({
     id: "faz_feature",
-    re: /\b(faz|fa[cç]a|execute)\b.*\b(feature|outdoor|patch|pr)\b/,
-    peso: 0.8
+    re: /\b(faz|fa[cç]a|execute|executa)\b.*\b(feature|funcionalidade|outdoor|patch|pr|an[aá]lise)\b/,
+    peso: 0.88
+  }),
+  Object.freeze({
+    id: "acione_agente",
+    re: /\b(acion[ae]|acionar)\b.*\b(cto|engenheiro|cursor|dispatcher)\b/,
+    peso: 0.94
+  }),
+  Object.freeze({
+    id: "delegue_tarefa",
+    re: /\b(delegue|delegar)\b.*\b(tarefa|trabalho|isto|isso|esta|este)\b/,
+    peso: 0.9
+  }),
+  Object.freeze({
+    id: "gere_relatorio",
+    re: /\b(ger[ae]|gerar)\b.*\b(relat[oó]rio|parecer|diagn[oó]stico)\b/,
+    peso: 0.9
+  }),
+  Object.freeze({
+    id: "investigue_erro",
+    re: /\b(investigue|investigar)\b.*\b(erro|bug|falha|problema|isto|isso|este|esta)\b/,
+    peso: 0.9
   }),
   Object.freeze({
     id: "verbo_execucao",
-    re: /\b(implementa|despacha|publica\s+job|abre\s+(um\s+)?pr)\b/,
-    peso: 0.75
+    re: /\b(implementa|despacha|publica\s+job|abre\s+(um\s+)?pr|acion[ae]|delegue|investigue|execut[ae]|ger[ae]|analis[ae])\b/,
+    peso: 0.8
   })
 ]);
 
-/** C2 — conversa de projecto / frente activa. */
+/** C2 — conversa de projecto / frente activa / deliberação (+ Emenda E2.2). */
 export const LEXICO_C2 = Object.freeze([
   Object.freeze({
     id: "onde_estamos",
@@ -198,6 +263,51 @@ export const LEXICO_C2 = Object.freeze([
     id: "deliberar",
     re: /\b(devemos|conv[eé]m|faz\s+sentido)\b.*\b(adiar|priorizar|focar)\b/,
     peso: 0.8
+  }),
+  Object.freeze({
+    id: "pergunta_estrategia",
+    re: /\b(como\s+devemos|o\s+que\s+(voc[eê]|tu)\s+acha|qual\s+seria\s+a\s+melhor)\b/,
+    peso: 0.9
+  }),
+  Object.freeze({
+    id: "e22_como_devemos",
+    re: /\bcomo\s+devemos\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "e22_voce_concorda",
+    re: /\bvoc[eê]\s+concorda\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "e22_o_que_acha",
+    re: /\bo\s+que\s+(voc[eê]|tu)\s+acha\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "e22_quais_capacidades",
+    re: /\bquais\s+capacidades\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "e22_qual_prioridade",
+    re: /\bqual\s+prioridade\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "e22_como_organizar",
+    re: /\bcomo\s+organizar\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "e22_o_que_falta",
+    re: /\bo\s+que\s+falta\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "explique_projeto",
+    re: /\b(explique|explica|descreva|descreve)\b.*\b(esse|este|esta|isso|nosso|projeto|m[oó]dulo|sistema|mg2|motor|ceo|arquitectura|arquitetura)\b/,
+    peso: 0.9
   }),
   Object.freeze({
     id: "situacao_projeto",

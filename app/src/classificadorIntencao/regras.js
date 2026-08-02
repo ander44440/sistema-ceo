@@ -1,5 +1,5 @@
 /**
- * Regras de classificação V1 — IMP-057 E2 / REQ-057 RF8–RF11.
+ * Regras de classificação V1 — IMP-057 E2 / Emendas E2.1–E2.2 / REQ-057 RF8–RF11.
  * Função pura `classificar` → SaidaClassificador (domínio E1).
  * Sem Núcleo, Motor, UI, Dispatcher ou I/O.
  */
@@ -21,16 +21,139 @@ import {
  */
 
 /**
- * Detecta verbo / indício claro de execução (empate C2/C3 → C3 só com isto).
+ * Pedido interrogativo / deliberativo — permanece fora de E2.1 C3.
+ * @param {string} t
+ */
+export function ehPerguntaDeliberativa(t) {
+  return (
+    /^(como|o que|qual|quando|onde|por que|porque|quem)\b/.test(t) ||
+    /\b(o que (voc[eê]|tu) acha|qual seria|como devemos|devemos priorizar)\b/.test(
+      t
+    ) ||
+    /\b(voc[eê]\s+concorda|quais\s+capacidades|qual\s+prioridade|como\s+organizar|o\s+que\s+falta)\b/.test(
+      t
+    ) ||
+    /\b(explique|explica|descreva|descreve)\b/.test(t)
+  );
+}
+
+/**
+ * Contexto de projecto para Emenda E2.2 (frente activa ou refs no texto).
+ * @param {string} t
+ * @param {ContextoClassificacao} [ctx]
+ */
+export function temContextoProjetoE22(t, ctx = {}) {
+  if (ctx.frenteActiva === true) return true;
+  return /\b(mg2|motoboy|projeto|coa|outdoor|worldlab|motor|ceo|mvp|sprint|frente|arquitectura|arquitetura|capacidades|m[oó]dulo)\b/.test(
+    t
+  );
+}
+
+/**
+ * Emenda E2.2 — padrões deliberativos → C2 quando há contexto de projecto.
+ * @param {string} t
+ * @param {ContextoClassificacao} [ctx]
+ */
+export function ehDeliberacaoProjetoE22(t, ctx = {}) {
+  if (!t || !temContextoProjetoE22(t, ctx)) return false;
+  if (ehIntencaoExecutivaE21(t)) return false;
+  return (
+    /\bcomo\s+devemos\b/.test(t) ||
+    /\bvoc[eê]\s+concorda\b/.test(t) ||
+    /\bo\s+que\s+(voc[eê]|tu)\s+acha\b/.test(t) ||
+    /\bquais\s+capacidades\b/.test(t) ||
+    /\bqual\s+prioridade\b/.test(t) ||
+    /\bcomo\s+organizar\b/.test(t) ||
+    /\bo\s+que\s+falta\b/.test(t)
+  );
+}
+
+/**
+ * Emenda E2.2 — conhecimento geral seguro → C1 (nunca Clarificação).
+ * Não captura explicações com dêixis de projecto («explique esse módulo»).
+ * @param {string} t
+ */
+export function ehConhecimentoGeralE22(t) {
+  if (!t) return false;
+  if (ehIntencaoExecutivaE21(t)) return false;
+
+  // Explicação / definição com âncora de projecto → não é C1 E2.2
+  if (
+    /\b(explique|explica|descreva|descreve)\b/.test(t) &&
+    /\b(esse|este|esta|isso|nosso|projeto|m[oó]dulo|sistema|mg2|motor|ceo|arquitectura|arquitetura)\b/.test(
+      t
+    )
+  ) {
+    return false;
+  }
+
+  if (/\b(receita|bolo|culin[aá]ria|cozinhar|ingredientes?)\b/.test(t)) {
+    return true;
+  }
+  if (/\bquem foi\b/.test(t)) return true;
+  // Evitar `\b` após `é` (JS sem flag u: acento não é \w)
+  if (/^o que [eé]\s+(?!voc[eê]\b)(?!tu\b)/.test(t)) return true;
+  if (
+    /\b(explique|explica|defina|definir)\b/.test(t) &&
+    !/\b(esse|este|esta|isso|nosso)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(ci[eê]ncia|f[ií]sica|qu[ií]mica|biologia|matem[aá]tica|equa[cç][aã]o|teorema|hist[oó]ria|programa[cç][aã]o|algoritmo|docker|kubernetes|rest|graphql)\b/.test(
+      t
+    ) &&
+    !temContextoProjetoE22(t, {}) &&
+    !/\bcomo\s+devemos\b/.test(t)
+  ) {
+    return true;
+  }
+  if (/\b(onde fica|capital de)\b/.test(t)) return true;
+
+  return false;
+}
+
+/**
+ * Emenda E2.1 — verbo imperativo dirigido ao CEO + acção potencialmente executável.
+ * Independente da frente activa.
+ * @param {string} t
+ */
+export function ehIntencaoExecutivaE21(t) {
+  if (!t || ehPerguntaDeliberativa(t)) return false;
+
+  const padroes = [
+    /\b(resolv[ae]|resolver)\b.*\b(bugs?|erros?|falhas?|problemas?)\b/,
+    /\b(corrija|corrige|corrigir|fix)\b.*\b(problema|c[oó]digo|bug|erro)\b/,
+    /\b(fa[cç]a|faz|fazer)\b.*\b(diagn[oó]stico|an[aá]lise|relat[oó]rio|feature|funcionalidade)\b/,
+    /\b(analis[ae]|analisar)\b.*\b(projeto|sistema|c[oó]digo|erro|situa[cç][aã]o|isto|isso|este|esta)\b/,
+    /\b(implement[ae]|implementar)\b/,
+    /\b(acion[ae]|acionar)\b.*\b(cto|engenheiro|cursor)\b/,
+    /\b(delegue|delegar)\b.*\b(tarefa|trabalho|isto|isso|esta|este)\b/,
+    /\b(execut[ae]|executar)\b.*\b(an[aá]lise|tarefa|trabalho|isto|isso|diagn[oó]stico)\b/,
+    /\b(ger[ae]|gerar)\b.*\b(relat[oó]rio|parecer|diagn[oó]stico)\b/,
+    /\b(cria(r)?|crie|cria)\s+(um\s+)?jobs?\b/,
+    /\b(investigue|investigar)\b.*\b(erro|bug|falha|problema|isto|isso|este|esta)\b/,
+    /\b(despacha(r)?|despache)\b/
+  ];
+
+  return padroes.some((re) => re.test(t));
+}
+
+/**
+ * Detecta verbo / indício claro de execução (empate C2/C3 → C3; inclui E2.1).
  * @param {string} t
  */
 export function temVerboExecucao(t) {
+  if (ehIntencaoExecutivaE21(t)) return true;
   return (
     /\b(implementa(r)?|implemente|despacha(r)?|despache)\b/.test(t) ||
-    /\b(cria(r)?|cria)\s+(um\s+)?jobs?\s+(para|de)\b/.test(t) ||
+    /\b(cria(r)?|cria|crie)\s+(um\s+)?jobs?\b/.test(t) ||
     /\b(publica(r)?|abre)\s+(um\s+)?(job|pr)\b/.test(t) ||
-    /\b(corrige|fix)\b.*\b(c[oó]digo|bug)\b/.test(t) ||
-    /\b(resolv[ae]|resolver|arranja(r)?)\b.*\b(bugs?|erros?|falhas?)\b/.test(t)
+    /\b(corrija|corrige|fix)\b.*\b(c[oó]digo|bug|problema)\b/.test(t) ||
+    /\b(resolv[ae]|resolver|arranja(r)?)\b.*\b(bugs?|erros?|falhas?|problemas?)\b/.test(t) ||
+    /\b(acion[ae]|delegue|investigue|analis[ae]|execut[ae]|ger[ae])\b/.test(
+      t
+    )
   );
 }
 
@@ -44,7 +167,7 @@ export function desambiguarJobs(t) {
     return "c4";
   }
   if (/\bjobs?\s+pendentes?\b/.test(t)) return "c4";
-  if (/\b(cria(r)?|cria|despacha)\s+(um\s+)?jobs?\b/.test(t)) return "c3";
+  if (/\b(cria(r)?|cria|crie|despacha)\s+(um\s+)?jobs?\b/.test(t)) return "c3";
   if (/\bjobs?\s+(para|de)\s+\w+/.test(t) && temVerboExecucao(t)) return "c3";
   return null;
 }
@@ -70,13 +193,37 @@ export function calcularConfianca(scoreVencedor, scoreSegundo, vago) {
 }
 
 /**
- * Resolve empates RF8–RF11.
+ * Resolve empates RF8–RF11 (+ Emendas E2.1 / E2.2).
  * @param {Record<string, number>} scores
  * @param {string} t
  * @param {ContextoClassificacao} ctx
  * @returns {{ classe: import("./dominio.js").ClasseIntencao, razao: string }}
  */
 export function resolverEmpates(scores, t, ctx = {}) {
+  // Emenda E2.1 — prioridade máxima sobre RF8/RF9 e frente activa
+  if (ehIntencaoExecutivaE21(t)) {
+    return {
+      classe: "trabalho_executivo",
+      razao: "E2.1: imperativo + acção executável → C3 (frente activa irrelevante)"
+    };
+  }
+
+  // Emenda E2.2 — deliberação de projecto (antes de C1 genérico)
+  if (ehDeliberacaoProjetoE22(t, ctx)) {
+    return {
+      classe: "conversa_projeto",
+      razao: "E2.2: padrão deliberativo + contexto de projecto → C2"
+    };
+  }
+
+  // Emenda E2.2 — conhecimento geral seguro
+  if (ehConhecimentoGeralE22(t)) {
+    return {
+      classe: "conhecimento_geral",
+      razao: "E2.2: conhecimento/definição/explicação → C1"
+    };
+  }
+
   const jobs = desambiguarJobs(t);
   if (jobs === "c4") {
     return {
@@ -188,6 +335,33 @@ export function classificar(texto, contexto = {}) {
     });
   }
 
+  // Emenda E2.1 — atalho obrigatório (antes de boost de frente activa)
+  if (ehIntencaoExecutivaE21(t)) {
+    return montarSaida(
+      "trabalho_executivo",
+      0.94,
+      "E2.1: imperativo + acção executável → C3"
+    );
+  }
+
+  // Emenda E2.2 — C2 deliberativo com contexto de projecto (nunca Clarificação)
+  if (ehDeliberacaoProjetoE22(t, contexto)) {
+    return montarSaida(
+      "conversa_projeto",
+      0.93,
+      "E2.2: deliberação de projecto → C2"
+    );
+  }
+
+  // Emenda E2.2 — C1 conhecimento seguro (nunca Clarificação)
+  if (ehConhecimentoGeralE22(t)) {
+    return montarSaida(
+      "conhecimento_geral",
+      0.93,
+      "E2.2: conhecimento geral → C1"
+    );
+  }
+
   const s1 = pontuarLexico(t, LEXICO_C1);
   const s2 = pontuarLexico(t, LEXICO_C2);
   const s3 = pontuarLexico(t, LEXICO_C3);
@@ -201,8 +375,13 @@ export function classificar(texto, contexto = {}) {
     comando_operacional: s4.score
   };
 
-  // Frente activa sem sinais fortes: ligeiro boost C2 (não força C3)
-  if (contexto.frenteActiva === true && s2.score < 0.5 && s3.score < 0.5 && s4.score < 0.5) {
+  // Frente activa sem sinais fortes: ligeiro boost C2 (nunca se E2.1 — já retornou)
+  if (
+    contexto.frenteActiva === true &&
+    s2.score < 0.5 &&
+    s3.score < 0.5 &&
+    s4.score < 0.5
+  ) {
     if (s2.hits.length === 0 && /\b(isto|isso|agora|hoje)\b/.test(t) === false) {
       /* no boost for pure C1 */
     }
@@ -231,11 +410,9 @@ export function classificar(texto, contexto = {}) {
     .join(" — ")
     .slice(0, 200);
 
-  // RF11: abaixo do limiar → clarificação (montarSaida trata); nunca C3+Job
   const saida = montarSaida(resolvido.classe, confianca, razaoCurta);
 
   if (abaixoDoLimiar(saida.confianca) || saida.precisaClarificacao) {
-    // reforço: permiteJob já false no domínio
     return saida;
   }
 
