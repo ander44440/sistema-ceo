@@ -1,10 +1,10 @@
 # IMP-057 — Classificação de Intenção
 
-> **Status: Homologada (v1.0) — Emenda E2.2 em encerramento (commit/push/deploy)** (01/08/2026).  
+> **Status: Homologada (v1.0) — Emenda E2.2 homologada em produção** (01/08/2026).  
 > Norma: **REQ-057** (homologada); **ARQ-018 v0.1** (homologada) — **não alteradas**.  
 > **Natureza:** plano + implementação E1–E7 + Emenda E2.1 (código) + Emenda E2.2 (código).  
-> **Emenda E2.1:** incluída no mesmo delta de código (preservada; CA-E2.1 verdes).  
-> **Emenda E2.2:** encerramento autorizado — commit/push/deploy + homologação em produção.
+> **Emenda E2.1:** incluída no mesmo delta (preservada; CA-E2.1 verdes).  
+> **Emenda E2.2:** encerrada — commit `5d5ef6a` · deploy `dpl_9FwXa14vMD2P5rHdeXPew1Ccu8EF` · evidência `IMP-057-E22-homologacao-producao.md`.
 
 ---
 
@@ -197,7 +197,7 @@ Gate do patrocinador sobre **este texto de emenda**. Código só após autoriza�
 
 ### Emenda E2.2 — Cobertura de Classificação
 
-> **Status:** Encerramento em curso — commit/push/deploy + homologação produção (01/08/2026).  
+> **Status:** Homologada em produção (01/08/2026).  
 > **Âmbito:** regras de classificação **C1** e **C2** (motor de regras / lexicon — etapa E2).  
 > **Origem:** clarificações indevidas quando a intenção é classificável com segurança (conhecimento geral ou deliberação de projecto).  
 > **Código:** `app/src/classificadorIntencao/{lexicon,regras,e22.test}.js` (+ exports).  
@@ -505,8 +505,8 @@ Commit **só** quando:
 | 1.2 | 01/08/2026 | Engenheiro (Cursor) | Implementação E2.1 (regras/lexicon/testes) | Materializar CA-E2.1-1…3; demos Núcleo | Aguarda homologação |
 | 1.3 | 01/08/2026 | Engenheiro (Cursor) | **Emenda E2.2** — Cobertura de Classificação (docs) | Eliminar Clarificação indevida em C1/C2 seguros | Texto aberto |
 | 1.4 | 01/08/2026 | Engenheiro (Cursor) | Implementação E2.2 (lexicon/regras/testes) | Materializar CA-E2.2-1…4; demos obrigatórios | Implementada |
-| 1.5 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E2.2 — commit/push/deploy/prod | Autorização do patrocinador | Em curso |
+| 1.5 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E2.2 — commit/push/deploy/prod | Autorização do patrocinador | Homologada em produção |
 
 ---
 
-**Pedido de Gate (pós-prod):** após homologação em produção da Emenda E2.2 — aguardar próximo Gate; **não** abrir nova frente.
+**Emenda E2.2 encerrada.** Aguardar próximo Gate. **Não** abrir nova frente.

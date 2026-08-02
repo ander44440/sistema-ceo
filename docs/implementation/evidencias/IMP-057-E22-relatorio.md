@@ -2,7 +2,7 @@
 
 > **Data:** 01/08/2026  
 > **Emenda:** E2.2 — Cobertura de Classificação  
-> **Status:** Implementada — **aguarda Gate** do patrocinador  
+> **Status:** Homologada em produção — ver `IMP-057-E22-homologacao-producao.md`  
 > **Norma:** IMP-057 § Emenda E2.2; REQ-057; ARQ-018 (**não alteradas**)  
 > **Commit:** **não realizado** (proibido até autorização)
 
