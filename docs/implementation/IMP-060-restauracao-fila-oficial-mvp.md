@@ -5,7 +5,8 @@
 > **Produção:** `docs/implementation/evidencias/IMP-060-homologacao-producao.md`.  
 > Norma: **ARQ-021** (homologada); **REQ-060** (homologada); IMP-060.  
 > **Capacidade:** CAP-11 — Integrações.  
-> **Commit:** `c4abe5ae3a4b7cf713008b8c243b94cd510cc433` · **Vercel:** `dpl_2iR1R7QJkz4u2bbwEKVPdruwpkCm` · **Railway:** `d8cd68e6-038c-443b-95c5-23753abebb14`.
+> **Commit:** `c4abe5ae3a4b7cf713008b8c243b94cd510cc433` · **Vercel:** `dpl_2iR1R7QJkz4u2bbwEKVPdruwpkCm` · **Railway:** `d8cd68e6-038c-443b-95c5-23753abebb14`.  
+> **Correcção pontual (painel híbrido):** `dd99c68` · `dpl_EihUKKhaxpoh14Gr63TFbyN2piAi` — ver evidência de produção.
 
 ---
 

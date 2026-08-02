@@ -53,3 +53,18 @@ bundle_bytes 272947
 **Homologação em produção: OK** — fila oficial restaurada (REQ-060 / ARQ-021 / IMP-060); SPA em `sistema-ceo.vercel.app`; API Railway com `/queue/*` despromovida (410) e `/health` operacional.
 
 **Frente IMP-060: ENCERRADA.** Nenhuma nova frente aberta neste encerramento.
+
+---
+
+## Correcção pontual — Painel híbrido (02/08/2026)
+
+| Item | Valor |
+|------|--------|
+| Commit | `dd99c68ae57434dfc9ef8e1dcfbac4d919f111f0` |
+| Deploy Vercel | `dpl_EihUKKhaxpoh14Gr63TFbyN2piAi` |
+| URL | https://sistema-ceo.vercel.app |
+
+**Problema:** SPA sem companion pedia snapshot só em path relativo → todos os nós em Erro.  
+**Correcção:** fallback híbrido — CEO/CTO/Backend/Speaker via Railway; Agent/Dispatcher *Aguardando* (fila no PC).  
+**Invariante IMP-060:** intacto (fila oficial continua só em `executive/queue` no PC).
+

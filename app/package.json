@@ -23,7 +23,7 @@
     "test:voz": "node --test src/experienciaVoz/orquestrador.test.js src/experienciaVoz/botaoVoz.test.js src/experienciaVoz/reproduzirResposta.test.js src/experienciaVoz/e6.tts.test.js",
     "test:cn": "node --test src/conversacaoNatural/conversacaoNatural.test.js src/conversacaoNatural/e3.integracao.test.js",
     "test:cto": "node --test src/ctoConnector/ctoConnector.test.js",
-    "test:orquestracao": "node --test src/orquestracao/dominio.test.js src/orquestracao/agregador.test.js src/orquestracao/ui.test.js src/orquestracao/e4.test.js src/orquestracao/e5.test.js src/orquestracao/e6.test.js src/orquestracao/e7.test.js",
+    "test:orquestracao": "node --test src/orquestracao/dominio.test.js src/orquestracao/agregador.test.js src/orquestracao/ui.test.js src/orquestracao/e4.test.js src/orquestracao/e5.test.js src/orquestracao/e5.imp060.test.js src/orquestracao/e6.test.js src/orquestracao/e7.test.js",
     "test:orquestracao:e1": "node --test src/orquestracao/dominio.test.js",
     "test:orquestracao:e2": "node --test src/orquestracao/agregador.test.js",
     "test:orquestracao:e3": "node --test src/orquestracao/ui.test.js",
