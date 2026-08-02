@@ -1,10 +1,10 @@
 # IMP-057 — Classificação de Intenção
 
-> **Status: Homologada (v1.0) — Emenda E5.1 em encerramento (commit/push/deploy)** (01/08/2026).  
+> **Status: Homologada (v1.0) — Emenda E5.1 homologada em produção** (01/08/2026).  
 > Norma: **REQ-057** (homologada); **ARQ-018 v0.1** (homologada) — **não alteradas**.  
 > **Natureza:** plano + implementação E1–E7 + Emendas E2.1 / E2.2 / **E5.1**.  
 > **Emenda E2.2:** encerrada em produção.  
-> **Emenda E5.1:** Gate aprovado — commit/push/deploy + homologação em produção.
+> **Emenda E5.1:** encerrada — commit `1e769fe` · deploy `dpl_4WpzzbSBQfSVDED8y92TYMRTFNmg` · evidência `IMP-057-E51-homologacao-producao.md`.
 
 ---
 
@@ -366,7 +366,7 @@ Gate do patrocinador sobre **implementação + CA-E2.2-1…4 + suite verde**. Se
 
 ### Emenda E5.1 — Executor do destino C1 (`resposta_leve`)
 
-> **Status:** Encerramento em curso — commit/push/deploy + homologação produção (01/08/2026).  
+> **Status:** Homologada em produção (01/08/2026).  
 > **Âmbito:** `executarDestinoC1` / gerador `respostaLeve.js` — **não** Classificador, Motor, Continuidade nem Consciência.  
 > **Origem:** em produção, C1 chegava a `resposta_leve` mas devolvia stub («resposta imediata (C1). Que detalhe precisa?»).  
 > **Evidência:** `docs/implementation/evidencias/IMP-057-E51-relatorio.md`.  
@@ -550,8 +550,8 @@ Commit **só** quando:
 | 1.4 | 01/08/2026 | Engenheiro (Cursor) | Implementação E2.2 (lexicon/regras/testes) | Materializar CA-E2.2-1…4; demos obrigatórios | Implementada |
 | 1.5 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E2.2 — commit/push/deploy/prod | Autorização do patrocinador | Homologada em produção |
 | 1.6 | 01/08/2026 | Engenheiro (Cursor) | **Emenda E5.1** — Executor destino C1 | Substituir stub por LLM em `resposta_leve` | Gate aprovado |
-| 1.7 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E5.1 — commit/push/deploy/prod | Autorização do patrocinador | Em curso |
+| 1.7 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E5.1 — commit/push/deploy/prod | Autorização do patrocinador | Homologada em produção |
 
 ---
 
-**Emenda E5.1:** Gate aprovado. Encerramento em curso. **Não** abrir nova frente.
+**Emenda E5.1 encerrada.** Aguardar próximo Gate. **Não** abrir nova frente.

@@ -2,7 +2,7 @@
 
 > **Data:** 01/08/2026  
 > **Emenda:** E5.1 — Executor do destino C1 (`resposta_leve`)  
-> **Status:** Implementada — **aguarda Gate** do patrocinador  
+> **Status:** Homologada em produção — ver `IMP-057-E51-homologacao-producao.md`  
 > **Norma:** IMP-057 § Emenda E5.1; REQ-057; ARQ-018 (**não alteradas**)  
 > **Commit:** **não realizado** (proibido até autorização)
 
