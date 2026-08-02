@@ -1,10 +1,11 @@
 # IMP-060 — Restauração da Fila Oficial do MVP
 
-> **Status: Encerramento autorizado** (02/08/2026) — E1–E6 concluídas; commit/push/deploy em curso.  
+> **Status: HOMOLOGADA** (02/08/2026) — frente **ENCERRADA**.  
 > **E1–E6:** `docs/implementation/evidencias/IMP-060-E*.md` (+ `IMP-060-E6-homologacao.md`).  
+> **Produção:** `docs/implementation/evidencias/IMP-060-homologacao-producao.md`.  
 > Norma: **ARQ-021** (homologada); **REQ-060** (homologada); IMP-060.  
 > **Capacidade:** CAP-11 — Integrações.  
-> **Autorização:** patrocinador — encerrar frente; commit; push; deploy; homologação em produção.
+> **Commit:** `c4abe5ae3a4b7cf713008b8c243b94cd510cc433` · **Vercel:** `dpl_2iR1R7QJkz4u2bbwEKVPdruwpkCm` · **Railway:** `d8cd68e6-038c-443b-95c5-23753abebb14`.
 
 ---
 
@@ -340,8 +341,9 @@ Commit **só** quando:
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 01/08/2026 | Engenheiro (Cursor) | Abertura IMP-060 — plano E1–E6 | Materializar ARQ-021 / REQ-060 sem código | Plano aberto — aguarda Gate |
 | 0.2 | 01/08/2026 | Engenheiro (Cursor) | E1–E6 executadas | Restaurar invariante fila oficial | Recomendação HOMOLOGAR (E6) |
-| 0.3 | 02/08/2026 | Engenheiro (Cursor) | Encerramento autorizado — commit/push/deploy | Ordem do patrocinador | Frente em fecho |
+| 0.3 | 02/08/2026 | Engenheiro (Cursor) | Encerramento autorizado — commit/push/deploy | Ordem do patrocinador | Commit `c4abe5a` |
+| 1.0 | 02/08/2026 | Engenheiro (Cursor) | Homologação em produção + fecho | Smoke API 410 + SPA READY | **HOMOLOGADA — frente encerrada** |
 
 ---
 
-**IMP-060** — encerramento autorizado. Homologação em produção e status **HOMOLOGADA** após deploy + evidência.
+**IMP-060 HOMOLOGADA e ENCERRADA.** Nenhuma nova frente após este encerramento.

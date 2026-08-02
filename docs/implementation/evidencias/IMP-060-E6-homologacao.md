@@ -66,7 +66,7 @@ Script: `app/scripts/smoke-e6-homologacao.mjs` → **7/7 PASS** (T1–T6+T8).
 
 | # | Pendência | Severidade | Nota |
 |---|-----------|------------|------|
-| P1 | Deploy `server/` para Railway devolver **410** em `/api/ceo/queue/*` | Operacional | Código E4 pronto; prod ainda pode servir fila antiga até deploy |
+| P1 | Deploy `server/` para Railway devolver **410** em `/api/ceo/queue/*` | Operacional | **Resolvido em produção** 02/08/2026 — ver `IMP-060-homologacao-producao.md` |
 | P2 | Heartbeat remoto no smoke E6 sem `CEO_API_BASE` no process env → `remoto=false` | Baixa | Dispatcher com `.env` correcto envia POST; ficheiro local OK para Painel Vite |
 | P3 | `Agent.prompt` (SDK) em `npm start` pode terminar `status=error` | Operacional Cursor | Ciclo de fila/Dispatcher homologado; conclusão real do Agent depende do SDK/rede |
 | P4 | SPA Vercel sem companion: Painel degrada (E5-CA3) | Esperado | MVP diário = Vite local ou `VITE_CEO_QUEUE_API_BASE` |
