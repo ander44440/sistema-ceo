@@ -310,6 +310,31 @@ export const LEXICO_C2 = Object.freeze([
     peso: 0.93
   }),
   Object.freeze({
+    id: "e23_papel",
+    re: /\b(seu|sua|teu|tua)\s+papel\b|\bpapel\b.*\b(voc[eê]|ceo|empresa)\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "e23_decisoes",
+    re: /\bcomo\s+(voc[eê]|tu)\s+toma\s+decis|\bcrit[eé]rios?\s+de\s+decis/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "e23_meta_job_resposta",
+    re: /\bquando\s+(voc[eê]|tu)\s+(decide|prefere)\b.*\b(jobs?|responder|resposta)\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "e23_diferenca_agentes",
+    re: /\bdiferen[cç]a\s+entre\s+(voc[eê]|tu)\b|\bdiferen[cç]a\s+entre\b.*\b(ceo|cto)\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "e23_capacidade_fraqueza",
+    re: /\bqual\s+capacidade\b.*\b(voc[eê]|tu|desenvolver)\b|\bfraqueza\b.*\bceo\b|\bceo\b.*\bfraqueza\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
     id: "explique_projeto",
     re: /\b(explique|explica|descreva|descreve)\b.*\b(esse|este|esta|isso|nosso|projeto|m[oó]dulo|sistema|mg2|motor|ceo|arquitectura|arquitetura)\b/,
     peso: 0.9

@@ -50,6 +50,85 @@ export function temContextoProjetoE22(t, ctx = {}) {
 }
 
 /**
+ * Emenda E2.3 — autoexplicação institucional do CEO → C2 (nunca C3/Clarificação).
+ * Perguntas sobre papel, decisões, capacidades, limitações, agentes, Jobs (meta).
+ * @param {string} t
+ */
+export function ehAutoexplicacaoInstitucionalE23(t) {
+  if (!t) return false;
+  // Pedido imperativo de execução continua E2.1 — não capturar
+  if (ehIntencaoExecutivaE21(t)) return false;
+
+  // Meta-política de Job / resposta (não «cria um job agora»)
+  if (
+    /\bquando\s+(voc[eê]|tu)\s+(decide|prefere)\b/.test(t) &&
+    /\b(jobs?|responder|resposta)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(decide|decides)\s+criar\s+(um\s+)?jobs?\b/.test(t) &&
+    /\b(quando|como|porque|por\s+que|crit[eé]rio)\b/.test(t)
+  ) {
+    return true;
+  }
+
+  // Papel / responsabilidades
+  if (/\b(seu|sua|teu|tua)\s+papel\b/.test(t)) return true;
+  if (
+    /\b(papel|responsabilidades?)\b/.test(t) &&
+    /\b(voc[eê]|tu|ceo|empresa|institui)\b/.test(t)
+  ) {
+    return true;
+  }
+
+  // Critérios / modo de decisão
+  if (/\bcomo\s+(voc[eê]|tu)\s+toma\s+decis/.test(t)) return true;
+  if (
+    /\bcrit[eé]rios?\s+de\s+decis/.test(t) &&
+    /\b(voc[eê]|tu|ceo|seu|sua)\b/.test(t)
+  ) {
+    return true;
+  }
+
+  // Diferença entre agentes
+  if (/\bdiferen[cç]a\s+entre\s+(voc[eê]|tu)\b/.test(t)) return true;
+  if (
+    /\bdiferen[cç]a\s+entre\b/.test(t) &&
+    /\b(ceo|cto|engenheiro|cursor|agente)\b/.test(t)
+  ) {
+    return true;
+  }
+
+  // Capacidades / limitações / fraquezas do CEO
+  if (
+    /\bqual\s+capacidade\b/.test(t) &&
+    /\b(voc[eê]|tu|desenvolver|importante)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (/\b(fraqueza|limita[cç][aã]o|limita[cç][oõ]es)\b.*\bceo\b/.test(t)) {
+    return true;
+  }
+  if (/\bceo\b.*\b(fraqueza|limita[cç][aã]o|limita[cç][oõ]es)\b/.test(t)) {
+    return true;
+  }
+
+  // Funcionamento / arquitectura do próprio sistema CEO
+  if (
+    /\b(funcionamento|como\s+(voc[eê]|tu)\s+funciona|arquitectura|arquitetura)\b/.test(
+      t
+    ) &&
+    /\b(voc[eê]|tu|ceo|pr[oó]prio\s+sistema|sistema\s+ceo)\b/.test(t) &&
+    !/\b(mg2|motoboy|outdoor|worldlab)\b/.test(t)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Emenda E2.2 — padrões deliberativos → C2 quando há contexto de projecto.
  * @param {string} t
  * @param {ContextoClassificacao} [ctx]
@@ -230,6 +309,14 @@ export function resolverEmpates(scores, t, ctx = {}) {
     };
   }
 
+  // Emenda E2.3 — autoexplicação institucional (antes de RF10/jobs e C1)
+  if (ehAutoexplicacaoInstitucionalE23(t)) {
+    return {
+      classe: "conversa_projeto",
+      razao: "E2.3: autoexplicação institucional do CEO → C2"
+    };
+  }
+
   // Emenda E2.2 — deliberação de projecto (antes de C1 genérico)
   if (ehDeliberacaoProjetoE22(t, ctx)) {
     return {
@@ -363,6 +450,15 @@ export function classificar(texto, contexto = {}) {
       "trabalho_executivo",
       0.94,
       "E2.1: imperativo + acção executável → C3"
+    );
+  }
+
+  // Emenda E2.3 — autoexplicação institucional → C2 (nunca Clarificação / C3 Job)
+  if (ehAutoexplicacaoInstitucionalE23(t)) {
+    return montarSaida(
+      "conversa_projeto",
+      0.93,
+      "E2.3: autoexplicação institucional do CEO → C2"
     );
   }
 

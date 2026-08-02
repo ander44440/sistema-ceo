@@ -1,9 +1,10 @@
 # IMP-057 — Classificação de Intenção
 
-> **Status: Homologada (v1.0) — Emenda E5.1 homologada em produção** (01/08/2026).  
+> **Status: Homologada (v1.0) — Emenda E2.3 Gate aprovado; encerramento em curso** (01/08/2026).  
 > Norma: **REQ-057** (homologada); **ARQ-018 v0.1** (homologada) — **não alteradas**.  
-> **Natureza:** plano + implementação E1–E7 + Emendas E2.1 / E2.2 / **E5.1**.  
+> **Natureza:** plano + implementação E1–E7 + Emendas E2.1 / E2.2 / **E2.3** / E5.1.  
 > **Emenda E2.2:** encerrada em produção.  
+> **Emenda E2.3:** Gate aprovado — commit/push/deploy/homologação em produção autorizados.  
 > **Emenda E5.1:** encerrada — commit `1e769fe` · deploy `dpl_4WpzzbSBQfSVDED8y92TYMRTFNmg` · evidência `IMP-057-E51-homologacao-producao.md`.
 
 ---
@@ -291,6 +292,69 @@ Gate do patrocinador sobre **implementação + CA-E2.2-1…4 + suite verde**. Se
 
 ---
 
+### Emenda E2.3 — Autoexplicação Institucional do CEO
+
+> **Status:** Gate aprovado — encerramento (commit/push/deploy/prod).  
+> **Âmbito:** regras de classificação **C2** (autoexplicação institucional — etapa E2).  
+> **Origem:** perguntas sobre o próprio CEO (papel, decisões, Jobs vs resposta, agentes, capacidades, fraquezas) geravam Clarificação ou C3/Job indevido.  
+> **Código:** `app/src/classificadorIntencao/{lexicon,regras,e23.test}.js` (+ exports).  
+> **Evidência:** `docs/implementation/evidencias/IMP-057-E23-relatorio.md`.  
+> **Não altera:** ARQ-018; REQ-057; Motor; Continuidade do Gate; Consciência Operacional (IMP-059).
+
+#### Objectivo
+
+Quando o utilizador perguntar sobre o **próprio CEO** — capacidades, responsabilidades, critérios de decisão ou funcionamento — o Classificador deve tratar como **Conversa sobre Projeto (C2)** → `nucleo_mre`, nunca Trabalho Executivo (C3), nunca Clarificação, nunca Job/Gate.
+
+#### Reconhecimento prioritário (lista mínima)
+
+| Tema |
+|------|
+| Papel |
+| Responsabilidades |
+| Funcionamento |
+| Capacidades |
+| Limitações / fraquezas |
+| Critérios de decisão |
+| Diferença entre agentes |
+| Arquitectura do próprio sistema |
+
+**Prioridade:** após Emenda E2.1 (imperativo → C3), **antes** de RF10/jobs e cobertura E2.2 genérica — para que «Quando você decide criar um Job?» não caia em C3 por lexicon de jobs.
+
+#### Exemplos obrigatórios → C2
+
+| ID | Mensagem |
+|----|----------|
+| CA-E2.3-1 | Qual é o seu papel? |
+| CA-E2.3-2 | Como você toma decisões? |
+| CA-E2.3-3 | Quando você decide criar um Job? |
+| CA-E2.3-4 | Quando você prefere apenas responder? |
+| CA-E2.3-5 | Qual a diferença entre você e o CTO? |
+| CA-E2.3-6 | Qual capacidade você considera mais importante desenvolver agora? |
+| CA-E2.3-7 | Qual é a maior fraqueza do CEO hoje? |
+
+*Todos → `classe === conversa_projeto`, `destino === nucleo_mre`.*
+
+#### Critérios transversais
+
+* **CA-E2.3-8:** Nenhum Job.  
+* **CA-E2.3-9:** Nenhum Gate.  
+* **CA-E2.3-10:** Nenhuma Clarificação.
+
+Convive com E2.1: imperativos do tipo «Crie um job…» continuam C3.
+
+#### Entregáveis (implementados)
+
+* `ehAutoexplicacaoInstitucionalE23` + early-return em `classificar` / `resolverEmpates`.  
+* Lexicon C2 E2.3 (papel, decisões, meta Job/resposta, agentes, capacidade/fraqueza).  
+* Suite `e23.test.js` + `npm run test:classificador:e23` / `test:classificador`.  
+* Evidência: `docs/implementation/evidencias/IMP-057-E23-relatorio.md`.
+
+#### Homologação E2.3
+
+Gate do patrocinador sobre **implementação + CA-E2.3-1…10 + suite verde**. Sem commit até autorização explícita.
+
+---
+
 ### E3 — Encaminhador pós-classe
 
 **Objectivo:** mapa determinístico classe → destino lógico (sem executar ainda efeitos pesados).
@@ -453,13 +517,14 @@ Gate do patrocinador sobre implementação + CA-E5.1-1…10 + suite verde. Sem c
 ## 7. Ordem e dependências entre etapas
 
 ```text
-E1 → E2 → [Emenda E2.1] → [Emenda E2.2] → E3 → E4 → E5
+E1 → E2 → [Emenda E2.1] → [Emenda E2.2] → [Emenda E2.3] → E3 → E4 → E5
                               ↘ E6 (pode iniciar após E4; fecha após E5)
 E1…E6 → E7
 ```
 
 **Emenda E2.1** (pós-homologação v1.0): ajusta regras C2×C3 do motor E2; implementação **só** após Gate da emenda (não reabre E3–E7 salvo impacto de regressão nos testes E2).  
-**Emenda E2.2** (pós-homologação v1.0): cobertura C1/C2 para eliminar Clarificação indevida; **implementada** — aguarda Gate / commit.
+**Emenda E2.2** (pós-homologação v1.0): cobertura C1/C2 para eliminar Clarificação indevida; **encerrada em produção**.  
+**Emenda E2.3** (pós-homologação v1.0): autoexplicação institucional → C2; **Gate aprovado** — encerramento em curso.
 
 Cada etapa exige **homologação interna** antes de avançar código da seguinte.
 
@@ -551,7 +616,9 @@ Commit **só** quando:
 | 1.5 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E2.2 — commit/push/deploy/prod | Autorização do patrocinador | Homologada em produção |
 | 1.6 | 01/08/2026 | Engenheiro (Cursor) | **Emenda E5.1** — Executor destino C1 | Substituir stub por LLM em `resposta_leve` | Gate aprovado |
 | 1.7 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E5.1 — commit/push/deploy/prod | Autorização do patrocinador | Homologada em produção |
+| 1.8 | 01/08/2026 | Engenheiro (Cursor) | **Emenda E2.3** — Autoexplicação Institucional (impl.) | Perguntas sobre o CEO → C2; nunca C3/Job/Gate/Clarificação | Gate aprovado |
+| 1.9 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E2.3 — commit/push/deploy/prod | Autorização do patrocinador | Em curso |
 
 ---
 
-**Emenda E5.1 encerrada.** Aguardar próximo Gate. **Não** abrir nova frente.
+**Emenda E2.3 Gate aprovado.** Encerramento em produção. **Não** abrir nova frente.

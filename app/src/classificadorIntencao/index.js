@@ -29,6 +29,7 @@ export {
   ehPerguntaDeliberativa,
   ehConhecimentoGeralE22,
   ehDeliberacaoProjetoE22,
+  ehAutoexplicacaoInstitucionalE23,
   temContextoProjetoE22,
   normalizarTexto
 } from "./regras.js";
