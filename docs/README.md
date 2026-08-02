@@ -132,11 +132,12 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`implementation/evidencias/IMP-058-matriz-ca-na.md`](implementation/evidencias/IMP-058-matriz-ca-na.md) | Matriz CA/NA REQ-058 — evidências IMP-058 |
 | [`implementation/evidencias/IMP-058-relatorio-consolidado.md`](implementation/evidencias/IMP-058-relatorio-consolidado.md) | Relatório consolidado E6+E7 + fecho IMP-058 |
 | [`implementation/evidencias/IMP-058-homologacao-producao.md`](implementation/evidencias/IMP-058-homologacao-producao.md) | Homologação em produção IMP-058 — commit `f4c22ae` · Vercel READY |
-| [`implementation/IMP-057-classificacao-de-intencao.md`](implementation/IMP-057-classificacao-de-intencao.md) | **Homologada v1.0** — Emenda E2.3 Gate aprovado (encerramento) |
+| [`implementation/IMP-057-classificacao-de-intencao.md`](implementation/IMP-057-classificacao-de-intencao.md) | **Homologada v1.0** — Emenda E2.3 homologada em produção |
 | [`implementation/evidencias/IMP-057-E22-abertura.md`](implementation/evidencias/IMP-057-E22-abertura.md) | Abertura Emenda E2.2 — Cobertura de Classificação |
 | [`implementation/evidencias/IMP-057-E22-relatorio.md`](implementation/evidencias/IMP-057-E22-relatorio.md) | Relatório homologação Emenda E2.2 (implementação) |
 | [`implementation/evidencias/IMP-057-E22-homologacao-producao.md`](implementation/evidencias/IMP-057-E22-homologacao-producao.md) | Homologação em produção Emenda E2.2 |
 | [`implementation/evidencias/IMP-057-E23-relatorio.md`](implementation/evidencias/IMP-057-E23-relatorio.md) | Relatório homologação Emenda E2.3 (autoexplicação institucional) |
+| [`implementation/evidencias/IMP-057-E23-homologacao-producao.md`](implementation/evidencias/IMP-057-E23-homologacao-producao.md) | Homologação em produção Emenda E2.3 |
 | [`implementation/evidencias/IMP-057-E51-relatorio.md`](implementation/evidencias/IMP-057-E51-relatorio.md) | Relatório homologação Emenda E5.1 (executor C1) |
 | [`implementation/evidencias/IMP-057-E51-homologacao-producao.md`](implementation/evidencias/IMP-057-E51-homologacao-producao.md) | Homologação em produção Emenda E5.1 |
 | [`implementation/evidencias/IMP-057-matriz-ca-na.md`](implementation/evidencias/IMP-057-matriz-ca-na.md) | Matriz CA/NA REQ-057 — evidências IMP-057 |

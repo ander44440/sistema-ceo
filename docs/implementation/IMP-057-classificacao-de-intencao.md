@@ -1,10 +1,10 @@
 # IMP-057 — Classificação de Intenção
 
-> **Status: Homologada (v1.0) — Emenda E2.3 Gate aprovado; encerramento em curso** (01/08/2026).  
+> **Status: Homologada (v1.0) — Emenda E2.3 homologada em produção** (01/08/2026).  
 > Norma: **REQ-057** (homologada); **ARQ-018 v0.1** (homologada) — **não alteradas**.  
 > **Natureza:** plano + implementação E1–E7 + Emendas E2.1 / E2.2 / **E2.3** / E5.1.  
 > **Emenda E2.2:** encerrada em produção.  
-> **Emenda E2.3:** Gate aprovado — commit/push/deploy/homologação em produção autorizados.  
+> **Emenda E2.3:** encerrada — commit `c614b46` · deploy `dpl_2n4QBYSWWLQ95SLNqN4132cs2wdJ` · evidência `IMP-057-E23-homologacao-producao.md`.  
 > **Emenda E5.1:** encerrada — commit `1e769fe` · deploy `dpl_4WpzzbSBQfSVDED8y92TYMRTFNmg` · evidência `IMP-057-E51-homologacao-producao.md`.
 
 ---
@@ -294,7 +294,7 @@ Gate do patrocinador sobre **implementação + CA-E2.2-1…4 + suite verde**. Se
 
 ### Emenda E2.3 — Autoexplicação Institucional do CEO
 
-> **Status:** Gate aprovado — encerramento (commit/push/deploy/prod).  
+> **Status:** Homologada em produção (01/08/2026).  
 > **Âmbito:** regras de classificação **C2** (autoexplicação institucional — etapa E2).  
 > **Origem:** perguntas sobre o próprio CEO (papel, decisões, Jobs vs resposta, agentes, capacidades, fraquezas) geravam Clarificação ou C3/Job indevido.  
 > **Código:** `app/src/classificadorIntencao/{lexicon,regras,e23.test}.js` (+ exports).  
@@ -524,7 +524,7 @@ E1…E6 → E7
 
 **Emenda E2.1** (pós-homologação v1.0): ajusta regras C2×C3 do motor E2; implementação **só** após Gate da emenda (não reabre E3–E7 salvo impacto de regressão nos testes E2).  
 **Emenda E2.2** (pós-homologação v1.0): cobertura C1/C2 para eliminar Clarificação indevida; **encerrada em produção**.  
-**Emenda E2.3** (pós-homologação v1.0): autoexplicação institucional → C2; **Gate aprovado** — encerramento em curso.
+**Emenda E2.3** (pós-homologação v1.0): autoexplicação institucional → C2; **encerrada em produção**.
 
 Cada etapa exige **homologação interna** antes de avançar código da seguinte.
 
@@ -617,8 +617,8 @@ Commit **só** quando:
 | 1.6 | 01/08/2026 | Engenheiro (Cursor) | **Emenda E5.1** — Executor destino C1 | Substituir stub por LLM em `resposta_leve` | Gate aprovado |
 | 1.7 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E5.1 — commit/push/deploy/prod | Autorização do patrocinador | Homologada em produção |
 | 1.8 | 01/08/2026 | Engenheiro (Cursor) | **Emenda E2.3** — Autoexplicação Institucional (impl.) | Perguntas sobre o CEO → C2; nunca C3/Job/Gate/Clarificação | Gate aprovado |
-| 1.9 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E2.3 — commit/push/deploy/prod | Autorização do patrocinador | Em curso |
+| 1.9 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E2.3 — commit/push/deploy/prod | Autorização do patrocinador | Homologada em produção |
 
 ---
 
-**Emenda E2.3 Gate aprovado.** Encerramento em produção. **Não** abrir nova frente.
+**Emenda E2.3 encerrada.** Aguardar próximo Gate. **Não** abrir nova frente.

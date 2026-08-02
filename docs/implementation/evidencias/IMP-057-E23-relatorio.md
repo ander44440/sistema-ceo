@@ -2,9 +2,9 @@
 
 > **Data:** 01/08/2026  
 > **Emenda:** E2.3 — Autoexplicação Institucional do CEO  
-> **Status:** Gate aprovado — encerramento (commit/push/deploy/prod)  
+> **Status:** Homologada em produção — ver `IMP-057-E23-homologacao-producao.md`  
 > **Norma:** IMP-057 § Emenda E2.3; REQ-057; ARQ-018 (**não alteradas**)  
-> **Commit:** autorizado pelo patrocinador (01/08/2026)
+> **Commit:** `c614b465d5fa312ef722477eefdac700c325acc5`
 
 ---
 
