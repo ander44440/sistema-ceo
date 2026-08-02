@@ -57,3 +57,11 @@ export {
   executarDestinoC4,
   CAPACIDADES_C4
 } from "./destinos.js";
+
+export {
+  gerarRespostaConhecimentoGeral,
+  ehStubRespostaLeveProibido,
+  montarMensagensRespostaLeve,
+  fallbackRespostaLeveSemLlm,
+  SYSTEM_RESPOSTA_LEVE
+} from "./respostaLeve.js";

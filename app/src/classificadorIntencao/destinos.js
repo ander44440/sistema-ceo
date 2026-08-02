@@ -1,12 +1,14 @@
 /**
  * Destinos C1–C4 — IMP-057 E5 / REQ-057 / ARQ-018.
  * Despacho estrito por `destino` do Classificador — sem fallback silencioso.
+ * Emenda E5.1: C1/`resposta_leve` gera conhecimento via LLM (sem MRE).
  */
 
 import {
   conduzirTrabalhoExecutivoC3,
   contemSugiroComoRespostaFinal
 } from "./integracaoNucleo.js";
+import { gerarRespostaConhecimentoGeral } from "./respostaLeve.js";
 
 /** Capacidades operacionais válidas para C4 (nunca Motor/MRE). */
 export const CAPACIDADES_C4 = Object.freeze([
@@ -64,13 +66,16 @@ function baseResposta(ctx, parcial) {
 }
 
 /**
- * C1 — resposta imediata; sem MRE, sem Motor.
+ * C1 — resposta imediata de conhecimento; sem MRE, sem Motor, sem Job/Gate.
+ * Emenda E5.1: deixa de ser stub — LLM (ou inject) produz prosa natural.
  * @param {ContextoDestino} ctx
  */
 export async function executarDestinoC1(ctx) {
   const capacidadeIa = ctx.obterCapacidade("ia");
   let resultado;
-  if (capacidadeIa && LOCAIS_C1.has(ctx.intencao.id)) {
+
+  if (capacidadeIa && LOCAIS_C1.has(ctx.intencao?.id)) {
+    // Saudações / data / hora / identidade — determinístico local (inalterado)
     resultado = await capacidadeIa.executar(
       ctx.contextoCapacidade({
         texto: ctx.texto,
@@ -79,14 +84,12 @@ export async function executarDestinoC1(ctx) {
       })
     );
   } else {
-    resultado = {
-      ok: true,
-      mensagem:
-        `Sobre «${ctx.texto.slice(0, 120)}${ctx.texto.length > 120 ? "…" : ""}»: ` +
-        "resposta imediata (C1). Que detalhe precisa?",
-      modo: "resposta_leve",
-      dados: {}
-    };
+    // E5.1 — conhecimento geral: LLM directo (nunca capacidadeIa deliberativa/MRE)
+    resultado = await gerarRespostaConhecimentoGeral({
+      texto: ctx.texto,
+      historico: ctx.historico || [],
+      deps: ctx.deps || {}
+    });
   }
 
   let resposta = baseResposta(ctx, {
@@ -98,11 +101,13 @@ export async function executarDestinoC1(ctx) {
       ...(resultado.dados || {}),
       mreInvocado: false,
       motorAcionado: false,
+      publicarJobProibido: true,
       rota: "resposta_leve"
     }
   });
 
-  if (LOCAIS_C1.has(ctx.intencao.id) && typeof ctx.naturalizar === "function") {
+  // CA-E5.1-10: Conversação Natural em todo C1 (não só locais)
+  if (typeof ctx.naturalizar === "function") {
     resposta = ctx.naturalizar(resposta);
   }
   return resposta;

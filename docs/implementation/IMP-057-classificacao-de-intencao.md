@@ -1,10 +1,10 @@
 # IMP-057 — Classificação de Intenção
 
-> **Status: Homologada (v1.0) — Emenda E2.2 homologada em produção** (01/08/2026).  
+> **Status: Homologada (v1.0) — Emenda E5.1 em encerramento (commit/push/deploy)** (01/08/2026).  
 > Norma: **REQ-057** (homologada); **ARQ-018 v0.1** (homologada) — **não alteradas**.  
-> **Natureza:** plano + implementação E1–E7 + Emenda E2.1 (código) + Emenda E2.2 (código).  
-> **Emenda E2.1:** incluída no mesmo delta (preservada; CA-E2.1 verdes).  
-> **Emenda E2.2:** encerrada — commit `5d5ef6a` · deploy `dpl_9FwXa14vMD2P5rHdeXPew1Ccu8EF` · evidência `IMP-057-E22-homologacao-producao.md`.
+> **Natureza:** plano + implementação E1–E7 + Emendas E2.1 / E2.2 / **E5.1**.  
+> **Emenda E2.2:** encerrada em produção.  
+> **Emenda E5.1:** Gate aprovado — commit/push/deploy + homologação em produção.
 
 ---
 
@@ -364,6 +364,49 @@ Gate do patrocinador sobre **implementação + CA-E2.2-1…4 + suite verde**. Se
 
 ---
 
+### Emenda E5.1 — Executor do destino C1 (`resposta_leve`)
+
+> **Status:** Encerramento em curso — commit/push/deploy + homologação produção (01/08/2026).  
+> **Âmbito:** `executarDestinoC1` / gerador `respostaLeve.js` — **não** Classificador, Motor, Continuidade nem Consciência.  
+> **Origem:** em produção, C1 chegava a `resposta_leve` mas devolvia stub («resposta imediata (C1). Que detalhe precisa?»).  
+> **Evidência:** `docs/implementation/evidencias/IMP-057-E51-relatorio.md`.  
+> **Não altera:** ARQ-018; REQ-057; regras/lexicon do Classificador; Motor; Continuidade do Gate; Consciência Operacional.
+
+#### Objectivo
+
+Quando `classe === conhecimento_geral` e `destino === resposta_leve`, produzir **imediatamente** uma resposta natural de conhecimento geral via LLM — sem MRE, Motor, Job nem Gate.
+
+#### Fluxo
+
+```text
+Conversa → Classificador → C1 → executarDestinoC1 → LLM → Resposta natural (+ Conversação Natural)
+```
+
+#### Entregáveis (implementados)
+
+* `app/src/classificadorIntencao/respostaLeve.js` — `gerarRespostaConhecimentoGeral` (LLM directo / inject de teste).  
+* `executarDestinoC1` deixa de emitir stub; locais (saudação/data/hora/identidade) inalterados.  
+* Suite `e51.test.js` — CA-E5.1-1…10.  
+* Proibido: MRE, Motor, Job, Gate, prosa «resposta imediata (C1)» / «Que detalhe precisa?» em pergunta completa.
+
+#### Critérios de aceite E5.1
+
+* **CA-E5.1-1…6:** cenários de conhecimento → resposta completa/natural (sem stub).  
+* **CA-E5.1-7:** nenhum Job.  
+* **CA-E5.1-8:** nenhum Gate.  
+* **CA-E5.1-9:** nenhuma deliberação MRE.  
+* **CA-E5.1-10:** Conversação Natural preservada (`naturalizar` em todo C1).
+
+#### Nota (Classificador intacto)
+
+«Como funciona o protocolo HTTP?» ainda pode cair em Clarificação no Classificador (confiança &lt; 0,55) — **fora do escopo E5.1**. O executor foi validado com destino C1; cobertura lexical desse padrão exige emenda futura do Classificador (não feita aqui).
+
+#### Homologação E5.1
+
+Gate do patrocinador sobre implementação + CA-E5.1-1…10 + suite verde. Sem commit até autorização.
+
+---
+
 ### E6 — Fronteiras, regressões e anti-bypass
 
 **Objectivo:** CA/NA de fronteira; CTO/Painel; sem classificadores concorrentes.
@@ -506,7 +549,9 @@ Commit **só** quando:
 | 1.3 | 01/08/2026 | Engenheiro (Cursor) | **Emenda E2.2** — Cobertura de Classificação (docs) | Eliminar Clarificação indevida em C1/C2 seguros | Texto aberto |
 | 1.4 | 01/08/2026 | Engenheiro (Cursor) | Implementação E2.2 (lexicon/regras/testes) | Materializar CA-E2.2-1…4; demos obrigatórios | Implementada |
 | 1.5 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E2.2 — commit/push/deploy/prod | Autorização do patrocinador | Homologada em produção |
+| 1.6 | 01/08/2026 | Engenheiro (Cursor) | **Emenda E5.1** — Executor destino C1 | Substituir stub por LLM em `resposta_leve` | Gate aprovado |
+| 1.7 | 01/08/2026 | Engenheiro (Cursor) | Encerramento E5.1 — commit/push/deploy/prod | Autorização do patrocinador | Em curso |
 
 ---
 
-**Emenda E2.2 encerrada.** Aguardar próximo Gate. **Não** abrir nova frente.
+**Emenda E5.1:** Gate aprovado. Encerramento em curso. **Não** abrir nova frente.
