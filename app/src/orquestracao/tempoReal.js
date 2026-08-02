@@ -5,6 +5,7 @@
 import {
   DEBOUNCE_UI_MS,
   HINT_DEGRADADO,
+  HINT_HIBRIDO,
   HINT_POLLING,
   HINT_SSE,
   INTERVALO_POLLING_MS,
@@ -80,7 +81,9 @@ export function ligarTempoRealOrquestracao(opts) {
     if (out.ok) {
       nosCache = out.nos;
       setModo("polling");
-      onNos(nosCache, HINT_POLLING, "polling");
+      const hint =
+        out.fonte === "hibrido" ? HINT_HIBRIDO : HINT_POLLING;
+      onNos(nosCache, hint, "polling");
     } else {
       setModo("degradado");
       onNos(nosCache, HINT_DEGRADADO, "degradado");

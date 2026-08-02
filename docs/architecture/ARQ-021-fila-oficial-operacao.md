@@ -10,6 +10,12 @@ CEO / Motor → executive/queue/ (PC) → Dispatcher local → Agent Cursor
 
 Railway (BP-001) = LLM, health, CTO, heartbeat de sinal — **não** fila de Jobs.
 
+## Painel em produção (Vercel)
+
+SPA sem companion: o Painel tenta a API local; se falhar, usa **fallback híbrido** —
+CEO / CTO / Backend / Speaker via Railway; Agent / Dispatcher ficam *Aguardando*
+(fila oficial só no PC). Uso diário completo = Vite local ou `VITE_CEO_QUEUE_API_BASE`.
+
 ## Onde está a fila
 
 `{CEO_REPO_ROOT}/executive/queue/JOB-*.json`

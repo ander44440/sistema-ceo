@@ -14,6 +14,8 @@ export const INTERVALO_POLLING_MS = 4000;
 
 export const HINT_SSE = "Em tempo real";
 export const HINT_POLLING = "Actualização periódica";
+export const HINT_HIBRIDO =
+  "API online — Agent/Dispatcher só com fila local no PC";
 export const HINT_DEGRADADO =
   "Sinais indisponíveis — a Conversa continua activa";
 
