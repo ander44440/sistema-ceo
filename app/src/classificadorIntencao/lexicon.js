@@ -64,7 +64,12 @@ export const LEXICO_C1 = Object.freeze([
   }),
   Object.freeze({
     id: "historia_pessoas",
-    re: /\bquem foi\b|\b(hist[oó]ria|hist[oó]rico)\b.*\b(de|do|da)\b/,
+    re: /\bquem\s+(foi|inventou|descobriu|criou|escreveu|fundou|pintou|comp[oô]s)\b|\b(hist[oó]ria|hist[oó]rico)\b.*\b(de|do|da)\b/,
+    peso: 0.9
+  }),
+  Object.freeze({
+    id: "como_funciona",
+    re: /^como\s+funciona\b/,
     peso: 0.9
   }),
   Object.freeze({

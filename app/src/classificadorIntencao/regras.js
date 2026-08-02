@@ -90,7 +90,21 @@ export function ehConhecimentoGeralE22(t) {
   if (/\b(receita|bolo|culin[aá]ria|cozinhar|ingredientes?)\b/.test(t)) {
     return true;
   }
-  if (/\bquem foi\b/.test(t)) return true;
+  // Pessoas / factos históricos — «quem foi/inventou/descobriu…»
+  if (
+    /\bquem\s+(foi|inventou|descobriu|criou|escreveu|fundou|pintou|comp[oô]s)\b/.test(
+      t
+    ) &&
+    !temContextoProjetoE22(t, {})
+  ) {
+    return true;
+  }
+  if (
+    /^quem\s+[eé]\s+(?!voc[eê]\b)(?!tu\b)(?!o\s+ceo\b)/.test(t) &&
+    !temContextoProjetoE22(t, {})
+  ) {
+    return true;
+  }
   // Evitar `\b` após `é` (JS sem flag u: acento não é \w)
   if (/^o que [eé]\s+(?!voc[eê]\b)(?!tu\b)/.test(t)) return true;
   if (
@@ -99,8 +113,16 @@ export function ehConhecimentoGeralE22(t) {
   ) {
     return true;
   }
+  // «Como funciona…» (conhecimento) — não «Como devemos…» (C2)
   if (
-    /\b(ci[eê]ncia|f[ií]sica|qu[ií]mica|biologia|matem[aá]tica|equa[cç][aã]o|teorema|hist[oó]ria|programa[cç][aã]o|algoritmo|docker|kubernetes|rest|graphql)\b/.test(
+    /^como\s+funciona\b/.test(t) &&
+    !temContextoProjetoE22(t, {}) &&
+    !/\bcomo\s+devemos\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(ci[eê]ncia|f[ií]sica|qu[ií]mica|biologia|matem[aá]tica|equa[cç][aã]o|teorema|hist[oó]ria|programa[cç][aã]o|algoritmo|docker|kubernetes|rest|graphql|internet|http|https)\b/.test(
       t
     ) &&
     !temContextoProjetoE22(t, {}) &&

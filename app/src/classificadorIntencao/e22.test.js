@@ -40,6 +40,8 @@ export const AMOSTRAS_DOMINIO_C1_E22 = Object.freeze([
   ["programação", "O que é um algoritmo?"],
   ["tecnologia", "O que é Kubernetes?"],
   ["pessoas", "Quem foi Marie Curie?"],
+  ["invenção", "Quem inventou a internet?"],
+  ["como_funciona", "Como funciona o protocolo HTTP?"],
   ["lugares", "Onde fica a capital de Portugal?"],
   ["definições", "O que é JSON?"],
   ["explicações", "Explique HTTP."]
@@ -97,6 +99,21 @@ test("CA-E2.2-3: amostras de domínios C1 cobertos", () => {
     assert.equal(s.classe, "conhecimento_geral", `${dominio}: ${texto}`);
     assert.equal(s.precisaClarificacao, false, dominio);
     assert.notEqual(s.destino, "clarificacao", dominio);
+  }
+});
+
+test("C1 cobertura: quem inventou / como funciona → resposta_leve sem Clarificação", () => {
+  for (const texto of [
+    "Quem inventou a internet?",
+    "Quem descobriu a penicilina?",
+    "Como funciona o protocolo HTTP?"
+  ]) {
+    const s = classificar(texto);
+    assert.equal(s.classe, "conhecimento_geral", texto);
+    assert.equal(s.destino, "resposta_leve", texto);
+    assert.equal(s.precisaClarificacao, false, texto);
+    assert.ok(s.confianca >= LIMIAR_CONFIANCA, `${texto} conf=${s.confianca}`);
+    assert.equal(classificarEEncaminhar(texto).destino, "resposta_leve", texto);
   }
 });
 
