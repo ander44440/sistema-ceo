@@ -449,6 +449,38 @@ test("CT-V-real2: meta conversa / IA / decisão CEO — sem clarificação indev
   assert.notEqual(dec.dados?.encaminhamento?.destino, "clarificacao");
 });
 
+test("CT-V-real3: meta-modo conversacional — 6 perguntas sem clarificação/MG2", async () => {
+  const top = criarTopico("Motoboy Game 2", "coa", ISO);
+  const msgs = [
+    "Você consegue perceber quando eu estou apenas refletindo e quando realmente espero uma decisão sua?",
+    "Se eu mudar completamente de assunto no meio da conversa, o que você faz?",
+    "Você prefere que eu explique tudo ou consegue descobrir parte do contexto sozinho?",
+    'Se eu disser apenas "vamos continuar", você sabe exatamente do que estou falando?',
+    "Em que momento você decide fazer uma pergunta em vez de responder diretamente?",
+    "Como você decide se uma pergunta é sobre um projeto ou apenas uma curiosidade?"
+  ];
+  for (const texto of msgs) {
+    resetEstadoTopicosSessao();
+    resetEstadoObjectivoSessao();
+    definirEstadoTopicosSessao({ topicoActivo: top, pausas: [] });
+    const out = await executiveEngine.executar({ texto });
+    assert.equal(
+      out.dados?.validacaoContexto?.veredicto,
+      "metaconversa",
+      texto
+    );
+    assert.equal(out.dados?.validacaoContexto?.autorizaLastroCsc, false, texto);
+    assert.equal(out.dados?.classificacao?.classe, "conversa_projeto", texto);
+    assert.equal(out.dados?.encaminhamento?.destino, "nucleo_mre", texto);
+    assert.notEqual(out.dados?.encaminhamento?.destino, "clarificacao", texto);
+    assert.doesNotMatch(
+      out.mensagem,
+      /Mantemos o foco|Continuidade:|Preciso de um pouco mais de clareza/i,
+      texto
+    );
+  }
+});
+
 test("CT-V-extra: rollback VCA_ATIVO=false força pertence", () => {
   definirVcaAtivo(false);
   const r = validarContextoAtivo({

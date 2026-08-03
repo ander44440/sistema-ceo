@@ -7,7 +7,9 @@
 import { normalizarTexto } from "../classificadorIntencao/lexicon.js";
 import {
   ehDeliberacaoProjetoE22,
-  ehConhecimentoGeralE22
+  ehConhecimentoGeralE22,
+  ehAutoexplicacaoInstitucionalE23,
+  ehMetaModoConversacional
 } from "../classificadorIntencao/regras.js";
 import { mensagemEhDeixisOuFollowUp } from "../classificadorIntencao/historicoRecente.js";
 
@@ -90,6 +92,14 @@ export function avaliarComplexidadeDecisao(entrada = {}) {
     ehConhecimentoGeralE22(t)
   ) {
     return resultado("leve", "conhecimento geral ou comando operacional");
+  }
+
+  // Meta institucional / modo conversacional → 1 LLM (sem MRE 0–7)
+  if (ehMetaModoConversacional(t) || ehAutoexplicacaoInstitucionalE23(t)) {
+    return resultado(
+      "moderado",
+      "meta-conversa / autoexplicação → deliberação rápida"
+    );
   }
 
   // Deliberativo / C2
