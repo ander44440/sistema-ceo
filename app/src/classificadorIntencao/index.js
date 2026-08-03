@@ -99,6 +99,13 @@ export {
 } from "./objectivoSessao.js";
 
 export {
+  validarContextoAtivo,
+  definirVcaAtivo,
+  VCA_ATIVO,
+  VEREDICTOS_VCA
+} from "./validadorContextoAtivo.js";
+
+export {
   encaminharPorClasse,
   classificarEEncaminhar,
   ROTAS_POR_DESTINO,

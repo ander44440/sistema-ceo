@@ -15,6 +15,8 @@ import {
 } from "./destinos.js";
 import { criarPublicadorFilaMemoria } from "../motorExecucao/ponteParecerJob.js";
 import { resetStoreContinuidadePadrao } from "../continuidadeGate/integracaoConversa.js";
+import { resetEstadoTopicosSessao } from "./topicosSessao.js";
+import { resetEstadoObjectivoSessao } from "./objectivoSessao.js";
 
 const FIX = {
   C1: "Bom dia",
@@ -25,6 +27,8 @@ const FIX = {
 
 beforeEach(() => {
   resetStoreContinuidadePadrao();
+  resetEstadoTopicosSessao();
+  resetEstadoObjectivoSessao();
 });
 
 test("E5: mapa CAPACIDADES_C4 não inclui motor nem ia deliberativa", () => {

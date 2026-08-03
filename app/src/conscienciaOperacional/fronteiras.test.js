@@ -18,6 +18,8 @@ import {
 import { agregarEstadoExecutivo } from "./agregarEstado.js";
 import { consultarEstadoExecutivoAntesDeResponder } from "./consultarAntesDeResponder.js";
 import { criarLeitoresConscienciaPadrao } from "./leitoresPadrao.js";
+import { resetEstadoTopicosSessao } from "../classificadorIntencao/topicosSessao.js";
+import { resetEstadoObjectivoSessao } from "../classificadorIntencao/objectivoSessao.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MODULOS = [
@@ -31,6 +33,8 @@ const MODULOS = [
 
 beforeEach(() => {
   resetStoreContinuidadePadrao();
+  resetEstadoTopicosSessao();
+  resetEstadoObjectivoSessao();
 });
 
 function lerModulo(nome) {

@@ -112,6 +112,8 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-023-resolucao-referencias-conversacionais.md`](architecture/ARQ-023-resolucao-referencias-conversacionais.md) | **Em análise v0.1** — Resolução de Referências Conversacionais; CAP-07; REQ-062 / IMP-062 |
 | [`architecture/ARQ-024-gestao-mudanca-de-assunto.md`](architecture/ARQ-024-gestao-mudanca-de-assunto.md) | **Em análise v0.1** — Gestão de Mudança de Assunto; CAP-07; REQ-063 / IMP-063 |
 | [`architecture/ARQ-025-objetivo-conversacional.md`](architecture/ARQ-025-objetivo-conversacional.md) | **Em análise v0.1** — Objetivo Conversacional / Goal Tracking; CAP-07; REQ-064 / IMP-064 |
+| [`architecture/ARQ-026-validador-contexto-ativo.md`](architecture/ARQ-026-validador-contexto-ativo.md) | **Em análise v0.1** — Validador de Contexto Ativo / VCA; CAP-07; REQ-065 / IMP-065 |
+| [`implementation/IMP-065-validador-contexto-ativo.md`](implementation/IMP-065-validador-contexto-ativo.md) | **Homologada** — 5ª frente EIC CSC (pré-cadeia VCA); CT-V01…14 |
 | [`implementation/IMP-064-objetivo-conversacional.md`](implementation/IMP-064-objetivo-conversacional.md) | **Homologada** — 4ª frente EIC CSC; CT-G01…14 |
 | [`implementation/evidencias/IMP-064-homologacao-producao.md`](implementation/evidencias/IMP-064-homologacao-producao.md) | Homologação em produção IMP-064 — commit `3b2caa8` · Vercel READY · PR #1 merge |
 | [`implementation/IMP-063-gestao-mudanca-de-assunto.md`](implementation/IMP-063-gestao-mudanca-de-assunto.md) | **Homologada** — 3ª frente EIC CSC; CT-T01…13 |
@@ -132,6 +134,8 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`analysis/ANL-007-resolucao-referencias-conversacionais.md`](analysis/ANL-007-resolucao-referencias-conversacionais.md) | **Em análise** — ANL Resolução de Referências Conversacionais (próxima frente EIC / CAP-07) |
 | [`analysis/ANL-008-gestao-mudanca-de-assunto.md`](analysis/ANL-008-gestao-mudanca-de-assunto.md) | **Em análise** — ANL Gestão de Mudança de Assunto / Topic Shift (3ª frente EIC CSC / CAP-07) |
 | [`analysis/ANL-009-objetivo-conversacional-goal-tracking.md`](analysis/ANL-009-objetivo-conversacional-goal-tracking.md) | **Em análise** — ANL Objetivo Conversacional / Goal Tracking (4ª frente EIC CSC / CAP-07) |
+| [`analysis/ANL-010-validador-contexto-ativo.md`](analysis/ANL-010-validador-contexto-ativo.md) | **Em análise** — ANL Validador de Contexto Ativo / VCA (pré-cadeia EIC / CAP-07) |
+| [`requirements/REQ-065-validador-contexto-ativo.md`](requirements/REQ-065-validador-contexto-ativo.md) | **Em análise v0.1** — Validador de Contexto Ativo; CAP-07; ANL-010 → ARQ-026 / IMP-065 |
 | [`requirements/REQ-064-objetivo-conversacional.md`](requirements/REQ-064-objetivo-conversacional.md) | **Em análise v0.1** — Objetivo Conversacional; CAP-07; ANL-009 → ARQ-025 / IMP-064 |
 | [`requirements/REQ-063-gestao-mudanca-de-assunto.md`](requirements/REQ-063-gestao-mudanca-de-assunto.md) | **Em análise v0.1** — Gestão de Mudança de Assunto; CAP-07; ANL-008 → ARQ-024 / IMP-063 |
 | [`requirements/REQ-062-resolucao-referencias-conversacionais.md`](requirements/REQ-062-resolucao-referencias-conversacionais.md) | **Em análise v0.1** — Resolução de Referências Conversacionais; CAP-07; ANL-007 / IMP-061 |

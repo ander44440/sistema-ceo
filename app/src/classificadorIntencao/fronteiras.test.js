@@ -18,12 +18,16 @@ import {
   montarSaida
 } from "./index.js";
 import { resetStoreContinuidadePadrao } from "../continuidadeGate/integracaoConversa.js";
+import { resetEstadoTopicosSessao } from "./topicosSessao.js";
+import { resetEstadoObjectivoSessao } from "./objectivoSessao.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootSrc = join(__dirname, "..");
 
 beforeEach(() => {
   resetStoreContinuidadePadrao();
+  resetEstadoTopicosSessao();
+  resetEstadoObjectivoSessao();
 });
 
 function ler(rel) {

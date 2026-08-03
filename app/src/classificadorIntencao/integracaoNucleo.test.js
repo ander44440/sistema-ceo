@@ -18,6 +18,8 @@ import {
 } from "./index.js";
 import { criarPublicadorFilaMemoria } from "../motorExecucao/ponteParecerJob.js";
 import { resetStoreContinuidadePadrao } from "../continuidadeGate/integracaoConversa.js";
+import { resetEstadoTopicosSessao } from "./topicosSessao.js";
+import { resetEstadoObjectivoSessao } from "./objectivoSessao.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootSrc = join(__dirname, "..");
@@ -27,6 +29,8 @@ const DEMO_C3 = "Quero que você resolva os bugs do projeto.";
 beforeEach(() => {
   // Isolamento face ao store de Continuidade (IMP-058 E4) — não altera o Classificador.
   resetStoreContinuidadePadrao();
+  resetEstadoTopicosSessao();
+  resetEstadoObjectivoSessao();
 });
 
 test("E4-CA3: classificarIntencao usa Classificador canónico (origem)", () => {
