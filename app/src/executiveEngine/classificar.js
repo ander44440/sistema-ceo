@@ -58,7 +58,7 @@ export function mapearCapacidadePorTexto(texto) {
   }
 
   if (
-    /\b(quem (e|é) (voc[eê]|tu)|o que (e|é) (voc[eê]|o ceo)|o que voc[eê] (e|é|faz))\b/.test(
+    /\b(quem (e|é|es|és) (voc[eê]|voce|tu)|o que (e|é) (voc[eê]|voce|o ceo)|o que (voc[eê]|voce) (e|é|faz)|quem e vc)\b/.test(
       t
     )
   ) {

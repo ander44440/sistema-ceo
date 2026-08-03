@@ -79,29 +79,66 @@ export function ehAutoexplicacaoInstitucionalE23(t) {
     return true;
   }
 
-  // Papel / responsabilidades
+  // Papel / responsabilidades / missão
   if (/\b(seu|sua|teu|tua)\s+papel\b/.test(t)) return true;
   if (
     /\b(papel|responsabilidades?)\b/.test(t) &&
-    /\b(voc[eê]|tu|ceo|empresa|institui)\b/.test(t)
+    /\b(voce|tu|ceo|empresa|institui)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(sua|teu|tua|sua)\s+missao\b/.test(t) ||
+    /\bmissao\b/.test(t) && /\b(voce|tu|ceo|sua|teu|exatamente)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (/\bqual\s+[eé]?\s*(exatamente\s+)?(a\s+)?(sua|tua)\s+missao\b/.test(t)) {
+    return true;
+  }
+
+  // Critérios / modo de decisão / autoridade (patrocinador)
+  if (/\bcomo\s+(voce|tu)\s+toma\s+decis/.test(t)) return true;
+  if (
+    /\bcriterios?\s+de\s+decis/.test(t) &&
+    /\b(voce|tu|ceo|seu|sua)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bdecis/.test(t) &&
+    /\b(pertencem|pertence|cabem|cabe)\b/.test(t) &&
+    /\b(voce|tu|patrocinador|usuario|utilizador)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(patrocinador|usuario|utilizador)\b/.test(t) &&
+    /\b(voce|tu|ceo)\b/.test(t) &&
+    /\b(decis|autoridade|papel|quem)\b/.test(t)
   ) {
     return true;
   }
 
-  // Critérios / modo de decisão
-  if (/\bcomo\s+(voc[eê]|tu)\s+toma\s+decis/.test(t)) return true;
+  // Diferença entre agentes / Motor / chatbot
+  if (/\bdiferenca\s+entre\s+(voce|tu)\b/.test(t)) return true;
   if (
-    /\bcrit[eé]rios?\s+de\s+decis/.test(t) &&
-    /\b(voc[eê]|tu|ceo|seu|sua)\b/.test(t)
+    /\bdiferenca\s+entre\b/.test(t) &&
+    /\b(ceo|cto|engenheiro|cursor|agente|motor(\s+executivo)?|chatbot)\b/.test(
+      t
+    )
   ) {
     return true;
   }
-
-  // Diferença entre agentes
-  if (/\bdiferen[cç]a\s+entre\s+(voc[eê]|tu)\b/.test(t)) return true;
   if (
-    /\bdiferen[cç]a\s+entre\b/.test(t) &&
-    /\b(ceo|cto|engenheiro|cursor|agente)\b/.test(t)
+    /\b(chatbot|assistente\s+(digital|gen[eé]rico|pessoal))\b/.test(t) &&
+    /\b(voce|tu|ceo|faz|diferenca|nao\s+faz)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bmotor(\s+executivo)?\b/.test(t) &&
+    /\b(voce|tu|ceo|diferenca|versus|vs)\b/.test(t)
   ) {
     return true;
   }
@@ -221,16 +258,24 @@ export function ehMetaModoConversacional(t) {
 
   // Quando perguntar vs responder
   if (
-    /\b(pergunta|perguntar)\b/.test(t) &&
-    /\b(responder|resposta)\b/.test(t) &&
-    /\b(momento|decide|em\s+vez|diretamente)\b/.test(t)
+    /\b(pergunta|perguntar|perguntas)\b/.test(t) &&
+    /\b(responder|resposta|respond)/.test(t) &&
+    /\b(momento|decide|em\s+vez|diretamente|antes)\b/.test(t)
   ) {
     return true;
   }
   if (
     /\bem\s+que\s+momento\b/.test(t) &&
-    /\b(voc[eê]|tu)\b/.test(t) &&
+    /\b(voce|tu)\b/.test(t) &&
     /\b(pergunta|perguntar)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bpor\s+que\b/.test(t) &&
+    /\b(voce|tu)\b/.test(t) &&
+    /\bpergunt/.test(t) &&
+    /\b(antes|respond)/.test(t)
   ) {
     return true;
   }

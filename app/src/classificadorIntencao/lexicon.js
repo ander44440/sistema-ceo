@@ -10,11 +10,13 @@ export function normalizarTexto(texto) {
   return String(texto || "")
     .trim()
     .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
     .replace(/\s+/g, " ")
     .replace(/\bhj\b/g, "hoje")
-    .replace(/\btbm\b/g, "também")
+    .replace(/\btbm\b/g, "tambem")
     .replace(/\bpq\b/g, "porque")
-    .replace(/\bvc\b/g, "você")
+    .replace(/\bvc\b/g, "voce")
     .replace(/\bq\b/g, "que")
     .replace(/[?？!.]+$/g, "")
     .trim();
@@ -44,7 +46,7 @@ export const LEXICO_C1 = Object.freeze([
   }),
   Object.freeze({
     id: "identidade",
-    re: /\bquem\s+(e|é|és)\s+(voc[eê]|tu)\b|\bo\s+que\s+(e|é)\s+(voc[eê]|o\s+ceo)\b|\bo\s+que\s+voc[eê]\s+(e|é|faz)\b/,
+    re: /\bquem\s+(e|é|es|és)\s+(voc[eê]|voce|tu)\b|\bo\s+que\s+(e|é)\s+(voc[eê]|voce|o\s+ceo)\b|\bo\s+que\s+(voc[eê]|voce)\s+(e|é|faz)\b/,
     peso: 0.9
   }),
   Object.freeze({

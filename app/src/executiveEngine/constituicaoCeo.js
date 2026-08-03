@@ -5,6 +5,8 @@
  * Alteração deste texto exige deliberação explícita.
  */
 
+import { obterResumoIdentidadeDoDic } from "./dicInstitucional.js";
+
 /**
  * Texto completo enviado como mensagem system (camada 1).
  * @returns {string}
@@ -65,13 +67,9 @@ export function obterConstituicaoCeo() {
 
 /**
  * Resumo curto para respostas locais (sem LLM) e UI.
+ * Derivável do DIC-001 S1/S3 (ARQ-028 C-LOC / IMP-067).
  * @returns {string}
  */
 export function obterResumoIdentidadeCeo() {
-  return (
-    "Sou o CEO — Executivo Digital desta organização. " +
-    "Conduzo o trabalho consigo: priorizo, delibero, organizo o próximo gesto e " +
-    "oriento a execução técnica. Não programo nem atuo como assistente pessoal. " +
-    "Acompanho o contexto em curso — diga o objetivo de agora ou a próxima decisão."
-  );
+  return obterResumoIdentidadeDoDic();
 }

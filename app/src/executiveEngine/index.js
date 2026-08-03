@@ -115,7 +115,8 @@ function contextoCapacidade({
   historico,
   intencao,
   lastroConsciencia = null,
-  coaAtivo = undefined
+  coaAtivo = undefined,
+  validacaoContexto = null
 }) {
   /** @type {Record<string, unknown>} */
   const ctx = {
@@ -129,6 +130,10 @@ function contextoCapacidade({
   // IMP-059 E3: lastro só quando há contexto operacional relevante
   if (lastroConsciencia) {
     ctx.lastroConsciencia = lastroConsciencia;
+  }
+  // IMP-067: veredicto VCA para activação do DIC no path meta
+  if (validacaoContexto) {
+    ctx.validacaoContexto = validacaoContexto;
   }
   return ctx;
 }
@@ -891,7 +896,8 @@ export const executiveEngine = {
       contextoCapacidade({
         ...parcial,
         lastroConsciencia: lastroConsciencia || parcial.lastroConsciencia || null,
-        coaAtivo: coaParaDestino
+        coaAtivo: coaParaDestino,
+        validacaoContexto: metaVca.validacaoContexto
       });
 
     const conduzirMotorPadrao = envolverConduzirMotorComContinuidade(
