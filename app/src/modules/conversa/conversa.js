@@ -1,16 +1,13 @@
 import {
-  acrescentarMensagem,
-  atualizarMensagem,
-  criarMensagem,
   listarMensagens,
-  temHistorico
+  temHistorico,
+  acrescentarMensagem,
+  criarMensagem
 } from "./store.js";
-import { executiveEngine } from "../../executiveEngine/index.js";
 import { textoBoasVindasNatural } from "../../conversacaoNatural/index.js";
-import {
-  prepararGestoEnvio,
-  reproduzirRespostaCeo
-} from "../../experienciaVoz/reproduzirResposta.js";
+import { enviarAoNucleo } from "./enviarAoNucleo.js";
+import { criarVoiceController, ESTADO_TURNO } from "../../ceoOuvindo/index.js";
+import { obterOrquestradorVozSessao } from "../../experienciaVoz/sessao.js";
 
 const MENSAGEM_BOAS_VINDAS = textoBoasVindasNatural();
 
@@ -62,6 +59,23 @@ function renderMensagem(msg) {
   `;
 }
 
+function rotuloEstadoOuvindo(estado, mensagemErro) {
+  switch (estado) {
+    case ESTADO_TURNO.OUVINDO:
+      return "CEO Ouvindo — fale agora";
+    case ESTADO_TURNO.PROCESSANDO:
+      return "CEO Ouvindo — a processar…";
+    case ESTADO_TURNO.RESPONDENDO:
+      return "CEO Ouvindo — a responder…";
+    case ESTADO_TURNO.ERRO:
+      return mensagemErro || "CEO Ouvindo — erro";
+    case ESTADO_TURNO.INTERROMPIDO:
+      return "CEO Ouvindo — interrompido";
+    default:
+      return "À escuta do próximo passo";
+  }
+}
+
 /**
  * Monta a superfície de Conversa no workspace.
  * @returns {HTMLElement}
@@ -97,7 +111,12 @@ export function montarConversa() {
       ></textarea>
       <div class="conversa-composer-bar">
         <p class="conversa-hint" id="conversa-hint">Enter envia · Shift+Enter nova linha</p>
-        <button type="submit" class="conversa-enviar" id="conversa-enviar">Enviar</button>
+        <div class="conversa-composer-acoes">
+          <button type="button" class="conversa-mic" id="conversa-mic" aria-pressed="false" title="CEO Ouvindo">
+            Ouvindo
+          </button>
+          <button type="submit" class="conversa-enviar" id="conversa-enviar">Enviar</button>
+        </div>
       </div>
     </form>
   `;
@@ -106,6 +125,7 @@ export function montarConversa() {
   const form = root.querySelector("#conversa-form");
   const input = root.querySelector("#conversa-input");
   const enviarBtn = root.querySelector("#conversa-enviar");
+  const micBtn = root.querySelector("#conversa-mic");
   const estadoEl = root.querySelector("#conversa-estado");
 
   let enviando = false;
@@ -124,78 +144,74 @@ export function montarConversa() {
     enviarBtn.disabled = enviando || vazio;
   }
 
+  function pintarMic(snap) {
+    const activo =
+      snap.estado === ESTADO_TURNO.OUVINDO ||
+      snap.estado === ESTADO_TURNO.PROCESSANDO ||
+      snap.estado === ESTADO_TURNO.RESPONDENDO;
+    micBtn.setAttribute("aria-pressed", activo ? "true" : "false");
+    micBtn.classList.toggle("is-activo", activo);
+    micBtn.classList.toggle("is-erro", snap.estado === ESTADO_TURNO.ERRO);
+    if (snap.estado === ESTADO_TURNO.OUVINDO) {
+      micBtn.textContent = "Parar";
+    } else if (snap.estado === ESTADO_TURNO.ERRO) {
+      micBtn.textContent = "Retry";
+    } else if (activo) {
+      micBtn.textContent = "…";
+    } else {
+      micBtn.textContent = "Ouvindo";
+    }
+  }
+
+  const voice = criarVoiceController({
+    retornoAutomaticoOuvindo: true,
+    enviarTexto: async (texto) => {
+      enviando = true;
+      sincronizarBotao();
+      try {
+        const out = await enviarAoNucleo(texto, {
+          reproduzirTts: false,
+          onEstadoUi: definirEstado
+        });
+        pintarHistorico();
+        return out;
+      } finally {
+        enviando = false;
+        sincronizarBotao();
+        pintarHistorico();
+      }
+    },
+    onEstado: (snap) => {
+      definirEstado(rotuloEstadoOuvindo(snap.estado, snap.mensagemErro));
+      pintarMic(snap);
+    }
+  });
+
+  pintarMic(voice.snapshot());
+
   /**
-   * Envia instrução ao Executive Engine (único ponto de coordenação).
    * @param {string} textoBruto
    */
   async function enviarInstrucao(textoBruto) {
     const texto = textoBruto.trim();
     if (!texto || enviando) return;
 
+    // Teclado tem prioridade: interrompe ciclo de voz
+    if (voice.estado() !== ESTADO_TURNO.IDLE) {
+      voice.interromper();
+    }
+
     enviando = true;
     sincronizarBotao();
-    definirEstado("Núcleo Executivo em ação…");
-    // Gesto de envio: unlock de sessão (se voz Ativa) antes do await
-    prepararGestoEnvio();
-
-    acrescentarMensagem(
-      criarMensagem({
-        papel: "usuario",
-        texto
-      })
-    );
     input.value = "";
     sincronizarBotao();
     pintarHistorico();
 
-    const placeholder = acrescentarMensagem(
-      criarMensagem({
-        papel: "ceo",
-        texto: "…",
-        estado: "pendente"
-      })
-    );
-    pintarHistorico();
-
     try {
-      const { publicarJobFila } = await import(
-        "../../executiveEngine/filaCliente.js"
-      );
-      const resposta = await executiveEngine.executar(
-        {
-          texto,
-          historico: listarMensagens()
-            .filter((m) => m.id !== placeholder.id)
-            .map((m) => ({ papel: m.papel, texto: m.texto }))
-        },
-        { publicarJob: publicarJobFila }
-      );
-
-      atualizarMensagem(placeholder.id, {
-        texto: resposta.mensagem,
-        estado: resposta.ok ? "pronta" : "erro",
-        papel: resposta.ok ? "ceo" : "sistema"
+      await enviarAoNucleo(texto, {
+        reproduzirTts: true,
+        onEstadoUi: definirEstado
       });
-      // PX-002 E4: TTS só via Orquestrador (Ativa + unlocked)
-      if (resposta.ok) {
-        const textoVoz =
-          (resposta.dados && resposta.dados.textoVoz) || resposta.mensagem;
-        void reproduzirRespostaCeo(textoVoz);
-      }
-      definirEstado(
-        resposta.ok
-          ? `Via ${resposta.capacidade || "núcleo"} · pronto`
-          : "Falha no Núcleo Executivo"
-      );
-    } catch (err) {
-      atualizarMensagem(placeholder.id, {
-        papel: "sistema",
-        texto:
-          "Não foi possível processar a instrução nesta sessão. " +
-          (err && err.message ? err.message : "Erro desconhecido."),
-        estado: "erro"
-      });
-      definirEstado("Falha no processamento");
     } finally {
       enviando = false;
       sincronizarBotao();
@@ -217,6 +233,37 @@ export function montarConversa() {
   });
 
   input.addEventListener("input", sincronizarBotao);
+
+  micBtn.addEventListener("click", async () => {
+    const e = voice.estado();
+    if (e === ESTADO_TURNO.ERRO) {
+      voice.recuperar();
+      pintarMic(voice.snapshot());
+      return;
+    }
+    if (
+      e === ESTADO_TURNO.OUVINDO ||
+      e === ESTADO_TURNO.PROCESSANDO ||
+      e === ESTADO_TURNO.RESPONDENDO
+    ) {
+      voice.interromper();
+      pintarMic(voice.snapshot());
+      definirEstado("À escuta do próximo passo");
+      return;
+    }
+    // Opt-in PX-002: se voz desactivada, o TTS pode ficar em fila — ainda assim STT funciona
+    const orch = obterOrquestradorVozSessao();
+    if (orch.preferenciaAtiva()) {
+      orch.desbloquearSessao();
+    }
+    const r = await voice.iniciarEscuta();
+    pintarMic(voice.snapshot());
+    if (!r.ok) {
+      definirEstado(
+        voice.mensagemErro() || r.erro || "Não foi possível iniciar CEO Ouvindo"
+      );
+    }
+  });
 
   pintarHistorico();
   sincronizarBotao();

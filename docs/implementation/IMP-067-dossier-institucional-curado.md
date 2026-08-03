@@ -8,7 +8,7 @@
 
 | Item | Estado |
 |------|--------|
-| DIC-001 documental (`docs/institution/DIC-001.md`) | Feito |
+| DIC-001 documental (`docs/institution/DIC-001.md`) | Feito (v1.1) |
 | Runtime `dicInstitucional.js` (`obterDicVigente`, `deveInjectarDic`) | Feito |
 | Injecção só no path meta/institucional | Feito |
 | Ordem mandato → governação → DIC → contexto | Feito |
@@ -16,11 +16,24 @@
 | Flag `DIC_INJECAO_ATIVA` (rollback L1) | Feito |
 | Resumo identidade alinhado a S1/S3 | Feito |
 | Política de exposição (mapa divulgável; sem APIs/NCS/prompts) | Feito |
+| Léxico / activação path meta expandido (refinamento) | Feito |
 | CT-DIC01…08 | Feito |
+
+## Refinamento — léxico e activação do path meta
+
+Expansão de `ehAutoexplicacaoInstitucionalE23` (sem redesenhar C1–C4 / Gate / Motor / NCS) para activar o path meta/DIC em perguntas sobre:
+
+* identidade institucional (exceto pitch curto local «quem és tu?» → `pergunta_identidade`)
+* missão / propósito / natureza
+* limites / mandato / o que o CEO não faz
+* Sistema CEO / mapa e arquitectura divulgável
+* EIC / Classificador de Intenção / Gate de Execução
+
+**Preservado:** VCA `metaconversa`; meta-modo conversacional; C1 mundano («O que é um ADR?»); deliberação de projecto MG2; Jobs / E2.1; identidade local curta.
 
 ## Fora de escopo (preservado)
 
-* C1–C4 / limiar 0,55 / Classificador / EIC / Gate / Motor / NCS / Jobs  
+* C1–C4 / limiar 0,55 / Gate / Motor / NCS / Jobs  
 * Retrieval / RAG  
 * Prompts de deliberação operacional / MRE 0–7  
 
@@ -59,8 +72,9 @@ npm run test:mre:ncs
 
 | Path | Papel |
 |------|-------|
-| `docs/institution/DIC-001.md` | Curadoria canónica de consumo |
+| `docs/institution/DIC-001.md` | Curadoria canónica de consumo (v1.1) |
 | `app/src/executiveEngine/dicInstitucional.js` | Runtime |
+| `app/src/classificadorIntencao/regras.js` | Léxico E2.3 / activação path meta |
 | `app/src/executiveEngine/promptGovernanca.js` | Injecção |
 | `app/src/executiveEngine/constituicaoCeo.js` | Resumo via DIC |
 | `app/src/executiveEngine/capacidades/ia.js` | Metadado `dicInjecao` |

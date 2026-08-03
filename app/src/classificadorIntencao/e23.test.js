@@ -106,3 +106,47 @@ test("E2.3: variante longa do papel (produção)", () => {
   assert.equal(s.precisaClarificacao, false);
   assert.equal(s.destino, "nucleo_mre");
 });
+
+/** IMP-067 — léxico path meta expandido (identidade, propósito, Sistema CEO, EIC, limites). */
+export const EXEMPLOS_E23_IMP067 = Object.freeze([
+  ["IMP067-1", "Qual é o seu propósito?"],
+  ["IMP067-2", "Qual a sua identidade?"],
+  ["IMP067-3", "O que é o Sistema CEO?"],
+  ["IMP067-4", "Como funciona o Sistema CEO?"],
+  ["IMP067-5", "O que é a EIC?"],
+  ["IMP067-6", "Quais são os seus limites?"],
+  ["IMP067-7", "O que você não faz?"],
+  ["IMP067-8", "Como funciona o Classificador de Intenção?"],
+  ["IMP067-9", "Para que você existe?"]
+]);
+
+test("E2.3 IMP-067: léxico institucional expandido → C2 / sem Job", () => {
+  for (const [id, texto] of EXEMPLOS_E23_IMP067) {
+    const t = normalizarTexto(texto);
+    assert.equal(ehAutoexplicacaoInstitucionalE23(t), true, `detect ${id}`);
+    assert.equal(ehIntencaoExecutivaE21(t), false, `não E2.1 ${id}`);
+    const s = classificar(texto);
+    assert.equal(s.classe, "conversa_projeto", id);
+    assert.equal(s.destino, "nucleo_mre", id);
+    assert.equal(s.precisaClarificacao, false, id);
+    assert.equal(s.permiteJob, false, id);
+  }
+});
+
+test("E2.3 IMP-067: não captura C1 mundano / projecto / identidade local curta", () => {
+  assert.equal(
+    ehAutoexplicacaoInstitucionalE23(normalizarTexto("O que é um ADR?")),
+    false
+  );
+  assert.equal(
+    ehAutoexplicacaoInstitucionalE23(
+      normalizarTexto("Como devemos priorizar outdoor vs LOD?")
+    ),
+    false
+  );
+  // «Quem és tu?» permanece fora de E2.3 → pergunta_identidade local
+  assert.equal(
+    ehAutoexplicacaoInstitucionalE23(normalizarTexto("Quem és tu?")),
+    false
+  );
+});

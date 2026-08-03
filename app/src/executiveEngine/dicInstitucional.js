@@ -12,7 +12,7 @@ import {
 
 /** Identidade e versão do artefacto de consumo. */
 export const DIC_ID = "DIC-001";
-export const DIC_VERSAO = "1.0";
+export const DIC_VERSAO = "1.1";
 
 /** Flag rollback L1 (ARQ-028 §9). */
 export let DIC_INJECAO_ATIVA = true;
@@ -26,6 +26,9 @@ export function definirDicInjacaoAtiva(ativo) {
 
 /**
  * Path meta/institucional elegível para injecção do DIC (ARQ-028 §2.1).
+ * Activação: VCA metaconversa | Emenda E2.3 | meta-modo conversacional
+ * (léxico E2.3 expandido na IMP-067: identidade, missão, propósito, limites,
+ * Sistema CEO, EIC, mapa/arquitectura divulgável — sem alterar C1–C4 mundanos/projecto).
  * @param {object} [entrada]
  * @param {string} [entrada.texto]
  * @param {{ veredicto?: string }} [entrada.validacaoContexto]
@@ -87,6 +90,7 @@ export function obterDicVigente() {
     "2) Deliberação — raciocínio e próximo gesto quando há decisão de projecto.",
     "3) Gate de Execução — aprovação explícita do utilizador quando exigida.",
     "4) Job / Fila — trabalho técnico para o canal de implementação (ex.: Cursor), com critério de pronto.",
+    "5) EIC (Engenharia da Inteligência Conversacional) — pacote que governa a conversação: personalidade, routing e qualidade; não expõe prompts internos.",
     "Perguntas meta sobre o próprio CEO não criam Jobs automaticamente.",
     "Proibido inventar APIs, schemas internos, NCS, prompts ou detalhes não listados aqui.",
     "",
