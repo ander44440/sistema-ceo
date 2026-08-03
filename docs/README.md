@@ -114,6 +114,7 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-025-objetivo-conversacional.md`](architecture/ARQ-025-objetivo-conversacional.md) | **Em análise v0.1** — Objetivo Conversacional / Goal Tracking; CAP-07; REQ-064 / IMP-064 |
 | [`architecture/ARQ-026-validador-contexto-ativo.md`](architecture/ARQ-026-validador-contexto-ativo.md) | **Em análise v0.1** — Validador de Contexto Ativo / VCA; CAP-07; REQ-065 / IMP-065 |
 | [`implementation/IMP-065-validador-contexto-ativo.md`](implementation/IMP-065-validador-contexto-ativo.md) | **Homologada** — 5ª frente EIC CSC (pré-cadeia VCA); CT-V01…14 |
+| [`implementation/evidencias/IMP-065-homologacao-producao.md`](implementation/evidencias/IMP-065-homologacao-producao.md) | Homologação em produção IMP-065 — commit `51562b1` · Vercel READY · PR #2 merge |
 | [`implementation/IMP-064-objetivo-conversacional.md`](implementation/IMP-064-objetivo-conversacional.md) | **Homologada** — 4ª frente EIC CSC; CT-G01…14 |
 | [`implementation/evidencias/IMP-064-homologacao-producao.md`](implementation/evidencias/IMP-064-homologacao-producao.md) | Homologação em produção IMP-064 — commit `3b2caa8` · Vercel READY · PR #1 merge |
 | [`implementation/IMP-063-gestao-mudanca-de-assunto.md`](implementation/IMP-063-gestao-mudanca-de-assunto.md) | **Homologada** — 3ª frente EIC CSC; CT-T01…13 |
