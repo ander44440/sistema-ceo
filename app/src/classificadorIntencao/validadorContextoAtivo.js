@@ -46,7 +46,7 @@ import {
 
 /** Marcador explícito de novo fio (ARQ-026 P4) — alinhado a RE_SHIFT de tópicos. */
 const RE_NOVO_CONTEXTO =
-  /\b(agora\s+sobre|mudando\s+de\s+assunto|mudar\s+de\s+assunto|deixemos\s+(o|a)|passando\s+(ao|à|a|para)|falando\s+(de|do|da)|vamos\s+(falar|tratar)\s+(de|do|da)|quero\s+falar\s+(de|do|da|sobre)|vamos\s+esquecer|esquecer\s+(o|a|os|as)|por\s+um\s+momento|novo\s+(assunto|contexto|fio|tema))\b/i;
+  /\b(agora\s+sobre|mudando\s+de\s+assunto|mudar\s+de\s+assunto|deixemos\s+(o|a)|passando\s+(ao|à|a|para)|falando\s+(de|do|da)|vamos\s+(falar|tratar)\s+(de|do|da)|quero\s+(falar|conversar)\s+(de|do|da|sobre)|vamos\s+esquecer|esque[cç]a(\s+todos)?|esquecer\s+(o|a|os|as|todos)|por\s+um\s+momento|novo\s+(assunto|contexto|fio|tema))\b/i;
 
 /** Retoma explícita do fio (alinhado a RE_RETOMAR de tópicos). */
 const RE_RETOMAR =
@@ -296,6 +296,17 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
     return resultado(
       "pertence",
       "menção ao contexto activo → path CSC"
+    );
+  }
+
+  // Menção ao projecto activo («deste projeto», «neste projecto») com contexto de sessão
+  if (
+    activo &&
+    /\b(deste|neste|do|da|neste)\s+proje[tc]o\b/.test(t)
+  ) {
+    return resultado(
+      "pertence",
+      "referência ao projecto activo da sessão → path CSC"
     );
   }
 

@@ -40,7 +40,7 @@ const MAX_TOKENS = Object.freeze({
 
 /** Marcadores de decisão pesada → MRE completo. */
 const RE_COMPLETA =
-  /\b(como\s+devemos|como\s+organizar|prioriz(ar|e|amos)|decidir\s+entre|trade-?off|alternativas?|roadmap|planejar\s+a\s+sprint|sprint\s+\d|arquitectura|arquitetura|riscos?\s+de|oportunidades?|compar(ar|e)|em\s+vez\s+de|vs\.?|versus)\b/i;
+  /\b(como\s+devemos|como\s+organizar|prioriz(ar|e|amos)|decidir\s+entre|trade-?off|alternativas?|roadmap|planejar\s+a\s+sprint|sprint\s+\d|arquitectura|arquitetura|riscos?\s+de|oportunidades?|compar(ar|e)|em\s+vez\s+de|vs\.?|versus|pr[oó]xima\s+decis[aã]o|decis[aã]o\s+mais\s+importante|principal\s+pend[eê]ncia|se\s+(voc[eê]|tu)\s+fosse\s+o\s+ceo)\b/i;
 
 /** Retoma / follow-up leve de projecto. */
 const RE_MODERADO =

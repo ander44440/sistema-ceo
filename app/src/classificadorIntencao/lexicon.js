@@ -315,6 +315,16 @@ export const LEXICO_C2 = Object.freeze([
     peso: 0.93
   }),
   Object.freeze({
+    id: "e22_ceo_hipotetico",
+    re: /\bse\s+(voc[eê]|tu)\s+fosse\s+o\s+ceo\b|\bpr[oó]xima\s+decis[aã]o\s+mais\s+importante\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
+    id: "e22_pendencia",
+    re: /\bprincipal\s+pend[eê]ncia\b|\bpend[eê]ncias?\s+(abertas?|atuais?|do\s+proje)/,
+    peso: 0.9
+  }),
+  Object.freeze({
     id: "e23_papel",
     re: /\b(seu|sua|teu|tua)\s+papel\b|\bpapel\b.*\b(voc[eê]|ceo|empresa)\b/,
     peso: 0.93

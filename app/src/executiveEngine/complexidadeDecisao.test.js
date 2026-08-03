@@ -57,6 +57,16 @@ test("CT-CX03: priorizar / trade-off → completa", () => {
   });
   assert.equal(r.nivel, "completa");
   assert.equal(r.permiteMreCompleto, true);
+
+  const d = avaliarComplexidadeDecisao({
+    texto:
+      "Se você fosse o CEO deste projeto, qual seria a próxima decisão mais importante e por quê?",
+    classe: "conversa_projeto",
+    destino: "nucleo_mre",
+    intencao: { id: "deliberar_objetivo", capacidade: "ia" },
+    frenteActiva: true
+  });
+  assert.equal(d.nivel, "completa");
 });
 
 test("CT-CX04: capacidadeIa moderado não chama pipeline MRE", async () => {
