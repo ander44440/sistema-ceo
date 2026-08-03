@@ -133,6 +133,20 @@ export function ehAutoexplicacaoInstitucionalE23(t) {
   ) {
     return true;
   }
+  // Meta sobre a própria conversa (produtividade / utilidade)
+  if (
+    /\besta\s+conversa\b/.test(t) &&
+    /\b(produtiva|útil|util|adianta|faz\s+sentido|vale\s+a\s+pena)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bacha\s+que\b/.test(t) &&
+    /\bconversa\b/.test(t) &&
+    /\b(produtiva|útil|util|adianta)\b/.test(t)
+  ) {
+    return true;
+  }
 
   // Funcionamento / arquitectura do próprio sistema CEO
   if (
@@ -163,7 +177,11 @@ export function ehDeliberacaoProjetoE22(t, ctx = {}) {
     /\bquais\s+capacidades\b/.test(t) ||
     /\bqual\s+prioridade\b/.test(t) ||
     /\bcomo\s+organizar\b/.test(t) ||
-    /\bo\s+que\s+falta\b/.test(t)
+    /\bo\s+que\s+falta\b/.test(t) ||
+    /\bse\s+(voc[eê]|tu)\s+fosse\s+o\s+ceo\b/.test(t) ||
+    /\bpr[oó]xima\s+decis[aã]o\b/.test(t) ||
+    /\bprincipal\s+pend[eê]ncia\b/.test(t) ||
+    /\bqual\s+seria\s+a\s+pr[oó]xima\b/.test(t)
   );
 }
 
@@ -175,6 +193,24 @@ export function ehDeliberacaoProjetoE22(t, ctx = {}) {
 export function ehConhecimentoGeralE22(t) {
   if (!t) return false;
   if (ehIntencaoExecutivaE21(t)) return false;
+
+  // Novo fio explícito para tema geral (ex.: IA) — não herdar «projetos» do «esqueça os projetos»
+  if (
+    /\besque[cç]a\b/.test(t) &&
+    /\bprojetos?\b/.test(t) &&
+    /\bquero\s+conversar\s+sobre\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bquero\s+conversar\s+sobre\b/.test(t) &&
+    /\b(intelig[eê]ncia\s+artificial|\bia\b|ci[eê]ncia|hist[oó]ria|filosofia)\b/.test(
+      t
+    ) &&
+    !/\b(mg2|motoboy|outdoor|worldlab)\b/.test(t)
+  ) {
+    return true;
+  }
 
   // Explicação / definição com âncora de projecto → não é C1 E2.2
   if (

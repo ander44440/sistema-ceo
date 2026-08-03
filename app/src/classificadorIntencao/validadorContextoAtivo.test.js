@@ -415,6 +415,40 @@ test("CT-V-real: capital / aritmética / meta / retoma — isolamento sem herdar
   assert.equal(retoma.dados?.validacaoContexto?.autorizaLastroCsc, true);
 });
 
+test("CT-V-real2: meta conversa / IA / decisão CEO — sem clarificação indevida", async () => {
+  const top = criarTopico("Motoboy Game 2", "coa", ISO);
+  definirEstadoTopicosSessao({ topicoActivo: top, pausas: [] });
+
+  const meta = await executiveEngine.executar({
+    texto: "Você acha que esta conversa está sendo produtiva?"
+  });
+  assert.equal(meta.dados?.validacaoContexto?.veredicto, "metaconversa");
+  assert.equal(meta.dados?.validacaoContexto?.autorizaLastroCsc, false);
+  assert.equal(meta.dados?.classificacao?.classe, "conversa_projeto");
+  assert.notEqual(meta.dados?.encaminhamento?.destino, "clarificacao");
+  assert.doesNotMatch(meta.mensagem, /Mantemos o foco|Continuidade:/i);
+
+  definirEstadoTopicosSessao({ topicoActivo: top, pausas: [] });
+  const ia = await executiveEngine.executar({
+    texto:
+      "Esqueça todos os projetos por um momento. Quero conversar sobre inteligência artificial."
+  });
+  assert.equal(ia.dados?.validacaoContexto?.veredicto, "novo_contexto");
+  assert.equal(ia.dados?.classificacao?.classe, "conhecimento_geral");
+  assert.equal(ia.dados?.encaminhamento?.destino, "resposta_leve");
+  assert.notEqual(ia.dados?.encaminhamento?.destino, "clarificacao");
+
+  definirEstadoTopicosSessao({ topicoActivo: top, pausas: [] });
+  const dec = await executiveEngine.executar({
+    texto:
+      "Se você fosse o CEO deste projeto, qual seria a próxima decisão mais importante e por quê?"
+  });
+  assert.equal(dec.dados?.validacaoContexto?.veredicto, "pertence");
+  assert.equal(dec.dados?.classificacao?.classe, "conversa_projeto");
+  assert.equal(dec.dados?.encaminhamento?.destino, "nucleo_mre");
+  assert.notEqual(dec.dados?.encaminhamento?.destino, "clarificacao");
+});
+
 test("CT-V-extra: rollback VCA_ATIVO=false força pertence", () => {
   definirVcaAtivo(false);
   const r = validarContextoAtivo({
