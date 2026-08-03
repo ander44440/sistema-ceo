@@ -1,13 +1,20 @@
 /**
  * Compositor do prompt enviado ao LLM.
- * Não define identidade — apenas monta na ordem canónica homologada:
- * Constituição → Governança LLM → Contexto → Briefing → Histórico → Objetivo atual.
+ * Ordem canónica: Constituição → Governança LLM → [DIC se path meta] →
+ * Contexto → [Briefing se NÃO path meta] → Histórico → Objetivo atual.
+ * IMP-067 / ARQ-028: DIC só no path institucional/metaconversacional.
  */
 
 import { obterConstituicaoCeo } from "./constituicaoCeo.js";
 import { obterGovernancaLlm } from "./governancaLlm.js";
 import { construirContextoSessao } from "./contextoSessao.js";
 import { obterBriefingProjeto } from "./briefingsProjeto.js";
+import {
+  DIC_ID,
+  DIC_VERSAO,
+  deveInjectarDic,
+  obterDicVigente
+} from "./dicInstitucional.js";
 
 /**
  * @param {object} params
@@ -16,6 +23,8 @@ import { obterBriefingProjeto } from "./briefingsProjeto.js";
  * @param {object} params.memoria
  * @param {object|null} params.coa
  * @param {object} [params.intencao]
+ * @param {{ veredicto?: string }} [params.validacaoContexto]
+ * @param {boolean} [params.pathMetaInstitucional]
  * @returns {Array<{role:string,content:string}>}
  */
 export function montarMensagensLlm({
@@ -23,20 +32,36 @@ export function montarMensagensLlm({
   historico,
   memoria,
   coa,
-  intencao
+  intencao,
+  validacaoContexto,
+  pathMetaInstitucional
 }) {
+  const injectDic = deveInjectarDic({
+    texto: instrucao,
+    validacaoContexto,
+    pathMetaInstitucional
+  });
+
   const messages = [
     { role: "system", content: obterConstituicaoCeo() },
-    { role: "system", content: obterGovernancaLlm() },
-    {
-      role: "system",
-      content: construirContextoSessao({ memoria, coa, intencao })
-    }
+    { role: "system", content: obterGovernancaLlm() }
   ];
 
-  const briefing = obterBriefingProjeto(coa);
-  if (briefing) {
-    messages.push({ role: "system", content: briefing });
+  if (injectDic) {
+    messages.push({ role: "system", content: obterDicVigente() });
+  }
+
+  messages.push({
+    role: "system",
+    content: construirContextoSessao({ memoria, coa, intencao })
+  });
+
+  // ARQ-028 C-COA: sem briefing COA por omissão no path meta
+  if (!injectDic) {
+    const briefing = obterBriefingProjeto(coa);
+    if (briefing) {
+      messages.push({ role: "system", content: briefing });
+    }
   }
 
   // Histórico antes do objetivo atual: a interação corrente fica como último turno.
@@ -63,7 +88,6 @@ export function montarMensagensLlm({
         content: `OBJETIVO ATUAL DA INTERAÇÃO:\n${objetivo}`
       });
     } else {
-      // Garante ênfase no objetivo corrente mesmo quando já é o último turno.
       const last = messages[messages.length - 1];
       if (last && last.role === "user") {
         last.content = `OBJETIVO ATUAL DA INTERAÇÃO:\n${objetivo}`;
@@ -72,6 +96,17 @@ export function montarMensagensLlm({
   }
 
   return messages;
+}
+
+/**
+ * Metadado de auditoria da injecção DIC (IMP-067).
+ * @param {object} params — mesmos campos relevantes de montarMensagensLlm
+ * @returns {{ injectado: boolean, id?: string, versao?: string }}
+ */
+export function metadadoDicInjecao(params = {}) {
+  const injectado = deveInjectarDic(params);
+  if (!injectado) return { injectado: false };
+  return { injectado: true, id: DIC_ID, versao: DIC_VERSAO };
 }
 
 /** @deprecated Use montarMensagensLlm — mantido só se algum import legado restar. */

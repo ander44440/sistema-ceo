@@ -10,7 +10,10 @@ import {
 } from "../resposta.js";
 import { obterCoaAtivo } from "../coaSessao.js";
 import { obterResumoIdentidadeCeo } from "../constituicaoCeo.js";
-import { montarMensagensLlm } from "../promptGovernanca.js";
+import {
+  metadadoDicInjecao,
+  montarMensagensLlm
+} from "../promptGovernanca.js";
 import { deliberarComLlm, obterStatusLlm } from "../llmCliente.js";
 import {
   ehRotaDeliberativa,
@@ -275,13 +278,16 @@ async function executarBruto(ctx) {
     }
 
     try {
-      const messages = montarMensagensLlm({
+      const paramsMsg = {
         instrucao: texto,
         historico: ctx.historico || [],
         memoria: mem,
         coa,
-        intencao
-      });
+        intencao,
+        validacaoContexto: ctx.validacaoContexto || null
+      };
+      const messages = montarMensagensLlm(paramsMsg);
+      const dicMeta = metadadoDicInjecao(paramsMsg);
       const saida = await deliberarComLlm({
         messages,
         temperature: 0.4,
@@ -300,6 +306,7 @@ async function executarBruto(ctx) {
           coa,
           rota: "deliberativa-rapida",
           complexidadeDecisao: complexidade,
+          dicInjecao: dicMeta,
           conscienciaInfluencia: reflexo,
           llm: {
             modelo: saida.modelo,
@@ -354,13 +361,16 @@ async function executarBruto(ctx) {
   }
 
   try {
-    const messages = montarMensagensLlm({
+    const paramsMsg = {
       instrucao: texto,
       historico: ctx.historico || [],
       memoria: mem,
       coa,
-      intencao
-    });
+      intencao,
+      validacaoContexto: ctx.validacaoContexto || null
+    };
+    const messages = montarMensagensLlm(paramsMsg);
+    const dicMeta = metadadoDicInjecao(paramsMsg);
 
     const saida = await deliberarComLlm({
       messages,
@@ -380,6 +390,7 @@ async function executarBruto(ctx) {
         coa,
         rota: "legado-llm",
         complexidadeDecisao: complexidade,
+        dicInjecao: dicMeta,
         llm: {
           modelo: saida.modelo,
           uso: saida.uso,
