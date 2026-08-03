@@ -113,6 +113,7 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-024-gestao-mudanca-de-assunto.md`](architecture/ARQ-024-gestao-mudanca-de-assunto.md) | **Em análise v0.1** — Gestão de Mudança de Assunto; CAP-07; REQ-063 / IMP-063 |
 | [`architecture/ARQ-025-objetivo-conversacional.md`](architecture/ARQ-025-objetivo-conversacional.md) | **Em análise v0.1** — Objetivo Conversacional / Goal Tracking; CAP-07; REQ-064 / IMP-064 |
 | [`implementation/IMP-064-objetivo-conversacional.md`](implementation/IMP-064-objetivo-conversacional.md) | **Homologada** — 4ª frente EIC CSC; CT-G01…14 |
+| [`implementation/evidencias/IMP-064-homologacao-producao.md`](implementation/evidencias/IMP-064-homologacao-producao.md) | Homologação em produção IMP-064 — commit `3b2caa8` · Vercel READY · PR #1 merge |
 | [`implementation/IMP-063-gestao-mudanca-de-assunto.md`](implementation/IMP-063-gestao-mudanca-de-assunto.md) | **Homologada** — 3ª frente EIC CSC; CT-T01…13 |
 | [`requirements/REQ-060-restauracao-fila-oficial-mvp.md`](requirements/REQ-060-restauracao-fila-oficial-mvp.md) | **Homologada v0.1** — Restauração da Fila Oficial do MVP; CAP-11; alinhada à ARQ-021 |
 | [`implementation/IMP-060-restauracao-fila-oficial-mvp.md`](implementation/IMP-060-restauracao-fila-oficial-mvp.md) | **Homologada** — frente encerrada 02/08/2026; E1–E6 em produção |
