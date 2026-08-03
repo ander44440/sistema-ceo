@@ -114,7 +114,8 @@ function contextoCapacidade({
   texto,
   historico,
   intencao,
-  lastroConsciencia = null
+  lastroConsciencia = null,
+  coaAtivo = undefined
 }) {
   /** @type {Record<string, unknown>} */
   const ctx = {
@@ -123,7 +124,7 @@ function contextoCapacidade({
     intencao,
     /** Snapshot da Memória Executiva disponível a qualquer capacidade. */
     memoria: lerMemoria,
-    coaAtivo: obterCoaAtivo()
+    coaAtivo: coaAtivo === undefined ? obterCoaAtivo() : coaAtivo
   };
   // IMP-059 E3: lastro só quando há contexto operacional relevante
   if (lastroConsciencia) {
@@ -500,7 +501,9 @@ export const executiveEngine = {
       : null;
 
     const contextoClassificacao = {
-      frenteActiva: Boolean(coa),
+      // Isolamento VCA: não injectar lastro de frente/COA no Classificador
+      // (evita desambiguação C1→C2 via frenteActiva — REQ-065 / ARQ-026).
+      frenteActiva: autorizaLastroCsc && Boolean(coa),
       ...(autorizaLastroCsc && historicoRecente.length > 0
         ? { historicoRecente }
         : {}),
@@ -730,10 +733,14 @@ export const executiveEngine = {
       agora: deps.agoraConsciencia
     });
     const metaConsciencia = metadadoConscienciaParaDados(consultaConsciencia);
-    let lastroConsciencia = consultaConsciencia.lastroParaNucleo;
+    // Isolamento VCA: sem lastro de consciência/COA/CSC neste turno
+    let lastroConsciencia = autorizaLastroCsc
+      ? consultaConsciencia.lastroParaNucleo
+      : null;
 
     // IMP-062: injectar referente no lastro C2/C1 (não altera pontuação C3 nem Jobs)
     if (
+      autorizaLastroCsc &&
       resultadoRef.estado === "resolvido" &&
       (rota.destino === "nucleo_mre" || rota.destino === "resposta_leve")
     ) {
@@ -761,6 +768,7 @@ export const executiveEngine = {
 
     // IMP-063: lastro temático C2/C1 (não altera C3/Jobs)
     if (
+      autorizaLastroCsc &&
       resultadoTop?.topicoActivo &&
       (rota.destino === "nucleo_mre" || rota.destino === "resposta_leve")
     ) {
@@ -790,6 +798,7 @@ export const executiveEngine = {
 
     // IMP-064: lastro de objectivo C2/C1 (não altera C3/Jobs)
     if (
+      autorizaLastroCsc &&
       resultadoObj?.objetivoActivo &&
       (rota.destino === "nucleo_mre" || rota.destino === "resposta_leve")
     ) {
@@ -876,10 +885,13 @@ export const executiveEngine = {
             ...(lastroConsciencia ? { lastroConsciencia } : {})
           };
 
+    const coaParaDestino = autorizaLastroCsc ? obterCoaAtivo() : null;
+
     const contextoCapacidadeComLastro = (parcial) =>
       contextoCapacidade({
         ...parcial,
-        lastroConsciencia: lastroConsciencia || parcial.lastroConsciencia || null
+        lastroConsciencia: lastroConsciencia || parcial.lastroConsciencia || null,
+        coaAtivo: coaParaDestino
       });
 
     const conduzirMotorPadrao = envolverConduzirMotorComContinuidade(
@@ -903,10 +915,11 @@ export const executiveEngine = {
         naturalizar: (r) =>
           naturalizarRespostaNucleo(r, {
             instrucao: texto,
-            historico,
+            historico: autorizaLastroCsc ? historico : [],
             intencao: r.intencao || intencao,
-            memoria: lerMemoria,
-            coaAtivo: obterCoaAtivo(),
+            // Isolamento: sem memória/COA de projecto na âncora CN («Mantemos o foco…»)
+            memoria: autorizaLastroCsc ? lerMemoria : null,
+            coaAtivo: coaParaDestino,
             canalSpeaker: "chat"
           })
       });

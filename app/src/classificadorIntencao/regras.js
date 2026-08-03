@@ -120,6 +120,20 @@ export function ehAutoexplicacaoInstitucionalE23(t) {
     return true;
   }
 
+  // Meta sobre a qualidade / papel executivo da resposta do CEO
+  if (
+    /\b(respondendo|responde|resposta)\b/.test(t) &&
+    /\b(executivo|ceo|verdadeiro|como\s+(um|uma)\s+ceo)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bacha\s+que\s+(est[aá]|voc[eê]|tu)\b/.test(t) &&
+    /\b(executivo|ceo|papel)\b/.test(t)
+  ) {
+    return true;
+  }
+
   // Funcionamento / arquitectura do próprio sistema CEO
   if (
     /\b(funcionamento|como\s+(voc[eê]|tu)\s+funciona|arquitectura|arquitetura)\b/.test(
@@ -215,7 +229,19 @@ export function ehConhecimentoGeralE22(t) {
   ) {
     return true;
   }
-  if (/\b(onde fica|capital de)\b/.test(t)) return true;
+  if (
+    /\b(onde fica|capital d[aeo]|localiza[cç][aã]o d[aeo])\b/.test(t)
+  ) {
+    return true;
+  }
+  // Aritmética / cálculo numérico simples (não projecto)
+  if (
+    /\bquanto\s+[eé]\s+\d/.test(t) &&
+    (/[×x*]/.test(t) || /[+\-/÷]/.test(t))
+  ) {
+    return true;
+  }
+  if (/^\d+\s*[×x*+\-/÷]\s*\d+\s*\??$/.test(t)) return true;
 
   return false;
 }
