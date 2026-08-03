@@ -57,7 +57,9 @@ export function temContextoProjetoE22(t, ctx = {}) {
 
 /**
  * Emenda E2.3 — autoexplicação institucional do CEO → C2 (nunca C3/Clarificação).
- * Perguntas sobre papel, decisões, capacidades, limitações, agentes, Jobs (meta).
+ * Perguntas sobre papel, identidade, missão, propósito, limites, Sistema CEO,
+ * EIC, mapa divulgável, decisões, capacidades, agentes, Jobs (meta).
+ * Refinamento IMP-067 do path meta/institucional.
  * @param {string} t
  */
 export function ehAutoexplicacaoInstitucionalE23(t) {
@@ -79,7 +81,9 @@ export function ehAutoexplicacaoInstitucionalE23(t) {
     return true;
   }
 
-  // Papel / responsabilidades / missão
+  // Papel / responsabilidades / missão / propósito / identidade / natureza
+  // (IMP-067 refinamento path meta — não captura «quem és tu» / «o que você é»:
+  //  esses permanecem em pergunta_identidade local com resumo derivado do DIC)
   if (/\b(seu|sua|teu|tua)\s+papel\b/.test(t)) return true;
   if (
     /\b(papel|responsabilidades?)\b/.test(t) &&
@@ -89,11 +93,37 @@ export function ehAutoexplicacaoInstitucionalE23(t) {
   }
   if (
     /\b(sua|teu|tua|sua)\s+missao\b/.test(t) ||
-    /\bmissao\b/.test(t) && /\b(voce|tu|ceo|sua|teu|exatamente)\b/.test(t)
+    (/\bmissao\b/.test(t) && /\b(voce|tu|ceo|sua|teu|exatamente)\b/.test(t))
   ) {
     return true;
   }
   if (/\bqual\s+[eé]?\s*(exatamente\s+)?(a\s+)?(sua|tua)\s+missao\b/.test(t)) {
+    return true;
+  }
+  if (
+    /\bproposito\b/.test(t) &&
+    /\b(voce|tu|ceo|sua|tua|seu|teu|sistema)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bpara\s+que\b/.test(t) &&
+    /\b(voce|tu|ceo)\b/.test(t) &&
+    /\b(existe|serve|foi\s+criad)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(sua|tua|seu|teu)\s+identidade\b/.test(t) ||
+    (/\bidentidade\b/.test(t) &&
+      /\b(ceo|institucional|sistema\s+ceo|voce|tu)\b/.test(t))
+  ) {
+    return true;
+  }
+  if (
+    /\bnatureza\b/.test(t) &&
+    /\b(ceo|sistema|voce|tu|sua|tua)\b/.test(t)
+  ) {
     return true;
   }
 
@@ -143,7 +173,7 @@ export function ehAutoexplicacaoInstitucionalE23(t) {
     return true;
   }
 
-  // Capacidades / limitações / fraquezas do CEO
+  // Capacidades / limitações / limites / mandato / fraquezas do CEO
   if (
     /\bqual\s+capacidade\b/.test(t) &&
     /\b(voc[eê]|tu|desenvolver|importante)\b/.test(t)
@@ -154,6 +184,25 @@ export function ehAutoexplicacaoInstitucionalE23(t) {
     return true;
   }
   if (/\bceo\b.*\b(fraqueza|limita[cç][aã]o|limita[cç][oõ]es)\b/.test(t)) {
+    return true;
+  }
+  if (
+    /\blimites?\b/.test(t) &&
+    /\b(voce|tu|ceo|seu|sua|seus|suas|teu|tua|teus|tuas)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bo\s+que\b/.test(t) &&
+    /\b(voce|tu|ceo)\b/.test(t) &&
+    /\b(nao\s+faz|nao\s+pode|nao\s+deve)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bmandato\b/.test(t) &&
+    /\b(voce|tu|ceo|seu|sua|teu|tua)\b/.test(t)
+  ) {
     return true;
   }
 
@@ -188,9 +237,43 @@ export function ehAutoexplicacaoInstitucionalE23(t) {
   // Meta-modo conversacional — como o CEO interpreta o utilizador (não identidade genérica)
   if (ehMetaModoConversacional(t)) return true;
 
-  // Funcionamento / arquitectura do próprio sistema CEO
+  // Sistema CEO / EIC / mapa divulgável / funcionamento / arquitectura
   if (
-    /\b(funcionamento|como\s+(voc[eê]|tu)\s+funciona|arquitectura|arquitetura)\b/.test(
+    /\bsistema\s+ceo\b/.test(t) &&
+    /\b(o\s+que|como|qual|explique|explica|arquitectura|arquitetura|mapa|funcion|eic|gate|classificador|pilares?|natureza|missao|proposito|limites?)\b/.test(
+      t
+    ) &&
+    !/\b(mg2|motoboy|outdoor|worldlab)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\beic\b/.test(t) &&
+    /\b(o\s+que|como|qual|explique|explica|signif|ceo|conversacional|inteligencia|intelig[eê]ncia)\b/.test(
+      t
+    ) &&
+    !/\b(mg2|motoboy|outdoor|worldlab)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(mapa\s+divulgavel|mapa\s+do\s+sistema|arquitectura\s+divulgavel|arquitetura\s+divulgavel)\b/.test(
+      t
+    )
+  ) {
+    return true;
+  }
+  if (
+    /\b(classificador(\s+de\s+inten[cç][aã]o)?|gate\s+de\s+execu[cç][aã]o|fila\s+de\s+execu)\b/.test(
+      t
+    ) &&
+    /\b(o\s+que|como|qual|explique|explica|funciona|e|é)\b/.test(t) &&
+    !/\b(mg2|motoboy|outdoor|worldlab)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(funcionamento|como\s+funciona|como\s+(voc[eê]|tu)\s+funciona|arquitectura|arquitetura)\b/.test(
       t
     ) &&
     /\b(voc[eê]|tu|ceo|pr[oó]prio\s+sistema|sistema\s+ceo)\b/.test(t) &&

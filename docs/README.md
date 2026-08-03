@@ -114,6 +114,8 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-025-objetivo-conversacional.md`](architecture/ARQ-025-objetivo-conversacional.md) | **Em análise v0.1** — Objetivo Conversacional / Goal Tracking; CAP-07; REQ-064 / IMP-064 |
 | [`architecture/ARQ-027-tempo-resposta-proporcional-complexidade.md`](architecture/ARQ-027-tempo-resposta-proporcional-complexidade.md) | **Em análise v0.1** — Tempo ∝ complexidade; CAP-07; REQ-066 / IMP-066 |
 | [`architecture/ARQ-028-dossier-institucional-curado.md`](architecture/ARQ-028-dossier-institucional-curado.md) | **Em análise v0.1** — Dossier Institucional Curado (DIC); CAP-07; REQ-067 → IMP-067 |
+| [`architecture/ARQ-029-modo-ceo-ouvindo.md`](architecture/ARQ-029-modo-ceo-ouvindo.md) | **Homologada** — Modo CEO Ouvindo; CAP-07; REQ-068 → IMP-068 |
+| [`implementation/IMP-068-modo-ceo-ouvindo.md`](implementation/IMP-068-modo-ceo-ouvindo.md) | **Implementada** — MVP CEO Ouvindo (pronta para homologação) |
 | [`implementation/IMP-067-dossier-institucional-curado.md`](implementation/IMP-067-dossier-institucional-curado.md) | **Implementada** — DIC-001 + injecção path meta; CT-DIC01…08; pronta para homologação |
 | [`institution/DIC-001.md`](institution/DIC-001.md) | **DIC-001 v1.0** — Dossier Institucional Curado (consumo; subordinado a /docs) |
 | [`implementation/IMP-066-tempo-resposta-proporcional-complexidade.md`](implementation/IMP-066-tempo-resposta-proporcional-complexidade.md) | **Implementada** — roteamento instantaneo/leve/moderado/completa |
@@ -142,6 +144,8 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`analysis/ANL-009-objetivo-conversacional-goal-tracking.md`](analysis/ANL-009-objetivo-conversacional-goal-tracking.md) | **Em análise** — ANL Objetivo Conversacional / Goal Tracking (4ª frente EIC CSC / CAP-07) |
 | [`analysis/ANL-010-validador-contexto-ativo.md`](analysis/ANL-010-validador-contexto-ativo.md) | **Em análise** — ANL Validador de Contexto Ativo / VCA (pré-cadeia EIC / CAP-07) |
 | [`analysis/ANL-011-conhecimento-institucional-do-ceo.md`](analysis/ANL-011-conhecimento-institucional-do-ceo.md) | **Em análise** — ANL Conhecimento Institucional do CEO (CAP-04/07/01; prepara ARQ do DIC) |
+| [`analysis/ANL-012-arquitetura-modo-ceo-ouvindo.md`](analysis/ANL-012-arquitetura-modo-ceo-ouvindo.md) | **Homologada** — ANL Arquitectura do Modo «CEO Ouvindo» (CAP-07 / EIC; voz como I/O) → REQ-068 |
+| [`requirements/REQ-068-modo-ceo-ouvindo.md`](requirements/REQ-068-modo-ceo-ouvindo.md) | **Homologada v0.1** — Modo CEO Ouvindo; CAP-07; ANL-012 → ARQ-029 → IMP-068 |
 | [`requirements/REQ-067-dossier-institucional-curado.md`](requirements/REQ-067-dossier-institucional-curado.md) | **Em análise v0.1** — Dossier Institucional Curado (DIC); CAP-07; ANL-011 → ARQ-028 / IMP-067 |
 | [`requirements/REQ-066-tempo-resposta-proporcional-complexidade.md`](requirements/REQ-066-tempo-resposta-proporcional-complexidade.md) | **Em análise v0.1** — Tempo de resposta ∝ complexidade; CAP-07 → ARQ-027 / IMP-066 |
 | [`requirements/REQ-065-validador-contexto-ativo.md`](requirements/REQ-065-validador-contexto-ativo.md) | **Em análise v0.1** — Validador de Contexto Ativo; CAP-07; ANL-010 → ARQ-026 / IMP-065 |

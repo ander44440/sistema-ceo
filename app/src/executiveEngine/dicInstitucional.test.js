@@ -57,7 +57,7 @@ describe("IMP-067 DIC", () => {
     assert.doesNotMatch(t, /\bNCS\b.*schema|\/api\/ceo/i);
   });
 
-  test("CT-DIC02: deveInjectarDic — papel / meta / VCA metaconversa", () => {
+  test("CT-DIC02: deveInjectarDic — papel / meta / VCA / léxico institucional expandido", () => {
     assert.equal(deveInjectarDic({ texto: "Qual é o seu papel?" }), true);
     assert.equal(
       deveInjectarDic({
@@ -73,6 +73,22 @@ describe("IMP-067 DIC", () => {
       }),
       true
     );
+    for (const texto of [
+      "Qual é o seu propósito?",
+      "Qual a sua identidade?",
+      "O que é o Sistema CEO?",
+      "Como funciona o Sistema CEO?",
+      "O que é a EIC?",
+      "Quais são os seus limites?",
+      "O que você não faz?",
+      "Como funciona o Classificador de Intenção?",
+      "O que é o Gate de Execução?",
+      "Para que você existe?",
+      "Qual a natureza do CEO?",
+      "Explique o mapa divulgável do Sistema CEO"
+    ]) {
+      assert.equal(deveInjectarDic({ texto }), true, texto);
+    }
   });
 
   test("CT-DIC03: NÃO injecta em conhecimento geral / retoma projecto", () => {
@@ -159,6 +175,7 @@ describe("IMP-067 DIC", () => {
   test("CT-DIC08: mapa divulgável sem APIs/prompts", () => {
     const t = obterDicVigente();
     assert.match(t, /Classificador|Gate|Job|Fila/i);
+    assert.match(t, /\bEIC\b/);
     assert.doesNotMatch(t, /CEO_LLM_API_KEY|system\[0\]|criarChamarLlmCeo/);
   });
 });
