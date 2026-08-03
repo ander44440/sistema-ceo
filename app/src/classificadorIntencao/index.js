@@ -31,6 +31,7 @@ export {
   ehConhecimentoGeralE22,
   ehDeliberacaoProjetoE22,
   ehAutoexplicacaoInstitucionalE23,
+  ehMetaModoConversacional,
   temContextoProjetoE22,
   normalizarTexto
 } from "./regras.js";

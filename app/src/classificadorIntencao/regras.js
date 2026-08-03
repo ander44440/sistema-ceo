@@ -148,6 +148,9 @@ export function ehAutoexplicacaoInstitucionalE23(t) {
     return true;
   }
 
+  // Meta-modo conversacional — como o CEO interpreta o utilizador (não identidade genérica)
+  if (ehMetaModoConversacional(t)) return true;
+
   // Funcionamento / arquitectura do próprio sistema CEO
   if (
     /\b(funcionamento|como\s+(voc[eê]|tu)\s+funciona|arquitectura|arquitetura)\b/.test(
@@ -155,6 +158,94 @@ export function ehAutoexplicacaoInstitucionalE23(t) {
     ) &&
     /\b(voc[eê]|tu|ceo|pr[oó]prio\s+sistema|sistema\s+ceo)\b/.test(t) &&
     !/\b(mg2|motoboy|outdoor|worldlab)\b/.test(t)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Perguntas sobre o *modo* de conversar do CEO (reflexão vs decisão, mudança de assunto,
+ * contexto implícito, quando perguntar, projecto vs curiosidade).
+ * @param {string} t
+ */
+export function ehMetaModoConversacional(t) {
+  if (!t) return false;
+
+  // Reflexão vs expectativa de decisão
+  if (
+    /\b(refletindo|reflex[aã]o)\b/.test(t) &&
+    /\b(decis[aã]o|decidir|esper[oa])\b/.test(t)
+  ) {
+    return true;
+  }
+
+  // Mudança de assunto / o que faz o CEO
+  if (
+    /\b(mudar|mude|muda)\b/.test(t) &&
+    /\bassunto\b/.test(t) &&
+    /\b(conversa|meio)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bmudar\b.*\bassunto\b/.test(t) &&
+    /\bo\s+que\s+(voc[eê]|tu)\s+faz\b/.test(t)
+  ) {
+    return true;
+  }
+
+  // Explicar tudo vs descobrir contexto
+  if (
+    /\b(explique|explicar|explique\s+tudo)\b/.test(t) &&
+    /\b(descobrir|contexto|sozinho)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bprefere\b/.test(t) &&
+    /\b(explique|explicar)\b/.test(t) &&
+    /\b(contexto|descobrir)\b/.test(t)
+  ) {
+    return true;
+  }
+
+  // «vamos continuar» — sabe do que se fala?
+  if (
+    /\bvamos\s+continuar\b/.test(t) &&
+    /\b(sabe|sabes|falando|assunto|contexto)\b/.test(t)
+  ) {
+    return true;
+  }
+
+  // Quando perguntar vs responder
+  if (
+    /\b(pergunta|perguntar)\b/.test(t) &&
+    /\b(responder|resposta)\b/.test(t) &&
+    /\b(momento|decide|em\s+vez|diretamente)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bem\s+que\s+momento\b/.test(t) &&
+    /\b(voc[eê]|tu)\b/.test(t) &&
+    /\b(pergunta|perguntar)\b/.test(t)
+  ) {
+    return true;
+  }
+
+  // Projecto vs curiosidade
+  if (
+    /\b(proje[tc]o|projeto)\b/.test(t) &&
+    /\bcuriosidade\b/.test(t) &&
+    /\b(decide|decidir|como\s+(voc[eê]|tu))\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\bcomo\s+(voc[eê]|tu)\s+decide\b/.test(t) &&
+    /\b(pergunta|proje[tc]o|projeto|curiosidade)\b/.test(t)
   ) {
     return true;
   }
