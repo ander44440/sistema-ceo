@@ -25,6 +25,7 @@ export {
   desambiguarJobs,
   calcularConfianca,
   resolverEmpates,
+  aplicarDesambiguacaoHistorico,
   ehIntencaoExecutivaE21,
   ehPerguntaDeliberativa,
   ehConhecimentoGeralE22,
@@ -33,6 +34,69 @@ export {
   temContextoProjetoE22,
   normalizarTexto
 } from "./regras.js";
+
+export {
+  seleccionarHistoricoRecente,
+  historicoTemReferenciaProjeto,
+  mensagemEhDeixisOuFollowUp,
+  truncarTextoHistorico,
+  JANELA_MAX_MSGS,
+  CAP_CHARS_MSG,
+  CAP_CHARS_TOTAL
+} from "./historicoRecente.js";
+
+export {
+  resolverReferencias,
+  mensagemPedeResolucaoReferencia,
+  montarPerguntaCurtaReferente,
+  deduplicarReferentes,
+  LIMIAR_REFERENTE,
+  MARGEM_REFERENTE,
+  LEXICO_TOPICOS
+} from "./resolverReferencias.js";
+
+export {
+  gestorTopicos,
+  criarTopico,
+  extrairAncorasMensagem,
+  trimPausas,
+  aplicarShiftEstado,
+  montarPerguntaCurtaTopico,
+  montarClarificacaoGateShift,
+  familiaDeAncora,
+  LIMIAR_SHIFT,
+  MARGEM_TOPICO,
+  MAX_PAUSAS
+} from "./gestorTopicos.js";
+
+export {
+  GESTOR_TOPICOS_ATIVO,
+  definirGestorTopicosAtivo,
+  obterEstadoTopicosSessao,
+  aplicarResultadoGestaoTopicos,
+  definirEstadoTopicosSessao,
+  resetEstadoTopicosSessao
+} from "./topicosSessao.js";
+
+export {
+  gestorObjectivo,
+  criarObjectivo,
+  extrairEnunciadoAposMarcador,
+  enunciadosCompativeis,
+  montarPerguntaCurtaObjectivo,
+  montarClarificacaoGateObjectivo,
+  LIMIAR_OBJECTIVO,
+  MARGEM_OBJECTIVO
+} from "./gestorObjectivo.js";
+
+export {
+  GESTOR_OBJECTIVO_ATIVO,
+  definirGestorObjectivoAtivo,
+  obterEstadoObjectivoSessao,
+  aplicarResultadoGestaoObjectivo,
+  definirEstadoObjectivoSessao,
+  resetEstadoObjectivoSessao
+} from "./objectivoSessao.js";
 
 export {
   encaminharPorClasse,

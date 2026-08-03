@@ -36,6 +36,71 @@ test("E4-CA3: classificarIntencao usa Classificador canónico (origem)", () => {
   assert.equal(i.classificacao?.destino, "resposta_leve");
 });
 
+test("EIC-V1: classificarIntencao reutiliza saidaPrevia (sem reclassificar)", () => {
+  const rota = primeiroPassoClassificar("Onde estamos no outdoor?", {
+    frenteActiva: true
+  });
+  const i = classificarIntencao("Onde estamos no outdoor?", rota.classificacao);
+  assert.equal(i.classificacao, rota.classificacao);
+  assert.equal(i.classe, rota.classificacao.classe);
+  assert.equal(i.confianca, rota.classificacao.confianca);
+  assert.equal(i.origem, "classificador_canonico");
+});
+
+test("EIC-V1: Núcleo passa classificacao única a classificarIntencao", () => {
+  const src = readFileSync(join(rootSrc, "executiveEngine/index.js"), "utf8");
+  assert.match(
+    src,
+    /classificarIntencao\(\s*texto\s*,\s*classificacao\s*\)/
+  );
+  assert.doesNotMatch(
+    src,
+    /const intencao = classificarIntencao\(\s*texto\s*\)\s*;/
+  );
+});
+
+/** SC-01…05 — EIC 05_TESTES_CONVERSACIONAIS (T-CL) sobre Classificador homologado */
+test("SC-01: pergunta genérica ADR → C1; sem Job", () => {
+  const s = classificar("O que é um ADR?");
+  assert.equal(s.classe, "conhecimento_geral");
+  assert.equal(s.permiteJob, false);
+  assert.equal(s.destino, "resposta_leve");
+});
+
+test("SC-02: onde estamos no outdoor? + frente → C2; sem Job automático", () => {
+  const s = classificar("onde estamos no outdoor?", { frenteActiva: true });
+  assert.equal(s.classe, "conversa_projeto");
+  assert.equal(s.permiteJob, false);
+  assert.notEqual(s.destino, "motor_execucao");
+});
+
+test("SC-03: implementa o outdoor lateral → C3 → Motor (não Job directo)", () => {
+  const rota = primeiroPassoClassificar("implementa o outdoor lateral");
+  assert.equal(rota.classificacao.classe, "trabalho_executivo");
+  assert.equal(rota.destino, "motor_execucao");
+  assert.equal(rota.classificacao.permiteJob, true);
+});
+
+test("SC-04: lista os jobs → C4", () => {
+  const s = classificar("lista os jobs");
+  assert.equal(s.classe, "comando_operacional");
+  assert.equal(s.destino, "capacidade_operacional");
+});
+
+test("SC-05: mensagem ambígua → não inventar C3", () => {
+  const s = classificar("resolve isso");
+  assert.ok(
+    s.precisaClarificacao === true ||
+      s.confianca < 0.55 ||
+      s.classe !== "trabalho_executivo"
+  );
+  assert.equal(
+    s.permiteJob && s.classe === "trabalho_executivo",
+    false,
+    "ambíguo não deve abrir C3+Job"
+  );
+});
+
 test("E4-CA4: Classificador / encaminhador / integração sem @cursor/sdk", () => {
   for (const rel of [
     "classificadorIntencao/regras.js",

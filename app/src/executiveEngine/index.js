@@ -25,6 +25,20 @@ import { consultarCto as consultarCtoApi, novoConsultaId } from "../ctoConnector
 import {
   primeiroPassoClassificar
 } from "../classificadorIntencao/integracaoNucleo.js";
+import { seleccionarHistoricoRecente } from "../classificadorIntencao/historicoRecente.js";
+import { resolverReferencias } from "../classificadorIntencao/resolverReferencias.js";
+import { gestorTopicos } from "../classificadorIntencao/gestorTopicos.js";
+import {
+  GESTOR_TOPICOS_ATIVO,
+  obterEstadoTopicosSessao,
+  aplicarResultadoGestaoTopicos
+} from "../classificadorIntencao/topicosSessao.js";
+import { gestorObjectivo } from "../classificadorIntencao/gestorObjectivo.js";
+import {
+  GESTOR_OBJECTIVO_ATIVO,
+  obterEstadoObjectivoSessao,
+  aplicarResultadoGestaoObjectivo
+} from "../classificadorIntencao/objectivoSessao.js";
 import { executarPorDestino } from "../classificadorIntencao/destinos.js";
 import {
   obterStoreContinuidadePadrao,
@@ -201,22 +215,118 @@ export const executiveEngine = {
 
     if (interceptacao === "clarificacao") {
       const outClar = responderClarificacaoGate(store, texto);
+      let mensagemClar = outClar.mensagem;
+      let modoClar = outClar.modo;
+      /** @type {object} */
+      let dadosTopGate = {};
+
+      // IMP-063 RF10 / IMP-064 RF12: Gate pendente + shift/goal → clarificação combinada
+      if (GESTOR_TOPICOS_ATIVO || GESTOR_OBJECTIVO_ATIVO) {
+        const historicoRecenteGate = seleccionarHistoricoRecente(historico, texto);
+        const estadoTop = obterEstadoTopicosSessao();
+        const resultadoTopGate = GESTOR_TOPICOS_ATIVO
+          ? gestorTopicos({
+              mensagem: texto,
+              historicoRecente: historicoRecenteGate,
+              topicoActivo: estadoTop.topicoActivo,
+              pausas: estadoTop.pausas,
+              gatePendente: true
+            })
+          : null;
+        const estadoObj = obterEstadoObjectivoSessao();
+        const resultadoObjGate = GESTOR_OBJECTIVO_ATIVO
+          ? gestorObjectivo({
+              mensagem: texto,
+              historicoRecente: historicoRecenteGate,
+              objetivoActivo: estadoObj.objetivoActivo,
+              objetivoAnterior: estadoObj.objetivoAnterior,
+              topicoActivo: resultadoTopGate?.topicoActivo || estadoTop.topicoActivo,
+              gatePendente: true
+            })
+          : null;
+
+        if (
+          resultadoObjGate?.clarificacaoGateObjectivo ||
+          resultadoObjGate?.evento === "mudar" ||
+          resultadoObjGate?.evento === "estabelecer"
+        ) {
+          aplicarResultadoGestaoObjectivo(resultadoObjGate);
+          if (
+            resultadoTopGate &&
+            (resultadoTopGate.evento === "shift" ||
+              resultadoTopGate.evento === "retomar")
+          ) {
+            aplicarResultadoGestaoTopicos(resultadoTopGate);
+          }
+          mensagemClar =
+            resultadoObjGate.clarificacaoGateObjectivo || mensagemClar;
+          modoClar = "clarificacao_gate_objectivo";
+          dadosTopGate = {
+            gestaoObjectivos: {
+              evento: resultadoObjGate.evento,
+              objetivoActivo: resultadoObjGate.objetivoActivo,
+              objetivoAnterior: resultadoObjGate.objetivoAnterior,
+              razaoObjectivo: resultadoObjGate.razaoObjectivo
+            },
+            ...(resultadoTopGate
+              ? {
+                  gestaoTopicos: {
+                    evento: resultadoTopGate.evento,
+                    topicoActivo: resultadoTopGate.topicoActivo,
+                    pausas: resultadoTopGate.pausas,
+                    razaoTopico: resultadoTopGate.razaoTopico
+                  }
+                }
+              : {}),
+            motorAcionado: false,
+            mreInvocado: false
+          };
+        } else if (
+          resultadoTopGate &&
+          (resultadoTopGate.clarificacaoGateShift ||
+            resultadoTopGate.evento === "shift" ||
+            resultadoTopGate.evento === "retomar")
+        ) {
+          aplicarResultadoGestaoTopicos(resultadoTopGate);
+          mensagemClar =
+            resultadoTopGate.clarificacaoGateShift ||
+            mensagemClar;
+          modoClar = "clarificacao_gate_shift";
+          dadosTopGate = {
+            gestaoTopicos: {
+              evento: resultadoTopGate.evento,
+              topicoActivo: resultadoTopGate.topicoActivo,
+              pausas: resultadoTopGate.pausas,
+              razaoTopico: resultadoTopGate.razaoTopico
+            },
+            motorAcionado: false,
+            mreInvocado: false
+          };
+        }
+      }
+
       const respostaClar = {
         ok: true,
-        mensagem: outClar.mensagem,
+        mensagem: mensagemClar,
         intencao: outClar.intencao,
         capacidade: null,
         dados: {
           ...(outClar.dados || {}),
           classificacao: null,
           encaminhamento: {
-            destino: "continuidade_gate_clarificacao",
+            destino:
+              modoClar === "clarificacao_gate_objectivo"
+                ? "clarificacao_gate_objectivo"
+                : modoClar === "clarificacao_gate_shift"
+                  ? "clarificacao_gate_shift"
+                  : "continuidade_gate_clarificacao",
             ok: true,
             idClasse: null
-          }
+          },
+          ...dadosTopGate
         },
         origem: "executiveEngine",
-        modo: outClar.modo
+        modo: modoClar
       };
       const memoriaClar = atualizarAposInstrucao({
         instrucao: texto,
@@ -231,11 +341,290 @@ export const executiveEngine = {
     }
 
     const coa = obterCoaAtivo();
-    const rota = primeiroPassoClassificar(texto, {
-      frenteActiva: Boolean(coa)
+    // EIC V1 + IMP-061: um único passo de classificação canónica.
+    // IMP-063: gestor de tópicos (após janela) — não decide classe.
+    // IMP-062: resolvedor auxiliar (referente) — não decide classe.
+    // IMP-064: gestor de objectivos (após 061→063→062) — não decide classe.
+    const historicoRecente = seleccionarHistoricoRecente(historico, texto);
+    const ctxGateActivo =
+      typeof store.obterContextoActivo === "function"
+        ? store.obterContextoActivo()
+        : null;
+    const gatePendente = Boolean(
+      ctxGateActivo &&
+        (ctxGateActivo.solicitacaoResumo || ctxGateActivo.estado === "pendente")
+    );
+
+    let resultadoTop = null;
+    if (GESTOR_TOPICOS_ATIVO) {
+      const estadoTop = obterEstadoTopicosSessao();
+      resultadoTop = gestorTopicos({
+        mensagem: texto,
+        historicoRecente,
+        topicoActivo: estadoTop.topicoActivo,
+        pausas: estadoTop.pausas,
+        frenteActiva: Boolean(coa),
+        coa: coa
+          ? { id: coa.id, nome: coa.nome || coa.titulo }
+          : null,
+        gatePendente
+      });
+      aplicarResultadoGestaoTopicos(resultadoTop);
+    }
+
+    const estadoObjPre = obterEstadoObjectivoSessao();
+    const topicoParaRef =
+      resultadoTop?.topicoActivo ||
+      (estadoObjPre.objetivoActivo?.ancora
+        ? {
+            ancora: estadoObjPre.objetivoActivo.ancora,
+            familia: estadoObjPre.objetivoActivo.ancora
+          }
+        : null);
+    const resultadoRef = resolverReferencias({
+      mensagem: texto,
+      historicoRecente,
+      frenteActiva: Boolean(coa),
+      coa: coa
+        ? { id: coa.id, nome: coa.nome || coa.titulo }
+        : null,
+      gateResumo:
+        ctxGateActivo && ctxGateActivo.solicitacaoResumo
+          ? String(ctxGateActivo.solicitacaoResumo)
+          : null,
+      topicoActivo: topicoParaRef
     });
+
+    let resultadoObj = null;
+    if (GESTOR_OBJECTIVO_ATIVO) {
+      resultadoObj = gestorObjectivo({
+        mensagem: texto,
+        historicoRecente,
+        objetivoActivo: estadoObjPre.objetivoActivo,
+        objetivoAnterior: estadoObjPre.objetivoAnterior,
+        topicoActivo: resultadoTop?.topicoActivo || null,
+        referente: resultadoRef,
+        frenteActiva: Boolean(coa),
+        coa: coa
+          ? { id: coa.id, nome: coa.nome || coa.titulo }
+          : null,
+        gatePendente
+      });
+      aplicarResultadoGestaoObjectivo(resultadoObj);
+    }
+
+    const objetivoParaContexto =
+      resultadoObj?.objetivoActivo || estadoObjPre.objetivoActivo || null;
+
+    const contextoClassificacao = {
+      frenteActiva: Boolean(coa),
+      ...(historicoRecente.length > 0 ? { historicoRecente } : {}),
+      // IMP-064: contexto de objectivo — Classificador permanece único decisor;
+      // regras V1 não usam este campo para pontuar C3.
+      ...(objetivoParaContexto
+        ? { objetivoConversacional: objetivoParaContexto }
+        : {})
+    };
+    const rota = primeiroPassoClassificar(texto, contextoClassificacao);
     const classificacao = rota.classificacao;
-    const intencao = classificarIntencao(texto);
+    const intencao = classificarIntencao(texto, classificacao);
+
+    const metaTopicos = resultadoTop
+      ? {
+          gestaoTopicos: {
+            evento: resultadoTop.evento,
+            topicoActivo: resultadoTop.topicoActivo,
+            pausas: resultadoTop.pausas,
+            razaoTopico: resultadoTop.razaoTopico
+          }
+        }
+      : {};
+
+    const metaObjectivos = resultadoObj
+      ? {
+          gestaoObjectivos: {
+            evento: resultadoObj.evento,
+            objetivoActivo: resultadoObj.objetivoActivo,
+            objetivoAnterior: resultadoObj.objetivoAnterior,
+            razaoObjectivo: resultadoObj.razaoObjectivo
+          }
+        }
+      : {};
+
+    // Prioridade (ARQ-025): Gate×objectivo > ambiguo_objetivo > Gate×shift > tópico > referente
+    if (resultadoObj?.clarificacaoGateObjectivo) {
+      const respostaGo = {
+        ok: true,
+        mensagem: resultadoObj.clarificacaoGateObjectivo,
+        intencao,
+        capacidade: null,
+        dados: {
+          classificacao,
+          encaminhamento: {
+            destino: "clarificacao_gate_objectivo",
+            ok: true,
+            idClasse: rota.rota?.id || null
+          },
+          ...metaObjectivos,
+          ...metaTopicos,
+          resolucaoReferencia: resultadoRef,
+          motorAcionado: false,
+          mreInvocado: false
+        },
+        origem: "executiveEngine",
+        modo: "clarificacao_gate_objectivo"
+      };
+      const memoriaGo = atualizarAposInstrucao({
+        instrucao: texto,
+        intencao: respostaGo.intencao,
+        capacidade: null,
+        ok: true,
+        mensagem: respostaGo.mensagem,
+        dados: respostaGo.dados
+      });
+      respostaGo.dados = { ...respostaGo.dados, memoria: memoriaGo };
+      return respostaGo;
+    }
+
+    if (
+      resultadoObj?.evento === "ambiguo_objetivo" &&
+      resultadoObj.perguntaCurta
+    ) {
+      const respostaObj = {
+        ok: true,
+        mensagem: resultadoObj.perguntaCurta,
+        intencao,
+        capacidade: null,
+        dados: {
+          classificacao,
+          encaminhamento: {
+            destino: "clarificacao_objectivo",
+            ok: true,
+            idClasse: rota.rota?.id || null
+          },
+          ...metaObjectivos,
+          ...metaTopicos,
+          resolucaoReferencia: resultadoRef,
+          motorAcionado: false,
+          mreInvocado: false
+        },
+        origem: "executiveEngine",
+        modo: "clarificacao_objectivo"
+      };
+      const memoriaObj = atualizarAposInstrucao({
+        instrucao: texto,
+        intencao: respostaObj.intencao,
+        capacidade: null,
+        ok: true,
+        mensagem: respostaObj.mensagem,
+        dados: respostaObj.dados
+      });
+      respostaObj.dados = { ...respostaObj.dados, memoria: memoriaObj };
+      return respostaObj;
+    }
+
+    if (resultadoTop?.clarificacaoGateShift) {
+      const respostaGs = {
+        ok: true,
+        mensagem: resultadoTop.clarificacaoGateShift,
+        intencao,
+        capacidade: null,
+        dados: {
+          classificacao,
+          encaminhamento: {
+            destino: "clarificacao_gate_shift",
+            ok: true,
+            idClasse: rota.rota?.id || null
+          },
+          ...metaObjectivos,
+          ...metaTopicos,
+          resolucaoReferencia: resultadoRef,
+          motorAcionado: false,
+          mreInvocado: false
+        },
+        origem: "executiveEngine",
+        modo: "clarificacao_gate_shift"
+      };
+      const memoriaGs = atualizarAposInstrucao({
+        instrucao: texto,
+        intencao: respostaGs.intencao,
+        capacidade: null,
+        ok: true,
+        mensagem: respostaGs.mensagem,
+        dados: respostaGs.dados
+      });
+      respostaGs.dados = { ...respostaGs.dados, memoria: memoriaGs };
+      return respostaGs;
+    }
+
+    if (resultadoTop?.evento === "ambiguo_topico" && resultadoTop.perguntaCurta) {
+      const respostaTop = {
+        ok: true,
+        mensagem: resultadoTop.perguntaCurta,
+        intencao,
+        capacidade: null,
+        dados: {
+          classificacao,
+          encaminhamento: {
+            destino: "clarificacao_topico",
+            ok: true,
+            idClasse: rota.rota?.id || null
+          },
+          ...metaObjectivos,
+          ...metaTopicos,
+          resolucaoReferencia: resultadoRef,
+          motorAcionado: false,
+          mreInvocado: false
+        },
+        origem: "executiveEngine",
+        modo: "clarificacao_topico"
+      };
+      const memoriaTop = atualizarAposInstrucao({
+        instrucao: texto,
+        intencao: respostaTop.intencao,
+        capacidade: null,
+        ok: true,
+        mensagem: respostaTop.mensagem,
+        dados: respostaTop.dados
+      });
+      respostaTop.dados = { ...respostaTop.dados, memoria: memoriaTop };
+      return respostaTop;
+    }
+
+    // IMP-062 RF7: ambiguidade de referente → pergunta curta (sem Job / sem C3)
+    if (resultadoRef.estado === "ambiguo") {
+      const respostaAmb = {
+        ok: true,
+        mensagem: resultadoRef.perguntaCurta,
+        intencao,
+        capacidade: null,
+        dados: {
+          classificacao,
+          encaminhamento: {
+            destino: "clarificacao_referente",
+            ok: true,
+            idClasse: rota.rota?.id || null
+          },
+          ...metaObjectivos,
+          ...metaTopicos,
+          resolucaoReferencia: resultadoRef,
+          motorAcionado: false,
+          mreInvocado: false
+        },
+        origem: "executiveEngine",
+        modo: "clarificacao_referente"
+      };
+      const memoriaAmb = atualizarAposInstrucao({
+        instrucao: texto,
+        intencao: respostaAmb.intencao,
+        capacidade: null,
+        ok: true,
+        mensagem: respostaAmb.mensagem,
+        dados: respostaAmb.dados
+      });
+      respostaAmb.dados = { ...respostaAmb.dados, memoria: memoriaAmb };
+      return respostaAmb;
+    }
 
     // IMP-059 E3/E4: Continuidade já foi tratada acima — consulta só no caminho deliberativo/executivo
     const leitoresConsciencia =
@@ -249,7 +638,92 @@ export const executiveEngine = {
       agora: deps.agoraConsciencia
     });
     const metaConsciencia = metadadoConscienciaParaDados(consultaConsciencia);
-    const lastroConsciencia = consultaConsciencia.lastroParaNucleo;
+    let lastroConsciencia = consultaConsciencia.lastroParaNucleo;
+
+    // IMP-062: injectar referente no lastro C2/C1 (não altera pontuação C3 nem Jobs)
+    if (
+      resultadoRef.estado === "resolvido" &&
+      (rota.destino === "nucleo_mre" || rota.destino === "resposta_leve")
+    ) {
+      const ref = resultadoRef.referente;
+      const facto = `Referente conversacional: «${ref.ancora}» (${ref.tipo})`;
+      if (lastroConsciencia && typeof lastroConsciencia === "object") {
+        lastroConsciencia = {
+          ...lastroConsciencia,
+          referenteConversacional: ref,
+          factosOficiais: [
+            ...(Array.isArray(lastroConsciencia.factosOficiais)
+              ? lastroConsciencia.factosOficiais
+              : []),
+            facto
+          ]
+        };
+      } else {
+        lastroConsciencia = {
+          temContextoRelevante: true,
+          referenteConversacional: ref,
+          factosOficiais: [facto]
+        };
+      }
+    }
+
+    // IMP-063: lastro temático C2/C1 (não altera C3/Jobs)
+    if (
+      resultadoTop?.topicoActivo &&
+      (rota.destino === "nucleo_mre" || rota.destino === "resposta_leve")
+    ) {
+      const top = resultadoTop.topicoActivo;
+      const factoTop = `Tópico activo: «${top.ancora}» (${resultadoTop.evento})`;
+      if (lastroConsciencia && typeof lastroConsciencia === "object") {
+        lastroConsciencia = {
+          ...lastroConsciencia,
+          topicoConversacional: top,
+          eventoTopico: resultadoTop.evento,
+          factosOficiais: [
+            ...(Array.isArray(lastroConsciencia.factosOficiais)
+              ? lastroConsciencia.factosOficiais
+              : []),
+            factoTop
+          ]
+        };
+      } else {
+        lastroConsciencia = {
+          temContextoRelevante: true,
+          topicoConversacional: top,
+          eventoTopico: resultadoTop.evento,
+          factosOficiais: [factoTop]
+        };
+      }
+    }
+
+    // IMP-064: lastro de objectivo C2/C1 (não altera C3/Jobs)
+    if (
+      resultadoObj?.objetivoActivo &&
+      (rota.destino === "nucleo_mre" || rota.destino === "resposta_leve")
+    ) {
+      const obj = resultadoObj.objetivoActivo;
+      const factoObj = `Objectivo activo: «${obj.enunciado}» (${resultadoObj.evento})`;
+      if (lastroConsciencia && typeof lastroConsciencia === "object") {
+        lastroConsciencia = {
+          ...lastroConsciencia,
+          objetivoConversacional: obj,
+          eventoObjectivo: resultadoObj.evento,
+          factosOficiais: [
+            ...(Array.isArray(lastroConsciencia.factosOficiais)
+              ? lastroConsciencia.factosOficiais
+              : []),
+            factoObj
+          ]
+        };
+      } else {
+        lastroConsciencia = {
+          temContextoRelevante: true,
+          objetivoConversacional: obj,
+          eventoObjectivo: resultadoObj.evento,
+          factosOficiais: [factoObj]
+        };
+      }
+    }
 
     const anexarClassificacao = (resposta) => {
       const baseDados =
@@ -263,6 +737,15 @@ export const executiveEngine = {
         ok: rota.ok,
         idClasse: rota.rota?.id || null
       };
+      if (resultadoTop) {
+        baseDados.gestaoTopicos = metaTopicos.gestaoTopicos;
+      }
+      if (resultadoObj) {
+        baseDados.gestaoObjectivos = metaObjectivos.gestaoObjectivos;
+      }
+      if (resultadoRef && resultadoRef.estado !== "nenhum") {
+        baseDados.resolucaoReferencia = resultadoRef;
+      }
       // Metadado só quando a consulta obrigatória correu (C2/C3) — C1/C4 intactos
       if (consultaConsciencia.consultado) {
         baseDados.conscienciaOperacional = metaConsciencia;

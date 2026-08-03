@@ -1,6 +1,6 @@
 # Classificador de Intenção
 
-**IMP-057** · **REQ-057** · **ARQ-018**  
+**IMP-057** · **IMP-061** · **REQ-057** · **REQ-061** · **ARQ-018** · **ARQ-022**  
 Destino C3 → Motor de Execução (**ARQ-017** / **REQ-056** / IMP-056).
 
 ## O que é
@@ -16,18 +16,23 @@ Primeiro passo obrigatório do Núcleo Executivo: classifica **toda** mensagem d
 
 **Limiar de confiança V1:** `0,55` (`LIMIAR_CONFIANCA`). Abaixo → clarificação; nunca C3+Job.
 
+**Histórico recente (IMP-061):** opcional no contexto (`historicoRecente`, janela 4 / 200 / 800). Só desambigua **C1↔C2**; **nunca** força C3. Ausência = comportamento IMP-057.
+
+**Referências (IMP-062):** módulo auxiliar `resolverReferencias` — resolve deixis para `ReferenteResolvido` ou ambiguidade (pergunta curta); **não** decide classe; Classificador permanece único decisor.
+
 ## Portas / módulos
 
 | Módulo | Responsabilidade |
 |--------|------------------|
 | `dominio.js` | Enum, contrato RF7, limiar, flags |
-| `lexicon.js` / `regras.js` | Classificação pura (sem I/O) |
+| `lexicon.js` / `regras.js` | Classificação pura (sem I/O); S3 histórico |
+| `historicoRecente.js` | Preparador de janela (IMP-061) |
 | `encaminhador.js` | Classe → destino lógico |
 | `integracaoNucleo.js` | Ponte C3 → Motor (anti-«Sugiro») |
 | `destinos.js` | Despacho estrito C1–C4 (IMP-057 E5) |
 | `executiveEngine/classificar.js` | Adapter legado → canónico (**um** limiar) |
 
-Entrypoint de runtime: `executiveEngine.executar` → `primeiroPassoClassificar` → `executarPorDestino`.
+Entrypoint de runtime: `executiveEngine.executar` → Continuidade Gate → `seleccionarHistoricoRecente` → `primeiroPassoClassificar` → `executarPorDestino`.
 
 ## Isolamento (fronteiras)
 

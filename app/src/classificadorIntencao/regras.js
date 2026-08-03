@@ -14,10 +14,16 @@ import {
   LEXICO_VAGO,
   pontuarLexico
 } from "./lexicon.js";
+import {
+  historicoTemReferenciaProjeto,
+  mensagemEhDeixisOuFollowUp
+} from "./historicoRecente.js";
 
 /**
  * @typedef {object} ContextoClassificacao
  * @property {boolean} [frenteActiva] — COA/frente presente (RF9)
+ * @property {ReadonlyArray<{ papel: "usuario"|"ceo", texto: string }>} [historicoRecente] — IMP-061 / REQ-061 (opcional)
+ * @property {object} [objetivoConversacional] — IMP-064 (contexto; não decide classe / não influencia C3)
  */
 
 /**
@@ -430,6 +436,70 @@ export function resolverEmpates(scores, t, ctx = {}) {
 }
 
 /**
+ * S3 — desambiguação C1↔C2 via histórico recente (IMP-061 / ARQ-022).
+ * Nunca promove a C3; nunca altera C4 sólido; ausência de histórico = no-op.
+ *
+ * @param {import("./dominio.js").SaidaClassificador} saida
+ * @param {string} t — texto normalizado
+ * @param {ContextoClassificacao} ctx
+ * @returns {import("./dominio.js").SaidaClassificador}
+ */
+export function aplicarDesambiguacaoHistorico(saida, t, ctx = {}) {
+  const hist = ctx.historicoRecente;
+  if (!Array.isArray(hist) || hist.length === 0) return saida;
+
+  // C3 da mensagem actual — intocável (I-C3 / RF7 / RF9)
+  if (
+    saida.classe === "trabalho_executivo" &&
+    saida.precisaClarificacao !== true
+  ) {
+    return saida;
+  }
+
+  // C4 sólido da mensagem actual — histórico não pontua C4 (RF13)
+  if (
+    saida.classe === "comando_operacional" &&
+    saida.precisaClarificacao !== true &&
+    !abaixoDoLimiar(saida.confianca)
+  ) {
+    return saida;
+  }
+
+  // C2 já acima do limiar — nada a desambiguar
+  if (
+    saida.classe === "conversa_projeto" &&
+    saida.precisaClarificacao !== true &&
+    !abaixoDoLimiar(saida.confianca)
+  ) {
+    return saida;
+  }
+
+  const temProjHist = historicoTemReferenciaProjeto(hist);
+  const temLastro = temProjHist || ctx.frenteActiva === true;
+  if (!temLastro) return saida;
+
+  const deixis = mensagemEhDeixisOuFollowUp(t);
+  const precisaAjuda =
+    saida.precisaClarificacao === true ||
+    abaixoDoLimiar(saida.confianca) ||
+    (saida.classe === "conhecimento_geral" && deixis);
+
+  if (!precisaAjuda) return saida;
+
+  // Só C1↔C2: promover / reforçar C2 (nunca C3)
+  const conf = Math.max(0.62, Number(saida.confianca) || 0);
+  const razao = [
+    "Histórico recente: desambiguação C1↔C2 → C2",
+    saida.razaoCurta
+  ]
+    .filter(Boolean)
+    .join(" — ")
+    .slice(0, 200);
+
+  return montarSaida("conversa_projeto", Math.min(0.93, conf), razao);
+}
+
+/**
  * Classifica intenção (puro) — integra domínio E1 via montarSaida.
  * @param {string} texto
  * @param {ContextoClassificacao} [contexto]
@@ -445,6 +515,7 @@ export function classificar(texto, contexto = {}) {
   }
 
   // Emenda E2.1 — atalho obrigatório (antes de boost de frente activa)
+  // Histórico NÃO entra aqui (ARQ-022 S1)
   if (ehIntencaoExecutivaE21(t)) {
     return montarSaida(
       "trabalho_executivo",
@@ -472,6 +543,7 @@ export function classificar(texto, contexto = {}) {
   }
 
   // Emenda E2.2 — C1 conhecimento seguro (nunca Clarificação)
+  // Histórico NÃO anula C1 seguro (ex.: «O que é um ADR?»)
   if (ehConhecimentoGeralE22(t)) {
     return montarSaida(
       "conhecimento_geral",
@@ -530,11 +602,8 @@ export function classificar(texto, contexto = {}) {
 
   const saida = montarSaida(resolvido.classe, confianca, razaoCurta);
 
-  if (abaixoDoLimiar(saida.confianca) || saida.precisaClarificacao) {
-    return saida;
-  }
-
-  return saida;
+  // S3 — histórico opcional (só C1↔C2)
+  return aplicarDesambiguacaoHistorico(saida, t, contexto);
 }
 
 export { LIMIAR_CONFIANCA, normalizarTexto };

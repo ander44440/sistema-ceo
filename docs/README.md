@@ -108,6 +108,12 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-019-continuidade-do-gate-de-execucao.md`](architecture/ARQ-019-continuidade-do-gate-de-execucao.md) | **Homologada v0.1** — Continuidade do Gate de Execução; retoma pós-decisão humana |
 | [`architecture/ARQ-020-consciencia-operacional.md`](architecture/ARQ-020-consciencia-operacional.md) | **Homologada v0.1** — Consciência Operacional; Estado Executivo Atual antes de C2/C3 |
 | [`architecture/ARQ-021-restauracao-fila-oficial-mvp.md`](architecture/ARQ-021-restauracao-fila-oficial-mvp.md) | **Homologada v0.1** — Restauração da Fila Oficial do MVP; mesma fila produtor/consumidor |
+| [`architecture/ARQ-022-historico-conversacional-classificador.md`](architecture/ARQ-022-historico-conversacional-classificador.md) | **Em análise v0.1** — Histórico Conversacional no Classificador; CAP-07; REQ-061 / IMP-061 |
+| [`architecture/ARQ-023-resolucao-referencias-conversacionais.md`](architecture/ARQ-023-resolucao-referencias-conversacionais.md) | **Em análise v0.1** — Resolução de Referências Conversacionais; CAP-07; REQ-062 / IMP-062 |
+| [`architecture/ARQ-024-gestao-mudanca-de-assunto.md`](architecture/ARQ-024-gestao-mudanca-de-assunto.md) | **Em análise v0.1** — Gestão de Mudança de Assunto; CAP-07; REQ-063 / IMP-063 |
+| [`architecture/ARQ-025-objetivo-conversacional.md`](architecture/ARQ-025-objetivo-conversacional.md) | **Em análise v0.1** — Objetivo Conversacional / Goal Tracking; CAP-07; REQ-064 / IMP-064 |
+| [`implementation/IMP-064-objetivo-conversacional.md`](implementation/IMP-064-objetivo-conversacional.md) | **Homologada** — 4ª frente EIC CSC; CT-G01…14 |
+| [`implementation/IMP-063-gestao-mudanca-de-assunto.md`](implementation/IMP-063-gestao-mudanca-de-assunto.md) | **Homologada** — 3ª frente EIC CSC; CT-T01…13 |
 | [`requirements/REQ-060-restauracao-fila-oficial-mvp.md`](requirements/REQ-060-restauracao-fila-oficial-mvp.md) | **Homologada v0.1** — Restauração da Fila Oficial do MVP; CAP-11; alinhada à ARQ-021 |
 | [`implementation/IMP-060-restauracao-fila-oficial-mvp.md`](implementation/IMP-060-restauracao-fila-oficial-mvp.md) | **Homologada** — frente encerrada 02/08/2026; E1–E6 em produção |
 | [`implementation/evidencias/IMP-060-E1-inventario.md`](implementation/evidencias/IMP-060-E1-inventario.md) | Inventário IMP-060 E1 — pontos `/api/ceo/queue/*` e cutover Railway |
@@ -119,6 +125,16 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`implementation/evidencias/IMP-060-homologacao-producao.md`](implementation/evidencias/IMP-060-homologacao-producao.md) | Homologação em produção IMP-060 — commit `c4abe5a` · Vercel + Railway READY |
 | [`architecture/ARQ-021-fila-oficial-operacao.md`](architecture/ARQ-021-fila-oficial-operacao.md) | Operação mínima fila oficial (ARQ-021 / REQ-060) |
 | [`requirements/REQ-057-classificacao-de-intencao.md`](requirements/REQ-057-classificacao-de-intencao.md) | **Homologada v0.1** — Classificação de Intenção; CAP-07; alinhada à ARQ-018 |
+| [`requirements/REQ-061-historico-conversacional-classificador.md`](requirements/REQ-061-historico-conversacional-classificador.md) | **Em análise v0.1** — Histórico Conversacional no Classificador; CAP-07; ANL-006 / ARQ-018 §5.1 |
+| [`implementation/IMP-061-historico-conversacional-classificador.md`](implementation/IMP-061-historico-conversacional-classificador.md) | **Homologada** — 1ª frente EIC CSC; CT-01…12 |
+| [`analysis/ANL-006-historico-conversacional-classificador.md`](analysis/ANL-006-historico-conversacional-classificador.md) | **Em análise** — ANL Histórico Conversacional no Classificador (prepara REQ-061) |
+| [`analysis/ANL-007-resolucao-referencias-conversacionais.md`](analysis/ANL-007-resolucao-referencias-conversacionais.md) | **Em análise** — ANL Resolução de Referências Conversacionais (próxima frente EIC / CAP-07) |
+| [`analysis/ANL-008-gestao-mudanca-de-assunto.md`](analysis/ANL-008-gestao-mudanca-de-assunto.md) | **Em análise** — ANL Gestão de Mudança de Assunto / Topic Shift (3ª frente EIC CSC / CAP-07) |
+| [`analysis/ANL-009-objetivo-conversacional-goal-tracking.md`](analysis/ANL-009-objetivo-conversacional-goal-tracking.md) | **Em análise** — ANL Objetivo Conversacional / Goal Tracking (4ª frente EIC CSC / CAP-07) |
+| [`requirements/REQ-064-objetivo-conversacional.md`](requirements/REQ-064-objetivo-conversacional.md) | **Em análise v0.1** — Objetivo Conversacional; CAP-07; ANL-009 → ARQ-025 / IMP-064 |
+| [`requirements/REQ-063-gestao-mudanca-de-assunto.md`](requirements/REQ-063-gestao-mudanca-de-assunto.md) | **Em análise v0.1** — Gestão de Mudança de Assunto; CAP-07; ANL-008 → ARQ-024 / IMP-063 |
+| [`requirements/REQ-062-resolucao-referencias-conversacionais.md`](requirements/REQ-062-resolucao-referencias-conversacionais.md) | **Em análise v0.1** — Resolução de Referências Conversacionais; CAP-07; ANL-007 / IMP-061 |
+| [`implementation/IMP-062-resolucao-referencias-conversacionais.md`](implementation/IMP-062-resolucao-referencias-conversacionais.md) | **Homologada** — 2ª frente EIC CSC; CT-R01…12 |
 | [`requirements/REQ-058-continuidade-do-gate-de-execucao.md`](requirements/REQ-058-continuidade-do-gate-de-execucao.md) | **Homologada v0.1** — Continuidade do Gate de Execução; CAP-11; alinhada à ARQ-019 |
 | [`requirements/REQ-059-consciencia-operacional.md`](requirements/REQ-059-consciencia-operacional.md) | **Homologada v0.1** — Consciência Operacional; CAP-01; alinhada à ARQ-020 |
 | [`implementation/IMP-058-continuidade-do-gate-de-execucao.md`](implementation/IMP-058-continuidade-do-gate-de-execucao.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 |

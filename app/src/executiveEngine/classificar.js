@@ -205,11 +205,21 @@ export function mapearCapacidadePorTexto(texto) {
 }
 
 /**
+ * Adapta SaidaClassificador canónica → Intencao legada (capacidade).
+ * Ponto único de classificação: passar `saidaPrevia` do `primeiroPassoClassificar`
+ * para **não** reexecutar `classificar` (EIC V1 — CAP-07 / IMP-057).
+ *
  * @param {string} texto
+ * @param {object|null} [saidaPrevia] — saída já produzida pelo Classificador canónico
  * @returns {Intencao}
  */
-export function classificarIntencao(texto) {
-  const saida = classificarCanonico(texto);
+export function classificarIntencao(texto, saidaPrevia = null) {
+  const saida =
+    saidaPrevia &&
+    typeof saidaPrevia === "object" &&
+    typeof saidaPrevia.classe === "string"
+      ? saidaPrevia
+      : classificarCanonico(texto);
   const idClasse = ID_POR_CLASSE[saida.classe] || "C?";
 
   if (saida.classe === "trabalho_executivo" && !saida.precisaClarificacao) {

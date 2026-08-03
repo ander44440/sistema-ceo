@@ -256,7 +256,7 @@ export async function conduzirTrabalhoExecutivoC3(texto, classificacao, deps = {
 /**
  * Classifica e encaminha (primeiro passo do Núcleo).
  * @param {string} texto
- * @param {{ frenteActiva?: boolean }} [contexto]
+ * @param {import("./regras.js").ContextoClassificacao} [contexto]
  */
 export function primeiroPassoClassificar(texto, contexto = {}) {
   return classificarEEncaminhar(texto, contexto);
