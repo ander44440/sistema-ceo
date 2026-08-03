@@ -4,6 +4,7 @@
  */
 
 import { deliberarComLlm, obterStatusLlm } from "../executiveEngine/llmCliente.js";
+import { avaliarComplexidadeDecisao } from "../executiveEngine/complexidadeDecisao.js";
 
 const STUB_PROIBIDO =
   /resposta imediata\s*\(C1\)|Que detalhe precisa\?/i;
@@ -124,10 +125,15 @@ export async function gerarRespostaConhecimentoGeral({
 
   try {
     const messages = montarMensagensRespostaLeve({ texto, historico });
+    const cx = avaliarComplexidadeDecisao({
+      texto,
+      classe: "conhecimento_geral",
+      destino: "resposta_leve"
+    });
     const saida = await deliberar({
       messages,
       temperature: 0.5,
-      max_tokens: 1200
+      max_tokens: cx.maxTokens || 450
     });
     const mensagem = String(saida?.texto || "").trim();
     if (!mensagem || ehStubRespostaLeveProibido(mensagem)) {
@@ -141,7 +147,8 @@ export async function gerarRespostaConhecimentoGeral({
         dados: {
           gerador: "fallback",
           mreInvocado: false,
-          motorAcionado: false
+          motorAcionado: false,
+          complexidadeDecisao: cx
         }
       };
     }
@@ -150,13 +157,14 @@ export async function gerarRespostaConhecimentoGeral({
       mensagem,
       modo: "resposta_leve",
       dados: {
-        gerador: "llm_c1",
+        gerador: "llm",
         mreInvocado: false,
         motorAcionado: false,
+        complexidadeDecisao: cx,
         llm: {
           modelo: saida.modelo,
           uso: saida.uso,
-          origem: saida.origem || "llm"
+          origem: saida.origem
         }
       }
     };
