@@ -1,0 +1,39 @@
+# Raiz do repositório CEO — complementa (não substitui) app/.gitignore e executive/queue/.gitignore
+
+# Dependências e build
+node_modules/
+dist/
+.vite/
+.vercel/
+*.tsbuildinfo
+
+# Segredos e ambiente local
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Dispatcher local (REQ-053) — logs/pid
+executive/dispatcher/logs/
+
+# SO / editores
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.log
+*.tmp
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Artefactos de diagnóstico / cobertura
+coverage/
+**/diag-*-resultado.json
+*.local.json
+
+# Python / misc acidental
+__pycache__/
+*.pyc
+.Python
+.vercel

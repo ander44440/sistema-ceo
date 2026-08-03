@@ -57,6 +57,130 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`adr/ADR-016-cria-tipo-documental-roadmap.md`](adr/ADR-016-cria-tipo-documental-roadmap.md) | Aceita v1.0 — tipo ROADMAP instituído |
 | [`adr/ADR-017-institui-cap-r-consolidacao-de-release.md`](adr/ADR-017-institui-cap-r-consolidacao-de-release.md) | Aceita v1.0 — classificação CAP-E / CAP-R instituída; nenhuma CAP-R aberta |
 | [`adr/ADR-018-mandato-cto-temporario.md`](adr/ADR-018-mandato-cto-temporario.md) | **Revogada v1.1** — nenhum trabalho técnico aberto sob o mandato |
+| [`adr/ADR-019-motor-de-raciocinio-executivo.md`](adr/ADR-019-motor-de-raciocinio-executivo.md) | **Aceita para modelagem v0.1** — MRE; modelagem REQ-048…051 **encerrada** (ver ARQ-013) |
+| [`requirements/REQ-048-parecer-executivo-schema.md`](requirements/REQ-048-parecer-executivo-schema.md) | **Aprovado v0.1** — contrato formal do ParecerExecutivo |
+| [`requirements/REQ-049-pipeline-motor-raciocinio-executivo.md`](requirements/REQ-049-pipeline-motor-raciocinio-executivo.md) | **Aprovado v0.1** — pipeline operacional do MRE |
+| [`requirements/REQ-050-speaker-executivo.md`](requirements/REQ-050-speaker-executivo.md) | **Aprovado v0.1** — Speaker Executivo (comunicação do parecer) |
+| [`requirements/REQ-051-aprendizado-executivo.md`](requirements/REQ-051-aprendizado-executivo.md) | **Aprovado v0.1** — Aprendizado Executivo (retenção pós-deliberação) |
+| [`architecture/ARQ-013-consolidacao-motor-raciocinio-executivo.md`](architecture/ARQ-013-consolidacao-motor-raciocinio-executivo.md) | **Homologada / aprovada v1.0** — mapa oficial MRE; Gate ARQ ok |
+| [`implementation/IMP-010-plano-de-implementacao-mre.md`](implementation/IMP-010-plano-de-implementacao-mre.md) | **Aprovado v0.1** — plano incremental F1–F9 do MRE |
+| [`implementation/IMP-011-contrato-validacao-parecer-executivo.md`](implementation/IMP-011-contrato-validacao-parecer-executivo.md) | **Imp. concluída** — Bloco 1 / F1; aguarda validação conjunta |
+| [`implementation/IMP-012-pipeline-mre-estagios-0-7.md`](implementation/IMP-012-pipeline-mre-estagios-0-7.md) | **Imp. concluída** — Bloco 1 / F2; aguarda validação conjunta |
+| [`implementation/IMP-013-aprendizado-executivo-estagio-8.md`](implementation/IMP-013-aprendizado-executivo-estagio-8.md) | **Imp. concluída** — Bloco 1 / F3; aguarda validação conjunta |
+| [`implementation/evidencias/BLOCO-1-relatorio-consolidado.md`](implementation/evidencias/BLOCO-1-relatorio-consolidado.md) | Relatório consolidado Bloco 1 — **33 testes pass** |
+| [`implementation/IMP-014-integracao-nucleo-mre.md`](implementation/IMP-014-integracao-nucleo-mre.md) | **Imp. concluída** — Bloco 2 / F4 — Núcleo → MRE |
+| [`implementation/IMP-015-speaker-executivo.md`](implementation/IMP-015-speaker-executivo.md) | **Imp. concluída** — Bloco 2 / F5 — Speaker |
+| [`implementation/IMP-016-canais-chat-voice-centro.md`](implementation/IMP-016-canais-chat-voice-centro.md) | **Imp. concluída** — Bloco 2 / F6 — canais |
+| [`implementation/evidencias/BLOCO-2-relatorio-consolidado.md`](implementation/evidencias/BLOCO-2-relatorio-consolidado.md) | Relatório consolidado Bloco 2 — **12 testes pass** |
+| [`implementation/IMP-017-despacho-fila-execucao.md`](implementation/IMP-017-despacho-fila-execucao.md) | **Imp. concluída** — Bloco 3 / F7 — Fila |
+| [`implementation/IMP-018-persistencia-retencao-gate.md`](implementation/IMP-018-persistencia-retencao-gate.md) | **Imp. concluída** — Bloco 3 / F8 — retenção + Gate |
+| [`implementation/IMP-019-fecho-imp-preparacao-val.md`](implementation/IMP-019-fecho-imp-preparacao-val.md) | **Imp. concluída** — Bloco 3 / F9 — fecho + prep VAL |
+| [`implementation/evidencias/BLOCO-3-relatorio-consolidado.md`](implementation/evidencias/BLOCO-3-relatorio-consolidado.md) | Relatório consolidado Bloco 3 — **14 testes pass** |
+| [`validation/VAL-MRE-esboco.md`](validation/VAL-MRE-esboco.md) | **Substituído** — histórico; ver VAL-009 |
+| [`validation/VAL-009-validacao-motor-raciocinio-executivo.md`](validation/VAL-009-validacao-motor-raciocinio-executivo.md) | **Homologada v1.0** — Gate Final 30/07/2026; P2 cumprido; 28 C / 0 NC / 4 OE |
+| [`learning/2026-07-30-p8-preparacao-producao-mre.md`](learning/2026-07-30-p8-preparacao-producao-mre.md) | **P8** — preparação; autorização **Go** (ver P10) |
+| [`learning/2026-07-30-p9-ensaio-operacional-mre.md`](learning/2026-07-30-p9-ensaio-operacional-mre.md) | **P9** — ensaio R1 concluído |
+| [`learning/2026-07-30-p10-pacote-autorizacao-producao-mre.md`](learning/2026-07-30-p10-pacote-autorizacao-producao-mre.md) | **P10 Gate Final** — **Go**; Produção MRE **AUTORIZADA** 30/07/2026 (R1) |
+| [`learning/2026-07-30-relatorio-consolidado-p9-p10.md`](learning/2026-07-30-relatorio-consolidado-p9-p10.md) | Relatório consolidado P9+P10 |
+| [`learning/2026-07-30-checkpoint-fases-mre.md`](learning/2026-07-30-checkpoint-fases-mre.md) | **Checkpoint oficial** — MRE R1 + IMP-020 NCS B1–B4 (`flagNcs` off) |
+| [`learning/2026-07-30-observacao-parecer-consultivo-vs-acao-executiva.md`](learning/2026-07-30-observacao-parecer-consultivo-vs-acao-executiva.md) | **Insumo** — lacuna de produto (parecer consultivo vs ação); **sem** implementação |
+| [`learning/2026-07-30-lacuna-conhecimento-operacional-coa-mg2.md`](learning/2026-07-30-lacuna-conhecimento-operacional-coa-mg2.md) | **Insumo** — CEO sem lastro operacional do MG2; briefing mínimo proposto; **sem** implementação |
+| [`learning/2026-07-30-comunicado-cto-lacuna-conhecimento-coa-mg2.md`](learning/2026-07-30-comunicado-cto-lacuna-conhecimento-coa-mg2.md) | **Comunicado ao CTO** — lacuna COA MG2; **respondido** (Opção C) |
+| [`learning/2026-07-30-deliberacao-cto-opcao-c-briefing-curado-mg2.md`](learning/2026-07-30-deliberacao-cto-opcao-c-briefing-curado-mg2.md) | **Deliberação CTO** — Opção C; Gate A (Briefing Curado); B condicionada |
+| [`learning/2026-07-30-confirmacao-intermedia-cto-gate-briefing-mg2.md`](learning/2026-07-30-confirmacao-intermedia-cto-gate-briefing-mg2.md) | Confirmação intermédia CTO (pré-parecer final) |
+| [`learning/2026-07-30-parecer-tecnico-briefing-operacional-mg2.md`](learning/2026-07-30-parecer-tecnico-briefing-operacional-mg2.md) | Parecer técnico (Engenheiro) — APROVADO COM OE |
+| [`learning/2026-07-30-parecer-final-cto-gate-briefing-mg2-encerrado.md`](learning/2026-07-30-parecer-final-cto-gate-briefing-mg2-encerrado.md) | **Gate CTO ENCERRADO** — Opção A homologada em uso; B condicionada |
+| [`learning/2026-07-30-diagnostico-falha-llm-tls-mre.md`](learning/2026-07-30-diagnostico-falha-llm-tls-mre.md) | Diagnóstico — falha MRE por TLS SSL (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`) |
+| [`learning/2026-07-30-evidencia-briefing-insuficiente-caminho-mre.md`](learning/2026-07-30-evidencia-briefing-insuficiente-caminho-mre.md) | Evidência — Briefing A insuficiente no MRE (pré-B1) |
+| [`learning/2026-07-30-b1-briefing-entrada-mre-autorizado.md`](learning/2026-07-30-b1-briefing-entrada-mre-autorizado.md) | **B1 feito** — factos do briefing na entrada MRE; validado |
+| [`mvp/briefing-operacional-mg2.md`](mvp/briefing-operacional-mg2.md) | **Briefing Curado v1.0** — mitigação operacional ativa (Gate encerrado) |
+| [`vision/VIS-008-natureza-cognitiva-da-solicitacao-no-mre.md`](vision/VIS-008-natureza-cognitiva-da-solicitacao-no-mre.md) | **Rascunho v0.1** — natureza cognitiva pré-deliberação (análise conjunta; sem REQ) |
+| [`requirements/REQ-052-natureza-cognitiva-da-solicitacao-mre.md`](requirements/REQ-052-natureza-cognitiva-da-solicitacao-mre.md) | **Rascunho v0.1** — REQ derivado da VIS-008 (revisão conjunta; sem IMP) |
+| [`requirements/REQ-053-dispatcher-fila-execucao-v2-local.md`](requirements/REQ-053-dispatcher-fila-execucao-v2-local.md) | **Homologada v0.1** — Dispatcher V2; frente encerrada 01/08/2026 |
+| [`requirements/REQ-054-conector-cto.md`](requirements/REQ-054-conector-cto.md) | **Homologada v0.1** — Conector CTO |
+| [`implementation/IMP-054-conector-cto.md`](implementation/IMP-054-conector-cto.md) | **Homologada** — frente encerrada 01/08/2026; produção |
+| [`architecture/ARQ-015-cto-connector.md`](architecture/ARQ-015-cto-connector.md) | **Homologada v0.2** — CTO Connector; Opção B (chave partilhada); Gate ARQ fechado |
+| [`architecture/ARQ-016-painel-orquestracao-tempo-real.md`](architecture/ARQ-016-painel-orquestracao-tempo-real.md) | **Homologada v0.2** — Painel de Orquestração; Progressividade; Conversa central |
+| [`requirements/REQ-055-painel-orquestracao-tempo-real.md`](requirements/REQ-055-painel-orquestracao-tempo-real.md) | **Homologada v0.1** — Painel de Orquestração; Progressividade |
+| [`implementation/IMP-055-painel-orquestracao-tempo-real.md`](implementation/IMP-055-painel-orquestracao-tempo-real.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 em produção |
+| [`architecture/ARQ-017-motor-de-execucao.md`](architecture/ARQ-017-motor-de-execucao.md) | **Homologada v0.1** — Motor de Execução; fluxo Intenção→Encerramento |
+| [`architecture/ARQ-018-classificacao-de-intencao.md`](architecture/ARQ-018-classificacao-de-intencao.md) | **Homologada v0.1** — Classificação de Intenção; quatro classes; Classificador primeiro |
+| [`architecture/ARQ-019-continuidade-do-gate-de-execucao.md`](architecture/ARQ-019-continuidade-do-gate-de-execucao.md) | **Homologada v0.1** — Continuidade do Gate de Execução; retoma pós-decisão humana |
+| [`architecture/ARQ-020-consciencia-operacional.md`](architecture/ARQ-020-consciencia-operacional.md) | **Homologada v0.1** — Consciência Operacional; Estado Executivo Atual antes de C2/C3 |
+| [`architecture/ARQ-021-restauracao-fila-oficial-mvp.md`](architecture/ARQ-021-restauracao-fila-oficial-mvp.md) | **Homologada v0.1** — Restauração da Fila Oficial do MVP; mesma fila produtor/consumidor |
+| [`architecture/ARQ-022-historico-conversacional-classificador.md`](architecture/ARQ-022-historico-conversacional-classificador.md) | **Em análise v0.1** — Histórico Conversacional no Classificador; CAP-07; REQ-061 / IMP-061 |
+| [`architecture/ARQ-023-resolucao-referencias-conversacionais.md`](architecture/ARQ-023-resolucao-referencias-conversacionais.md) | **Em análise v0.1** — Resolução de Referências Conversacionais; CAP-07; REQ-062 / IMP-062 |
+| [`architecture/ARQ-024-gestao-mudanca-de-assunto.md`](architecture/ARQ-024-gestao-mudanca-de-assunto.md) | **Em análise v0.1** — Gestão de Mudança de Assunto; CAP-07; REQ-063 / IMP-063 |
+| [`architecture/ARQ-025-objetivo-conversacional.md`](architecture/ARQ-025-objetivo-conversacional.md) | **Em análise v0.1** — Objetivo Conversacional / Goal Tracking; CAP-07; REQ-064 / IMP-064 |
+| [`implementation/IMP-064-objetivo-conversacional.md`](implementation/IMP-064-objetivo-conversacional.md) | **Homologada** — 4ª frente EIC CSC; CT-G01…14 |
+| [`implementation/IMP-063-gestao-mudanca-de-assunto.md`](implementation/IMP-063-gestao-mudanca-de-assunto.md) | **Homologada** — 3ª frente EIC CSC; CT-T01…13 |
+| [`requirements/REQ-060-restauracao-fila-oficial-mvp.md`](requirements/REQ-060-restauracao-fila-oficial-mvp.md) | **Homologada v0.1** — Restauração da Fila Oficial do MVP; CAP-11; alinhada à ARQ-021 |
+| [`implementation/IMP-060-restauracao-fila-oficial-mvp.md`](implementation/IMP-060-restauracao-fila-oficial-mvp.md) | **Homologada** — frente encerrada 02/08/2026; E1–E6 em produção |
+| [`implementation/evidencias/IMP-060-E1-inventario.md`](implementation/evidencias/IMP-060-E1-inventario.md) | Inventário IMP-060 E1 — pontos `/api/ceo/queue/*` e cutover Railway |
+| [`implementation/evidencias/IMP-060-E2-relatorio.md`](implementation/evidencias/IMP-060-E2-relatorio.md) | Relatório IMP-060 E2 — publicação na fila oficial `executive/queue` |
+| [`implementation/evidencias/IMP-060-E3-relatorio.md`](implementation/evidencias/IMP-060-E3-relatorio.md) | Relatório IMP-060 E3 — Dispatcher consome fila oficial + heartbeat |
+| [`implementation/evidencias/IMP-060-E4-relatorio.md`](implementation/evidencias/IMP-060-E4-relatorio.md) | Relatório IMP-060 E4 — Railway despromovida no ciclo Job MVP |
+| [`implementation/evidencias/IMP-060-E5-relatorio.md`](implementation/evidencias/IMP-060-E5-relatorio.md) | Relatório IMP-060 E5 — Painel e Consciência na fila oficial |
+| [`implementation/evidencias/IMP-060-E6-homologacao.md`](implementation/evidencias/IMP-060-E6-homologacao.md) | Homologação IMP-060 E6 — T1–T8 · recomendação HOMOLOGAR |
+| [`implementation/evidencias/IMP-060-homologacao-producao.md`](implementation/evidencias/IMP-060-homologacao-producao.md) | Homologação em produção IMP-060 — commit `c4abe5a` · Vercel + Railway READY |
+| [`architecture/ARQ-021-fila-oficial-operacao.md`](architecture/ARQ-021-fila-oficial-operacao.md) | Operação mínima fila oficial (ARQ-021 / REQ-060) |
+| [`requirements/REQ-057-classificacao-de-intencao.md`](requirements/REQ-057-classificacao-de-intencao.md) | **Homologada v0.1** — Classificação de Intenção; CAP-07; alinhada à ARQ-018 |
+| [`requirements/REQ-061-historico-conversacional-classificador.md`](requirements/REQ-061-historico-conversacional-classificador.md) | **Em análise v0.1** — Histórico Conversacional no Classificador; CAP-07; ANL-006 / ARQ-018 §5.1 |
+| [`implementation/IMP-061-historico-conversacional-classificador.md`](implementation/IMP-061-historico-conversacional-classificador.md) | **Homologada** — 1ª frente EIC CSC; CT-01…12 |
+| [`analysis/ANL-006-historico-conversacional-classificador.md`](analysis/ANL-006-historico-conversacional-classificador.md) | **Em análise** — ANL Histórico Conversacional no Classificador (prepara REQ-061) |
+| [`analysis/ANL-007-resolucao-referencias-conversacionais.md`](analysis/ANL-007-resolucao-referencias-conversacionais.md) | **Em análise** — ANL Resolução de Referências Conversacionais (próxima frente EIC / CAP-07) |
+| [`analysis/ANL-008-gestao-mudanca-de-assunto.md`](analysis/ANL-008-gestao-mudanca-de-assunto.md) | **Em análise** — ANL Gestão de Mudança de Assunto / Topic Shift (3ª frente EIC CSC / CAP-07) |
+| [`analysis/ANL-009-objetivo-conversacional-goal-tracking.md`](analysis/ANL-009-objetivo-conversacional-goal-tracking.md) | **Em análise** — ANL Objetivo Conversacional / Goal Tracking (4ª frente EIC CSC / CAP-07) |
+| [`requirements/REQ-064-objetivo-conversacional.md`](requirements/REQ-064-objetivo-conversacional.md) | **Em análise v0.1** — Objetivo Conversacional; CAP-07; ANL-009 → ARQ-025 / IMP-064 |
+| [`requirements/REQ-063-gestao-mudanca-de-assunto.md`](requirements/REQ-063-gestao-mudanca-de-assunto.md) | **Em análise v0.1** — Gestão de Mudança de Assunto; CAP-07; ANL-008 → ARQ-024 / IMP-063 |
+| [`requirements/REQ-062-resolucao-referencias-conversacionais.md`](requirements/REQ-062-resolucao-referencias-conversacionais.md) | **Em análise v0.1** — Resolução de Referências Conversacionais; CAP-07; ANL-007 / IMP-061 |
+| [`implementation/IMP-062-resolucao-referencias-conversacionais.md`](implementation/IMP-062-resolucao-referencias-conversacionais.md) | **Homologada** — 2ª frente EIC CSC; CT-R01…12 |
+| [`requirements/REQ-058-continuidade-do-gate-de-execucao.md`](requirements/REQ-058-continuidade-do-gate-de-execucao.md) | **Homologada v0.1** — Continuidade do Gate de Execução; CAP-11; alinhada à ARQ-019 |
+| [`requirements/REQ-059-consciencia-operacional.md`](requirements/REQ-059-consciencia-operacional.md) | **Homologada v0.1** — Consciência Operacional; CAP-01; alinhada à ARQ-020 |
+| [`implementation/IMP-058-continuidade-do-gate-de-execucao.md`](implementation/IMP-058-continuidade-do-gate-de-execucao.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 |
+| [`implementation/IMP-059-consciencia-operacional.md`](implementation/IMP-059-consciencia-operacional.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 |
+| [`implementation/evidencias/IMP-059-E1-evidencia.md`](implementation/evidencias/IMP-059-E1-evidencia.md) | Evidência IMP-059 E1 — domínio Estado Executivo F1–F8 / P1–P7 |
+| [`implementation/evidencias/IMP-059-E2-evidencia.md`](implementation/evidencias/IMP-059-E2-evidencia.md) | Evidência IMP-059 E2 — agregador read-only / degradação por fonte |
+| [`implementation/evidencias/IMP-059-E3-evidencia.md`](implementation/evidencias/IMP-059-E3-evidencia.md) | Evidência IMP-059 E3 — consulta obrigatória C2/C3 + lastro Núcleo |
+| [`implementation/evidencias/IMP-059-E4-evidencia.md`](implementation/evidencias/IMP-059-E4-evidencia.md) | Evidência IMP-059 E4 — influência MRE / demos Job+Gate |
+| [`implementation/evidencias/IMP-059-E5-evidencia.md`](implementation/evidencias/IMP-059-E5-evidencia.md) | Evidência IMP-059 E5 — prosa canónica contextualizada |
+| [`implementation/evidencias/IMP-059-E6-evidencia.md`](implementation/evidencias/IMP-059-E6-evidencia.md) | Evidência IMP-059 E6 — fronteiras / read-only |
+| [`implementation/evidencias/IMP-059-E7-evidencia.md`](implementation/evidencias/IMP-059-E7-evidencia.md) | Evidência IMP-059 E7 — documentação |
+| [`implementation/evidencias/IMP-059-matriz-ca-na.md`](implementation/evidencias/IMP-059-matriz-ca-na.md) | Matriz CA/NA REQ-059 — evidências IMP-059 |
+| [`implementation/evidencias/IMP-059-relatorio-consolidado.md`](implementation/evidencias/IMP-059-relatorio-consolidado.md) | Relatório consolidado E1–E7 + fecho IMP-059 |
+| [`implementation/evidencias/IMP-059-homologacao-producao.md`](implementation/evidencias/IMP-059-homologacao-producao.md) | Homologação em produção IMP-059 — commit `de9fe81` · Vercel READY |
+| [`implementation/evidencias/IMP-058-E1-evidencia.md`](implementation/evidencias/IMP-058-E1-evidencia.md) | Evidência IMP-058 E1 — domínio / estados / Gate pendente |
+| [`implementation/evidencias/IMP-058-E2-evidencia.md`](implementation/evidencias/IMP-058-E2-evidencia.md) | Evidência IMP-058 E2 — léxico / reconhecimento determinístico |
+| [`implementation/evidencias/IMP-058-E3-evidencia.md`](implementation/evidencias/IMP-058-E3-evidencia.md) | Evidência IMP-058 E3 — store contexto / Gate activo |
+| [`implementation/evidencias/IMP-058-E4-evidencia.md`](implementation/evidencias/IMP-058-E4-evidencia.md) | Evidência IMP-058 E4 — integração Conversa → Motor |
+| [`implementation/evidencias/IMP-058-E5-evidencia.md`](implementation/evidencias/IMP-058-E5-evidencia.md) | Evidência IMP-058 E5 — Aprovado/Rejeitado/Adiado + P10 |
+| [`implementation/evidencias/IMP-058-E6-evidencia.md`](implementation/evidencias/IMP-058-E6-evidencia.md) | Evidência IMP-058 E6 — fronteiras / regressão |
+| [`implementation/evidencias/IMP-058-E7-evidencia.md`](implementation/evidencias/IMP-058-E7-evidencia.md) | Evidência IMP-058 E7 — documentação |
+| [`implementation/evidencias/IMP-058-matriz-ca-na.md`](implementation/evidencias/IMP-058-matriz-ca-na.md) | Matriz CA/NA REQ-058 — evidências IMP-058 |
+| [`implementation/evidencias/IMP-058-relatorio-consolidado.md`](implementation/evidencias/IMP-058-relatorio-consolidado.md) | Relatório consolidado E6+E7 + fecho IMP-058 |
+| [`implementation/evidencias/IMP-058-homologacao-producao.md`](implementation/evidencias/IMP-058-homologacao-producao.md) | Homologação em produção IMP-058 — commit `f4c22ae` · Vercel READY |
+| [`implementation/IMP-057-classificacao-de-intencao.md`](implementation/IMP-057-classificacao-de-intencao.md) | **Homologada v1.0** — Emenda E2.3 homologada em produção |
+| [`implementation/evidencias/IMP-057-E22-abertura.md`](implementation/evidencias/IMP-057-E22-abertura.md) | Abertura Emenda E2.2 — Cobertura de Classificação |
+| [`implementation/evidencias/IMP-057-E22-relatorio.md`](implementation/evidencias/IMP-057-E22-relatorio.md) | Relatório homologação Emenda E2.2 (implementação) |
+| [`implementation/evidencias/IMP-057-E22-homologacao-producao.md`](implementation/evidencias/IMP-057-E22-homologacao-producao.md) | Homologação em produção Emenda E2.2 |
+| [`implementation/evidencias/IMP-057-E23-relatorio.md`](implementation/evidencias/IMP-057-E23-relatorio.md) | Relatório homologação Emenda E2.3 (autoexplicação institucional) |
+| [`implementation/evidencias/IMP-057-E23-homologacao-producao.md`](implementation/evidencias/IMP-057-E23-homologacao-producao.md) | Homologação em produção Emenda E2.3 |
+| [`implementation/evidencias/IMP-057-E51-relatorio.md`](implementation/evidencias/IMP-057-E51-relatorio.md) | Relatório homologação Emenda E5.1 (executor C1) |
+| [`implementation/evidencias/IMP-057-E51-homologacao-producao.md`](implementation/evidencias/IMP-057-E51-homologacao-producao.md) | Homologação em produção Emenda E5.1 |
+| [`implementation/evidencias/IMP-057-matriz-ca-na.md`](implementation/evidencias/IMP-057-matriz-ca-na.md) | Matriz CA/NA REQ-057 — evidências IMP-057 |
+| [`implementation/evidencias/IMP-057-relatorio-consolidado.md`](implementation/evidencias/IMP-057-relatorio-consolidado.md) | Relatório consolidado E6+E7 + fecho IMP-057 |
+| [`requirements/REQ-056-motor-de-execucao.md`](requirements/REQ-056-motor-de-execucao.md) | **Homologada v0.1** — Motor de Execução; CAP-11 |
+| [`implementation/IMP-056-motor-de-execucao.md`](implementation/IMP-056-motor-de-execucao.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 |
+| [`implementation/evidencias/IMP-056-matriz-ca-na.md`](implementation/evidencias/IMP-056-matriz-ca-na.md) | Matriz CA/NA REQ-056 — evidências IMP-056 |
+| [`learning/ANCORA-MESTRA.md`](learning/ANCORA-MESTRA.md) | **Âncora Mestra** — Painel Orquestração + Conector CTO em produção; autonomia local V2 |
+| [`learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md`](learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md) | Checkpoint — Dispatcher V2 operacional |
+| [`architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md`](architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md) | **Rascunho v0.1** — ARQ da NCS no limiar MRE (revisão conjunta; sem IMP) |
+| [`implementation/IMP-020-natureza-cognitiva-da-solicitacao-ncs.md`](implementation/IMP-020-natureza-cognitiva-da-solicitacao-ncs.md) | **Rascunho v0.1** — plano IMP da NCS; C1–C8 materializados (B1–B4); produção NCS **não** declarada |
+| [`implementation/IMP-020-blocos-de-implementacao.md`](implementation/IMP-020-blocos-de-implementacao.md) | Decomposição B1–B4; **B1–B4 implementados** (gates internos) |
+| [`implementation/evidencias/IMP-020-B1-evidencia.md`](implementation/evidencias/IMP-020-B1-evidencia.md) | Evidência gate B1 (C1/C3/C4) |
+| [`implementation/evidencias/IMP-020-B2-evidencia.md`](implementation/evidencias/IMP-020-B2-evidencia.md) | Evidência gate B2 (C2) |
+| [`implementation/evidencias/IMP-020-B3-evidencia.md`](implementation/evidencias/IMP-020-B3-evidencia.md) | Evidência gate B3 (C5/C6) |
+| [`implementation/evidencias/IMP-020-B4-evidencia.md`](implementation/evidencias/IMP-020-B4-evidencia.md) | Evidência gate B4 (C7/C8); rollback `flagNcs` |
 | [`governance/mandato-cto-temporario-vigente.md`](governance/mandato-cto-temporario-vigente.md) | Histórico — mandato revogado |
 | [`learning/2026-07-25-checkpoint-pre-cto-temporario.md`](learning/2026-07-25-checkpoint-pre-cto-temporario.md) | Histórico — checkpoint da transição abortada |
 | [`learning/2026-07-25-revogacao-mandato-cto-temporario.md`](learning/2026-07-25-revogacao-mandato-cto-temporario.md) | Marco — revogação e restabelecimento dos papéis |
@@ -180,6 +304,19 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`cap-03/oportunidades-evolucao-arquivadas.md`](cap-03/oportunidades-evolucao-arquivadas.md) | Consolidado — OE-001…003 (editoriais) |
 | [`cap-03/relatorio-encerramento-cap-03.md`](cap-03/relatorio-encerramento-cap-03.md) | Relatório oficial de encerramento — CAP-03 concluída |
 | [`learning/2026-07-26-encerramento-cap-03-coa.md`](learning/2026-07-26-encerramento-cap-03-coa.md) | Marco — encerramento do ciclo CAP-03 |
+| [`product/README.md`](product/README.md) — Sede IPR-001 (Experiência e Desejabilidade) | F0–F6 concluídas; Ondas 01–03 homologadas |
+| [`product/IPR-001-experiencia-do-produto.md`](product/IPR-001-experiencia-do-produto.md) | Documento-mestre; F6 + Onda 03 encerradas |
+| [`product/marco-encerramento-f6.md`](product/marco-encerramento-f6.md) | Encerramento oficial F6 (28/07/2026) |
+| [`product/marco-encerramento-onda-03.md`](product/marco-encerramento-onda-03.md) | Encerramento oficial Onda Operacional 03 (28/07/2026) |
+| [`product/relatorio-final-onda-03.md`](product/relatorio-final-onda-03.md) | Relatório final Onda 03 — Fluxo Executivo Diário |
+| [`learning/2026-07-28-encerramento-onda-03-fluxo-executivo-diario.md`](learning/2026-07-28-encerramento-onda-03-fluxo-executivo-diario.md) | Marco — encerramento Onda 03 |
+| [`learning/2026-07-28-ciclo-validacao-operacional-pos-onda-03.md`](learning/2026-07-28-ciclo-validacao-operacional-pos-onda-03.md) | Deliberação — ciclo de validação operacional (sem Onda 04/F7) |
+| [`product/estudo-nucleo-executivo-v0.md`](product/estudo-nucleo-executivo-v0.md) | Núcleo Executivo — estudo homologado v0 (28/07/2026) |
+| [`learning/2026-07-28-homologacao-nucleo-executivo-v0.md`](learning/2026-07-28-homologacao-nucleo-executivo-v0.md) | Marco — Gate de homologação do Núcleo Executivo v0 |
+| [`product/principios-de-produto.md`](product/principios-de-produto.md) | Homologado — princípios normativos de produto (Gate IPR-001) |
+| [`product/design-system-roadmap.md`](product/design-system-roadmap.md) | Homologado — roadmap do design system (Gate IPR-001) |
+| [`product/benchmark/f1-benchmark-estrategico.md`](product/benchmark/f1-benchmark-estrategico.md) | Gate F1 APROVADO — fichas nominadas em revisão |
+| [`product/benchmark/fichas/README.md`](product/benchmark/fichas/README.md) | 3 fichas: Linear, Cursor, Notion |
 | [`requirements/pacote-requisitos-ceo-mvp-v0-1.md`](requirements/pacote-requisitos-ceo-mvp-v0-1.md) | Homologado — pacote REQ-016…032 |
 | [`requirements/REQ-016-painel-do-dia.md`](requirements/REQ-016-painel-do-dia.md) … [`REQ-032-respeito-ao-tempo-do-patrocinador.md`](requirements/REQ-032-respeito-ao-tempo-do-patrocinador.md) | Pacote MVP (ver pacote) |
 | [`architecture/ARQ-008-arquitetura-funcional-ceo-mvp-v0-1.md`](architecture/ARQ-008-arquitetura-funcional-ceo-mvp-v0-1.md) | Homologada v1.0 — módulos A–G; Dia de Trabalho |

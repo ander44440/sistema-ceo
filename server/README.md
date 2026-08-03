@@ -1,0 +1,45 @@
+# CEO Server — Backend de Produção (BP-001)
+
+Servidor HTTP Node (Hono) para as APIs `/api/ceo/*` em produção (alvo Railway).
+
+## Estado atual
+
+- Entrypoint: `npm start` → `src/index.js`
+- Porta: `process.env.PORT` ou **8787**
+- Rotas online (BP-001):
+  - `GET /health`
+  - `GET /api/ceo/llm-status` · `POST /api/ceo/deliberar`
+  - `POST /api/ceo/cto/consultar` (REQ-054 — Conector CTO; canal ≠ deliberar)
+  - `GET|POST /api/ceo/onboarding/*`
+  - Orquestração: snapshot / stream / **heartbeat** (sinal Dispatcher)
+- **Fila MVP (IMP-060 E4):** `/api/ceo/queue/*` neste host responde **410** (`FILA_MVP_LOCAL`).  
+  Fonte oficial de Jobs: `executive/queue/` no PC (plugin Vite / companion).  
+  Railway **não** é fonte de verdade do ciclo `pending` → `completed` / `failed`.
+- Plugin Vite `executionQueuePlugin` em `app/` = API local da fila oficial
+
+## Local
+
+```bash
+cd server
+npm install
+npm start
+```
+
+Carrega automaticamente `server/.env` e `app/.env` (sem sobrescrever variáveis já definidas no shell).
+
+## Ambiente
+
+| Variável | Obrigatória | Descrição |
+|----------|-------------|-----------|
+| `PORT` | Não (default 8787) | Porta HTTP (Railway) |
+| `CEO_DATA_ROOT` | Não | Raiz com `executive/` (default: pai de `server/`) |
+| `CEO_ALLOWED_ORIGIN` | Não (prod: sim) | Origem do front (ex. `https://sistema-ceo.vercel.app`). Ausente → só localhost/127.0.0.1 |
+| `CEO_LLM_API_KEY` | Sim (ou `OPENAI_API_KEY` / `CEO_OPENAI_API_KEY`) | Chave do provedor |
+| `CEO_LLM_BASE_URL` | Não | Default `https://api.openai.com/v1` |
+| `CEO_LLM_MODEL` | Não | Default `gpt-4o-mini` |
+| `CEO_CTO_MODEL` | Não | Override de modelo só para `/api/ceo/cto/*` (mesma chave) |
+| `CEO_LLM_TLS_INSECURE` | Não | `1` desativa verificação TLS (só local) |
+
+## Relação com o frontend
+
+O SPA em `app/` não foi alterado. Em desenvolvimento, `npm run dev` em `app/` continua a servir a API via plugins Vite (convivência temporária com este servidor).

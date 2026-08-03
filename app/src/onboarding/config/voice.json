@@ -1,0 +1,12 @@
+{
+  "provider": "browser",
+  "language": "pt-BR",
+  "voice": "auto",
+  "speed": 0.95,
+  "pitch": 1.0,
+  "volume": 1.0,
+  "personality": {
+    "pauseBetweenParagraphsMs": 320,
+    "executiveTone": true
+  }
+}

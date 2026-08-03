@@ -1,0 +1,9 @@
+# Railway — Backend de Produção do CEO (BP-001)
+# Deploy a partir do diretório `server/` (Root Directory = server).
+
+[deploy]
+startCommand = "npm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
