@@ -14,12 +14,16 @@ import { avancarAposGate } from "../motorExecucao/politicaAprovacao.js";
 import { montarCiclo } from "../motorExecucao/dominio.js";
 import { criarStoreContextoGate } from "./contexto.js";
 import { resetStoreContinuidadePadrao } from "./integracaoConversa.js";
+import { resetEstadoTopicosSessao } from "../classificadorIntencao/topicosSessao.js";
+import { resetEstadoObjectivoSessao } from "../classificadorIntencao/objectivoSessao.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootSrc = join(__dirname, "..");
 
 beforeEach(() => {
   resetStoreContinuidadePadrao();
+  resetEstadoTopicosSessao();
+  resetEstadoObjectivoSessao();
 });
 
 async function abrirGateBugs(store, fila) {

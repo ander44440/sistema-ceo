@@ -39,6 +39,10 @@ import {
   obterEstadoObjectivoSessao,
   aplicarResultadoGestaoObjectivo
 } from "../classificadorIntencao/objectivoSessao.js";
+import {
+  validarContextoAtivo,
+  VCA_ATIVO
+} from "../classificadorIntencao/validadorContextoAtivo.js";
 import { executarPorDestino } from "../classificadorIntencao/destinos.js";
 import {
   obterStoreContinuidadePadrao,
@@ -341,11 +345,11 @@ export const executiveEngine = {
     }
 
     const coa = obterCoaAtivo();
+    // IMP-065 / ARQ-026: VCA após Gate, antes da cadeia CSC (061→064).
     // EIC V1 + IMP-061: um único passo de classificação canónica.
     // IMP-063: gestor de tópicos (após janela) — não decide classe.
     // IMP-062: resolvedor auxiliar (referente) — não decide classe.
     // IMP-064: gestor de objectivos (após 061→063→062) — não decide classe.
-    const historicoRecente = seleccionarHistoricoRecente(historico, texto);
     const ctxGateActivo =
       typeof store.obterContextoActivo === "function"
         ? store.obterContextoActivo()
@@ -355,70 +359,151 @@ export const executiveEngine = {
         (ctxGateActivo.solicitacaoResumo || ctxGateActivo.estado === "pendente")
     );
 
-    let resultadoTop = null;
-    if (GESTOR_TOPICOS_ATIVO) {
-      const estadoTop = obterEstadoTopicosSessao();
-      resultadoTop = gestorTopicos({
-        mensagem: texto,
-        historicoRecente,
-        topicoActivo: estadoTop.topicoActivo,
-        pausas: estadoTop.pausas,
-        frenteActiva: Boolean(coa),
-        coa: coa
-          ? { id: coa.id, nome: coa.nome || coa.titulo }
-          : null,
-        gatePendente
-      });
-      aplicarResultadoGestaoTopicos(resultadoTop);
-    }
-
+    const estadoTopPre = obterEstadoTopicosSessao();
     const estadoObjPre = obterEstadoObjectivoSessao();
-    const topicoParaRef =
-      resultadoTop?.topicoActivo ||
-      (estadoObjPre.objetivoActivo?.ancora
-        ? {
-            ancora: estadoObjPre.objetivoActivo.ancora,
-            familia: estadoObjPre.objetivoActivo.ancora
-          }
-        : null);
-    const resultadoRef = resolverReferencias({
-      mensagem: texto,
-      historicoRecente,
-      frenteActiva: Boolean(coa),
-      coa: coa
-        ? { id: coa.id, nome: coa.nome || coa.titulo }
-        : null,
-      gateResumo:
-        ctxGateActivo && ctxGateActivo.solicitacaoResumo
-          ? String(ctxGateActivo.solicitacaoResumo)
-          : null,
-      topicoActivo: topicoParaRef
-    });
+    const resultadoVca =
+      VCA_ATIVO !== false
+        ? validarContextoAtivo({
+            mensagem: texto,
+            historicoCandidato: historico,
+            topicoActivo: estadoTopPre.topicoActivo,
+            pausas: estadoTopPre.pausas,
+            objetivoActivo: estadoObjPre.objetivoActivo,
+            frenteActiva: Boolean(coa),
+            coa: coa
+              ? { id: coa.id, nome: coa.nome || coa.titulo }
+              : null,
+            gatePendente
+          })
+        : {
+            veredicto: "pertence",
+            autorizaLastroCsc: true,
+            razaoContexto: "VCA desactivado → path CSC"
+          };
 
+    const metaVca = {
+      validacaoContexto: {
+        veredicto: resultadoVca.veredicto,
+        autorizaLastroCsc: resultadoVca.autorizaLastroCsc,
+        razaoContexto: resultadoVca.razaoContexto
+      }
+    };
+
+    // Prioridade RF: Gate > ambiguo_contexto > objectivo > tópico > referente
+    if (
+      resultadoVca.veredicto === "ambiguo_contexto" &&
+      resultadoVca.perguntaCurta
+    ) {
+      const pergunta =
+        resultadoVca.clarificacaoGateIsolamento || resultadoVca.perguntaCurta;
+      const respostaVca = {
+        ok: true,
+        mensagem: pergunta,
+        intencao: "conversa_projeto",
+        capacidade: null,
+        dados: {
+          classificacao: null,
+          encaminhamento: {
+            destino: "clarificacao_contexto",
+            ok: true,
+            idClasse: null
+          },
+          ...metaVca,
+          motorAcionado: false,
+          mreInvocado: false
+        },
+        origem: "executiveEngine",
+        modo: "clarificacao_contexto"
+      };
+      const memoriaVca = atualizarAposInstrucao({
+        instrucao: texto,
+        intencao: respostaVca.intencao,
+        capacidade: null,
+        ok: true,
+        mensagem: respostaVca.mensagem,
+        dados: respostaVca.dados
+      });
+      respostaVca.dados = { ...respostaVca.dados, memoria: memoriaVca };
+      return respostaVca;
+    }
+
+    const autorizaLastroCsc = resultadoVca.autorizaLastroCsc === true;
+
+    /** @type {import("../classificadorIntencao/historicoRecente.js").HistoricoRecenteItem[]} */
+    let historicoRecente = [];
+    let resultadoTop = null;
+    /** @type {import("../classificadorIntencao/resolverReferencias.js").ResultadoResolucaoReferencia} */
+    let resultadoRef = { estado: "nenhum" };
     let resultadoObj = null;
-    if (GESTOR_OBJECTIVO_ATIVO) {
-      resultadoObj = gestorObjectivo({
+
+    if (autorizaLastroCsc) {
+      historicoRecente = seleccionarHistoricoRecente(historico, texto);
+
+      if (GESTOR_TOPICOS_ATIVO) {
+        resultadoTop = gestorTopicos({
+          mensagem: texto,
+          historicoRecente,
+          topicoActivo: estadoTopPre.topicoActivo,
+          pausas: estadoTopPre.pausas,
+          frenteActiva: Boolean(coa),
+          coa: coa
+            ? { id: coa.id, nome: coa.nome || coa.titulo }
+            : null,
+          gatePendente
+        });
+        aplicarResultadoGestaoTopicos(resultadoTop);
+      }
+
+      const topicoParaRef =
+        resultadoTop?.topicoActivo ||
+        (estadoObjPre.objetivoActivo?.ancora
+          ? {
+              ancora: estadoObjPre.objetivoActivo.ancora,
+              familia: estadoObjPre.objetivoActivo.ancora
+            }
+          : null);
+      resultadoRef = resolverReferencias({
         mensagem: texto,
         historicoRecente,
-        objetivoActivo: estadoObjPre.objetivoActivo,
-        objetivoAnterior: estadoObjPre.objetivoAnterior,
-        topicoActivo: resultadoTop?.topicoActivo || null,
-        referente: resultadoRef,
         frenteActiva: Boolean(coa),
         coa: coa
           ? { id: coa.id, nome: coa.nome || coa.titulo }
           : null,
-        gatePendente
+        gateResumo:
+          ctxGateActivo && ctxGateActivo.solicitacaoResumo
+            ? String(ctxGateActivo.solicitacaoResumo)
+            : null,
+        topicoActivo: topicoParaRef
       });
-      aplicarResultadoGestaoObjectivo(resultadoObj);
-    }
 
-    const objetivoParaContexto =
-      resultadoObj?.objetivoActivo || estadoObjPre.objetivoActivo || null;
+      if (GESTOR_OBJECTIVO_ATIVO) {
+        resultadoObj = gestorObjectivo({
+          mensagem: texto,
+          historicoRecente,
+          objetivoActivo: estadoObjPre.objetivoActivo,
+          objetivoAnterior: estadoObjPre.objetivoAnterior,
+          topicoActivo: resultadoTop?.topicoActivo || null,
+          referente: resultadoRef,
+          frenteActiva: Boolean(coa),
+          coa: coa
+            ? { id: coa.id, nome: coa.nome || coa.titulo }
+            : null,
+          gatePendente
+        });
+        aplicarResultadoGestaoObjectivo(resultadoObj);
+      }
+    }
+    // Isolamento: stores preservados (não mutados); sem lastro CSC neste turno.
+
+    const objetivoParaContexto = autorizaLastroCsc
+      ? resultadoObj?.objetivoActivo || estadoObjPre.objetivoActivo || null
+      : null;
 
     const contextoClassificacao = {
       frenteActiva: Boolean(coa),
-      ...(historicoRecente.length > 0 ? { historicoRecente } : {}),
+      ...(autorizaLastroCsc && historicoRecente.length > 0
+        ? { historicoRecente }
+        : {}),
       // IMP-064: contexto de objectivo — Classificador permanece único decisor;
       // regras V1 não usam este campo para pontuar C3.
       ...(objetivoParaContexto
@@ -451,7 +536,8 @@ export const executiveEngine = {
         }
       : {};
 
-    // Prioridade (ARQ-025): Gate×objectivo > ambiguo_objetivo > Gate×shift > tópico > referente
+    // Prioridade (ARQ-026/025): ambiguo_contexto (já tratado) >
+    // Gate×objectivo > ambiguo_objetivo > Gate×shift > tópico > referente
     if (resultadoObj?.clarificacaoGateObjectivo) {
       const respostaGo = {
         ok: true,
@@ -465,6 +551,8 @@ export const executiveEngine = {
             ok: true,
             idClasse: rota.rota?.id || null
           },
+          ...metaVca,
+          ...metaVca,
           ...metaObjectivos,
           ...metaTopicos,
           resolucaoReferencia: resultadoRef,
@@ -502,6 +590,7 @@ export const executiveEngine = {
             ok: true,
             idClasse: rota.rota?.id || null
           },
+          ...metaVca,
           ...metaObjectivos,
           ...metaTopicos,
           resolucaoReferencia: resultadoRef,
@@ -536,6 +625,7 @@ export const executiveEngine = {
             ok: true,
             idClasse: rota.rota?.id || null
           },
+          ...metaVca,
           ...metaObjectivos,
           ...metaTopicos,
           resolucaoReferencia: resultadoRef,
@@ -570,6 +660,7 @@ export const executiveEngine = {
             ok: true,
             idClasse: rota.rota?.id || null
           },
+          ...metaVca,
           ...metaObjectivos,
           ...metaTopicos,
           resolucaoReferencia: resultadoRef,
@@ -605,6 +696,7 @@ export const executiveEngine = {
             ok: true,
             idClasse: rota.rota?.id || null
           },
+          ...metaVca,
           ...metaObjectivos,
           ...metaTopicos,
           resolucaoReferencia: resultadoRef,
@@ -737,6 +829,7 @@ export const executiveEngine = {
         ok: rota.ok,
         idClasse: rota.rota?.id || null
       };
+      baseDados.validacaoContexto = metaVca.validacaoContexto;
       if (resultadoTop) {
         baseDados.gestaoTopicos = metaTopicos.gestaoTopicos;
       }

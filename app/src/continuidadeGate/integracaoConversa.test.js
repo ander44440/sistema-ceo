@@ -16,12 +16,16 @@ import {
   decidirInterceptacaoContinuidade,
   mensagemAguardandoGateContinuidade
 } from "./integracaoConversa.js";
+import { resetEstadoTopicosSessao } from "../classificadorIntencao/topicosSessao.js";
+import { resetEstadoObjectivoSessao } from "../classificadorIntencao/objectivoSessao.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootSrc = join(__dirname, "..");
 
 beforeEach(() => {
   resetStoreContinuidadePadrao();
+  resetEstadoTopicosSessao();
+  resetEstadoObjectivoSessao();
 });
 
 test("E4-CA1: Gate pendente + «Aprovado.» → Continuidade; sem «Sugiro…»", async () => {
