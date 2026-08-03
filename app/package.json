@@ -56,6 +56,7 @@
     "test:classificador:e63": "node --test src/classificadorIntencao/gestorTopicos.test.js",
     "test:classificador:e64": "node --test src/classificadorIntencao/gestorObjectivo.test.js",
     "test:classificador:e65": "node --test src/classificadorIntencao/validadorContextoAtivo.test.js",
+    "test:complexidade": "node --test src/executiveEngine/complexidadeDecisao.test.js",
     "test:consciencia-operacional:e1": "node --test src/conscienciaOperacional/dominio.test.js",
     "test:consciencia-operacional:e2": "node --test src/conscienciaOperacional/agregarEstado.test.js",
     "test:consciencia-operacional:e3": "node --test src/conscienciaOperacional/consultarAntesDeResponder.test.js",

@@ -22,6 +22,7 @@ import {
   comporProsaLastro,
   garantirReflexoEstadoExecutivo
 } from "../../conscienciaOperacional/influenciaDeliberacao.js";
+import { avaliarComplexidadeDecisao } from "../complexidadeDecisao.js";
 
 function formatarDataAgora() {
   const agora = new Date();
@@ -102,6 +103,12 @@ async function executarBruto(ctx) {
     "saudacao"
   ]);
   if (localIds.has(intencao.id)) {
+    const cxLocal = avaliarComplexidadeDecisao({
+      texto,
+      intencao,
+      classe: intencao.classe,
+      destino: intencao.destino
+    });
     return {
       ok: true,
       capacidade: "ia",
@@ -112,16 +119,125 @@ async function executarBruto(ctx) {
         intencao,
         memoria: mem,
         coa,
-        rota: "deterministica"
+        rota: "deterministica",
+        complexidadeDecisao: cxLocal
       }
     };
   }
 
+  const complexidade = avaliarComplexidadeDecisao({
+    texto,
+    intencao,
+    classe: intencao.classe,
+    destino: intencao.destino,
+    frenteActiva: Boolean(coa)
+  });
+
   if (ehRotaDeliberativa(intencao) && flagMre.ativo) {
     const lastro = ctx.lastroConsciencia || null;
-    const status = await obterStatusLlm();
-    if (!status || !status.configurado) {
-      // IMP-059 E4: com lastro operacional, contextualizar mesmo sem LLM
+
+    // REQ-066: só decisões «completa» pagam o pipeline MRE 0–7
+    if (complexidade.permiteMreCompleto) {
+      const status = await obterStatusLlm();
+      if (!status || !status.configurado) {
+        // IMP-059 E4: com lastro operacional, contextualizar mesmo sem LLM
+        const prosaLastro = comporProsaLastro(lastro, texto);
+        if (prosaLastro) {
+          return {
+            ok: true,
+            capacidade: "ia",
+            mensagem: prosaLastro,
+            modo: "consciencia_operacional",
+            dados: {
+              instrucao: texto,
+              intencao,
+              memoria: mem,
+              coa,
+              llm: status,
+              lastroConsciencia: lastro,
+              rota: "deliberativa-consciencia-sem-llm",
+              complexidadeDecisao: complexidade
+            }
+          };
+        }
+        return {
+          ok: true,
+          capacidade: "ia",
+          mensagem: fallbackSemLlm(texto, "chave não configurada — MRE indisponível"),
+          modo: "fallback",
+          dados: {
+            instrucao: texto,
+            intencao,
+            memoria: mem,
+            coa,
+            llm: status,
+            rota: "deliberativa-sem-llm",
+            complexidadeDecisao: complexidade
+          }
+        };
+      }
+
+      try {
+        const mreOut = await executarRotaDeliberativa(
+          {
+            ...ctx,
+            coaAtivo: coa,
+            ...(lastro ? { lastroConsciencia: lastro } : {})
+          },
+          {
+            canal: ctx.canalSpeaker || "chat",
+            skipFila: ctx.skipFilaConsciencia === true ? true : undefined
+          }
+        );
+        const reflexo = garantirReflexoEstadoExecutivo(
+          mreOut.mensagem,
+          lastro,
+          texto
+        );
+        return {
+          ...mreOut,
+          mensagem: reflexo.mensagem,
+          capacidade: "ia",
+          dados: {
+            ...(mreOut.dados || {}),
+            instrucao: texto,
+            intencao,
+            memoria: mem,
+            coa,
+            llm: status,
+            conscienciaInfluencia: reflexo,
+            complexidadeDecisao: complexidade,
+            ...(lastro ? { lastroConsciencia: lastro } : {})
+          }
+        };
+      } catch (err) {
+        const fallback = fallbackSemLlm(
+          texto,
+          err && err.message ? err.message : "falha no MRE"
+        );
+        const reflexo = garantirReflexoEstadoExecutivo(fallback, lastro, texto);
+        return {
+          ok: true,
+          capacidade: "ia",
+          mensagem: reflexo.mensagem,
+          modo: "fallback",
+          dados: {
+            instrucao: texto,
+            intencao,
+            memoria: mem,
+            coa,
+            erro: err && err.message,
+            rota: "deliberativa-erro",
+            conscienciaInfluencia: reflexo,
+            complexidadeDecisao: complexidade
+          }
+        };
+      }
+    }
+
+    // Nível moderado/leve deliberativo → 1× LLM (sem pipeline MRE)
+    const statusMod = await obterStatusLlm();
+    if (!statusMod || !statusMod.configurado) {
       const prosaLastro = comporProsaLastro(lastro, texto);
       if (prosaLastro) {
         return {
@@ -134,65 +250,69 @@ async function executarBruto(ctx) {
             intencao,
             memoria: mem,
             coa,
-            llm: status,
+            llm: statusMod,
             lastroConsciencia: lastro,
-            rota: "deliberativa-consciencia-sem-llm"
+            rota: "deliberativa-rapida-sem-llm",
+            complexidadeDecisao: complexidade
           }
         };
       }
       return {
         ok: true,
         capacidade: "ia",
-        mensagem: fallbackSemLlm(texto, "chave não configurada — MRE indisponível"),
+        mensagem: fallbackSemLlm(texto, "chave não configurada"),
         modo: "fallback",
         dados: {
           instrucao: texto,
           intencao,
           memoria: mem,
           coa,
-          llm: status,
-          rota: "deliberativa-sem-llm"
+          llm: statusMod,
+          rota: "deliberativa-rapida-sem-llm",
+          complexidadeDecisao: complexidade
         }
       };
     }
 
     try {
-      const mreOut = await executarRotaDeliberativa(
-        {
-          ...ctx,
-          coaAtivo: coa,
-          ...(lastro ? { lastroConsciencia: lastro } : {})
-        },
-        {
-          canal: ctx.canalSpeaker || "chat",
-          // Consciência não escreve na Fila (E4-CA4); MRE pode ainda receber publicarJob via deps
-          skipFila: ctx.skipFilaConsciencia === true ? true : undefined
-        }
-      );
-      const reflexo = garantirReflexoEstadoExecutivo(
-        mreOut.mensagem,
-        lastro,
-        texto
-      );
+      const messages = montarMensagensLlm({
+        instrucao: texto,
+        historico: ctx.historico || [],
+        memoria: mem,
+        coa,
+        intencao
+      });
+      const saida = await deliberarComLlm({
+        messages,
+        temperature: 0.4,
+        max_tokens: complexidade.maxTokens
+      });
+      const reflexo = garantirReflexoEstadoExecutivo(saida.texto, lastro, texto);
       return {
-        ...mreOut,
-        mensagem: reflexo.mensagem,
+        ok: true,
         capacidade: "ia",
+        mensagem: reflexo.mensagem,
+        modo: "llm_rapido",
         dados: {
-          ...(mreOut.dados || {}),
           instrucao: texto,
           intencao,
           memoria: mem,
           coa,
-          llm: status,
+          rota: "deliberativa-rapida",
+          complexidadeDecisao: complexidade,
           conscienciaInfluencia: reflexo,
+          llm: {
+            modelo: saida.modelo,
+            uso: saida.uso,
+            origem: saida.origem
+          },
           ...(lastro ? { lastroConsciencia: lastro } : {})
         }
       };
     } catch (err) {
       const fallback = fallbackSemLlm(
         texto,
-        err && err.message ? err.message : "falha no MRE"
+        err && err.message ? err.message : "falha na chamada rápida"
       );
       const reflexo = garantirReflexoEstadoExecutivo(fallback, lastro, texto);
       return {
@@ -206,7 +326,8 @@ async function executarBruto(ctx) {
           memoria: mem,
           coa,
           erro: err && err.message,
-          rota: "deliberativa-erro",
+          rota: "deliberativa-rapida-erro",
+          complexidadeDecisao: complexidade,
           conscienciaInfluencia: reflexo
         }
       };
@@ -226,7 +347,8 @@ async function executarBruto(ctx) {
         memoria: mem,
         coa,
         llm: status,
-        rota: "legado"
+        rota: "legado",
+        complexidadeDecisao: complexidade
       }
     };
   }
@@ -240,7 +362,11 @@ async function executarBruto(ctx) {
       intencao
     });
 
-    const saida = await deliberarComLlm({ messages, temperature: 0.45 });
+    const saida = await deliberarComLlm({
+      messages,
+      temperature: 0.45,
+      max_tokens: complexidade.maxTokens || 900
+    });
 
     return {
       ok: true,
@@ -253,6 +379,7 @@ async function executarBruto(ctx) {
         memoria: mem,
         coa,
         rota: "legado-llm",
+        complexidadeDecisao: complexidade,
         llm: {
           modelo: saida.modelo,
           uso: saida.uso,
@@ -275,7 +402,8 @@ async function executarBruto(ctx) {
         memoria: mem,
         coa,
         erro: err && err.message,
-        rota: "legado-erro"
+        rota: "legado-erro",
+        complexidadeDecisao: complexidade
       }
     };
   }
