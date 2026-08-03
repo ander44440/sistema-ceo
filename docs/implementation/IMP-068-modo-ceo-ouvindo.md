@@ -1,8 +1,9 @@
 # IMP-068 — Implementação do Modo CEO Ouvindo (MVP)
 
-> **Status:** Implementada — 03/08/2026 (pronta para homologação).  
+> **Status:** Homologada (laboratório) — 03/08/2026; produção condicional (VAL-010).  
 > Norma: **REQ-068**; **ARQ-029** (homologada). Capacidade: CAP-07.  
-> Base: ANL-012; PX-001/PX-002; REQ-047; REQ-050; `experienciaVoz/`; `onboarding/voice/stt.js`.
+> Base: ANL-012; PX-001/PX-002; REQ-047; REQ-050; `experienciaVoz/`; `onboarding/voice/stt.js`.  
+> **VAL:** [`VAL-010-homologacao-modo-ceo-ouvindo.md`](../validation/VAL-010-homologacao-modo-ceo-ouvindo.md).
 
 ## Escopo cumprido (MVP)
 
@@ -19,7 +20,7 @@
 | Adaptadores / interfaces | Feito |
 | Eventos e erros básicos STT/TTS | Feito — `console` + callbacks |
 | UI Conversa (botão Ouvindo) | Feito |
-| CT-CO01…06 | Feito |
+| CT-CO01…10 | Feito |
 
 ## Decisões técnicas
 

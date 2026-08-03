@@ -137,4 +137,142 @@ describe("IMP-068 CEO Ouvindo", () => {
     ctrl.interromper();
     assert.equal(ctrl.estado(), ESTADO_TURNO.IDLE);
   });
+
+  test("CT-CO07: erro TTS (erro-sintese) → Erro", async () => {
+    const ctrl = criarVoiceController({
+      retornoAutomaticoOuvindo: true,
+      enviarTexto: async () => ({
+        ok: true,
+        mensagem: "ok",
+        dados: { textoVoz: "ok" }
+      }),
+      stt: {
+        suportado: () => true,
+        configurar() {},
+        iniciar() {},
+        parar() {},
+        escutando: () => false
+      },
+      devices: {
+        suportado: () => true,
+        async garantirPermissaoMic() {
+          return { ok: true };
+        },
+        fecharCaptura() {},
+        estaCapturando: () => false
+      },
+      tts: {
+        async speak() {
+          return { falou: false, motivo: "erro-sintese", erro: "TTS offline" };
+        },
+        stop() {}
+      }
+    });
+    await ctrl.iniciarEscuta();
+    await ctrl._processarTranscricao("teste");
+    assert.equal(ctrl.estado(), ESTADO_TURNO.ERRO);
+    assert.match(String(ctrl.mensagemErro()), /TTS|voz|ecrã|tela/i);
+  });
+
+  test("CT-CO08: múltiplas interações consecutivas", async () => {
+    let n = 0;
+    const ctrl = criarVoiceController({
+      retornoAutomaticoOuvindo: true,
+      enviarTexto: async (t) => {
+        n += 1;
+        return { ok: true, mensagem: `r${n}:${t}`, dados: { textoVoz: `r${n}` } };
+      },
+      stt: {
+        suportado: () => true,
+        configurar() {},
+        iniciar() {},
+        parar() {},
+        escutando: () => false
+      },
+      devices: {
+        suportado: () => true,
+        async garantirPermissaoMic() {
+          return { ok: true };
+        },
+        fecharCaptura() {},
+        estaCapturando: () => false
+      },
+      tts: {
+        async speak() {
+          return { falou: true };
+        },
+        stop() {}
+      }
+    });
+    await ctrl.iniciarEscuta();
+    await ctrl._processarTranscricao("um");
+    assert.equal(ctrl.estado(), ESTADO_TURNO.OUVINDO);
+    await ctrl._processarTranscricao("dois");
+    assert.equal(ctrl.estado(), ESTADO_TURNO.OUVINDO);
+    await ctrl._processarTranscricao("tres");
+    assert.equal(n, 3);
+    assert.equal(ctrl.estado(), ESTADO_TURNO.OUVINDO);
+  });
+
+  test("CT-CO09: STT Adapter — silêncio dispara transcricao_concluida", async () => {
+    const { criarSttAdapter } = await import("./sttAdapter.js");
+    const eventos = [];
+    let onFinalHandler = null;
+    const sttCore = {
+      suportado: () => true,
+      configurar(cbs) {
+        onFinalHandler = cbs.onFinal;
+      },
+      iniciar() {},
+      parar() {},
+      escutando: () => false
+    };
+    const adapter = criarSttAdapter({
+      silenceMs: 20,
+      stt: sttCore,
+      onEvento: (e) => eventos.push(e)
+    });
+    let finalTexto = null;
+    adapter.configurar({
+      onFinal: (t) => {
+        finalTexto = t;
+      }
+    });
+    adapter.iniciar();
+    onFinalHandler("olá CEO");
+    await new Promise((r) => setTimeout(r, 50));
+    assert.equal(finalTexto, "olá CEO");
+    assert.ok(eventos.some((e) => e.tipo === "silencio"));
+    assert.ok(eventos.some((e) => e.tipo === "transcricao_concluida"));
+  });
+
+  test("CT-CO10: mic negado → Erro sem pipeline", async () => {
+    let chamadas = 0;
+    const ctrl = criarVoiceController({
+      enviarTexto: async () => {
+        chamadas += 1;
+        return { ok: true, mensagem: "x" };
+      },
+      stt: {
+        suportado: () => true,
+        configurar() {},
+        iniciar() {},
+        parar() {},
+        escutando: () => false
+      },
+      devices: {
+        suportado: () => true,
+        async garantirPermissaoMic() {
+          return { ok: false, motivo: "Permissão de microfone negada." };
+        },
+        fecharCaptura() {},
+        estaCapturando: () => false
+      },
+      tts: { async speak() { return { falou: true }; }, stop() {} }
+    });
+    const r = await ctrl.iniciarEscuta();
+    assert.equal(r.ok, false);
+    assert.equal(ctrl.estado(), ESTADO_TURNO.ERRO);
+    assert.equal(chamadas, 0);
+  });
 });

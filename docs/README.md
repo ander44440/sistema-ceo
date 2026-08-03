@@ -115,7 +115,9 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-027-tempo-resposta-proporcional-complexidade.md`](architecture/ARQ-027-tempo-resposta-proporcional-complexidade.md) | **Em análise v0.1** — Tempo ∝ complexidade; CAP-07; REQ-066 / IMP-066 |
 | [`architecture/ARQ-028-dossier-institucional-curado.md`](architecture/ARQ-028-dossier-institucional-curado.md) | **Em análise v0.1** — Dossier Institucional Curado (DIC); CAP-07; REQ-067 → IMP-067 |
 | [`architecture/ARQ-029-modo-ceo-ouvindo.md`](architecture/ARQ-029-modo-ceo-ouvindo.md) | **Homologada** — Modo CEO Ouvindo; CAP-07; REQ-068 → IMP-068 |
-| [`implementation/IMP-068-modo-ceo-ouvindo.md`](implementation/IMP-068-modo-ceo-ouvindo.md) | **Implementada** — MVP CEO Ouvindo (pronta para homologação) |
+| [`implementation/IMP-068-modo-ceo-ouvindo.md`](implementation/IMP-068-modo-ceo-ouvindo.md) | **Homologada (lab)** — MVP CEO Ouvindo; VAL-010 |
+| [`validation/VAL-010-homologacao-modo-ceo-ouvindo.md`](validation/VAL-010-homologacao-modo-ceo-ouvindo.md) | **Em análise** — Homologação CEO Ouvindo; lab 15/15; produção condicional |
+| [`implementation/evidencias/IMP-068-homologacao-val010.md`](implementation/evidencias/IMP-068-homologacao-val010.md) | Evidências VAL-010 — commit `0c7d205` |
 | [`implementation/IMP-067-dossier-institucional-curado.md`](implementation/IMP-067-dossier-institucional-curado.md) | **Implementada** — DIC-001 + injecção path meta; CT-DIC01…08; pronta para homologação |
 | [`institution/DIC-001.md`](institution/DIC-001.md) | **DIC-001 v1.0** — Dossier Institucional Curado (consumo; subordinado a /docs) |
 | [`implementation/IMP-066-tempo-resposta-proporcional-complexidade.md`](implementation/IMP-066-tempo-resposta-proporcional-complexidade.md) | **Implementada** — roteamento instantaneo/leve/moderado/completa |
