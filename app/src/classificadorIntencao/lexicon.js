@@ -84,8 +84,13 @@ export const LEXICO_C1 = Object.freeze([
   }),
   Object.freeze({
     id: "lugares",
-    re: /\b(onde fica|onde [eé]|capital de|localiza[cç][aã]o de)\b/,
+    re: /\b(onde fica|onde [eé]|capital d[aeo]|localiza[cç][aã]o d[aeo])\b/,
     peso: 0.88
+  }),
+  Object.freeze({
+    id: "aritmetica",
+    re: /\bquanto\s+[eé]\s+\d|[×x*].*\d|\d+\s*[×x*+\-/÷]\s*\d+/,
+    peso: 0.9
   }),
   Object.freeze({
     id: "explicacao_conceito",

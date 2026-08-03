@@ -46,7 +46,11 @@ import {
 
 /** Marcador explícito de novo fio (ARQ-026 P4) — alinhado a RE_SHIFT de tópicos. */
 const RE_NOVO_CONTEXTO =
-  /\b(agora\s+sobre|mudando\s+de\s+assunto|mudar\s+de\s+assunto|deixemos\s+(o|a)|passando\s+(ao|à|a|para)|falando\s+(de|do|da)|vamos\s+(falar|tratar)\s+(de|do|da)|quero\s+falar\s+(de|do|da)|novo\s+(assunto|contexto|fio|tema))\b/i;
+  /\b(agora\s+sobre|mudando\s+de\s+assunto|mudar\s+de\s+assunto|deixemos\s+(o|a)|passando\s+(ao|à|a|para)|falando\s+(de|do|da)|vamos\s+(falar|tratar)\s+(de|do|da)|quero\s+falar\s+(de|do|da|sobre)|vamos\s+esquecer|esquecer\s+(o|a|os|as)|por\s+um\s+momento|novo\s+(assunto|contexto|fio|tema))\b/i;
+
+/** Retoma explícita do fio (alinhado a RE_RETOMAR de tópicos). */
+const RE_RETOMAR =
+  /\b(voltando\s+(a|ao|à|para)|retomando|retomar|voltar\s+(a|ao|à|para)|regressando\s+(a|ao|à)|onde\s+paramos)\b/i;
 
 /** Flag de rollback L1/L2 (ARQ-026 §10). */
 export let VCA_ATIVO = true;
@@ -122,6 +126,36 @@ function familiaGenerica(familia) {
   if (!f) return true;
   if (FAMILIAS_GENERICAS_VCA.has(f)) return true;
   if (f.includes("motoboy")) return true;
+  return false;
+}
+
+/**
+ * Menção textual ao tópico/objectivo activo (inclui frentes genéricas MG2/COA).
+ * @param {string} mensagem
+ * @param {{ ancora?: string }|null|undefined} topicoActivo
+ * @param {{ ancora?: string, enunciado?: string }|null|undefined} objetivoActivo
+ */
+function mencionaContextoActivo(mensagem, topicoActivo, objetivoActivo) {
+  const blob = String(mensagem || "").toLowerCase();
+  if (!blob) return false;
+  const candidatos = [
+    topicoActivo?.ancora,
+    objetivoActivo?.ancora,
+    objetivoActivo?.enunciado
+  ]
+    .filter(Boolean)
+    .map((s) => String(s).toLowerCase().trim())
+    .filter((s) => s.length >= 3);
+  for (const c of candidatos) {
+    if (blob.includes(c)) return true;
+    // tokens significativos (≥4) do enunciado/âncora
+    for (const tok of c.split(/[^\p{L}\p{N}]+/u).filter((x) => x.length >= 4)) {
+      if (blob.includes(tok)) return true;
+    }
+  }
+  if (/\b(mg2|motoboy)\b/.test(blob) && candidatos.some((c) => /motoboy|mg2|game/.test(c))) {
+    return true;
+  }
   return false;
 }
 
@@ -209,6 +243,18 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
     return base;
   }
 
+  // Meta explícita sobre o Sistema CEO (mesmo sem E2.3 completo)
+  if (
+    /\bsistema\s+ceo\b/.test(t) &&
+    /\b(falar|quero|sobre|esqueci|esquecer|momento)\b/.test(t) &&
+    !/\b(mg2|motoboy|outdoor)\b/.test(t)
+  ) {
+    return resultado(
+      "metaconversa",
+      "pedido explícito sobre o Sistema CEO → isolamento de lastro de projecto"
+    );
+  }
+
   // Execução C3 / verbos de trabalho → pertence (Classificador decide C3; sem ambiguidade VCA)
   if (ehIntencaoExecutivaE21(t) || temVerboExecucao(t)) {
     return resultado(
@@ -227,9 +273,29 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
 
   // P4 — novo contexto explícito
   if (RE_NOVO_CONTEXTO.test(mensagem) || RE_NOVO_CONTEXTO.test(t)) {
+    // «quero falar sobre o Sistema CEO» já tratado acima; resto = novo fio
     return resultado(
       "novo_contexto",
       "marcador explícito de novo fio → sem lastro do anterior; stores preservados"
+    );
+  }
+
+  // Retoma explícita do fio / «onde paramos» → pertence
+  if (
+    (RE_RETOMAR.test(mensagem) || RE_RETOMAR.test(t)) &&
+    (activo || histProjeto || entrada.frenteActiva || mencionaContextoActivo(mensagem, topicoActivo, objetivoActivo))
+  ) {
+    return resultado(
+      "pertence",
+      "retoma explícita / onde paramos → path CSC"
+    );
+  }
+
+  // Menção directa ao activo (inclui COA/MG2 genérico) → pertence
+  if (mencionaContextoActivo(mensagem, topicoActivo, objetivoActivo)) {
+    return resultado(
+      "pertence",
+      "menção ao contexto activo → path CSC"
     );
   }
 

@@ -78,3 +78,4 @@ VCA (validarContextoAtivo)
 | Versão | Data | Quem | O quê |
 |--------|------|------|-------|
 | 0.1 | 03/08/2026 | Engenheiro (Cursor) | Implementação + CT-V + validação |
+| 0.2 | 03/08/2026 | Engenheiro (Cursor) | Correcção pós-teste: isolamento de `frenteActiva`/COA/memória na CN; C1 capital/aritmética; retoma/meta/novo |

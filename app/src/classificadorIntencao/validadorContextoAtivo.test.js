@@ -355,6 +355,66 @@ test("CT-V14: só pertence activa CSC — fixtures ≠ pertence sem lastro 061�
   }
 });
 
+test("CT-V-real: capital / aritmética / meta / retoma — isolamento sem herdar MG2", async () => {
+  const top = criarTopico("Motoboy Game 2", "coa", ISO);
+  definirEstadoTopicosSessao({ topicoActivo: top, pausas: [] });
+
+  const capital = await executiveEngine.executar({
+    texto: "Qual é a capital da França?"
+  });
+  assert.equal(capital.dados?.validacaoContexto?.autorizaLastroCsc, false);
+  assert.equal(capital.dados?.classificacao?.classe, "conhecimento_geral");
+  assert.equal(capital.dados?.encaminhamento?.destino, "resposta_leve");
+  assert.doesNotMatch(
+    capital.mensagem,
+    /Mantemos o foco|Continuidade:|Frente ativa:/i
+  );
+
+  definirEstadoTopicosSessao({ topicoActivo: top, pausas: [] });
+  const math = await executiveEngine.executar({ texto: "quanto é 125 × 48?" });
+  assert.equal(math.dados?.validacaoContexto?.autorizaLastroCsc, false);
+  assert.equal(math.dados?.classificacao?.classe, "conhecimento_geral");
+  assert.equal(math.dados?.encaminhamento?.destino, "resposta_leve");
+  assert.doesNotMatch(
+    math.mensagem,
+    /Mantemos o foco|Continuidade:|Frente ativa:|Sugiro/i
+  );
+
+  definirEstadoTopicosSessao({ topicoActivo: top, pausas: [] });
+  const meta = await executiveEngine.executar({
+    texto: "Você acha que está respondendo como um verdadeiro executivo?"
+  });
+  assert.equal(meta.dados?.validacaoContexto?.veredicto, "metaconversa");
+  assert.equal(meta.dados?.validacaoContexto?.autorizaLastroCsc, false);
+  assert.doesNotMatch(
+    meta.mensagem,
+    /Mantemos o foco|Continuidade:|Frente ativa:/i
+  );
+
+  definirEstadoTopicosSessao({ topicoActivo: top, pausas: [] });
+  const shift = await executiveEngine.executar({
+    texto:
+      "Vamos esquecer o Motoboy Game 2 por um momento. Quero falar sobre o Sistema CEO."
+  });
+  assert.equal(shift.dados?.validacaoContexto?.autorizaLastroCsc, false);
+  assert.ok(
+    ["novo_contexto", "metaconversa"].includes(
+      shift.dados?.validacaoContexto?.veredicto
+    )
+  );
+  assert.doesNotMatch(
+    shift.mensagem,
+    /Mantemos o foco|Continuidade:|Frente ativa:|Sprint 1/i
+  );
+
+  definirEstadoTopicosSessao({ topicoActivo: top, pausas: [] });
+  const retoma = await executiveEngine.executar({
+    texto: "Voltando ao Motoboy Game 2, onde paramos?"
+  });
+  assert.equal(retoma.dados?.validacaoContexto?.veredicto, "pertence");
+  assert.equal(retoma.dados?.validacaoContexto?.autorizaLastroCsc, true);
+});
+
 test("CT-V-extra: rollback VCA_ATIVO=false força pertence", () => {
   definirVcaAtivo(false);
   const r = validarContextoAtivo({
