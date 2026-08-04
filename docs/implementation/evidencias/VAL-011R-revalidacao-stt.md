@@ -58,3 +58,7 @@ npm run test:classificador:e23 → 8/8
 ## GATE-010
 
 **Não reaberto.** Condicionado à aprovação da VAL-011R.
+
+## Commit
+
+`80260f2dff93f17bb5508c2e78048722d38a21c7` — `fix(voz): sync SpeechRecognition start + VAL-011R revalidation`

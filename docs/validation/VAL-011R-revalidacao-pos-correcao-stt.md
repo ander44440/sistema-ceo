@@ -134,4 +134,10 @@ Módulo: `app/src/onboarding/voice/debugStt.js`.
 
 ## 8. Entregáveis / commits
 
-Ver evidência [`../implementation/evidencias/VAL-011R-revalidacao-stt.md`](../implementation/evidencias/VAL-011R-revalidacao-stt.md) e commits associados a esta VAL.
+| Item | Valor |
+|------|--------|
+| Commit | `80260f2dff93f17bb5508c2e78048722d38a21c7` |
+| Mensagem | `fix(voz): sync SpeechRecognition start + VAL-011R revalidation` |
+| Branch | `cursor/ipr-001-experiencia-f1-f2` |
+| Evidência | [`../implementation/evidencias/VAL-011R-revalidacao-stt.md`](../implementation/evidencias/VAL-011R-revalidacao-stt.md) |
+| Produção | `dpl_Bfm7V3pP5vaJAoGQ7RJHQ9zzBgUj` |
