@@ -22,7 +22,7 @@
 | FLW | Fluxos | `docs/flows/` | CTO/Engenheiro | CTO |
 | TSK | Tarefas | `docs/tasks/` | CEO/Engenheiro | CTO |
 | TST | Testes | `docs/tests/` | Engenheiro | CTO |
-| REL | Releases | `docs/` (futuro) | Engenheiro | Usuário |
+| REL | Releases / estado de produto | `docs/` | Engenheiro | Usuário |
 | — | Aprendizado | `docs/learning/` | qualquer participante | — |
 
 Criação de **novo tipo documental** exige registro em ADR e inclusão nesta tabela — nunca criação ad hoc.
@@ -49,6 +49,9 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 
 | Documento | Status |
 |-----------|--------|
+| [`GATE-009-certificacao-prontidao-sistema-ceo.md`](GATE-009-certificacao-prontidao-sistema-ceo.md) | **Homologado** — Certificação de prontidão; parecer **Apto com ressalvas**; abre deliberação da próxima frente |
+| [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — Próxima onda; **F1 aberta** (ANL-013); demais F2–F8 aguardam |
+| [`REL-001-estado-atual-do-sistema-ceo.md`](REL-001-estado-atual-do-sistema-ceo.md) | **Homologado** — Estado atual pós-EIC + MVP CEO Ouvindo; estabilização concluída (patrocinador) |
 | [`D0-fundacao.md`](D0-fundacao.md) | Histórico (fundação) |
 | [`CON-001-constituicao.md`](CON-001-constituicao.md) | Aprovado v1.2 — mandato temporário revogado; papéis permanentes restabelecidos |
 | [`vision/VIS-001-visao-do-produto.md`](vision/VIS-001-visao-do-produto.md) | Aprovado v1.0 |
@@ -114,10 +117,14 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-025-objetivo-conversacional.md`](architecture/ARQ-025-objetivo-conversacional.md) | **Em análise v0.1** — Objetivo Conversacional / Goal Tracking; CAP-07; REQ-064 / IMP-064 |
 | [`architecture/ARQ-027-tempo-resposta-proporcional-complexidade.md`](architecture/ARQ-027-tempo-resposta-proporcional-complexidade.md) | **Em análise v0.1** — Tempo ∝ complexidade; CAP-07; REQ-066 / IMP-066 |
 | [`architecture/ARQ-028-dossier-institucional-curado.md`](architecture/ARQ-028-dossier-institucional-curado.md) | **Em análise v0.1** — Dossier Institucional Curado (DIC); CAP-07; REQ-067 → IMP-067 |
-| [`architecture/ARQ-029-modo-ceo-ouvindo.md`](architecture/ARQ-029-modo-ceo-ouvindo.md) | **Homologada** — Modo CEO Ouvindo; CAP-07; REQ-068 → IMP-068 |
-| [`implementation/IMP-068-modo-ceo-ouvindo.md`](implementation/IMP-068-modo-ceo-ouvindo.md) | **Homologada (lab)** — MVP CEO Ouvindo; VAL-010 |
-| [`validation/VAL-010-homologacao-modo-ceo-ouvindo.md`](validation/VAL-010-homologacao-modo-ceo-ouvindo.md) | **Em análise** — Homologação CEO Ouvindo; lab 15/15; produção condicional |
+| [`architecture/ARQ-029-modo-ceo-ouvindo.md`](architecture/ARQ-029-modo-ceo-ouvindo.md) | **Homologada / frente ENCERRADA** — Modo CEO Ouvindo; CAP-07; REQ-068 → IMP-068 → VAL-010 → ENC-006 |
+| [`implementation/IMP-068-modo-ceo-ouvindo.md`](implementation/IMP-068-modo-ceo-ouvindo.md) | **Homologada (lab) / frente ENCERRADA** — MVP CEO Ouvindo; VAL-010 → ENC-006 |
+| [`validation/VAL-010-homologacao-modo-ceo-ouvindo.md`](validation/VAL-010-homologacao-modo-ceo-ouvindo.md) | **Homologada (lab) / ENC-006** — 15/15; residual prod fechado por **VAL-011** |
 | [`implementation/evidencias/IMP-068-homologacao-val010.md`](implementation/evidencias/IMP-068-homologacao-val010.md) | Evidências VAL-010 — commit `0c7d205` |
+| [`learning/ENC-006-encerramento-modo-ceo-ouvindo.md`](learning/ENC-006-encerramento-modo-ceo-ouvindo.md) | **Encerrado** — Encerramento da frente Modo CEO Ouvindo (MVP); VAL oficial = **VAL-010** (≠ VAL-006 CAP-05) |
+| [`REL-001-estado-atual-do-sistema-ceo.md`](REL-001-estado-atual-do-sistema-ceo.md) | **Homologado** — Consolidação pós-ENC-006; estabilização concluída |
+| [`GATE-009-certificacao-prontidao-sistema-ceo.md`](GATE-009-certificacao-prontidao-sistema-ceo.md) | **Homologado** — Prontidão para nova frente; **Apto com ressalvas** |
+| [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — Onda; **F1 aberta** via ANL-013; sem código nesta etapa |
 | [`implementation/IMP-067-dossier-institucional-curado.md`](implementation/IMP-067-dossier-institucional-curado.md) | **Implementada** — DIC-001 + injecção path meta; CT-DIC01…08; pronta para homologação |
 | [`institution/DIC-001.md`](institution/DIC-001.md) | **DIC-001 v1.0** — Dossier Institucional Curado (consumo; subordinado a /docs) |
 | [`implementation/IMP-066-tempo-resposta-proporcional-complexidade.md`](implementation/IMP-066-tempo-resposta-proporcional-complexidade.md) | **Implementada** — roteamento instantaneo/leve/moderado/completa |
@@ -146,8 +153,15 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`analysis/ANL-009-objetivo-conversacional-goal-tracking.md`](analysis/ANL-009-objetivo-conversacional-goal-tracking.md) | **Em análise** — ANL Objetivo Conversacional / Goal Tracking (4ª frente EIC CSC / CAP-07) |
 | [`analysis/ANL-010-validador-contexto-ativo.md`](analysis/ANL-010-validador-contexto-ativo.md) | **Em análise** — ANL Validador de Contexto Ativo / VCA (pré-cadeia EIC / CAP-07) |
 | [`analysis/ANL-011-conhecimento-institucional-do-ceo.md`](analysis/ANL-011-conhecimento-institucional-do-ceo.md) | **Em análise** — ANL Conhecimento Institucional do CEO (CAP-04/07/01; prepara ARQ do DIC) |
-| [`analysis/ANL-012-arquitetura-modo-ceo-ouvindo.md`](analysis/ANL-012-arquitetura-modo-ceo-ouvindo.md) | **Homologada** — ANL Arquitectura do Modo «CEO Ouvindo» (CAP-07 / EIC; voz como I/O) → REQ-068 |
-| [`requirements/REQ-068-modo-ceo-ouvindo.md`](requirements/REQ-068-modo-ceo-ouvindo.md) | **Homologada v0.1** — Modo CEO Ouvindo; CAP-07; ANL-012 → ARQ-029 → IMP-068 |
+| [`analysis/ANL-013-paridade-producao-ceo-ouvindo.md`](analysis/ANL-013-paridade-producao-ceo-ouvindo.md) | **Homologada** — Frente **F1**; Paridade Produção → REQ-069 → ARQ-030 |
+| [`architecture/ARQ-030-implantacao-producao-ceo-ouvindo.md`](architecture/ARQ-030-implantacao-producao-ceo-ouvindo.md) | **Homologada** — Implantação em produção CEO Ouvindo; CAP-07; REQ-069 → IMP-069 |
+| [`implementation/IMP-069-implantacao-producao-ceo-ouvindo.md`](implementation/IMP-069-implantacao-producao-ceo-ouvindo.md) | **Homologada** — Deploy Production F1; `dpl_B1UgTVLv…` → VAL-011 |
+| [`implementation/evidencias/IMP-069-homologacao-producao.md`](implementation/evidencias/IMP-069-homologacao-producao.md) | Evidências IMP-069 — alias com `ceoOuvindo`; smoke pipeline/TTS/Ouvindo |
+| [`validation/VAL-011-homologacao-paridade-producao-ceo-ouvindo.md`](validation/VAL-011-homologacao-paridade-producao-ceo-ouvindo.md) | **Homologada (engenharia)** — 13/13; paridade lab↔prod; aguarda Gate final |
+| [`validation/VAL-011R-revalidacao-pos-correcao-stt.md`](validation/VAL-011R-revalidacao-pos-correcao-stt.md) | **Homologada (engenharia)** — pós-correção STT; `dpl_Bfm7V3pP…`; GATE-010 não reaberto |
+| [`requirements/REQ-069-paridade-producao-ceo-ouvindo.md`](requirements/REQ-069-paridade-producao-ceo-ouvindo.md) | **Homologada v0.1** — Paridade Produção CEO Ouvindo; CAP-07; ANL-013 → ARQ-030 → IMP-069 |
+| [`analysis/ANL-012-arquitetura-modo-ceo-ouvindo.md`](analysis/ANL-012-arquitetura-modo-ceo-ouvindo.md) | **Homologada / frente ENCERRADA** — ANL Modo «CEO Ouvindo» → REQ-068 → … → ENC-006 |
+| [`requirements/REQ-068-modo-ceo-ouvindo.md`](requirements/REQ-068-modo-ceo-ouvindo.md) | **Homologada / frente ENCERRADA** — Modo CEO Ouvindo; CAP-07; ANL-012 → ARQ-029 → IMP-068 → **VAL-010** → ENC-006 |
 | [`requirements/REQ-067-dossier-institucional-curado.md`](requirements/REQ-067-dossier-institucional-curado.md) | **Em análise v0.1** — Dossier Institucional Curado (DIC); CAP-07; ANL-011 → ARQ-028 / IMP-067 |
 | [`requirements/REQ-066-tempo-resposta-proporcional-complexidade.md`](requirements/REQ-066-tempo-resposta-proporcional-complexidade.md) | **Em análise v0.1** — Tempo de resposta ∝ complexidade; CAP-07 → ARQ-027 / IMP-066 |
 | [`requirements/REQ-065-validador-contexto-ativo.md`](requirements/REQ-065-validador-contexto-ativo.md) | **Em análise v0.1** — Validador de Contexto Ativo; CAP-07; ANL-010 → ARQ-026 / IMP-065 |
@@ -210,6 +224,7 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-012-arquitetura-coa-home-executiva-conversacional.md`](architecture/ARQ-012-arquitetura-coa-home-executiva-conversacional.md) | Em análise v0.1 — componentes N–S; D1–D10 |
 | [`learning/2026-07-24-institucionalizacao-cap-r.md`](learning/2026-07-24-institucionalizacao-cap-r.md) | Marco — institucionalização da CAP-R |
 | [`roadmap/ROADMAP-001-plano-estrategico-do-sistema-ceo.md`](roadmap/ROADMAP-001-plano-estrategico-do-sistema-ceo.md) | Homologado v1.0 — plano estratégico até CEO 1.0; épicos E1–E7 |
+| [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — Próxima onda pós-GATE-009; **F1 aberta** (ANL-013); F2–F8 não iniciadas |
 | [`learning/2026-07-24-institucionalizacao-roadmap.md`](learning/2026-07-24-institucionalizacao-roadmap.md) | Marco — institucionalização do tipo ROADMAP |
 | [`CAP-002-priorizacao-das-capacidades.md`](CAP-002-priorizacao-das-capacidades.md) | Aprovado v1.0 |
 | [`requirements/REQ-001-distribuicao-da-constituicao.md`](requirements/REQ-001-distribuicao-da-constituicao.md) | Aprovado |

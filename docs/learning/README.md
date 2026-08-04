@@ -4,6 +4,14 @@ Registros educacionais: por que cada decisão foi tomada, alternativas, riscos e
 
 | Registro | Tema |
 |----------|------|
+| [`ENC-006-encerramento-modo-ceo-ouvindo.md`](ENC-006-encerramento-modo-ceo-ouvindo.md) | Encerramento da frente Modo CEO Ouvindo (MVP) — VAL-010 → ENC-006 — 03/08/2026 |
+| [`2026-08-03-diagnostico-ceo-nao-ouviu.md`](2026-08-03-diagnostico-ceo-nao-ouviu.md) | Diagnóstico inicial «CEO não ouviu» (GUM↔SR) — GATE-010 cancelado |
+| [`2026-08-03-diagnostico-stt-instrumental-gate010-cancelado.md`](2026-08-03-diagnostico-stt-instrumental-gate010-cancelado.md) | Diagnóstico instrumental STT — causa: await mic antes de start(); correção sync |
+| [`../validation/VAL-011R-revalidacao-pos-correcao-stt.md`](../validation/VAL-011R-revalidacao-pos-correcao-stt.md) | VAL-011R — revalidação pós-correção; GATE-010 aguarda aprovação |
+| [`../REL-001-estado-atual-do-sistema-ceo.md`](../REL-001-estado-atual-do-sistema-ceo.md) | REL-001 — Estado atual do Sistema CEO (**Homologado**; estabilização concluída) |
+| [`../GATE-009-certificacao-prontidao-sistema-ceo.md`](../GATE-009-certificacao-prontidao-sistema-ceo.md) | GATE-009 — Certificação de prontidão (**Homologado**; Apto com ressalvas) |
+| [`../roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](../roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | ROADMAP-002 — Próxima onda; **F1 aberta** (ANL-013) |
+| [`../analysis/ANL-013-paridade-producao-ceo-ouvindo.md`](../analysis/ANL-013-paridade-producao-ceo-ouvindo.md) | ANL-013 — F1 Paridade → … → VAL-011 (Gate final) |
 | [`2026-07-21-conceitos-organizacionais.md`](2026-07-21-conceitos-organizacionais.md) | Conceitos organizacionais |
 | [`2026-07-21-r1-revisao-organizacional.md`](2026-07-21-r1-revisao-organizacional.md) | Revisão organizacional R1 |
 | [`2026-07-22-ancora-operacional-pos-cnc-005.md`](2026-07-22-ancora-operacional-pos-cnc-005.md) | Âncora pós-CNC-005 |

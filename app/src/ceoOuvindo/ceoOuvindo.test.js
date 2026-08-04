@@ -214,6 +214,53 @@ describe("IMP-068 CEO Ouvindo", () => {
     assert.equal(ctrl.estado(), ESTADO_TURNO.OUVINDO);
   });
 
+  test("CT-CO11: VAL-011R — 10 conversas consecutivas sem regressão", async () => {
+    let n = 0;
+    let starts = 0;
+    const ctrl = criarVoiceController({
+      retornoAutomaticoOuvindo: true,
+      enviarTexto: async (t) => {
+        n += 1;
+        return {
+          ok: true,
+          mensagem: `ok-${n}:${t}`,
+          dados: { textoVoz: `ok-${n}` }
+        };
+      },
+      stt: {
+        suportado: () => true,
+        configurar() {},
+        iniciar() {
+          starts += 1;
+        },
+        parar() {},
+        escutando: () => false
+      },
+      devices: {
+        suportado: () => true,
+        async garantirPermissaoMic() {
+          return { ok: true };
+        },
+        fecharCaptura() {},
+        estaCapturando: () => false
+      },
+      tts: {
+        async speak() {
+          return { falou: true };
+        },
+        stop() {}
+      }
+    });
+    await ctrl.iniciarEscuta();
+    assert.equal(starts, 1);
+    for (let i = 1; i <= 10; i++) {
+      await ctrl._processarTranscricao(`turno-${i}`);
+      assert.equal(ctrl.estado(), ESTADO_TURNO.OUVINDO, `pós turno ${i}`);
+    }
+    assert.equal(n, 10);
+    assert.ok(starts >= 11, "start inicial + 10 retornos automáticos");
+  });
+
   test("CT-CO09: STT Adapter — silêncio dispara transcricao_concluida", async () => {
     const { criarSttAdapter } = await import("./sttAdapter.js");
     const eventos = [];
@@ -246,8 +293,10 @@ describe("IMP-068 CEO Ouvindo", () => {
     assert.ok(eventos.some((e) => e.tipo === "transcricao_concluida"));
   });
 
-  test("CT-CO10: mic negado → Erro sem pipeline", async () => {
+  test("CT-CO10: STT not-allowed → Erro sem pipeline", async () => {
     let chamadas = 0;
+    /** @type {(ev: object) => void} */
+    let onErro = () => {};
     const ctrl = criarVoiceController({
       enviarTexto: async () => {
         chamadas += 1;
@@ -255,7 +304,9 @@ describe("IMP-068 CEO Ouvindo", () => {
       },
       stt: {
         suportado: () => true,
-        configurar() {},
+        configurar(cbs) {
+          if (cbs && typeof cbs.onErro === "function") onErro = cbs.onErro;
+        },
         iniciar() {},
         parar() {},
         escutando: () => false
@@ -263,15 +314,22 @@ describe("IMP-068 CEO Ouvindo", () => {
       devices: {
         suportado: () => true,
         async garantirPermissaoMic() {
-          return { ok: false, motivo: "Permissão de microfone negada." };
+          return { ok: true, via: "permissions" };
         },
         fecharCaptura() {},
         estaCapturando: () => false
       },
-      tts: { async speak() { return { falou: true }; }, stop() {} }
+      tts: {
+        async speak() {
+          return { falou: true };
+        },
+        stop() {}
+      }
     });
     const r = await ctrl.iniciarEscuta();
-    assert.equal(r.ok, false);
+    assert.equal(r.ok, true);
+    assert.equal(ctrl.estado(), ESTADO_TURNO.OUVINDO);
+    onErro({ error: "not-allowed" });
     assert.equal(ctrl.estado(), ESTADO_TURNO.ERRO);
     assert.equal(chamadas, 0);
   });

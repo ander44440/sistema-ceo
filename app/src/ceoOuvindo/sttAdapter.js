@@ -1,5 +1,6 @@
 /**
  * Speech-to-Text Adapter — envolve criarStt (ARQ-029 §2 / IMP-068).
+ * Modo turno (continuous: false) — adequado a CEO Ouvindo MVP.
  */
 
 import { criarStt } from "../onboarding/voice/stt.js";
@@ -13,7 +14,13 @@ import { criarStt } from "../onboarding/voice/stt.js";
  */
 export function criarSttAdapter(opts = {}) {
   const silenceMs = opts.silenceMs ?? 900;
-  const stt = opts.stt || criarStt({ lang: opts.lang || "pt-BR" });
+  const stt =
+    opts.stt ||
+    criarStt({
+      lang: opts.lang || "pt-BR",
+      continuous: false,
+      interimResults: true
+    });
   /** @type {ReturnType<typeof setTimeout>|null} */
   let silenceTimer = null;
   /** @type {string} */
@@ -43,12 +50,19 @@ export function criarSttAdapter(opts = {}) {
       emitir("stt_start", null);
       cbs.onStart?.();
     },
+    onAudioStart: () => emitir("stt_audiostart", null),
+    onSoundStart: () => emitir("stt_soundstart", null),
+    onSpeechStart: () => emitir("stt_speechstart", null),
+    onAudioEnd: () => emitir("stt_audioend", null),
+    onSoundEnd: () => emitir("stt_soundend", null),
+    onSpeechEnd: () => emitir("stt_speechend", null),
     onEnd: () => {
       emitir("stt_end", null);
       cbs.onEnd?.();
     },
     onInterim: (t) => {
       cbs.onParcial?.(t);
+      emitir("stt_interim", { texto: t });
     },
     onFinal: (t) => {
       const piece = String(t || "").trim();
@@ -70,7 +84,6 @@ export function criarSttAdapter(opts = {}) {
     },
     onError: (ev) => {
       const erro = (ev && ev.error) || (ev && ev.message) || "erro-stt";
-      // `no-speech` / `aborted` são recuperáveis — não forçar Erro fatal sempre
       emitir("erro_voz", { origem: "stt", motivo: erro });
       cbs.onErro?.(ev);
     }

@@ -8,6 +8,7 @@ import { criarVoiceStateManager } from "./voiceStateManager.js";
 import { criarAudioDeviceManager } from "./audioDeviceManager.js";
 import { criarSttAdapter } from "./sttAdapter.js";
 import { criarTtsAdapter } from "./ttsAdapter.js";
+import { diagStt } from "../onboarding/voice/debugStt.js";
 
 /**
  * @param {object} deps
@@ -101,10 +102,15 @@ export function criarVoiceController(deps) {
     });
     if (!proc.ok) return;
 
+    diagStt("10. Texto enviado ao Gate/Núcleo", t);
     onEvento({ tipo: "processamento_iniciado", detalhe: { texto: t } });
 
     try {
       const resposta = await deps.enviarTexto(t);
+      diagStt("11. Resposta recebida do Gate/Núcleo", {
+        ok: resposta?.ok,
+        mensagem: String(resposta?.mensagem || "").slice(0, 120)
+      });
       if (cancelarTurno) {
         state.transitar(ESTADO_TURNO.INTERROMPIDO, { motivo: "cancelado" });
         state.transitar(ESTADO_TURNO.IDLE, { motivo: "apos_interrupcao" });
@@ -147,8 +153,8 @@ export function criarVoiceController(deps) {
       await reiniciarEscutaSeAuto();
     } catch (err) {
       const msg = (err && err.message) || "Falha no processamento por voz.";
+      diagStt("11. Erro ao falar com Gate/Núcleo", msg);
       onEvento({ tipo: "erro_voz", detalhe: { origem: "pipeline", motivo: msg } });
-      // Erro de pipeline: texto pode ter sido mostrado pela UI; modo voz → Erro
       state.transitar(ESTADO_TURNO.ERRO, { mensagemErro: msg });
     }
   }
@@ -192,16 +198,15 @@ export function criarVoiceController(deps) {
       return { ok: false, erro: "stt-indisponivel", ...snapUi() };
     }
 
-    const perm = await devices.garantirPermissaoMic();
-    if (!perm.ok) {
-      state.transitar(ESTADO_TURNO.ERRO, {
-        mensagemErro: perm.motivo || "Microfone negado."
-      });
-      return { ok: false, erro: "mic", ...snapUi() };
-    }
-
-    // Liberta stream de teste — Web Speech abre o mic sozinho
+    // Chrome exige recognition.start() no mesmo turno síncrono do gesto do utilizador.
+    // Qualquer await (permissions / getUserMedia) ANTES de start() quebra a captura:
+    // UI fica em Ouvindo, mas sem onaudiostart/onresult → «CEO não ouviu».
     devices.fecharCaptura();
+    try {
+      tts.stop();
+    } catch {
+      /* ignore */
+    }
 
     if (actual === ESTADO_TURNO.ERRO || actual === ESTADO_TURNO.INTERROMPIDO) {
       state.transitar(ESTADO_TURNO.IDLE, { motivo: "reset_pre_escuta" });
@@ -214,14 +219,27 @@ export function criarVoiceController(deps) {
 
     try {
       stt.iniciar();
-      onEvento({ tipo: "iniciar_escuta", detalhe: null });
-      return { ok: true, ...snapUi() };
+      onEvento({
+        tipo: "iniciar_escuta",
+        detalhe: { syncStart: true, micVia: "delegado-stt" }
+      });
     } catch (err) {
       state.transitar(ESTADO_TURNO.ERRO, {
         mensagemErro: (err && err.message) || "Falha ao iniciar STT."
       });
       return { ok: false, erro: "stt-start", ...snapUi() };
     }
+
+    // Permissão só como diagnóstico em background (não bloqueia start)
+    Promise.resolve(devices.garantirPermissaoMic())
+      .then((perm) => {
+        if (perm && perm.ok === false) {
+          diagStt("mic permissão background", perm);
+        }
+      })
+      .catch(() => {});
+
+    return { ok: true, ...snapUi() };
   }
 
   function pararEscuta() {
