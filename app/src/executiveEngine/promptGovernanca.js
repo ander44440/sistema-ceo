@@ -8,7 +8,8 @@
 import { obterConstituicaoCeo } from "./constituicaoCeo.js";
 import { obterGovernancaLlm } from "./governancaLlm.js";
 import { construirContextoSessao } from "./contextoSessao.js";
-import { obterBriefingProjeto } from "./briefingsProjeto.js";
+import { obterProjecaoBriefing } from "./briefingsProjeto.js";
+import { factosViaPorta } from "../camadaConhecimento/portaRecuperacao.js";
 import {
   DIC_ID,
   DIC_VERSAO,
@@ -56,11 +57,29 @@ export function montarMensagensLlm({
     content: construirContextoSessao({ memoria, coa, intencao })
   });
 
+  // IMP-070 B5 / REQ-072: lastro de Camada só via Porta (nunca directo ao Acervo)
+  const ambitoCoa = coa?.id || memoria?.projetoAtivo?.id || null;
+  const factosOficiais = factosViaPorta({
+    contextoTrabalho: ambitoCoa ? { id: ambitoCoa } : coa,
+    necessidade:
+      String(instrucao || "").trim() ||
+      "lastro organizacional para composição EIC / Executive Engine"
+  });
+  if (factosOficiais.length) {
+    messages.push({
+      role: "system",
+      content:
+        "PORTA DE RECUPERAÇÃO (lastro oficial apto — única superfície de leitura):\n" +
+        factosOficiais.join("\n")
+    });
+  }
+
   // ARQ-028 C-COA: sem briefing COA por omissão no path meta
+  // REQ-070: briefing = projecção subordinada, nunca Fonte Oficial
   if (!injectDic) {
-    const briefing = obterBriefingProjeto(coa);
-    if (briefing) {
-      messages.push({ role: "system", content: briefing });
+    const projecao = obterProjecaoBriefing(coa);
+    if (projecao?.textoRotulado) {
+      messages.push({ role: "system", content: projecao.textoRotulado });
     }
   }
 

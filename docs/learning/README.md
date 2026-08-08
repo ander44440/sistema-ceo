@@ -4,6 +4,23 @@ Registros educacionais: por que cada decisão foi tomada, alternativas, riscos e
 
 | Registro | Tema |
 |----------|------|
+| [`2026-08-07-despacho-baseline-oficial-maturidade.md`](2026-08-07-despacho-baseline-oficial-maturidade.md) | **BASELINE OFICIAL ACTUALIZADA** · Maturidade por Evidências **ACTIVO** |
+| [`2026-08-07-encerramento-imp-071-baseline-cap-01.md`](2026-08-07-encerramento-imp-071-baseline-cap-01.md) | **IMP-071 Homologada** · CAP-01 Autoridade Delegada na **Baseline** (07/08/2026) |
+| [`2026-08-07-despacho-cap-04-baseline-maturidade.md`](2026-08-07-despacho-cap-04-baseline-maturidade.md) | Despacho — CAP-04 Baseline · maturidade por evidências restabelecida |
+| [`2026-08-07-encerramento-imp-070-baseline-cap-04.md`](2026-08-07-encerramento-imp-070-baseline-cap-04.md) | **IMP-070 Homologada** · CAP-04 Camada na **Baseline** (07/08/2026) |
+| [`2026-08-06-cto-001-preservacao-missao.md`](2026-08-06-cto-001-preservacao-missao.md) | **CTO-001** — Preservação da missão sob incerteza (**Homologado / Encerrado** · Baseline) |
+| [`2026-08-06-cto-002-disciplina-executiva.md`](2026-08-06-cto-002-disciplina-executiva.md) | **CTO-002** — Disciplina Deliberar/Executar (implementado; ver documento) |
+| [`2026-08-06-cto-003-persistencia-estado-operacional.md`](2026-08-06-cto-003-persistencia-estado-operacional.md) | **CTO-003** — Persistência do estado operacional + RECUPERAR (**Homologado / Encerrado** · Baseline) |
+| [`2026-08-06-cto-003-homologacao-pratica.md`](2026-08-06-cto-003-homologacao-pratica.md) | CTO-003 — Homologação prática 7/7 (despacho CTO) |
+| [`2026-08-06-cto-003-inconsistencia-pipeline.md`](2026-08-06-cto-003-inconsistencia-pipeline.md) | CTO-003 — Correção: interceptação pré-classificador (uso real) |
+| [`2026-08-06-cto-003-validacao-pratica-invariante.md`](2026-08-06-cto-003-validacao-pratica-invariante.md) | CTO-003 — Validação prática pós-reinício (**Aprovado** · ref. Baseline 1.2) |
+| [`2026-08-06-status-maturidade-baseline-estavel.md`](2026-08-06-status-maturidade-baseline-estavel.md) | Status oficial — **BASELINE OFICIAL** · Maturidade por Evidências **ACTIVO** |
+| [`2026-08-06-status-capacidade-conversacao.md`](2026-08-06-status-capacidade-conversacao.md) | Status conversação — EIC-001 + DESP-002 + DESP-003 — 06/08/2026 |
+| [`2026-08-06-desp-002-calibracao-comportamento-conversacional.md`](2026-08-06-desp-002-calibracao-comportamento-conversacional.md) | DESP-002 — condução conversacional (**Homologado**) |
+| [`2026-08-06-ciclo-decidir-calibracao.md`](2026-08-06-ciclo-decidir-calibracao.md) | DESP-003 — ciclo Decidir (**Homologado**) |
+| [`2026-08-06-desp-004-calibracao-planejamento.md`](2026-08-06-desp-004-calibracao-planejamento.md) | DESP-004 — planejar (**Homologado**) |
+| [`2026-08-06-desp-005-calibracao-antecipacao.md`](2026-08-06-desp-005-calibracao-antecipacao.md) | DESP-005 — antecipar (aguarda homologação) |
+| [`ANCORA-MESTRA.md`](ANCORA-MESTRA.md) | Âncora Mestra — estado operacional vigente (actualizada 07/08/2026 · CAP-04 Baseline) |
 | [`ENC-006-encerramento-modo-ceo-ouvindo.md`](ENC-006-encerramento-modo-ceo-ouvindo.md) | Encerramento da frente Modo CEO Ouvindo (MVP) — VAL-010 → ENC-006 — 03/08/2026 |
 | [`2026-08-03-diagnostico-ceo-nao-ouviu.md`](2026-08-03-diagnostico-ceo-nao-ouviu.md) | Diagnóstico inicial «CEO não ouviu» (GUM↔SR) — GATE-010 cancelado |
 | [`2026-08-03-diagnostico-stt-instrumental-gate010-cancelado.md`](2026-08-03-diagnostico-stt-instrumental-gate010-cancelado.md) | Diagnóstico instrumental STT — causa: await mic antes de start(); correção sync |

@@ -50,7 +50,7 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | Documento | Status |
 |-----------|--------|
 | [`GATE-009-certificacao-prontidao-sistema-ceo.md`](GATE-009-certificacao-prontidao-sistema-ceo.md) | **Homologado** — Certificação de prontidão; parecer **Apto com ressalvas**; abre deliberação da próxima frente |
-| [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — Próxima onda; **F1 aberta** (ANL-013); demais F2–F8 aguardam |
+| [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — F1 ENCERRADA; **F2 retirada**; candidatas F3–F8 |
 | [`REL-001-estado-atual-do-sistema-ceo.md`](REL-001-estado-atual-do-sistema-ceo.md) | **Homologado** — Estado atual pós-EIC + MVP CEO Ouvindo; estabilização concluída (patrocinador) |
 | [`D0-fundacao.md`](D0-fundacao.md) | Histórico (fundação) |
 | [`CON-001-constituicao.md`](CON-001-constituicao.md) | Aprovado v1.2 — mandato temporário revogado; papéis permanentes restabelecidos |
@@ -124,7 +124,7 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`learning/ENC-006-encerramento-modo-ceo-ouvindo.md`](learning/ENC-006-encerramento-modo-ceo-ouvindo.md) | **Encerrado** — Encerramento da frente Modo CEO Ouvindo (MVP); VAL oficial = **VAL-010** (≠ VAL-006 CAP-05) |
 | [`REL-001-estado-atual-do-sistema-ceo.md`](REL-001-estado-atual-do-sistema-ceo.md) | **Homologado** — Consolidação pós-ENC-006; estabilização concluída |
 | [`GATE-009-certificacao-prontidao-sistema-ceo.md`](GATE-009-certificacao-prontidao-sistema-ceo.md) | **Homologado** — Prontidão para nova frente; **Apto com ressalvas** |
-| [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — Onda; **F1 aberta** via ANL-013; sem código nesta etapa |
+| [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — Onda; F1 ENCERRADA; F2 não-frente; aguarda F3–F8 |
 | [`implementation/IMP-067-dossier-institucional-curado.md`](implementation/IMP-067-dossier-institucional-curado.md) | **Implementada** — DIC-001 + injecção path meta; CT-DIC01…08; pronta para homologação |
 | [`institution/DIC-001.md`](institution/DIC-001.md) | **DIC-001 v1.0** — Dossier Institucional Curado (consumo; subordinado a /docs) |
 | [`implementation/IMP-066-tempo-resposta-proporcional-complexidade.md`](implementation/IMP-066-tempo-resposta-proporcional-complexidade.md) | **Implementada** — roteamento instantaneo/leve/moderado/completa |
@@ -153,12 +153,12 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`analysis/ANL-009-objetivo-conversacional-goal-tracking.md`](analysis/ANL-009-objetivo-conversacional-goal-tracking.md) | **Em análise** — ANL Objetivo Conversacional / Goal Tracking (4ª frente EIC CSC / CAP-07) |
 | [`analysis/ANL-010-validador-contexto-ativo.md`](analysis/ANL-010-validador-contexto-ativo.md) | **Em análise** — ANL Validador de Contexto Ativo / VCA (pré-cadeia EIC / CAP-07) |
 | [`analysis/ANL-011-conhecimento-institucional-do-ceo.md`](analysis/ANL-011-conhecimento-institucional-do-ceo.md) | **Em análise** — ANL Conhecimento Institucional do CEO (CAP-04/07/01; prepara ARQ do DIC) |
-| [`analysis/ANL-013-paridade-producao-ceo-ouvindo.md`](analysis/ANL-013-paridade-producao-ceo-ouvindo.md) | **Homologada** — Frente **F1**; Paridade Produção → REQ-069 → ARQ-030 |
-| [`architecture/ARQ-030-implantacao-producao-ceo-ouvindo.md`](architecture/ARQ-030-implantacao-producao-ceo-ouvindo.md) | **Homologada** — Implantação em produção CEO Ouvindo; CAP-07; REQ-069 → IMP-069 |
+| [`analysis/ANL-013-paridade-producao-ceo-ouvindo.md`](analysis/ANL-013-paridade-producao-ceo-ouvindo.md) | **Homologada** — Frente **F1 ENCERRADA**; Paridade → REQ-069 → ARQ-030 → IMP-069 → VAL-011 |
+| [`architecture/ARQ-030-implantacao-producao-ceo-ouvindo.md`](architecture/ARQ-030-implantacao-producao-ceo-ouvindo.md) | **Homologada** — Implantação produção CEO Ouvindo; CAP-07; Gate ARQ→IMP registado |
 | [`implementation/IMP-069-implantacao-producao-ceo-ouvindo.md`](implementation/IMP-069-implantacao-producao-ceo-ouvindo.md) | **Homologada** — Deploy Production F1; `dpl_B1UgTVLv…` → VAL-011 |
 | [`implementation/evidencias/IMP-069-homologacao-producao.md`](implementation/evidencias/IMP-069-homologacao-producao.md) | Evidências IMP-069 — alias com `ceoOuvindo`; smoke pipeline/TTS/Ouvindo |
-| [`validation/VAL-011-homologacao-paridade-producao-ceo-ouvindo.md`](validation/VAL-011-homologacao-paridade-producao-ceo-ouvindo.md) | **Homologada (engenharia)** — 13/13; paridade lab↔prod; aguarda Gate final |
-| [`validation/VAL-011R-revalidacao-pos-correcao-stt.md`](validation/VAL-011R-revalidacao-pos-correcao-stt.md) | **Homologada (engenharia)** — pós-correção STT; `dpl_Bfm7V3pP…`; GATE-010 não reaberto |
+| [`validation/VAL-011-homologacao-paridade-producao-ceo-ouvindo.md`](validation/VAL-011-homologacao-paridade-producao-ceo-ouvindo.md) | **Homologada** — 13/13; Gate final 06/08/2026; F1 encerrada |
+| [`validation/VAL-011R-revalidacao-pos-correcao-stt.md`](validation/VAL-011R-revalidacao-pos-correcao-stt.md) | **Homologada** — pós-correção STT; Gate 06/08/2026; `dpl_Bfm7V3pP…` |
 | [`requirements/REQ-069-paridade-producao-ceo-ouvindo.md`](requirements/REQ-069-paridade-producao-ceo-ouvindo.md) | **Homologada v0.1** — Paridade Produção CEO Ouvindo; CAP-07; ANL-013 → ARQ-030 → IMP-069 |
 | [`analysis/ANL-012-arquitetura-modo-ceo-ouvindo.md`](analysis/ANL-012-arquitetura-modo-ceo-ouvindo.md) | **Homologada / frente ENCERRADA** — ANL Modo «CEO Ouvindo» → REQ-068 → … → ENC-006 |
 | [`requirements/REQ-068-modo-ceo-ouvindo.md`](requirements/REQ-068-modo-ceo-ouvindo.md) | **Homologada / frente ENCERRADA** — Modo CEO Ouvindo; CAP-07; ANL-012 → ARQ-029 → IMP-068 → **VAL-010** → ENC-006 |
@@ -206,7 +206,9 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`requirements/REQ-056-motor-de-execucao.md`](requirements/REQ-056-motor-de-execucao.md) | **Homologada v0.1** — Motor de Execução; CAP-11 |
 | [`implementation/IMP-056-motor-de-execucao.md`](implementation/IMP-056-motor-de-execucao.md) | **Homologada** — frente encerrada 01/08/2026; E1–E7 |
 | [`implementation/evidencias/IMP-056-matriz-ca-na.md`](implementation/evidencias/IMP-056-matriz-ca-na.md) | Matriz CA/NA REQ-056 — evidências IMP-056 |
-| [`learning/ANCORA-MESTRA.md`](learning/ANCORA-MESTRA.md) | **Âncora Mestra** — Painel Orquestração + Conector CTO em produção; autonomia local V2 |
+| [`learning/ANCORA-MESTRA.md`](learning/ANCORA-MESTRA.md) | **Âncora Mestra** — Baseline oficial actualizada · maturidade por evidências **ACTIVO** |
+| [`learning/2026-08-07-despacho-baseline-oficial-maturidade.md`](learning/2026-08-07-despacho-baseline-oficial-maturidade.md) | Despacho — **BASELINE OFICIAL ACTUALIZADA** |
+| [`learning/2026-08-06-status-maturidade-baseline-estavel.md`](learning/2026-08-06-status-maturidade-baseline-estavel.md) | Status oficial — Baseline · Maturidade por Evidências **ACTIVO** |
 | [`learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md`](learning/2026-08-01-checkpoint-dispatcher-fila-v2-req-053.md) | Checkpoint — Dispatcher V2 operacional |
 | [`architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md`](architecture/ARQ-014-natureza-cognitiva-da-solicitacao-mre.md) | **Rascunho v0.1** — ARQ da NCS no limiar MRE (revisão conjunta; sem IMP) |
 | [`implementation/IMP-020-natureza-cognitiva-da-solicitacao-ncs.md`](implementation/IMP-020-natureza-cognitiva-da-solicitacao-ncs.md) | **Rascunho v0.1** — plano IMP da NCS; C1–C8 materializados (B1–B4); produção NCS **não** declarada |
@@ -216,6 +218,39 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`implementation/evidencias/IMP-020-B3-evidencia.md`](implementation/evidencias/IMP-020-B3-evidencia.md) | Evidência gate B3 (C5/C6) |
 | [`implementation/evidencias/IMP-020-B4-evidencia.md`](implementation/evidencias/IMP-020-B4-evidencia.md) | Evidência gate B4 (C7/C8); rollback `flagNcs` |
 | [`governance/mandato-cto-temporario-vigente.md`](governance/mandato-cto-temporario-vigente.md) | Histórico — mandato revogado |
+| [`governance/REG-001-plano-regularizacao-arquitetural-onda-f1.md`](governance/REG-001-plano-regularizacao-arquitetural-onda-f1.md) | **Executado** — Plano regularização F1 |
+| [`governance/REG-001-pacote-fecho-f1.md`](governance/REG-001-pacote-fecho-f1.md) | **Concluído** — Pacote de fecho F1 (06/08/2026) |
+| [`analysis/ANL-014-mapa-capacidades-executivas-baseline-eic.md`](analysis/ANL-014-mapa-capacidades-executivas-baseline-eic.md) | **Aprovado CTO** — Mapa capacidades executivas / Baseline EIC |
+| [`analysis/ANL-015-diagnostico-f1-reg.md`](analysis/ANL-015-diagnostico-f1-reg.md) | **Emitido** — Diagnóstico F1 (REG); lastro Opção B |
+| [`analysis/ANL-016-parecer-executivo-f2.md`](analysis/ANL-016-parecer-executivo-f2.md) | **Decisão CTO** — F2 não autorizada; retirada como frente |
+| [`architecture/ARQ-032-autoridade-delegada.md`](architecture/ARQ-032-autoridade-delegada.md) | **ARQ-032 Homologada v1.0 · congelada** · Baseline CAP-01 |
+| [`cap-01/README.md`](cap-01/README.md) | **CAP-01 Autoridade Delegada — Baseline oficial** · ciclo ENCERRADO |
+| [`cap-01/CAP-01-abertura-ciclo-autoridade-delegada.md`](cap-01/CAP-01-abertura-ciclo-autoridade-delegada.md) | Abertura histórica — ciclo **ENCERRADO** |
+| [`cap-01/CAP-01-autoridade-delegada-responsabilidades.md`](cap-01/CAP-01-autoridade-delegada-responsabilidades.md) | Decomposição R1–R10 (**congelada**) |
+| [`cap-01/CAP-01-pacote-reqs-autoridade-delegada.md`](cap-01/CAP-01-pacote-reqs-autoridade-delegada.md) | Pacote REQ-075…084 — **APROVADO / congelado** |
+| [`cap-01/CAP-01-verificacao-cas-pre-imp.md`](cap-01/CAP-01-verificacao-cas-pre-imp.md) | Pré-condição CAs — **satisfeita** (40 PASS/FAIL) |
+| [`cap-01/CAP-01-preparacao-fase-implementacao.md`](cap-01/CAP-01-preparacao-fase-implementacao.md) | Preparação IMP — **cumprida** · IMP-071 encerrada |
+| [`cap-01/relatorio-encerramento-cap-01-autoridade-delegada.md`](cap-01/relatorio-encerramento-cap-01-autoridade-delegada.md) | Encerramento ciclo · Baseline |
+| [`implementation/IMP-071-autoridade-delegada.md`](implementation/IMP-071-autoridade-delegada.md) | **IMP-071 HOMOLOGADA / ENCERRADA** |
+| [`implementation/evidencias/IMP-071-fecho-b6.md`](implementation/evidencias/IMP-071-fecho-b6.md) | Evidência B6 · Homologação final |
+| [`validation/VAL-IMP-071-B1.md`](validation/VAL-IMP-071-B1.md) | VAL B1 — **Homologada** · REQ-075/076 congelados |
+| [`validation/VAL-IMP-071-B2.md`](validation/VAL-IMP-071-B2.md) | VAL B2 — **Homologada** · REQ-077/078 congelados |
+| [`validation/VAL-IMP-071-B3.md`](validation/VAL-IMP-071-B3.md) | VAL B3 — **Homologada** · REQ-079/080 congelados |
+| [`validation/VAL-IMP-071-B4.md`](validation/VAL-IMP-071-B4.md) | VAL B4 — **Homologada** · REQ-081/082 congelados |
+| [`validation/VAL-IMP-071-B5.md`](validation/VAL-IMP-071-B5.md) | VAL B5 — **Homologada** · REQ-083/084 congelados |
+| [`validation/VAL-IMP-071.md`](validation/VAL-IMP-071.md) | VAL integrada — **Homologada** · Baseline |
+| [`learning/2026-08-07-encerramento-imp-071-baseline-cap-01.md`](learning/2026-08-07-encerramento-imp-071-baseline-cap-01.md) | MO — IMP-071 Homologada · Baseline CAP-01 |
+| [`requirements/REQ-075-validacao-acto-delegacao.md`](requirements/REQ-075-validacao-acto-delegacao.md) | **Aprovado v1.0** — R1 |
+| [`requirements/REQ-076-estado-autoridade-delegada-activa.md`](requirements/REQ-076-estado-autoridade-delegada-activa.md) | **Aprovado v1.0** — R2 |
+| [`requirements/REQ-077-fecho-no-perimetro-delegado.md`](requirements/REQ-077-fecho-no-perimetro-delegado.md) | **Aprovado v1.0** — R3 |
+| [`requirements/REQ-078-recusa-fora-limites-delegacao.md`](requirements/REQ-078-recusa-fora-limites-delegacao.md) | **Aprovado v1.0** — R4 |
+| [`requirements/REQ-079-encerramento-autoridade-delegada.md`](requirements/REQ-079-encerramento-autoridade-delegada.md) | **Aprovado v1.0** — R5 |
+| [`requirements/REQ-080-retorno-automatico-autoridade-usuario.md`](requirements/REQ-080-retorno-automatico-autoridade-usuario.md) | **Aprovado v1.0** — R6 |
+| [`requirements/REQ-081-prevalencia-soberana-usuario.md`](requirements/REQ-081-prevalencia-soberana-usuario.md) | **Aprovado v1.0** — R7 |
+| [`requirements/REQ-082-ortogonalidade-modos-autoridade-delegada.md`](requirements/REQ-082-ortogonalidade-modos-autoridade-delegada.md) | **Aprovado v1.0** — R8 |
+| [`requirements/REQ-083-rastreabilidade-fecho-delegado.md`](requirements/REQ-083-rastreabilidade-fecho-delegado.md) | **Aprovado v1.0** — R9 |
+| [`requirements/REQ-084-distincao-delegacao-autorizacao-despacho.md`](requirements/REQ-084-distincao-delegacao-autorizacao-despacho.md) | **Aprovado v1.0** — R10 |
+| [`analysis/INV-001-autoridade-delegada.md`](analysis/INV-001-autoridade-delegada.md) | **INV-001 ENCERRADA** — causa raiz aceite · sem novas inv. nesta frente |
 | [`learning/2026-07-25-checkpoint-pre-cto-temporario.md`](learning/2026-07-25-checkpoint-pre-cto-temporario.md) | Histórico — checkpoint da transição abortada |
 | [`learning/2026-07-25-revogacao-mandato-cto-temporario.md`](learning/2026-07-25-revogacao-mandato-cto-temporario.md) | Marco — revogação e restabelecimento dos papéis |
 | [`vision/VIS-007-visao-do-ceo-mvp-2-0-ambiente-executivo-multiprojeto.md`](vision/VIS-007-visao-do-ceo-mvp-2-0-ambiente-executivo-multiprojeto.md) | **Aprovada para prosseguimento v0.2** — COA + Home conversacional (CAP-03) |
@@ -224,7 +259,7 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-012-arquitetura-coa-home-executiva-conversacional.md`](architecture/ARQ-012-arquitetura-coa-home-executiva-conversacional.md) | Em análise v0.1 — componentes N–S; D1–D10 |
 | [`learning/2026-07-24-institucionalizacao-cap-r.md`](learning/2026-07-24-institucionalizacao-cap-r.md) | Marco — institucionalização da CAP-R |
 | [`roadmap/ROADMAP-001-plano-estrategico-do-sistema-ceo.md`](roadmap/ROADMAP-001-plano-estrategico-do-sistema-ceo.md) | Homologado v1.0 — plano estratégico até CEO 1.0; épicos E1–E7 |
-| [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — Próxima onda pós-GATE-009; **F1 aberta** (ANL-013); F2–F8 não iniciadas |
+| [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — Pós-GATE-009; F1 ENCERRADA; F2 retirada (ANL-016); F3–F8 candidatas |
 | [`learning/2026-07-24-institucionalizacao-roadmap.md`](learning/2026-07-24-institucionalizacao-roadmap.md) | Marco — institucionalização do tipo ROADMAP |
 | [`CAP-002-priorizacao-das-capacidades.md`](CAP-002-priorizacao-das-capacidades.md) | Aprovado v1.0 |
 | [`requirements/REQ-001-distribuicao-da-constituicao.md`](requirements/REQ-001-distribuicao-da-constituicao.md) | Aprovado |
@@ -259,6 +294,26 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-005-arquitetura-da-distribuicao-de-governanca.md`](architecture/ARQ-005-arquitetura-da-distribuicao-de-governanca.md) | Homologada v1.0 |
 | [`architecture/ARQ-006-arquitetura-do-acervo-de-conhecimento.md`](architecture/ARQ-006-arquitetura-do-acervo-de-conhecimento.md) | Homologada v1.0 — CAP-04; Fase ARQ encerrada com ARQ-007 |
 | [`architecture/ARQ-007-espaco-de-identificacao-do-acervo-de-conhecimento.md`](architecture/ARQ-007-espaco-de-identificacao-do-acervo-de-conhecimento.md) | Homologada v1.0 — espaço `KNW-nnn`; Fase ARQ CAP-04 encerrada; IMP não iniciada |
+| [`architecture/ARQ-031-capacidade-de-conhecimento.md`](architecture/ARQ-031-capacidade-de-conhecimento.md) | **Homologada v1.0 · congelada (Baseline CAP-04)** |
+| [`cap-04/README.md`](cap-04/README.md) — Sede / baseline CAP-04 Camada | **Homologada · ENCERRADA** — Baseline oficial · maturidade por evidências |
+| [`cap-04/relatorio-encerramento-cap-04-camada.md`](cap-04/relatorio-encerramento-cap-04-camada.md) | Encerramento oficial · Baseline |
+| [`cap-04/CAP-04-abertura-ciclo-camada-conhecimento.md`](cap-04/CAP-04-abertura-ciclo-camada-conhecimento.md) | Ciclo **ENCERRADO / BASELINE** |
+| [`implementation/IMP-070-capacidade-de-conhecimento-camada.md`](implementation/IMP-070-capacidade-de-conhecimento-camada.md) | **HOMOLOGADA / ENCERRADA** |
+| [`validation/VAL-IMP-070-B1-fonte-oficial.md`](validation/VAL-IMP-070-B1-fonte-oficial.md) | VAL B1 — **Homologada** |
+| [`validation/VAL-IMP-070-B2-limites-admissao.md`](validation/VAL-IMP-070-B2-limites-admissao.md) | VAL B2 — **Homologada** |
+| [`validation/VAL-IMP-070-B3-governanca.md`](validation/VAL-IMP-070-B3-governanca.md) | VAL B3 — **Homologada** |
+| [`validation/VAL-IMP-070-B4-atualizacao.md`](validation/VAL-IMP-070-B4-atualizacao.md) | VAL B4 — **Homologada** |
+| [`validation/VAL-IMP-070-B5-porta-eic.md`](validation/VAL-IMP-070-B5-porta-eic.md) | VAL B5 — **Homologada** |
+| [`validation/VAL-IMP-070.md`](validation/VAL-IMP-070.md) | VAL integrada IMP-070 — **Homologada** |
+| [`cap-04/CAP-04-pacote-reqs-camada-para-analise-cto.md`](cap-04/CAP-04-pacote-reqs-camada-para-analise-cto.md) | Pacote REQ-070…074 — **APROVADO · congelado (Baseline)** |
+| [`cap-04/CAP-04-verificacao-cas-pre-imp.md`](cap-04/CAP-04-verificacao-cas-pre-imp.md) | Pré-condição CAs — **satisfeita** |
+| [`requirements/REQ-070-fonte-oficial-do-conhecimento.md`](requirements/REQ-070-fonte-oficial-do-conhecimento.md) | **Aprovado v1.0 · congelado (Baseline)** — D1 · CAP-04 |
+| [`requirements/REQ-071-atualizacao-por-curadoria-governada.md`](requirements/REQ-071-atualizacao-por-curadoria-governada.md) | **Aprovado v1.0 · congelado (Baseline)** — D2 · CAP-04 |
+| [`requirements/REQ-072-porta-recuperacao-eic.md`](requirements/REQ-072-porta-recuperacao-eic.md) | **Aprovado v1.0 · congelado (Baseline)** — D3 · CAP-04 |
+| [`requirements/REQ-073-limites-admissao-camada-conhecimento.md`](requirements/REQ-073-limites-admissao-camada-conhecimento.md) | **Aprovado v1.0 · congelado (Baseline)** — D4 · CAP-04 |
+| [`requirements/REQ-074-governanca-promocao-aptidao-acervo.md`](requirements/REQ-074-governanca-promocao-aptidao-acervo.md) | **Aprovado v1.0 · congelado (Baseline)** — D5 · CAP-04 |
+| [`learning/2026-08-07-encerramento-imp-070-baseline-cap-04.md`](learning/2026-08-07-encerramento-imp-070-baseline-cap-04.md) | MO — IMP-070 Homologada · Baseline CAP-04 |
+| [`learning/2026-08-07-diretriz-reqs-cap-04-camada.md`](learning/2026-08-07-diretriz-reqs-cap-04-camada.md) | Diretriz CTO — REQs só decompõem CAP-04; ARQ-031 intocável |
 | [`analysis/plano-pre-imp-cap-04-gestao-do-conhecimento.md`](analysis/plano-pre-imp-cap-04-gestao-do-conhecimento.md) | Homologado v1.1 — referência pré-IMP CAP-04; IMP-004 homologado v1.0 |
 | [`knowledge/decisao-conjunto-inicial-de-classificacoes.md`](knowledge/decisao-conjunto-inicial-de-classificacoes.md) | Em análise v0.1 — decisão técnica CTO; pré-condição IMP-004; **não** é E1 |
 | [`implementation/IMP-004-plano-de-implementacao-documental-do-acervo-de-conhecimento.md`](implementation/IMP-004-plano-de-implementacao-documental-do-acervo-de-conhecimento.md) | Homologado v1.0 — CAP-04; E1+E2 homologadas; E3 não iniciada |

@@ -1,10 +1,12 @@
 /**
- * Briefings fixos por projeto — conhecimento de domínio (camada de contexto).
- * Fonte canónica curada: docs/mvp/briefing-operacional-mg2.md
- * Gate Opção A: Deliberação CTO 30/07/2026.
- * B1 (autorizado Patrocinador 30/07/2026): factos do briefing entram na entrada MRE
- * via Núcleo (`montarEntradaMre`) — sem alterar lógica deliberativa do MRE/Speaker.
+ * IMP-070 B1 — Briefing como projecção subordinada (não Fonte Oficial).
+ * REQ-070: em divergência prevalece o Acervo; lacuna quando Acervo sem item apto.
  */
+
+import {
+  rotuloProjecaoSubordinada,
+  subordinarProjecao
+} from "../camadaConhecimento/fonteOficial.js";
 
 /** @type {Record<string, string>} */
 const BRIEFINGS_POR_ID = {
@@ -20,15 +22,11 @@ const BRIEFINGS_POR_ID = {
     "- Próximo passo único: validar Sprint 1 de perf com o Patrocinador; se ok → LOD (Sprint 2) na oficina.",
     "- Fora de escopo agora: build no CEO; alterar MRE/Speaker; multiplayer/pagamento complexo; ciclo VIS→REQ→ARQ estrutural sem evidências adicionais.",
     "- Regra de ouro: se faltar facto (ex. margem, métricas), declarar lacuna e perguntar o mínimo — não inventar Job. Pedidos técnicos → oficina com título/descrição concretos.",
-    "- Fonte canónica: docs/mvp/briefing-operacional-mg2.md (atualizar lá primeiro)."
+    "- Nota IMP-070 B1: este texto é PROJEÇÃO SUBORDINADA — Fonte Oficial = Acervo (REQ-070)."
   ].join("\n")
 };
 
-/**
- * Factos discretos para `factosOficiais` da entrada MRE (B1).
- * Mantidos alinhados ao briefing canónico — atualizar em conjunto.
- * @type {Record<string, string[]>}
- */
+/** @type {Record<string, string[]>} */
 const FACTOS_BRIEFING_POR_ID = {
   "prj-mg2": [
     "COA MG2 = Motoboy Game 2 — protótipo 3D web (Three.js/Vite), cidade Bombinhas, cena principal WorldLab2 (rotas / e /mg2).",
@@ -44,11 +42,11 @@ const FACTOS_BRIEFING_POR_ID = {
   ]
 };
 
-// Alias de id usado em alguns testes / caminhos legados
 BRIEFINGS_POR_ID["coa-mg2"] = BRIEFINGS_POR_ID["prj-mg2"];
 FACTOS_BRIEFING_POR_ID["coa-mg2"] = FACTOS_BRIEFING_POR_ID["prj-mg2"];
 
 /**
+ * Texto bruto da projecção briefing (legado). Preferir `obterProjecaoBriefing`.
  * @param {{ id?: string, nome?: string } | null | undefined} coa
  * @returns {string|null}
  */
@@ -63,7 +61,7 @@ export function obterBriefingProjeto(coa) {
 }
 
 /**
- * Factos do briefing para entrada factual do MRE (B1 — camada de contexto).
+ * Factos brutos da projecção (legado). Não são Fonte Oficial.
  * @param {{ id?: string, nome?: string } | null | undefined} coa
  * @returns {string[]}
  */
@@ -77,4 +75,21 @@ export function obterFactosBriefingProjeto(coa) {
     return FACTOS_BRIEFING_POR_ID["prj-mg2"].slice();
   }
   return [];
+}
+
+/**
+ * Projecção subordinada ao Acervo (REQ-070 / IMP-070 B1).
+ * @param {{ id?: string, nome?: string } | null | undefined} coa
+ */
+export function obterProjecaoBriefing(coa) {
+  const texto = obterBriefingProjeto(coa);
+  const factos = obterFactosBriefingProjeto(coa);
+  if (!texto && !factos.length) return null;
+  return subordinarProjecao({
+    id: "projecao-briefing-curado",
+    origem: "briefingsProjeto",
+    texto,
+    factos,
+    textoRotulado: texto ? rotuloProjecaoSubordinada(texto) : null
+  });
 }

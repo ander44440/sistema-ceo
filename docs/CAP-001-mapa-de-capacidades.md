@@ -32,12 +32,13 @@
 
 * **Identificador:** CAP-01
 * **Nome:** Governança
+* **Ciclo (Autoridade Delegada — ARQ-032):** **Homologada e concluída (07/08/2026)** — ARQ-032 → REQ-075…084 → IMP-071 → VAL-IMP-071. **Baseline** em [`cap-01/`](cap-01/README.md). **Ciclo ENCERRADO.** **Congelado:** ARQ-032 · REQ-075…084 · IMP-071. **Não reabrir** sem evidência de uso real + deliberação CTO.
 * **Objetivo:** Garantir que todo o trabalho de humanos e agentes obedeça às normas do projeto.
-* **Descrição:** Estabelecer, distribuir e manter regras permanentes válidas para qualquer agente conectado, de forma independente de ferramenta; assegurar que nenhuma ação contrarie a hierarquia normativa (Constituição → Visão → Requisitos → ADRs → Implementação).
-* **Fora do Escopo:** Executar as tarefas governadas (CAP-02, CAP-03); armazenar o histórico das decisões (CAP-05).
+* **Descrição:** Estabelecer, distribuir e manter regras permanentes válidas para qualquer agente conectado, de forma independente de ferramenta; assegurar que nenhuma ação contrarie a hierarquia normativa (Constituição → Visão → Requisitos → ADRs → Implementação). Inclui a **Autoridade Delegada** (Baseline): competência temporária, explícita e subordinada de fecho Usuário→CEO (sem novo dono da missão).
+* **Fora do Escopo:** Executar as tarefas governadas (CAP-02, CAP-03); armazenar o histórico das decisões (CAP-05); alterar ARQ-032 sem evidência + CTO.
 * **Pilares Fortalecidos:** Governança.
-* **Fontes Normativas:** CON-001 Art. 5º e 7º; REQ-001; ADR-001 Decisão 3.
-* **Observações:** O primeiro requisito do projeto (REQ-001 — distribuição da Constituição) pertence a esta capacidade.
+* **Fontes Normativas:** CON-001 Art. 5º, 6º I e 7º; REQ-001; ADR-001 Decisão 3; **ARQ-032**.
+* **Observações:** O primeiro requisito do projeto (REQ-001 — distribuição da Constituição) pertence a esta capacidade. Autoridade Delegada = **Baseline oficial** · ciclo **ENCERRADO**. Encerramento: [`cap-01/relatorio-encerramento-cap-01-autoridade-delegada.md`](cap-01/relatorio-encerramento-cap-01-autoridade-delegada.md). Suite ref.: 48/48.
 
 ### CAP-02 — Gestão de Agentes
 
@@ -67,12 +68,14 @@
 
 * **Identificador:** CAP-04
 * **Nome:** Gestão do Conhecimento
+* **Ciclo (Camada — ARQ-031):** **Homologada e concluída (07/08/2026)** — ARQ-031 → REQ-070…074 → IMP-070 → VAL-IMP-070. **Baseline** em [`cap-04/`](cap-04/README.md). **Ciclo ENCERRADO.** **Congelado:** ARQ-031 · REQ-070…074 · IMP-070. **Não reabrir** sem evidência de uso real + deliberação CTO.
+* **Ciclo documental prévio (IMP-004):** E1+E2 homologadas (sede `docs/knowledge/`); E3 não iniciada — infraestrutura de acervo; **não** substitui a Baseline de Camada.
 * **Objetivo:** Transformar o que os projetos produzem em patrimônio consultável.
-* **Descrição:** Organizar, preservar e recuperar o conhecimento gerado pelos projetos, tornando cada novo projeto mais rápido que o anterior.
-* **Fora do Escopo:** O registro decisório em si (CAP-05); a absorção de competências de outras IAs (CAP-06).
+* **Descrição:** Organizar, preservar e recuperar o conhecimento gerado pelos projetos, tornando cada novo projeto mais rápido que o anterior. A Camada (ARQ-031) especifica fonte oficial, actualização, porta de recuperação para a EIC, limites e governação do acervo — **integrada à arquitectura operacional do Sistema CEO**.
+* **Fora do Escopo:** O registro decisório em si (CAP-05); a absorção de competências de outras IAs (CAP-06); engenharia/código do MG2 (REQ-030); decisões de implementação/tecnologia na fase de especificação.
 * **Pilares Fortalecidos:** Conhecimento.
-* **Fontes Normativas:** D0 (Objetivos); VIS-001 §4; ADR-002 Decisão 5.
-* **Observações:** —
+* **Fontes Normativas:** D0 (Objetivos); VIS-001 §4; ADR-002 Decisão 5; ARQ-006; ARQ-007; **ARQ-031**.
+* **Observações:** Capacidade de Conhecimento = **Baseline oficial** · ciclo **ENCERRADO**. Modo sistema: maturidade por evidências. Encerramento: [`cap-04/relatorio-encerramento-cap-04-camada.md`](cap-04/relatorio-encerramento-cap-04-camada.md).
 
 ### CAP-05 — Memória Organizacional
 

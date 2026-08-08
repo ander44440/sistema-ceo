@@ -53,11 +53,23 @@ import {
   aplicarMensagemGateNaResposta
 } from "../continuidadeGate/integracaoConversa.js";
 import { conduzirAposDecisaoGate } from "../motorExecucao/integracaoOrquestrador.js";
+import { processarMensagemAutoridadeDelegada } from "../autoridadeDelegada/autoridadeDelegada.js";
 import {
   consultarEstadoExecutivoAntesDeResponder,
   metadadoConscienciaParaDados
 } from "../conscienciaOperacional/consultarAntesDeResponder.js";
 import { criarLeitoresConscienciaPadrao } from "../conscienciaOperacional/leitoresPadrao.js";
+import {
+  REFINO_EIC_ATIVO,
+  actualizarMemoriaTrabalhoExecutiva,
+  factosLastroRefinoEic,
+  metadadoRefinoEicParaDados
+} from "./refinoEic.js";
+import {
+  deveInterceptarOperacional,
+  executarInterceptacaoOperacional,
+  lerEstadoOperacionalPreClassificador
+} from "../conversacaoNatural/interceptacaoOperacional.js";
 
 const CAPACIDADES_INICIAIS = [
   capacidadeDashboard,
@@ -348,6 +360,80 @@ export const executiveEngine = {
       });
       respostaClar.dados = { ...respostaClar.dados, memoria: memoriaClar };
       return respostaClar;
+    }
+
+    // IMP-071 B1–B3: candidatura / encerramento / retorno automático.
+    // Não altera CTO-003 / Gate; não amplia perímetro nem soberania.
+    processarMensagemAutoridadeDelegada({ texto, agente: "usuario" });
+
+    // CTO-003: Interceptação Operacional — ANTES de VCA / CSC / Classificador.
+    // Critério: comando operacional com operação aberta não chega ao classificador.
+    {
+      const { estadoOperacional: estadoOpPre } =
+        await lerEstadoOperacionalPreClassificador({
+          storeContinuidade: store,
+          leitoresConsciencia: deps.leitoresConsciencia,
+          agoraConsciencia: deps.agoraConsciencia,
+          historico,
+          listarPorEstado: deps.listarPorEstado
+        });
+
+      if (
+        deveInterceptarOperacional({
+          texto,
+          historico,
+          estadoOperacional: estadoOpPre
+        })
+      ) {
+        let publicarJobOp = deps.publicarJob;
+        if (typeof publicarJobOp !== "function") {
+          try {
+            const { publicarJobFila } = await import("./filaCliente.js");
+            publicarJobOp = publicarJobFila;
+          } catch {
+            publicarJobOp = undefined;
+          }
+        }
+        const respostaOp = await executarInterceptacaoOperacional({
+          texto,
+          estadoOperacional: estadoOpPre,
+          deps: {
+            ...deps,
+            publicarJob: publicarJobOp,
+            conduzirMotor:
+              deps.conduzirMotor ||
+              ((parecer, motorDeps) =>
+                this.conduzirMotorAposDecisaoGate(
+                  parecer,
+                  motorDeps?.decisaoAprovacao,
+                  motorDeps
+                ))
+          }
+        });
+        const memoriaOp = atualizarAposInstrucao({
+          instrucao: texto,
+          intencao: respostaOp.intencao,
+          capacidade: respostaOp.capacidade,
+          ok: respostaOp.ok,
+          mensagem: respostaOp.mensagem,
+          dados: respostaOp.dados
+        });
+        respostaOp.dados = { ...respostaOp.dados, memoria: memoriaOp };
+        return naturalizarRespostaNucleo(respostaOp, {
+          instrucao: texto,
+          historico,
+          canalSpeaker: "chat",
+          lastroConsciencia: {
+            temContextoRelevante: true,
+            estadoOperacional: estadoOpPre,
+            contagens: {
+              jobsPendentes: estadoOpPre.sinais.pending,
+              jobsEmExecucao: estadoOpPre.sinais.running,
+              gatesPendentes: estadoOpPre.sinais.gatePendente
+            }
+          }
+        });
+      }
     }
 
     const coa = obterCoaAtivo();
@@ -831,6 +917,54 @@ export const executiveEngine = {
       }
     }
 
+    // Refino EIC interno: Memória de Trabalho + ciclo + hierarquia + E→D→A.
+    // Não classifica; não cria Jobs; não altera contratos públicos.
+    let memoriaTrabalhoPre = null;
+    if (REFINO_EIC_ATIVO) {
+      memoriaTrabalhoPre = actualizarMemoriaTrabalhoExecutiva({
+        fase: "pre",
+        mensagem: texto,
+        classe: classificacao.classe,
+        destino: rota.destino,
+        objetivoConversacional: objetivoParaContexto,
+        topicoActivo: autorizaLastroCsc
+          ? resultadoTop?.topicoActivo || null
+          : null,
+        coa: autorizaLastroCsc && coa
+          ? { id: coa.id, nome: coa.nome || coa.titulo }
+          : null,
+        memoriaExecutiva: lerMemoria(),
+        gatePendente,
+        veredictoVca: resultadoVca.veredicto
+      });
+
+      // DESP-009: MTE sempre no lastro C2 (mesmo sem factos) — execução vê a missão
+      if (
+        autorizaLastroCsc &&
+        (rota.destino === "nucleo_mre" || rota.destino === "resposta_leve")
+      ) {
+        const factosRefino = factosLastroRefinoEic(memoriaTrabalhoPre);
+        if (lastroConsciencia && typeof lastroConsciencia === "object") {
+          lastroConsciencia = {
+            ...lastroConsciencia,
+            memoriaTrabalhoExecutiva: memoriaTrabalhoPre,
+            factosOficiais: [
+              ...(Array.isArray(lastroConsciencia.factosOficiais)
+                ? lastroConsciencia.factosOficiais
+                : []),
+              ...factosRefino
+            ]
+          };
+        } else {
+          lastroConsciencia = {
+            temContextoRelevante: true,
+            memoriaTrabalhoExecutiva: memoriaTrabalhoPre,
+            factosOficiais: factosRefino
+          };
+        }
+      }
+    }
+
     const anexarClassificacao = (resposta) => {
       const baseDados =
         resposta.dados && typeof resposta.dados === "object"
@@ -856,6 +990,9 @@ export const executiveEngine = {
       // Metadado só quando a consulta obrigatória correu (C2/C3) — C1/C4 intactos
       if (consultaConsciencia.consultado) {
         baseDados.conscienciaOperacional = metaConsciencia;
+      }
+      if (memoriaTrabalhoPre) {
+        Object.assign(baseDados, metadadoRefinoEicParaDados(memoriaTrabalhoPre));
       }
       return { ...resposta, intencao: resposta.intencao || intencao, dados: baseDados };
     };
@@ -926,7 +1063,12 @@ export const executiveEngine = {
             // Isolamento: sem memória/COA de projecto na âncora CN («Mantemos o foco…»)
             memoria: autorizaLastroCsc ? lerMemoria : null,
             coaAtivo: coaParaDestino,
-            canalSpeaker: "chat"
+            canalSpeaker: "chat",
+            // DESP-009: CN e superfícies partilham o mesmo lastro de missão
+            lastroConsciencia: autorizaLastroCsc ? lastroConsciencia : null,
+            refinoEic: memoriaTrabalhoPre
+              ? metadadoRefinoEicParaDados(memoriaTrabalhoPre).refinoEic
+              : null
           })
       });
     } catch (err) {
@@ -972,6 +1114,33 @@ export const executiveEngine = {
       resposta.dados = { ...resposta.dados, memoria };
     } else {
       resposta.dados = { memoria };
+    }
+
+    // Refino EIC — critério de encerramento / estado pós-turno (interno).
+    if (REFINO_EIC_ATIVO) {
+      const memoriaTrabalhoPos = actualizarMemoriaTrabalhoExecutiva({
+        fase: "pos",
+        mensagem: texto,
+        classe: classificacao.classe,
+        destino: rota.destino,
+        objetivoConversacional: objetivoParaContexto,
+        topicoActivo: autorizaLastroCsc
+          ? resultadoTop?.topicoActivo || null
+          : null,
+        coa: autorizaLastroCsc && coa
+          ? { id: coa.id, nome: coa.nome || coa.titulo }
+          : null,
+        memoriaExecutiva: memoria,
+        gatePendente,
+        veredictoVca: resultadoVca.veredicto,
+        resposta
+      });
+      if (memoriaTrabalhoPos && resposta.dados && typeof resposta.dados === "object") {
+        Object.assign(
+          resposta.dados,
+          metadadoRefinoEicParaDados(memoriaTrabalhoPos)
+        );
+      }
     }
 
     return resposta;
