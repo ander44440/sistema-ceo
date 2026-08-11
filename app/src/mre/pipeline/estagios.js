@@ -11,7 +11,10 @@ import {
   Urgencia,
   ValorOportunidade
 } from "../parecer/enums.js";
-import { CATALOGO_PRINCIPIOS } from "./catalogoPrincipios.js";
+import {
+  catalogoPrincipiosParaCoa,
+  filtrarPrincipiosPorCoa
+} from "./catalogoPrincipios.js";
 import { chamarComRetry } from "./llmEstagio.js";
 import { mapearTipoAcao } from "./mapeamentoAcao.js";
 import {
@@ -19,6 +22,11 @@ import {
   comContextoNcs,
   schemaHintEstagio6ComNcs
 } from "../ncs/politicas.js";
+import { hintEstagio6AnaliseDeliberativa } from "../politicaAnaliseDeliberativa.js";
+import {
+  hintEstagio6DecisaoSobConflito,
+  temFatoBloqueanteNomeado
+} from "../politicaDecisaoSobConflito.js";
 
 function trimStr(v, fallback = "") {
   const s = typeof v === "string" ? v.trim() : "";
@@ -197,6 +205,13 @@ export function estagio2Dossier(entrada, lacunasAcc, pacoteNcs = null) {
   if (painel) fontes.push("painel");
   if (factos.length) fontes.push("memoria");
   if (entrada.mensagem) fontes.push("utilizador");
+  if (entrada.manifestoMg2?.ok) {
+    // FonteFacto fechado (REQ-048): usar «outro» + facto explícito da origem canónica
+    fontes.push("outro");
+    factos.push(
+      `Diretriz canónica Manifesto MG2: docs/MANIFESTO-MG2.md (origem=${entrada.manifestoMg2.origem})`
+    );
+  }
 
   return {
     dossier: {
@@ -210,28 +225,79 @@ export function estagio2Dossier(entrada, lacunasAcc, pacoteNcs = null) {
 
 /**
  * Estágio 3 — Princípios (HIB — seleção no catálogo)
+ * Princípios de escopo MG2 só entram no catálogo quando o COA activo é MG2.
  */
 export async function estagio3Principios(diagnostico, enquadramento, deps, lacunasAcc) {
+  const coa =
+    deps.coaAtivo ||
+    (deps.coaId ? { id: deps.coaId } : null) ||
+    null;
+  const catalogoManifesto = Array.isArray(deps.catalogoPrincipiosManifesto)
+    ? deps.catalogoPrincipiosManifesto.filter(Boolean)
+    : [];
+  const usarManifesto = catalogoManifesto.length > 0;
+  const catalogo = usarManifesto
+    ? catalogoManifesto
+    : catalogoPrincipiosParaCoa(coa);
+
+  const schemaHint = usarManifesto
+    ? "{ principiosAplicados: string[] } — APENAS títulos/secções do Manifesto MG2 canónico anexado (docs/MANIFESTO-MG2.md). Proibido catálogo de governança do CEO."
+    : "{ principiosAplicados: string[] } — só ids/textos do catálogo";
+
   const bruto = await chamarComRetry(deps.chamarLlm, {
     estagio: "3_principios",
-    schemaHint: "{ principiosAplicados: string[] } — só ids/textos do catálogo",
+    schemaHint,
     contexto: comContextoNcs(
-      { diagnostico, enquadramento, catalogo: CATALOGO_PRINCIPIOS },
+      {
+        diagnostico,
+        enquadramento,
+        catalogo,
+        ...(usarManifesto
+          ? {
+              fontePrincipios: "manifesto_mg2_canonico",
+              caminhoCanonico: "docs/MANIFESTO-MG2.md"
+            }
+          : {})
+      },
       deps.pacoteNcs
     )
   });
   const pedidos = asStringList(bruto.principiosAplicados);
-  const selecionados = pedidos.filter((p) => CATALOGO_PRINCIPIOS.includes(p));
-  if (selecionados.length === 0) {
-    selecionados.push("Respeito absoluto ao tempo do utilizador");
-    if (diagnostico.natureza !== "operacional") {
-      selecionados.push("Priorizar uso diário no MG2 (ADR-015)");
-    }
+
+  /** @type {string[]} */
+  const seleccionados = [];
+  for (const p of pedidos) {
+    const hit = catalogo.find(
+      (c) =>
+        c === p ||
+        String(p).trim() === String(c).trim() ||
+        String(c).startsWith(String(p).trim()) ||
+        (/\§\d+/.test(p) && String(c).startsWith(String(p).match(/§\d+/)?.[0] || "___"))
+    );
+    if (hit && !seleccionados.includes(hit)) seleccionados.push(hit);
   }
-  if (pedidos.length && selecionados.length === 0) {
+
+  if (seleccionados.length === 0) {
+    if (usarManifesto) {
+      lacunasAcc.push(
+        "Nenhum princípio do Manifesto MG2 canónico seleccionado com precisão — usando secções centrais da diretriz carregada"
+      );
+      // Derivado do ficheiro (já no catalogo), não inventado
+      const centrais = catalogo.filter((c) =>
+        /§(2|5|13|14|16)\b/.test(c)
+      );
+      return (centrais.length ? centrais : catalogo).slice(0, 4);
+    }
+    // Fallback global apenas — nunca inserir princípio de escopo MG2
+    seleccionados.push("Respeito absoluto ao tempo do utilizador");
+  }
+  if (pedidos.length && seleccionados.length === 0) {
     lacunasAcc.push("Nenhum princípio do catálogo selecionável");
   }
-  return selecionados;
+  // Manifesto: secções do jogo são intencionais; catálogo CEO: filtrar escopo MG2
+  return usarManifesto
+    ? seleccionados
+    : filtrarPrincipiosPorCoa(seleccionados, coa);
 }
 
 /**
@@ -301,9 +367,17 @@ export async function estagio6Decisao(parcial, deps) {
     "tipoPedido no contexto NÃO é estado — não copiar tipoPedido para estado. " +
     "justificativa DEVE mencionar riscos, princípios ou oportunidades (ou declarar ausência).";
 
+  let schemaHint = schemaHintEstagio6ComNcs(schemaBase, deps.pacoteNcs);
+  if (deps.pedidoAnaliseDeliberativa === true) {
+    schemaHint += hintEstagio6AnaliseDeliberativa();
+  }
+  if (deps.pedidoDecisaoExplicita === true) {
+    schemaHint += hintEstagio6DecisaoSobConflito();
+  }
+
   const bruto = await chamarComRetry(deps.chamarLlm, {
     estagio: "6_decisao",
-    schemaHint: schemaHintEstagio6ComNcs(schemaBase, deps.pacoteNcs),
+    schemaHint,
     contexto: comContextoNcs(parcial, deps.pacoteNcs)
   });
 
@@ -319,7 +393,18 @@ export async function estagio6Decisao(parcial, deps) {
   if ((parcial.lacunas || []).length > 0 && estado !== "solicitar_dados" && deps.preferirSolicitarDados !== false) {
     // REQ-049: lacunas materiais → preferir solicitar_dados
     if (parcial.shortCircuit || (parcial.lacunas || []).some((l) => /ausente|falt/i.test(l))) {
-      estado = "solicitar_dados";
+      // Decisão sob conflito: conflito ≠ lacuna; só forçar com facto bloqueante nomeado
+      if (deps.pedidoDecisaoExplicita === true) {
+        const bloqueante =
+          parcial.shortCircuit === true ||
+          temFatoBloqueanteNomeado({
+            lacunas: parcial.lacunas,
+            recomendacao: bruto.recomendacao
+          });
+        if (bloqueante) estado = "solicitar_dados";
+      } else {
+        estado = "solicitar_dados";
+      }
     }
   }
 
@@ -343,12 +428,30 @@ export async function estagio6Decisao(parcial, deps) {
  */
 export async function estagio7Acao(decisao, parcial, deps) {
   const preferirDespacho =
-    decisao.estado === "delegar" ||
-    Boolean(deps.preferirDespacho) ||
-    /despach|fila|execut/i.test(decisao.recomendacao || "");
+    deps.proibirDespacho === true
+      ? false
+      : decisao.estado === "delegar" ||
+        Boolean(deps.preferirDespacho) ||
+        /despach|fila|execut/i.test(decisao.recomendacao || "");
 
-  const map = mapearTipoAcao(decisao.estado, {
-    preferirDespacho: decisao.estado === "aprovar" ? preferirDespacho : false
+  // P1-2: pedido de análise não gera Job mesmo se o LLM insistir em delegar
+  let estadoAcao = decisao.estado;
+  if (
+    deps.proibirDespacho === true &&
+    (estadoAcao === "delegar" || preferirDespacho)
+  ) {
+    estadoAcao = /solicitar|dados|falt|lacuna/i.test(decisao.recomendacao || "")
+      ? "solicitar_dados"
+      : "monitorar";
+  }
+
+  const map = mapearTipoAcao(estadoAcao, {
+    preferirDespacho:
+      deps.proibirDespacho === true
+        ? false
+        : decisao.estado === "aprovar"
+          ? preferirDespacho
+          : false
   });
 
   let descricao = "";

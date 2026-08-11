@@ -90,21 +90,38 @@ export function reconhecerDecisao(texto) {
     };
   }
 
-  const decisao = LEXICO_DECISAO_GATE[enunciadoNormalizado];
-  if (!decisao || !ehDecisaoGate(decisao)) {
+  const decisaoExact = LEXICO_DECISAO_GATE[enunciadoNormalizado];
+  if (decisaoExact && ehDecisaoGate(decisaoExact)) {
     return {
-      reconhecida: false,
-      decisao: null,
+      reconhecida: true,
+      decisao: decisaoExact,
       enunciadoNormalizado,
-      sinonimo: null
+      sinonimo: enunciadoNormalizado
+    };
+  }
+
+  // P0: encerrar/cancelar Gate em prosa natural (sem exigir só o léxico curto).
+  const rejeicaoGate =
+    /\b(encerrar|fechar|cancelar|cancela|rejeitar|rejeita)\b/.test(
+      enunciadoNormalizado
+    ) &&
+    (/\bgate\b/.test(enunciadoNormalizado) ||
+      /\bsem\s+execu[cç][aã]o\b/.test(enunciadoNormalizado) ||
+      /\bsem\s+criar\s+job\b/.test(enunciadoNormalizado));
+  if (rejeicaoGate) {
+    return {
+      reconhecida: true,
+      decisao: "rejeitado",
+      enunciadoNormalizado,
+      sinonimo: "encerrar_gate"
     };
   }
 
   return {
-    reconhecida: true,
-    decisao,
+    reconhecida: false,
+    decisao: null,
     enunciadoNormalizado,
-    sinonimo: enunciadoNormalizado
+    sinonimo: null
   };
 }
 

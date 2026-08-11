@@ -6,7 +6,7 @@
 
 /** @typedef {"Intencao"|"Plano"|"Aprovacao"|"CriacaoDoJob"|"Dispatcher"|"Execucao"|"Monitoramento"|"Resultado"|"Encerramento"} EtapaCiclo */
 
-/** @typedef {"pending"|"running"|"completed"|"failed"|"cancelled"} EstadoJob */
+/** @typedef {"pending"|"dispatched"|"running"|"result"|"needs_correction"|"completed"|"failed"|"cancelled"} EstadoJob */
 
 /** @typedef {"aprovado"|"rejeitado"|"adiado"} DecisaoAprovacao */
 
@@ -27,23 +27,29 @@ export const ETAPAS_CICLO = Object.freeze([
 ]);
 
 /**
- * Enum canónico de Job (REQ-045 / ARQ-017 §6.1).
+ * Enum canónico de Job (REQ-045 / ARQ-017 §6.1) — P0-2: ciclo explícito.
  * @type {ReadonlyArray<EstadoJob>}
  */
 export const ESTADOS_JOB = Object.freeze([
   "pending",
+  "dispatched",
   "running",
+  "result",
+  "needs_correction",
   "completed",
   "failed",
   "cancelled"
 ]);
 
-/** Estados terminais do Job — Encerramento exige um destes (ou cancelamento governado). */
+/** Estados terminais estáveis — Encerramento exige um destes. */
 export const ESTADOS_JOB_TERMINAIS = Object.freeze([
   "completed",
   "failed",
   "cancelled"
 ]);
+
+/** Estados que ainda podem retomar execução (P0-2). */
+export const ESTADOS_JOB_RECUPERAVEIS = Object.freeze(["needs_correction"]);
 
 /**
  * Decisões possíveis no Gate de aprovação (ARQ-017 §3.2).
@@ -56,8 +62,7 @@ export const DECISOES_APROVACAO = Object.freeze([
 ]);
 
 /**
- * Mapeamento etapa do fluxo → estado(s) Job típicos (ARQ-017 §6.2).
- * Etapas anteriores à Criação não têm Job; Encerramento exige terminal estável.
+ * Mapeamento etapa do fluxo → estado(s) Job típicos (ARQ-017 §6.2 + P0-2).
  * @type {Readonly<Record<EtapaCiclo, ReadonlyArray<EstadoJob|null>>>}
  */
 export const MAPA_ETAPA_ESTADOS_JOB = Object.freeze({
@@ -65,13 +70,32 @@ export const MAPA_ETAPA_ESTADOS_JOB = Object.freeze({
   Plano: Object.freeze([null]),
   Aprovacao: Object.freeze([null]),
   CriacaoDoJob: Object.freeze(/** @type {EstadoJob[]} */ (["pending"])),
-  Dispatcher: Object.freeze(/** @type {EstadoJob[]} */ (["pending", "running"])),
-  Execucao: Object.freeze(/** @type {EstadoJob[]} */ (["running"])),
+  Dispatcher: Object.freeze(
+    /** @type {EstadoJob[]} */ (["pending", "dispatched", "running"])
+  ),
+  Execucao: Object.freeze(
+    /** @type {EstadoJob[]} */ (["dispatched", "running"])
+  ),
   Monitoramento: Object.freeze(
-    /** @type {EstadoJob[]} */ (["pending", "running", "completed", "failed", "cancelled"])
+    /** @type {EstadoJob[]} */ ([
+      "pending",
+      "dispatched",
+      "running",
+      "result",
+      "needs_correction",
+      "completed",
+      "failed",
+      "cancelled"
+    ])
   ),
   Resultado: Object.freeze(
-    /** @type {EstadoJob[]} */ (["completed", "failed", "cancelled"])
+    /** @type {EstadoJob[]} */ ([
+      "result",
+      "needs_correction",
+      "completed",
+      "failed",
+      "cancelled"
+    ])
   ),
   Encerramento: Object.freeze(
     /** @type {EstadoJob[]} */ (["completed", "failed", "cancelled"])
@@ -79,14 +103,30 @@ export const MAPA_ETAPA_ESTADOS_JOB = Object.freeze({
 });
 
 /**
- * Transições legais de estado Job (ARQ-017 §6.2–§6.3).
- * Chave = origem; valor = destinos permitidos.
+ * Transições legais de estado Job (ARQ-017 §6.2–§6.3 + P0-2).
+ * COMPLETED só via `result` (após verificação). Handoff → dispatched ≠ completed.
  * @type {Readonly<Record<EstadoJob, ReadonlyArray<EstadoJob>>>}
  */
 export const TRANSICOES_JOB = Object.freeze({
-  pending: Object.freeze(/** @type {EstadoJob[]} */ (["running", "cancelled"])),
+  pending: Object.freeze(
+    /** @type {EstadoJob[]} */ (["dispatched", "running", "cancelled"])
+  ),
+  dispatched: Object.freeze(
+    /** @type {EstadoJob[]} */ (["running", "failed", "cancelled"])
+  ),
   running: Object.freeze(
-    /** @type {EstadoJob[]} */ (["completed", "failed", "cancelled"])
+    /** @type {EstadoJob[]} */ (["result", "failed", "cancelled"])
+  ),
+  result: Object.freeze(
+    /** @type {EstadoJob[]} */ ([
+      "completed",
+      "needs_correction",
+      "failed",
+      "cancelled"
+    ])
+  ),
+  needs_correction: Object.freeze(
+    /** @type {EstadoJob[]} */ (["running", "failed", "cancelled"])
   ),
   completed: Object.freeze(/** @type {EstadoJob[]} */ ([])),
   failed: Object.freeze(/** @type {EstadoJob[]} */ ([])),
@@ -145,6 +185,14 @@ export function ehEstadoJob(estado) {
  */
 export function ehEstadoJobTerminal(estado) {
   return ESTADOS_JOB_TERMINAIS.includes(/** @type {EstadoJob} */ (estado));
+}
+
+/**
+ * @param {string} estado
+ * @returns {boolean}
+ */
+export function ehEstadoJobRecuperavel(estado) {
+  return ESTADOS_JOB_RECUPERAVEIS.includes(/** @type {EstadoJob} */ (estado));
 }
 
 /**

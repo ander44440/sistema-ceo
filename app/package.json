@@ -21,7 +21,7 @@
     "test:mre:ncs": "node --test src/mre/ncs/ncs.b1.test.js src/mre/ncs/ncs.b2.test.js src/mre/ncs/ncs.b3.test.js src/mre/ncs/ncs.b4.test.js",
     "test:mre": "node --test src/mre/parecer/validarParecerExecutivo.test.js src/mre/pipeline/pipeline07.test.js src/mre/aprendizado/aprendizado.test.js src/mre/bloco2.test.js src/mre/bloco3.test.js src/mre/ncs/ncs.b1.test.js src/mre/ncs/ncs.b2.test.js src/mre/ncs/ncs.b3.test.js src/mre/ncs/ncs.b4.test.js",
     "test:voz": "node --test src/experienciaVoz/orquestrador.test.js src/experienciaVoz/botaoVoz.test.js src/experienciaVoz/reproduzirResposta.test.js src/experienciaVoz/e6.tts.test.js",
-    "test:cn": "node --test src/conversacaoNatural/conversacaoNatural.test.js src/conversacaoNatural/e3.integracao.test.js",
+    "test:cn": "node --test src/conversacaoNatural/conversacaoNatural.test.js src/conversacaoNatural/e3.integracao.test.js src/conversacaoNatural/planoExecutivo.test.js src/conversacaoNatural/antecipacaoExecutiva.test.js src/conversacaoNatural/adaptacaoConversacional.test.js src/conversacaoNatural/memoriaExecutivaConversacional.test.js src/conversacaoNatural/inteligenciaExecutiva.test.js",
     "test:cto": "node --test src/ctoConnector/ctoConnector.test.js",
     "test:orquestracao": "node --test src/orquestracao/dominio.test.js src/orquestracao/agregador.test.js src/orquestracao/ui.test.js src/orquestracao/e4.test.js src/orquestracao/e5.test.js src/orquestracao/e5.imp060.test.js src/orquestracao/e6.test.js src/orquestracao/e7.test.js",
     "test:orquestracao:e1": "node --test src/orquestracao/dominio.test.js",
@@ -58,6 +58,7 @@
     "test:classificador:e65": "node --test src/classificadorIntencao/validadorContextoAtivo.test.js",
     "test:complexidade": "node --test src/executiveEngine/complexidadeDecisao.test.js",
     "test:dic": "node --test src/executiveEngine/dicInstitucional.test.js",
+    "test:refino-eic": "node --test src/executiveEngine/refinoEic.test.js",
     "test:ceo-ouvindo": "node --test src/ceoOuvindo/ceoOuvindo.test.js",
     "test:consciencia-operacional:e1": "node --test src/conscienciaOperacional/dominio.test.js",
     "test:consciencia-operacional:e2": "node --test src/conscienciaOperacional/agregarEstado.test.js",
@@ -74,7 +75,8 @@
     "test:continuidade-gate:e5": "node --test src/continuidadeGate/e5.test.js",
     "test:continuidade-gate:e6": "node --test src/continuidadeGate/fronteiras.test.js",
     "test:continuidade-gate:e7": "node --test src/continuidadeGate/e7.test.js",
-    "test:continuidade-gate": "node --test src/continuidadeGate/dominio.test.js src/continuidadeGate/reconhecerDecisao.test.js src/continuidadeGate/contexto.test.js src/continuidadeGate/integracaoConversa.test.js src/continuidadeGate/e5.test.js src/continuidadeGate/fronteiras.test.js src/continuidadeGate/e7.test.js"
+    "test:continuidade-gate": "node --test src/continuidadeGate/dominio.test.js src/continuidadeGate/reconhecerDecisao.test.js src/continuidadeGate/contexto.test.js src/continuidadeGate/integracaoConversa.test.js src/continuidadeGate/e5.test.js src/continuidadeGate/fronteiras.test.js src/continuidadeGate/e7.test.js",
+    "verify:leg-mg2-001": "node scripts/verificar-leg-mg2-001-ordem-expansoes.mjs"
   },
   "devDependencies": {
     "vite": "^6.0.0"

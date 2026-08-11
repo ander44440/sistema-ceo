@@ -198,10 +198,11 @@ export function ehAutorizacaoOperacionalPontual(texto) {
   if (/^(ok|sim|certo|segue|pode|confirmo|isso|tá|ta|beleza|de acordo)\.?$/i.test(n)) {
     return true;
   }
-  // «está autorizado» / «autorizado a executar» sem verbo de decidir/assumir
+  // «está autorizado» / «autorizado a executar» sem verbo de decidir/assumir/julgar
+  // Nota: usar radical «julg» para cobrir julga/julgar (regressão uso real).
   if (
     /\bautorizad[oa]\b/i.test(n) &&
-    !/\b(decid|assum|fech|julgar|crit[eé]rio|autoridade)\b/i.test(n)
+    !/\b(decid|assum|fech|julg|crit[eé]rio|autoridade|medidas?)\b/i.test(n)
   ) {
     return true;
   }
@@ -210,6 +211,7 @@ export function ehAutorizacaoOperacionalPontual(texto) {
 
 /**
  * Sinais de intenção de conceder competência de fecho (CA-075-1).
+ * P0: perguntas meta («quando você decide…») NÃO são acto de delegação.
  * @param {string} texto
  */
 export function ehActoExplicitoDeFecho(texto) {
@@ -218,6 +220,15 @@ export function ehActoExplicitoDeFecho(texto) {
   if (ehAutorizacaoOperacionalPontual(t)) return false;
 
   const n = t.toLowerCase();
+
+  // P0 — pergunta / meta sobre o modo de decidir ≠ concessão de fecho
+  const enunciadoPerguntaMeta =
+    /\?/.test(t) ||
+    /^(quando|como|em\s+que|qual|quais|o\s+que|por\s+que|porque)\b/.test(
+      n.replace(/^[«"']+/, "")
+    ) ||
+    /\b(quando|em\s+que\s+momento)\s+(voc[eê]|tu)\s+decid/.test(n) ||
+    /\bcomo\s+(voc[eê]|tu)\s+(toma|decid)/.test(n);
 
   // Delegação explícita de autoridade / fecho
   if (
@@ -229,12 +240,13 @@ export function ehActoExplicitoDeFecho(texto) {
   // Nota: `\b` após vogais acentuadas falha em JS (ê/é ∉ \w) — usar âncoras de limite.
   const fimToken = "(?=\\s|$|[.,!?;:])";
   if (
-    new RegExp(`\\b(voc[eê]|tu)\\s+decid`).test(n) ||
-    new RegExp(`\\bdecid[ae]\\s+(voc[eê]|tu)${fimToken}`).test(n) ||
-    new RegExp(`\\bpodes?\\s+(decidir|fechar)${fimToken}`).test(n) ||
-    /\b(fica|fique)\s+a\s+(teu|seu|teu\s+crit|seu\s+crit)/.test(n) ||
-    (/\bcrit[eé]rio\b/.test(n) &&
-      new RegExp(`\\b(teu|seu|voc[eê]|ceo)${fimToken}`).test(n))
+    !enunciadoPerguntaMeta &&
+    (new RegExp(`\\b(voc[eê]|tu)\\s+decid`).test(n) ||
+      new RegExp(`\\bdecid[ae]\\s+(voc[eê]|tu)${fimToken}`).test(n) ||
+      new RegExp(`\\bpodes?\\s+(decidir|fechar)${fimToken}`).test(n) ||
+      /\b(fica|fique)\s+a\s+(teu|seu|teu\s+crit|seu\s+crit)/.test(n) ||
+      (/\bcrit[eé]rio\b/.test(n) &&
+        new RegExp(`\\b(teu|seu|voc[eê]|ceo)${fimToken}`).test(n)))
   ) {
     return true;
   }
@@ -250,13 +262,18 @@ export function ehActoExplicitoDeFecho(texto) {
   }
   if (
     /\bfa[cç]a\s+o\s+que\s+julgar\b/.test(n) ||
-    /\bjulgar\s+necess/.test(n)
+    /\bjulga?r?\s+necess/.test(n) ||
+    (/\b(todas\s+as\s+)?medidas?\b/.test(n) && /\bjulg/.test(n))
   ) {
     return true;
   }
   if (
-    /\bautorizo\s+(voc[eê]|o\s+ceo|tu)\s+a\s+(decidir|fechar|assum)/.test(n) ||
-    /\best[aá]\s+autorizad[oa]\s+a\s+(decidir|fechar|assum)/.test(n)
+    /\bautorizo\s+(voc[eê]|o\s+ceo|tu)\s+a\s+(decidir|fechar|assum|tomar)/.test(
+      n
+    ) ||
+    /\best[aá]\s+autorizad[oa]\s+a\s+(decidir|fechar|assum|tomar)/.test(n) ||
+    (/\bautorizad[oa]\s+a\s+tomar\b/.test(n) &&
+      /\b(medidas?|julg|necess)/.test(n))
   ) {
     return true;
   }
@@ -389,6 +406,7 @@ export function activarAutoridadeDelegada(opts = {}) {
 
 /**
  * Processa mensagem do Usuário: valida e, se OK, activa (B1).
+ * Se já activo: não reactiva (evita loop de ack).
  * @param {object} opts
  */
 export function processarCandidaturaDelegacao(opts = {}) {
@@ -398,6 +416,15 @@ export function processarCandidaturaDelegacao(opts = {}) {
       ok: false,
       activado: false,
       motivosRecusa: ["agente_nao_usuario"],
+      estado: obterEstadoAutoridadeDelegada()
+    };
+  }
+  if (autoridadeDelegadaActiva()) {
+    return {
+      ok: true,
+      activado: false,
+      jaActivo: true,
+      motivosRecusa: [],
       estado: obterEstadoAutoridadeDelegada()
     };
   }
@@ -411,6 +438,7 @@ export function processarCandidaturaDelegacao(opts = {}) {
   return {
     ok: r.ok,
     activado: r.ok === true,
+    jaActivo: false,
     motivosRecusa: r.motivosRecusa || [],
     estado: r.estado
   };
@@ -1007,10 +1035,82 @@ export function processarMensagemAutoridadeDelegada(opts = {}) {
   });
   return {
     activado: act.activado === true,
+    jaActivo: act.jaActivo === true,
     encerrado: false,
     resultado: act,
     estado: obterEstadoAutoridadeDelegada()
   };
+}
+
+/**
+ * Snapshot para dados de resposta / lastro do pipeline (integração EE).
+ */
+export function snapshotAutoridadeDelegadaParaDados() {
+  const e = obterEstadoAutoridadeDelegada();
+  return Object.freeze({
+    activo: e.activo === true,
+    estado: e.estado,
+    titularMissao: e.titularMissao,
+    competenciaFecho: e.competenciaFecho,
+    perimetro: e.perimetro,
+    actoOrigem: e.actoOrigem,
+    quandoActivado: e.quandoActivado
+  });
+}
+
+/**
+ * Ordem de execução operacional (sob AD → Motor/Jobs, não novo ack de mandato).
+ * @param {string} texto
+ */
+export function ehOrdemExecucaoOperacional(texto) {
+  const n = String(texto || "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/\s+/gu, " ")
+    .trim();
+  if (!n || n.length < 4) return false;
+  // P0: «não execute…» / «apenas responda…» nunca é ordem de execução
+  if (
+    /\bn[aã]o\s+(execute|executa|executar|implemente|implementa|crie\s+jobs?)\b/.test(
+      n
+    ) ||
+    /\bapenas\s+(responda|informe|diga|analise)\b/.test(n) ||
+    /\bsomente\s+(responda|informe|diga|analise)\b/.test(n) ||
+    /\bsem\s+(executar|execu[cç][aã]o|criar\s+jobs?)\b/.test(n)
+  ) {
+    return false;
+  }
+  if (
+    /\b(execut[aeo]|implement[ae]|aplica|desbloque|avança\s+com|avance\s+com)\b/.test(
+      n
+    )
+  ) {
+    return true;
+  }
+  if (
+    /\b(faz|fa[cç]a)\s+(as|os|isso|as\s+melhorias|o\s+plano)\b/.test(n) ||
+    /\bpode\s+(executar|implementar|seguir|avançar)\b/.test(n)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Bloco de sistema para o LLM quando AD está activa (modula deliberação).
+ */
+export function textoGovernancaAutoridadeDelegadaActiva() {
+  const e = obterEstadoAutoridadeDelegada();
+  if (!e.activo) return null;
+  return [
+    "AUTORIDADE DELEGADA ACTIVA (ARQ-032 / CAP-01) — competência de fecho concedida:",
+    `- Perímetro: ${e.perimetro || PERIMETRO_OMISSAO}`,
+    "- Titular permanente da missão: Usuário (inalterado).",
+    "- Podes priorizar, escolher entre alternativas já enquadradas, determinar o próximo gesto e declarar a decisão — sem pedir novo acto de fecho/autorização ao Usuário para o que estiver no perímetro.",
+    "- Não peças «autorização para decidir» nem devolvas ao Usuário decisões cobertas pelo mandato.",
+    "- Se faltar dado factual, declara a melhor decisão operacional possível com o lastro disponível e o próximo gesto concreto; não bloqueies a missão pedindo permissão de fecho.",
+    "- Fora do perímetro, reservas constitucionais ou ampliação de mandato: devolve ao Usuário com fundamentação."
+  ].join("\n");
 }
 
 /* ─── B4 / REQ-081 + REQ-082 ─────────────────────────────────────────── */

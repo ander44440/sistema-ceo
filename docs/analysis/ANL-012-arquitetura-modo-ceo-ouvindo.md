@@ -1,13 +1,14 @@
 # ANL-012 — Arquitectura do Modo «CEO Ouvindo»
 
-> **Status:** Homologada (aprovada para abertura de REQ).  
+> **Status:** Homologada / frente **ENCERRADA** (ENC-006).  
 > **Tipo:** ANL (ADR-005) — preparatório, **não normativo**.  
 > **Data:** 03/08/2026.  
 > **Capacidade:** CAP-07 (Comunicação) — interface conversacional; eixo EIC (entrada/saída por voz).  
-> **Nome provisório da capacidade:** **CEO Ouvindo** (formalizado em REQ-068).  
-> **Normas consultadas (somente leitura):** CON-001; VIS-001; VIS-002; VIS-003; ADR-006; ADR-015; ADR-019; ARQ-016; ARQ-017; ARQ-018; ARQ-019; ARQ-026; ARQ-027; ARQ-028; REQ-046; REQ-047; REQ-050; REQ-057; REQ-061–067; IMP-057…IMP-067; PX-001 E1; PX-002 E1; PX-003; `docs/EIC/`; runtime `experienciaVoz/` (baseline TTS).  
-> **Origem:** Comando do patrocinador — a EIC está madura o suficiente para abrir uma nova frente; objectivo: base arquitectural sólida **sem** implementação nesta etapa.  
-> **Efeito:** Não altera código, prompts, ARQ/REQ vigentes nem comportamento. REQ derivada: **REQ-068** (Em análise).
+> **Nome da capacidade:** **CEO Ouvindo** (REQ-068).  
+> **Normas consultadas (somente leitura):** CON-001; VIS-001; VIS-002; VIS-003; ADR-006; ADR-015; ADR-019; ARQ-016; ARQ-017; ARQ-018; ARQ-019; ARQ-026; ARQ-027; ARQ-028; REQ-046; REQ-047; REQ-050; REQ-057; REQ-061–068; IMP-057…IMP-068; PX-001 E1; PX-002 E1; PX-003; `docs/EIC/`; runtime `experienciaVoz/` (baseline TTS).  
+> **Origem:** Comando do patrocinador — base arquitectural da frente de voz.  
+> **Cadeia:** **esta ANL** → REQ-068 → ARQ-029 → IMP-068 → **VAL-010** → ENC-006.  
+> **Efeito:** Não altera código por si; ciclo da frente encerrado em ENC-006.
 
 ---
 
@@ -358,7 +359,7 @@ Esta ANL estabelece:
 * componentes candidatos;  
 * riscos e evoluções adiadas.
 
-**Próximo passo oficial (após Gate do CTO):** abrir a **REQ** da capacidade (nome definitivo) e, só então, a **ARQ** de integração — **sem** implementar código nesta fase.
+**Próximo passo oficial (após Gate do CTO):** ciclo concluído — ver ENC-006.
 
 ---
 
@@ -368,9 +369,13 @@ Esta ANL estabelece:
 |--------|------|------|-------|-----------|
 | 0.1 | 03/08/2026 | Engenheiro (Cursor) | ANL completa — objectivo, fluxo, estados, eventos, integração, componentes, riscos, evoluções | Aguarda revisão CTO |
 | 0.2 | 03/08/2026 | Engenheiro (Cursor) | Marcação homologada; ligação a REQ-068 | Homologada — REQ aberta |
+| 0.3 | 03/08/2026 | Engenheiro (Cursor) | Cadeia fechada VAL-010 + ENC-006 | Homologada / frente ENCERRADA |
 
 ---
 
-**Estado:** Análise **homologada**. **Sem implementação nesta ANL.**  
-**REQ derivada:** [`REQ-068-modo-ceo-ouvindo.md`](../requirements/REQ-068-modo-ceo-ouvindo.md) (Em análise v0.1 — 03/08/2026).  
-**Próximo passo oficial:** Homologação da REQ-068 → ARQ → IMP.
+**Estado:** Análise **homologada** / frente **ENCERRADA** (ENC-006).  
+**Cadeia oficial:** ANL-012 → REQ-068 → ARQ-029 → IMP-068 → **VAL-010** → ENC-006.  
+**REQ:** [`REQ-068-modo-ceo-ouvindo.md`](../requirements/REQ-068-modo-ceo-ouvindo.md).  
+**VAL:** [`VAL-010-homologacao-modo-ceo-ouvindo.md`](../validation/VAL-010-homologacao-modo-ceo-ouvindo.md) (*não* VAL-006).  
+**ENC:** [`ENC-006-encerramento-modo-ceo-ouvindo.md`](../learning/ENC-006-encerramento-modo-ceo-ouvindo.md).  
+Nenhuma nova alteração nesta frente — aguardar abertura da próxima frente do Sistema CEO.

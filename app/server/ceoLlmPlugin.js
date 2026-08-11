@@ -62,6 +62,42 @@ function criarHandler(env) {
       });
     }
 
+    // P1-3 — Manifesto canónico MG2 (fonte: docs/MANIFESTO-MG2.md no repo do jogo)
+    if (req.method === "GET" && path === "/api/ceo/manifesto-mg2") {
+      try {
+        const fs = await import("node:fs");
+        const { carregarManifestoMg2DoDisco } = await import(
+          "../src/camadaConhecimento/manifestoMg2.js"
+        );
+        const doc = carregarManifestoMg2DoDisco({
+          fs,
+          repoRoot: env.CEO_MG2_REPO || process.env.CEO_MG2_REPO
+        });
+        if (!doc.ok) {
+          return enviarJson(res, 404, {
+            ok: false,
+            erro: doc.erro || "Manifesto canónico indisponível",
+            caminhoRelativo: doc.caminhoRelativo
+          });
+        }
+        return enviarJson(res, 200, {
+          ok: true,
+          origem: doc.origem,
+          caminhoRelativo: doc.caminhoRelativo,
+          caminhoAbsoluto: doc.caminhoAbsoluto,
+          mtimeMs: doc.mtimeMs,
+          secoes: doc.secoes,
+          principiosSelecionaveis: doc.principiosSelecionaveis,
+          conteudo: doc.conteudo
+        });
+      } catch (err) {
+        return enviarJson(res, 500, {
+          ok: false,
+          erro: err && err.message ? err.message : "Falha ao carregar Manifesto"
+        });
+      }
+    }
+
     if (req.method === "POST" && path === "/api/ceo/cto/consultar") {
       sinaisRuntimeGlobal.inicioConsultaCto();
       sinaisRuntimeGlobal.inicioCicloCeo();

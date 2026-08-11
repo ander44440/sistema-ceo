@@ -2,6 +2,8 @@
  * Tipos de turno — contrato PX-003 E1 §3.3.
  */
 
+import { devePreservarRespostaNucleo } from "./prioridadeIntencao.js";
+
 export const TIPO_TURNO = Object.freeze({
   ABERTURA: "abertura",
   ESPELHO: "espelho",
@@ -35,6 +37,23 @@ export function classificarTipoTurno(entrada = {}) {
     modo === "mre-speaker-falha" ||
     rota.includes("erro") ||
     rota.includes("sem-llm")
+  ) {
+    return TIPO_TURNO.SISTEMA;
+  }
+
+  // Ritual Abrir/Encerrar o dia (Memória): preservar prosa de continuidade — não FECHO/ESPELHO.
+  if (intencaoId === "abrir_dia" || intencaoId === "encerrar_dia") {
+    return TIPO_TURNO.SISTEMA;
+  }
+
+  // P1: consulta/capacidade factual — preservar resposta do Núcleo (CONTEXTO ≠ RESPOSTA)
+  if (
+    devePreservarRespostaNucleo({
+      intencaoId,
+      modo,
+      instrucao,
+      dados: entrada.dados
+    })
   ) {
     return TIPO_TURNO.SISTEMA;
   }

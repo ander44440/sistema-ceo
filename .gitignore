@@ -16,6 +16,9 @@ dist/
 # Dispatcher local (REQ-053) — logs/pid
 executive/dispatcher/logs/
 
+# Vite lab local (autostart ops) — logs/pid
+app/ops/logs/
+
 # SO / editores
 .DS_Store
 Thumbs.db
@@ -37,3 +40,4 @@ __pycache__/
 *.pyc
 .Python
 .vercel
+.env*

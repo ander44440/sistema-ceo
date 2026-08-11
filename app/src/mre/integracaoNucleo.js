@@ -4,7 +4,6 @@
 
 import { obterPainelExecutivo } from "../catalogoProjetos/index.js";
 import { lerMemoria } from "../executiveMemory/index.js";
-import { publicarJobFila } from "../executiveEngine/filaCliente.js";
 import {
   obterFactosBriefingProjeto,
   obterProjecaoBriefing
@@ -22,6 +21,23 @@ import {
   schemaHintConsciencia,
   garantirReflexoEstadoExecutivo
 } from "../conscienciaOperacional/influenciaDeliberacao.js";
+import {
+  detectarPedidoAnaliseDeliberativa,
+  ehPedidoDelegacaoExplicita,
+  hintEstagio6AnaliseDeliberativa,
+  montarProsaAnaliseDeliberativa
+} from "./politicaAnaliseDeliberativa.js";
+import {
+  detectarPedidoDecisaoExplicita,
+  hintEstagio6DecisaoSobConflito
+} from "./politicaDecisaoSobConflito.js";
+import {
+  blocoContextoManifestoParaMre,
+  deveAnexarManifestoMg2,
+  hintManifestoComoDiretriz,
+  obterManifestoMg2,
+  obterManifestoMg2EmCache
+} from "../camadaConhecimento/manifestoMg2.js";
 
 /** Store de retenção da sessão (browser/Node). */
 let storeRetencaoSessao = criarStoreRetencaoMemoria();
@@ -128,15 +144,50 @@ export function montarEntradaMre(ctx) {
   mensagem = enriquecerMensagemComFioRecente(mensagem, ctx.historico);
   mensagem = enriquecerMensagemComMemoriaTrabalho(mensagem, lastro);
 
+  // P1-3 — Manifesto canónico (diretriz; não Fonte Oficial / Acervo)
+  const manifesto =
+    ctx.manifestoMg2 && ctx.manifestoMg2.ok
+      ? ctx.manifestoMg2
+      : null;
+  if (manifesto) {
+    const bloco = blocoContextoManifestoParaMre(manifesto);
+    if (bloco) {
+      mensagem = `${mensagem}\n\n${bloco}`;
+    }
+  }
+
   return {
     mensagem,
     coaId: coa?.id ?? mem?.projetoAtivo?.id ?? null,
+    coaAtivo: coa
+      ? { id: coa.id, nome: coa.nome || coa.titulo || null }
+      : mem?.projetoAtivo
+        ? {
+            id: mem.projetoAtivo.id,
+            nome: mem.projetoAtivo.nome || null
+          }
+        : null,
     intencao: ctx.intencao || null,
     snapshotPainel,
     factosOficiais: factos,
     projecaoSubordinada: projecaoBriefing,
     fonteOficial: "acervo_oficial",
-    viaPortaRecuperacao: true
+    viaPortaRecuperacao: true,
+    ...(manifesto
+      ? {
+          manifestoMg2: {
+            origem: manifesto.origem,
+            caminhoRelativo: manifesto.caminhoRelativo,
+            caminhoAbsoluto: manifesto.caminhoAbsoluto,
+            mtimeMs: manifesto.mtimeMs,
+            principiosSelecionaveis: manifesto.principiosSelecionaveis,
+            secoes: manifesto.secoes,
+            // conteudo completo disponível ao pipeline (diretriz)
+            conteudo: manifesto.conteudo,
+            ok: true
+          }
+        }
+      : {})
   };
 }
 
@@ -290,7 +341,30 @@ function enriquecerMensagemComConsciencia(texto, lastro, blocoFn) {
  */
 export async function executarRotaDeliberativa(ctx, deps = {}) {
   const canal = deps.canal || "chat";
-  const entrada = montarEntradaMre(ctx);
+  const msgUserPre = String(ctx.instrucao || "");
+  const coaPre = ctx.coaAtivo || null;
+
+  // P1-3: aquecer Manifesto canónico antes de montar entrada
+  let ctxComManifesto = ctx;
+  if (deveAnexarManifestoMg2(msgUserPre, coaPre)) {
+    let manifesto =
+      ctx.manifestoMg2 && ctx.manifestoMg2.ok
+        ? ctx.manifestoMg2
+        : obterManifestoMg2EmCache();
+    if (!manifesto || !manifesto.ok) {
+      manifesto = await obterManifestoMg2({
+        forcar: deps.forcarManifesto === true,
+        fs: deps.fsManifesto,
+        repoRoot: deps.repoMg2,
+        fetchImpl: deps.fetchManifesto
+      });
+    }
+    if (manifesto && manifesto.ok) {
+      ctxComManifesto = { ...ctx, manifestoMg2: manifesto };
+    }
+  }
+
+  const entrada = montarEntradaMre(ctxComManifesto);
   const chamarLlmBase = deps.chamarLlm || criarChamarLlmCeo();
   const lastro = ctx.lastroConsciencia || null;
   const temLastroConsciencia = Boolean(
@@ -307,18 +381,42 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
   );
 
   const msgUser = String(ctx.instrucao || "");
-  const exploratoria = mensagemEhExploratoria(msgUser);
+  const pedidoDecisao = detectarPedidoDecisaoExplicita(msgUser);
+  // Pedido explícito de decisão prevalece sobre modo exploração (trade-off/alternativas).
+  const exploratoria = pedidoDecisao
+    ? false
+    : mensagemEhExploratoria(msgUser);
   const diagnosticoFactos = mensagemPedeDiagnosticoFactos(msgUser);
+  const pedidoAnalise = detectarPedidoAnaliseDeliberativa(msgUser);
+  const pedidoDelegacaoExplicita = ehPedidoDelegacaoExplicita(msgUser);
+  const temManifesto = Boolean(entrada.manifestoMg2?.ok);
 
   /**
    * IMP-070 B1 + IMP-059 E4 — reforço no adaptador do Núcleo (não altera o motor MRE).
    * Briefing = projecção subordinada; Fonte Oficial = Acervo (pode ter lacuna).
+   * P1-2: pedido de análise → hint anti-delegação fictícia no estágio 6.
+   * Decisão sob conflito: pedido explícito → hint de fecho no estágio 6.
+   * P1-3: Manifesto canónico → diretriz de decisão (não catálogo CEO).
    */
   const chamarLlm =
-    temLastroBriefing || temLastroConsciencia || temLacunaFonteOficial
+    temLastroBriefing ||
+    temLastroConsciencia ||
+    temLacunaFonteOficial ||
+    pedidoAnalise ||
+    pedidoDecisao ||
+    temManifesto
       ? async (pedido) => {
+          let hint = pedido.schemaHint || "";
+          if (temManifesto) {
+            hint += hintManifestoComoDiretriz();
+          }
           if (pedido?.estagio === "6_decisao") {
-            let hint = pedido.schemaHint || "";
+            if (pedidoAnalise) {
+              hint += hintEstagio6AnaliseDeliberativa();
+            }
+            if (pedidoDecisao) {
+              hint += hintEstagio6DecisaoSobConflito();
+            }
             if (temLacunaFonteOficial) {
               hint +=
                 " Fonte Oficial (Acervo) sem item apto: há LACUNA EXPLÍCITA. " +
@@ -341,7 +439,9 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
                 hint +=
                   " Mensagem exploratória: NÃO forçar aprovar. Preferir solicitar_dados " +
                   "com critério nomeado que falta, ou monitorar com critério de vigília explícito.";
-              } else {
+              } else if (pedidoDecisao) {
+                // Hint de fecho já injectado acima — não enfraquecer com «pode aprovar».
+              } else if (!pedidoAnalise) {
                 hint +=
                   " Se for decisão com critérios já nos factos oficiais, pode aprovar; " +
                   "declare o critério na recomendação.";
@@ -364,21 +464,41 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
             }
             return chamarLlmBase({ ...pedido, schemaHint: hint });
           }
+          if (temManifesto && hint !== (pedido.schemaHint || "")) {
+            return chamarLlmBase({ ...pedido, schemaHint: hint });
+          }
           return chamarLlmBase(pedido);
         }
       : chamarLlmBase;
 
-  // Em exploração, manter preferirSolicitarDados para não silenciar lacunas materiais
-  const preferirSolicitarDados = exploratoria
-    ? true
-    : temLastroBriefing || temLastroConsciencia
-      ? false
-      : undefined;
+  // Em exploração, manter preferirSolicitarDados para não silenciar lacunas materiais.
+  // Pedido explícito de decisão: não preferir solicitar_dados por conflito/exploração.
+  const preferirSolicitarDados = pedidoDecisao
+    ? false
+    : exploratoria
+      ? true
+      : temLastroBriefing || temLastroConsciencia
+        ? false
+        : undefined;
 
   const resultado = await executarDeliberacaoMre(entrada, {
     chamarLlm,
     preferirSolicitarDados,
-    metadados: { origem: "nucleo", intencaoId: ctx.intencao?.id }
+    pedidoAnaliseDeliberativa: pedidoAnalise,
+    pedidoDecisaoExplicita: pedidoDecisao,
+    pedidoDelegacaoExplicita,
+    proibirDespacho:
+      (pedidoAnalise || pedidoDecisao) && !pedidoDelegacaoExplicita,
+    metadados: {
+      origem: "nucleo",
+      intencaoId: ctx.intencao?.id,
+      manifestoMg2: temManifesto
+        ? {
+            origem: entrada.manifestoMg2.origem,
+            caminhoRelativo: entrada.manifestoMg2.caminhoRelativo
+          }
+        : null
+    }
   });
 
   if (!resultado.ok || !resultado.parecer) {
@@ -401,7 +521,9 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     };
   }
 
-  const falado = gerarComunicadoExecutivo(resultado.parecer, canal);
+  const falado = gerarComunicadoExecutivo(resultado.parecer, canal, {
+    pedidoAnalise
+  });
   if (!falado.ok) {
     return {
       ok: false,
@@ -416,13 +538,30 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
   }
 
   const comunicado = falado.comunicado;
+  if (pedidoAnalise) {
+    const prosaAnalise = montarProsaAnaliseDeliberativa(resultado.parecer, {
+      maxAnalise: canal === "voz" ? 400 : 900
+    });
+    if (prosaAnalise) {
+      comunicado.texto = prosaAnalise;
+    }
+  }
   const reflexo = garantirReflexoEstadoExecutivo(
     comunicado.texto,
     lastro,
     ctx.instrucao || ""
   );
-  if (reflexo.aplicada) {
+  if (reflexo.aplicada && !pedidoAnalise) {
+    // P1-2: análise deliberativa não é substituída por prosa canónica de Gate/Job
     comunicado.texto = reflexo.mensagem;
+  } else if (reflexo.aplicada && pedidoAnalise) {
+    // Mantém análise; só anexa lastro operacional se for Gate/Job crítico e ainda não mencionado
+    if (
+      lastro?.contagens?.gatesPendentes > 0 &&
+      !/gate\s+pendente/i.test(comunicado.texto)
+    ) {
+      comunicado.texto = `${comunicado.texto}\n\nNota operacional: existe Gate pendente — não inicia execução desta análise.`;
+    }
   }
 
   try {
@@ -435,17 +574,20 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
   }
 
   // F7 + F8 — efeitos pós-parecer (não bloqueiam a mensagem se falharem)
-  // IMP-059 E4: a camada Consciência não publica Jobs; o MRE mantém efeitos próprios.
+  // E5-CA1 / P1-2: só publica Job se o Núcleo injectar publicador explicitamente.
+  // NÃO fazer fallback silencioso para publicarJobFila (C2 passava undefined e ainda criava Job).
   let efeitos = null;
   try {
     const publicarJob =
-      deps.publicarJob ||
-      (async (pedido) => publicarJobFila(pedido));
+      typeof deps.publicarJob === "function" ? deps.publicarJob : undefined;
+    const skipFila =
+      deps.skipFila === true ||
+      (pedidoAnalise && !pedidoDelegacaoExplicita);
     efeitos = await aplicarEfeitosPosDeliberacao(
       resultado.parecer,
       resultado.planoRetencao,
       {
-        publicarJob: deps.skipFila ? undefined : publicarJob,
+        publicarJob: skipFila ? undefined : publicarJob,
         storeRetencao: deps.storeRetencao || storeRetencaoSessao,
         registroDespacho: deps.registroDespacho || registroDespachoSessao
       }
@@ -469,7 +611,20 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
       parecerId: resultado.parecer.id,
       referenciaDecisao: comunicado.referenciaDecisao,
       efeitosPosDeliberacao: efeitos,
-      conscienciaInfluencia: reflexo
+      conscienciaInfluencia: reflexo,
+      ...(temManifesto
+        ? {
+            manifestoMg2: {
+              origem: entrada.manifestoMg2.origem,
+              caminhoRelativo: entrada.manifestoMg2.caminhoRelativo,
+              caminhoAbsoluto: entrada.manifestoMg2.caminhoAbsoluto,
+              mtimeMs: entrada.manifestoMg2.mtimeMs,
+              principiosSelecionaveis:
+                entrada.manifestoMg2.principiosSelecionaveis,
+              anexado: true
+            }
+          }
+        : {})
     }
   };
 }

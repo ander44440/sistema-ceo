@@ -2,6 +2,11 @@
  * Mock injetável de LLM por estágio — testes IMP-012/013 (sem rede).
  */
 
+import {
+  PRINCIPIO_USO_DIARIO_ACTIVO,
+  PRINCIPIO_USO_DIARIO_MG2
+} from "./catalogoPrincipios.js";
+
 /**
  * @param {Record<string, object|((pedido:object)=>object)>} mapa
  * @param {object} [opts]
@@ -32,8 +37,16 @@ export function criarChamarLlmMock(mapa, opts = {}) {
 
 /**
  * Respostas padrão para fluxo feliz (aprovar + orientar).
+ * Por omissão: princípios globais (sem escopo MG2).
+ * @param {Record<string, object|Function>} [overrides]
+ * @param {{ escopoMg2?: boolean }} [opts]
  */
-export function mapaLlmFluxoFeliz(overrides = {}) {
+export function mapaLlmFluxoFeliz(overrides = {}, opts = {}) {
+  const principioUso =
+    opts.escopoMg2 === true
+      ? PRINCIPIO_USO_DIARIO_MG2
+      : PRINCIPIO_USO_DIARIO_ACTIVO;
+
   return {
     "0_diagnostico": {
       objetivoReal: "Decidir prioridade do outdoor vs pagamento",
@@ -48,7 +61,7 @@ export function mapaLlmFluxoFeliz(overrides = {}) {
     "3_principios": {
       principiosAplicados: [
         "Respeito absoluto ao tempo do utilizador",
-        "Priorizar uso diário no MG2 (ADR-015)"
+        principioUso
       ]
     },
     "4_analise": {
@@ -78,7 +91,7 @@ export function mapaLlmFluxoFeliz(overrides = {}) {
       recomendacao: "Aprovar adiamento do outdoor e focar pagamento",
       alternativas: ["Fazer outdoor em paralelo"],
       justificativa:
-        "Com base no princípio Priorizar uso diário no MG2 (ADR-015) e no risco medio de atraso visual, aprova-se o adiamento. Oportunidade de foco na integração."
+        `Com base no princípio ${principioUso} e no risco medio de atraso visual, aprova-se o adiamento. Oportunidade de foco na integração.`
     },
     "7_acao": {
       descricao: "Manter outdoor fora do caminho crítico até concluir pagamento"
@@ -86,7 +99,7 @@ export function mapaLlmFluxoFeliz(overrides = {}) {
     "7_acao_job": {
       descricao: "Despachar implementação do outdoor",
       job: {
-        titulo: "Outdoor lateral MG2",
+        titulo: "Outdoor lateral",
         descricao: "Implementar assets laterais",
         prioridade: "baixa"
       }

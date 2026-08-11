@@ -195,6 +195,7 @@ export function gestorObjectivo(entrada = {}) {
   const activo = entrada.objetivoActivo || null;
   const anterior = entrada.objetivoAnterior || null;
   const gatePendente = entrada.gatePendente === true;
+  void gatePendente; // P0: API preservada; não bloqueia conversa
   const topico = entrada.topicoActivo || null;
 
   const preservado = () => ({
@@ -254,12 +255,7 @@ export function gestorObjectivo(entrada = {}) {
       razaoObjectivo: `mudar → «${novo.enunciado}»`,
       commitEstado: true
     };
-    if (gatePendente) {
-      out.clarificacaoGateObjectivo = montarClarificacaoGateObjectivo(
-        "Gate pendente",
-        novo.enunciado
-      );
-    }
+    // P0: Gate pendente não bloqueia mudança de objectivo
     return out;
   }
 
@@ -299,12 +295,7 @@ export function gestorObjectivo(entrada = {}) {
         razaoObjectivo: `estabelecer com activo distinto → mudar «${novo.enunciado}»`,
         commitEstado: true
       };
-      if (gatePendente) {
-        out.clarificacaoGateObjectivo = montarClarificacaoGateObjectivo(
-          "Gate pendente",
-          novo.enunciado
-        );
-      }
+      // P0: Gate pendente não bloqueia objectivo
       return out;
     }
     const novo = criarObjectivo(enunciado, "usuario", agora, {
@@ -319,12 +310,7 @@ export function gestorObjectivo(entrada = {}) {
       razaoObjectivo: `estabelecer «${novo.enunciado}»`,
       commitEstado: true
     };
-    if (gatePendente) {
-      out.clarificacaoGateObjectivo = montarClarificacaoGateObjectivo(
-        "Gate pendente",
-        novo.enunciado
-      );
-    }
+    // P0: Gate pendente não bloqueia estabelecer objectivo
     return out;
   }
 

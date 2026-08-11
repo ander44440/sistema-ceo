@@ -313,6 +313,27 @@ function sincronizarJobNaoTerminal(ciclo, job) {
       estadoJob: "pending"
     };
   }
+  if (estado === "dispatched") {
+    return {
+      processado: false,
+      execucaoConcluida: false,
+      motivo: "despachado_aguarda_execucao",
+      ciclo,
+      jobId: job.id,
+      estadoJob: "dispatched"
+    };
+  }
+  if (estado === "result" || estado === "needs_correction") {
+    return {
+      processado: false,
+      execucaoConcluida: false,
+      motivo:
+        estado === "result" ? "aguarda_verificacao" : "aguarda_correcao",
+      ciclo,
+      jobId: job.id,
+      estadoJob: estado
+    };
+  }
   // running
   const base = validarCiclo(ciclo);
   if (!base.ok) {

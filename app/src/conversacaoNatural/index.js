@@ -12,6 +12,14 @@ import { TIPO_TURNO, classificarTipoTurno } from "./tiposTurno.js";
 import { sanitizarProsaUsuario } from "./sanitizarProsa.js";
 import { _resetVariacaoParaTestes } from "./variacao.js";
 
+export {
+  extrairCriterioCurto,
+  montarProsaDecisaoExecutiva,
+  deveApresentarFechoDecisorio,
+  temEscolhaDecisoriaValida,
+  pedidoTemAlternativasAbc,
+  inferirLetraFechoAbc
+} from "./compor.js";
 export { TIPO_TURNO, classificarTipoTurno } from "./tiposTurno.js";
 export { extrairContextoImediato } from "./contextoImediato.js";
 export { sanitizarProsaUsuario, expoeEstruturaDeliberacao } from "./sanitizarProsa.js";
@@ -34,7 +42,12 @@ export function aplicarConversacaoNatural(entrada = {}) {
     parecer,
     memoria: dados.memoria || entrada.memoria,
     coa: dados.coa || entrada.coa,
-    instrucao
+    instrucao,
+    gestaoTopicos: dados.gestaoTopicos || entrada.gestaoTopicos,
+    gestaoObjectivos: dados.gestaoObjectivos || entrada.gestaoObjectivos,
+    refinoEic: dados.refinoEic || entrada.refinoEic,
+    lastroConsciencia:
+      dados.lastroConsciencia || entrada.lastroConsciencia
   });
 
   const pedidoAmbiguo = detectarPedidoAmbiguo(instrucao, parecer);
@@ -57,7 +70,10 @@ export function aplicarConversacaoNatural(entrada = {}) {
     ctxImediato,
     mensagemOriginal,
     canal,
-    pediuDetalhe
+    pediuDetalhe,
+    instrucao,
+    intencaoId: dados.intencao?.id || entrada.intencaoId || "",
+    modo: entrada.modo || ""
   });
 
   const texto = sanitizarProsaUsuario(composto.texto);
@@ -72,12 +88,14 @@ export function aplicarConversacaoNatural(entrada = {}) {
     contextoImediato: ctxImediato,
     textoAntes: mensagemOriginal,
     gerador: GERADOR,
+    modoAdaptacao: composto.modoAdaptacao || null,
     meta: {
       gerador: GERADOR,
       tipoTurno,
       canal,
       pedidoAmbiguo,
       pediuDetalhe,
+      modoAdaptacao: composto.modoAdaptacao || null,
       objetivoJaNoFio: objetivoJaNoFio(ctxImediato.objetivoAtual, ctxImediato)
     }
   };
@@ -106,13 +124,20 @@ export function naturalizarRespostaNucleo(resposta, ctx = {}) {
     };
   }
 
+  // DESP-009: preferir lastro/refino do Engine quando ainda não estão em dados
+  const lastroConsciencia =
+    resposta.dados?.lastroConsciencia || ctx.lastroConsciencia || null;
+  const refinoEic = resposta.dados?.refinoEic || ctx.refinoEic || null;
+
   const cn = aplicarConversacaoNatural({
     mensagem: resposta.mensagem,
     ok: resposta.ok,
     modo: resposta.modo,
     dados: {
       ...(resposta.dados || {}),
-      intencao: resposta.dados?.intencao || resposta.intencao || ctx.intencao
+      intencao: resposta.dados?.intencao || resposta.intencao || ctx.intencao,
+      ...(lastroConsciencia ? { lastroConsciencia } : {}),
+      ...(refinoEic ? { refinoEic } : {})
     },
     historico: ctx.historico || [],
     instrucao: ctx.instrucao || resposta.dados?.instrucao,
@@ -122,6 +147,8 @@ export function naturalizarRespostaNucleo(resposta, ctx = {}) {
         ? ctx.memoria()
         : ctx.memoria || resposta.dados?.memoria,
     coa: resposta.dados?.coa || ctx.coaAtivo,
+    lastroConsciencia,
+    refinoEic,
     intencaoId:
       resposta.dados?.intencao?.id ||
       resposta.intencao?.id ||
@@ -175,8 +202,8 @@ export function textoBoasVindasNatural(opts = {}) {
     ok: true,
     modo: "local",
     mensagem: cumprimento
-      ? `${cumprimento}. Qual é o objetivo de agora?`
-      : "Pronto. Qual é o objetivo de agora?",
+      ? `${cumprimento} Em que avanço consigo ajudar agora?`
+      : "Olá. Em que avanço consigo ajudar agora?",
     forcarAbertura: true,
     dados: {
       intencao: { id: "saudacao" },

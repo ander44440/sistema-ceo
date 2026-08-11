@@ -16,7 +16,12 @@ import {
   ehConhecimentoGeralE22,
   ehIntencaoExecutivaE21,
   temVerboExecucao,
-  desambiguarJobs
+  desambiguarJobs,
+  ehProibicaoExecucaoExplicita,
+  ehConsultaEstadoOperacional,
+  ehPedidoContinuidadeMissao,
+  ehPedidoAnaliseOuRecomendacao,
+  ehComandoExecucaoExplicito
 } from "./regras.js";
 import {
   extrairAncorasMensagem,
@@ -34,6 +39,7 @@ import {
  * @property {{ id?: string, enunciado?: string, ancora?: string }|null} [objetivoActivo]
  * @property {boolean} [frenteActiva]
  * @property {{ id?: string, nome?: string, titulo?: string }|null} [coa]
+ * @property {boolean} [operacaoAberta] — Teste 3: Job F2 aberto (continuidade → lastro)
  * @property {boolean} [gatePendente]
  *
  * @typedef {object} ResultadoVca
@@ -229,18 +235,11 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
 
   // P2 — metaconversa (E2.3)
   if (ehAutoexplicacaoInstitucionalE23(t)) {
-    const base = resultado(
+    // P0: metaconversa não força lock de Gate (GATE ≠ CONVERSATION_LOCK)
+    return resultado(
       "metaconversa",
       "E2.3: autoexplicação institucional → isolamento de lastro CSC"
     );
-    if (entrada.gatePendente) {
-      return {
-        ...base,
-        clarificacaoGateIsolamento:
-          "Antes de falar do próprio CEO: o Gate continua pendente — aprova, rejeita ou cancela?"
-      };
-    }
-    return base;
   }
 
   // Meta explícita sobre o Sistema CEO (mesmo sem E2.3 completo)
@@ -252,6 +251,27 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
     return resultado(
       "metaconversa",
       "pedido explícito sobre o Sistema CEO → isolamento de lastro de projecto"
+    );
+  }
+
+  // Teste 3 — continuidade de missão com operação aberta: autoriza lastro CSC
+  // (não isola como consulta factual de Job).
+  if (entrada.operacaoAberta && ehPedidoContinuidadeMissao(t)) {
+    return resultado(
+      "pertence",
+      "Teste 3: continuidade de missão com operação aberta → lastro CSC autorizado"
+    );
+  }
+
+  // P0 — consulta / proibição / análise deliberativa: nunca path de execução
+  if (
+    ehProibicaoExecucaoExplicita(t) ||
+    ehConsultaEstadoOperacional(t) ||
+    (ehPedidoAnaliseOuRecomendacao(t) && !ehComandoExecucaoExplicito(t))
+  ) {
+    return resultado(
+      "independente",
+      "P0: consulta/análise/proibição de execução → sem lastro CSC de Job"
     );
   }
 

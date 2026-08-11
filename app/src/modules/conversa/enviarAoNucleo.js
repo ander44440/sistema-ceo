@@ -50,9 +50,13 @@ export async function enviarAoNucleo(textoBruto, opts = {}) {
   );
 
   try {
-    const { publicarJobFila } = await import(
-      "../../executiveEngine/filaCliente.js"
-    );
+    let publicarJob = opts.publicarJob;
+    if (typeof publicarJob !== "function") {
+      const { publicarJobFila } = await import(
+        "../../executiveEngine/filaCliente.js"
+      );
+      publicarJob = publicarJobFila;
+    }
     const resposta = await executiveEngine.executar(
       {
         texto,
@@ -60,7 +64,7 @@ export async function enviarAoNucleo(textoBruto, opts = {}) {
           .filter((m) => m.id !== placeholder.id)
           .map((m) => ({ papel: m.papel, texto: m.texto }))
       },
-      { publicarJob: publicarJobFila }
+      { publicarJob }
     );
 
     atualizarMensagem(placeholder.id, {
@@ -73,6 +77,24 @@ export async function enviarAoNucleo(textoBruto, opts = {}) {
       const textoVoz =
         (resposta.dados && resposta.dados.textoVoz) || resposta.mensagem;
       void reproduzirRespostaCeo(textoVoz);
+    }
+
+    // Relato/encerramento: notificar Centro para abrir faixa do dia com campos preenchidos
+    if (
+      resposta.ok &&
+      (resposta.modo === "relato_encerramento" ||
+        resposta.dados?.origemCampos === "estado_operacional" ||
+        resposta.dados?.continuidade)
+    ) {
+      try {
+        window.dispatchEvent(
+          new CustomEvent("ceo:continuidade-dia", {
+            detail: resposta.dados?.continuidade || null
+          })
+        );
+      } catch {
+        /* no-op */
+      }
     }
 
     onEstadoUi?.(

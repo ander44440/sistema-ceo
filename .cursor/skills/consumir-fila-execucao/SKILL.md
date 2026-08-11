@@ -22,14 +22,21 @@ Executar o próximo Job `pending` publicado pelo CEO, **sem** o utilizador colar
 Se o workspace atual for outro (ex.: MG2), use o caminho absoluto do repo CEO:
 `E:/anderson/CEO/executive/queue/` (ajustar se o clone estiver noutro sítio).
 
+## Ciclo de vida (P0-2)
+
+`pending → dispatched → running → result → verificação → completed|needs_correction|failed`
+
+Handoff ≠ conclusão. O Agent regista `result` (ou `failed`); o CEO verifica antes de `completed`.
+
 ## Protocolo obrigatório
 
 1. Ler `PROXIMO.md` e/ou listar `JOB-*.json` com `"estado": "pending"` (mais antigo primeiro).
 2. Se não houver pending: informar e parar.
-3. Antes de executar: atualizar o JSON do Job para `"estado": "running"` e `iniciadoEm` (ISO).
+3. Antes de executar: atualizar o JSON do Job para `"estado": "running"` e `iniciadoEm` (ISO) (se ainda `pending`/`dispatched`, pode marcar `dispatched` primeiro).
 4. Executar **apenas** o que `titulo` + `descricao` pedem; não expandir escopo.
-5. Ao terminar: `"estado": "completed"` ou `"failed"`, preencher `concluidoEm` e `resultado` (resumo curto).
-6. Não inventar Jobs; não chamar o CEO de volta automaticamente nesta V1.
+5. Ao terminar: `"estado": "result"` com `resultado` (evidência). **Não** marcar `completed` — a verificação é do CEO. Em erro de execução: `"failed"` com motivo.
+6. Após gravar `result`, a verificação formal (`verificarResultadoJob`) é disparada pelo Dispatcher (reconciliação pós-Agent / pass de Jobs em `result`) ou pela API da fila (`registarResultado` / PATCH `result`). O Agent **não** completa o Job.
+7. Não inventar Jobs; não marcar `completed` directamente.
 
 ## Atualizar estado (PowerShell exemplo)
 
@@ -41,7 +48,7 @@ $j.iniciadoEm = (Get-Date).ToUniversalTime().ToString("o")
 ($j | ConvertTo-Json -Depth 6) | Set-Content $p -Encoding utf8
 ```
 
-(Repetir no fim com `completed`/`failed` + `resultado` + `concluidoEm`.)
+(Repetir no fim com `result` + `resultado`, ou `failed` + motivo — **não** `completed` directo.)
 
 ## Dispatcher V2 (REQ-053)
 

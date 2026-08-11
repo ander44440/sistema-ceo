@@ -1,12 +1,13 @@
 # VAL-011R — Revalidação Pós-Correção do STT
 
-> **Status:** Homologada (engenharia) — 03/08/2026; **aguarda aprovação do patrocinador**.  
+> **Status:** **Homologada** — Gate aprovado 06/08/2026 (Alçada do Patrocinador / mandato CTO Opção B — REG-A04).  
 > **Tipo:** VAL (ADR-006) — revalidação em produção após correção da falha de activação do SpeechRecognition.  
-> **Data:** 03/08/2026.  
+> **Data:** 03/08/2026 (engenharia); Gate 06/08/2026.  
 > **Capacidade:** CAP-07 — Comunicação.  
-> **Frente:** F1 — Paridade Produção CEO Ouvindo (pós-defeito).  
+> **Frente:** F1 — Paridade Produção CEO Ouvindo (pós-defeito) — **ENCERRADA**.  
 > **Lastro:** VAL-011 · diagnóstico STT homologado · correção sync `start()`.  
-> **GATE-010:** permanece **cancelado** — só reabre **após** aprovação desta VAL-011R.
+> **GATE-010:** permanece **cancelado** nesta regularização — reabertura exige mandato explícito separado (fora do pacote mínimo F1).  
+> **Regularização:** REG-A04 / REG-A05 — 06/08/2026.
 
 ---
 
@@ -126,9 +127,10 @@ Módulo: `app/src/onboarding/voice/debugStt.js`.
 | 10 conversas consecutivas | **Confirmadas** (lab voz + prod Gate) |
 | Sem regressões de suite | **Confirmado** |
 | Logs temporários | **DEBUG only** |
-| GATE-010 | **Não reaberto** — aguarda aprovação VAL-011R |
+| GATE-010 | **Não reaberto** — fora do pacote mínimo F1; requer mandato futuro explícito |
 
-**Parecer:** Apto para aprovação do patrocinador. Smoke oral final (1→11 completo com mic) recomendado no browser do patrocinador com `?debug=stt` antes de reabrir GATE-010.
+**Parecer engenharia (03/08/2026):** Apto para aprovação do patrocinador.  
+**Gate (06/08/2026):** **APROVADO** — Alçada do Patrocinador via mandato CTO Opção B (REG-A04). NC-I1 = **CORRIGIDA** (patch STT + deploy `dpl_Bfm7V3pP…`).
 
 ---
 
@@ -141,3 +143,16 @@ Módulo: `app/src/onboarding/voice/debugStt.js`.
 | Branch | `cursor/ipr-001-experiencia-f1-f2` |
 | Evidência | [`../implementation/evidencias/VAL-011R-revalidacao-stt.md`](../implementation/evidencias/VAL-011R-revalidacao-stt.md) |
 | Produção | `dpl_Bfm7V3pP5vaJAoGQ7RJHQ9zzBgUj` |
+
+---
+
+## Histórico
+
+| Versão | Data | Quem | O quê | Resultado |
+|--------|------|------|-------|-----------|
+| 0.1 | 03/08/2026 | Engenheiro (Cursor) | Revalidação STT pós-correção | Homologada engenharia — aguardava Gate |
+| 0.2 | 06/08/2026 | Engenheiro (Cursor) | REG-A04/A05 — Gate + fecho NC-I1 | **Homologada** — Gate aprovado |
+
+---
+
+**Estado:** **Homologada** — Gate aprovado. F1 **encerrada**.

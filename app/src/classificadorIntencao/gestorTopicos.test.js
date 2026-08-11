@@ -249,7 +249,7 @@ test("CT-T09: Gate + Aprovado → Continuidade", async () => {
   assert.notEqual(out.modo, "clarificacao_topico");
 });
 
-test("CT-T10: Gate pendente + shift → clarificação combinada; Gate não auto-fechado", async () => {
+test("CT-T10: Gate pendente + shift → processa (P0); Gate não auto-fechado", async () => {
   const store = obterStoreContinuidadePadrao();
   registarGateAposMotor(
     store,
@@ -273,10 +273,9 @@ test("CT-T10: Gate pendente + shift → clarificação combinada; Gate não auto
     { texto: "Agora sobre o pagamento" },
     { storeContinuidade: store }
   );
-  assert.equal(out.modo, "clarificacao_gate_shift");
-  assert.match(out.mensagem, /Gate|pagamento/i);
-  assert.equal(out.dados?.motorAcionado, false);
-  // Gate ainda activo
+  assert.notEqual(out.modo, "clarificacao_gate_shift");
+  assert.notEqual(out.modo, "continuidade_gate_clarificacao");
+  // Gate ainda activo (execução ainda requer autorização)
   assert.ok(store.obterGatePendenteMaisRecente());
 });
 
@@ -345,4 +344,25 @@ test("CT-T-fronteira: gestor não importa destinos/motor", () => {
   const idx = readFileSync(join(rootSrc, "executiveEngine", "index.js"), "utf8");
   assert.match(idx, /gestorTopicos/);
   assert.match(idx, /clarificacao_topico|clarificacao_gate_shift/);
+});
+
+test("DESP-010: «Adiar outdoor e focar pagamento» não é ambiguidade", () => {
+  const r = gestorTopicos({
+    mensagem: "Adiar outdoor e focar pagamento. Decide e conduz a missão.",
+    topicoActivo: null,
+    pausas: [],
+    agoraIso: ISO
+  });
+  assert.notEqual(r.evento, "ambiguo_topico");
+  assert.ok(r.evento === "shift" || r.evento === "continuar");
+  assert.match(String(r.topicoActivo?.ancora || ""), /pagamento/i);
+
+  // Escolha explícita continua a pedir clarificação
+  const amb = gestorTopicos({
+    mensagem: "Outdoor ou pagamento?",
+    topicoActivo: criarTopico("outdoor", "usuario", ISO),
+    pausas: [criarTopico("pagamento", "usuario", ISO)],
+    agoraIso: ISO
+  });
+  assert.equal(amb.evento, "ambiguo_topico");
 });

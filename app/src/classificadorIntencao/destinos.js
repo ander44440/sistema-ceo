@@ -9,6 +9,15 @@ import {
   contemSugiroComoRespostaFinal
 } from "./integracaoNucleo.js";
 import { gerarRespostaConhecimentoGeral } from "./respostaLeve.js";
+import {
+  devePreservarMissao,
+  montarConfirmacaoNatural,
+  sanitizarProsaUtilizador
+} from "./preservarMissao.js";
+import {
+  ehComandoSobreJobActivo,
+  extrairEstadoOperacional
+} from "../conversacaoNatural/estadoOperacional.js";
 
 /** Capacidades operacionais válidas para C4 (nunca Motor/MRE). */
 export const CAPACIDADES_C4 = Object.freeze([
@@ -323,19 +332,103 @@ export async function executarDestinoC4(ctx) {
 }
 
 /**
- * Clarificação — sem Motor / MRE / capacidades pesadas.
+ * Clarificação — CTO-001/003: preservar missão e operação aberta.
+ * CTO-003: Job activo > classificador; comandos sobre Job → C3 (recuperação).
+ * P1: com missão/operação → continua (C3 se comando de Job, senão C2).
+ * P2/P3: confirmação em linguagem natural (sem Job / deliberar / C1–C4).
  * @param {ContextoDestino} ctx
  */
-export function executarDestinoClarificacao(ctx) {
+export async function executarDestinoClarificacao(ctx) {
+  const estadoOp = extrairEstadoOperacional({
+    lastroConsciencia: ctx.deps?.lastroConsciencia,
+    historico: ctx.historico,
+    estadoOperacional: ctx.deps?.lastroConsciencia?.estadoOperacional
+  });
+
+  // CTO-003 REGRA 1+3: operação aberta + comando sobre Job → Motor (não reclassificar)
+  if (estadoOp.operacaoAberta && ehComandoSobreJobActivo(ctx.texto)) {
+    const intencaoRec = {
+      ...ctx.intencao,
+      id: "publicar_job_fila",
+      capacidade: "motor_execucao",
+      precisaClarificacao: false,
+      destino: "motor_execucao"
+    };
+    const ctxRec = {
+      ...ctx,
+      intencao: intencaoRec,
+      rota: {
+        ...(ctx.rota && typeof ctx.rota === "object" ? ctx.rota : {}),
+        destino: "motor_execucao"
+      }
+    };
+    const resposta = await executarDestinoC3(ctxRec);
+    return {
+      ...resposta,
+      dados: {
+        ...(resposta.dados && typeof resposta.dados === "object"
+          ? resposta.dados
+          : {}),
+        preservacaoMissao: "CTO-003",
+        recuperacaoOperacional: true,
+        estadoOperacional: estadoOp,
+        rotaOrigem: "clarificacao",
+        rota: "motor_execucao"
+      }
+    };
+  }
+
+  if (estadoOp.operacaoAberta || devePreservarMissao(ctx)) {
+    const intencaoMissao = {
+      ...ctx.intencao,
+      id:
+        ctx.intencao?.id === "deliberar" ||
+        ctx.intencao?.id === "deliberar_objetivo" ||
+        ctx.intencao?.id === "pergunta_aberta"
+          ? ctx.intencao.id
+          : "deliberar_objetivo",
+      capacidade: "ia",
+      precisaClarificacao: false,
+      destino: "nucleo_mre"
+    };
+    const ctxMissao = {
+      ...ctx,
+      intencao: intencaoMissao,
+      rota: {
+        ...(ctx.rota && typeof ctx.rota === "object" ? ctx.rota : {}),
+        destino: "nucleo_mre"
+      }
+    };
+    const resposta = await executarDestinoC2(ctxMissao);
+    return {
+      ...resposta,
+      dados: {
+        ...(resposta.dados && typeof resposta.dados === "object"
+          ? resposta.dados
+          : {}),
+        motorAcionado: false,
+        preservacaoMissao: estadoOp.operacaoAberta ? "CTO-003" : "CTO-001",
+        hipoteseMissao: true,
+        estadoOperacional: estadoOp.operacaoAberta ? estadoOp : undefined,
+        rotaOrigem: "clarificacao",
+        rota: "nucleo_mre"
+      }
+    };
+  }
+
+  const mensagem = sanitizarProsaUtilizador(montarConfirmacaoNatural(ctx));
   return baseResposta(ctx, {
     ok: true,
-    mensagem:
-      "Preciso de um pouco mais de clareza antes de agir. " +
-      "Quer deliberar sobre o projecto, executar um trabalho (Job), " +
-      "ou um comando operacional (ex.: listar jobs, estado)?",
+    mensagem,
     capacidade: null,
     modo: "clarificacao",
-    dados: { motorAcionado: false, mreInvocado: false, rota: "clarificacao" }
+    dados: {
+      motorAcionado: false,
+      mreInvocado: false,
+      rota: "clarificacao",
+      preservacaoMissao: "CTO-001",
+      confirmacaoNatural: true
+    }
   });
 }
 
@@ -350,7 +443,7 @@ export async function executarPorDestino(ctx) {
 
   switch (destino) {
     case "clarificacao":
-      return executarDestinoClarificacao(ctx);
+      return await executarDestinoClarificacao(ctx);
     case "resposta_leve":
       return executarDestinoC1(ctx);
     case "nucleo_mre":

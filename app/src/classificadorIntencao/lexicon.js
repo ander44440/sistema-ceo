@@ -91,7 +91,8 @@ export const LEXICO_C1 = Object.freeze([
   }),
   Object.freeze({
     id: "aritmetica",
-    re: /\bquanto\s+[eé]\s+\d|[×x*].*\d|\d+\s*[×x*+\-/÷]\s*\d+/,
+    // Operações matemáticas reais — NÃO usar /[x*].*\d/ (falso positivo em «exato»+«4»).
+    re: /\bquanto\s+[eé]\s+\d+\b|\b\d+\s*[×x*+\-/÷]\s*\d+\b|\bqual\s+[eé]\s+(o\s+)?resultado\s+de\s+\d+\s*[×x*+\-/÷]\s*\d+/i,
     peso: 0.9
   }),
   Object.freeze({
@@ -110,12 +111,22 @@ export const LEXICO_C4 = Object.freeze([
   }),
   Object.freeze({
     id: "jobs_pendentes",
-    re: /\bjobs?\s+pendentes?\b|\bfila\s+(de\s+)?(execu[cç][aã]o|jobs?)\b/,
+    re: /\bjobs?\s+pendentes?\b|\bfila\s+(de\s+)?(execu[cç][aã]o|jobs?)\b|\bestado\s+da\s+fila\b/,
     peso: 0.9
   }),
   Object.freeze({
+    id: "gate_pendente",
+    re: /\bgates?\s+pendentes?\b|\bquais\s+gates?\b|\bqual\s+[eé]?\s*(o\s+)?gates?\b|\bgates?\s+(que\s+esta|activo|ativo)\b|\bid\s+(do\s+)?gates?\b/,
+    peso: 0.94
+  }),
+  Object.freeze({
+    id: "estado_job",
+    re: /\bestado\s+(do\s+)?jobs?-?\d*\b|\bqual\s+[eé]?\s*(o\s+)?estado\s+(do\s+)?jobs?\b|\bjobs?-\d+\b|\b(resultado|verificad).*\bjobs?-\d+\b/,
+    peso: 0.93
+  }),
+  Object.freeze({
     id: "status",
-    re: /^(status|estado)(\s+(do\s+)?(sistema|ceo|sess[aã]o))?$|\bstatus\s+(do\s+)?(sistema|ceo)\b|\bestado\s+atual\b/,
+    re: /^(status|estado)(\s+(do\s+)?(sistema|ceo|sess[aã]o|fila))?$|\bstatus\s+(do\s+)?(sistema|ceo|fila)\b|\bestado\s+atual\b|\bestado\s+da\s+fila\b/,
     peso: 0.9
   }),
   Object.freeze({
@@ -174,6 +185,11 @@ export const LEXICO_C4 = Object.freeze([
     peso: 0.85
   }),
   Object.freeze({
+    id: "empresas_ancora",
+    re: /\b(abrir\s+(a\s+)?empresa|ativar\s+(a\s+)?empresa|trocar\s+para\s+(a\s+)?empresa|trocar\s+de\s+empresa|selecionar\s+(a\s+)?empresa)\b/,
+    peso: 0.85
+  }),
+  Object.freeze({
     id: "conhecimento",
     re: /\b(conhecimento|patrim[oó]nio|acervo|buscar\s+no\s+acervo)\b/,
     peso: 0.8
@@ -214,17 +230,12 @@ export const LEXICO_C3 = Object.freeze([
   }),
   Object.freeze({
     id: "faz_diagnostico",
-    re: /\b(fa[cç]a|faz|fazer)\b.*\b(diagn[oó]stico|an[aá]lise|relat[oó]rio)\b/,
-    peso: 0.9
-  }),
-  Object.freeze({
-    id: "analise_projeto",
-    re: /\b(analis[ae]|analisar)\b.*\b(projeto|sistema|c[oó]digo|erro|situa[cç][aã]o)\b/,
+    re: /\b(fa[cç]a|faz|fazer)\b.*\b(diagn[oó]stico|relat[oó]rio)\b/,
     peso: 0.9
   }),
   Object.freeze({
     id: "faz_feature",
-    re: /\b(faz|fa[cç]a|execute|executa)\b.*\b(feature|funcionalidade|outdoor|patch|pr|an[aá]lise)\b/,
+    re: /\b(faz|fa[cç]a|execute|executa)\b.*\b(feature|funcionalidade|outdoor|patch|pr)\b/,
     peso: 0.88
   }),
   Object.freeze({
@@ -249,7 +260,8 @@ export const LEXICO_C3 = Object.freeze([
   }),
   Object.freeze({
     id: "verbo_execucao",
-    re: /\b(implementa|despacha|publica\s+job|abre\s+(um\s+)?pr|acion[ae]|delegue|investigue|execut[ae]|ger[ae]|analis[ae])\b/,
+    // P0: sem analis[ae] — análise deliberativa ≠ execução
+    re: /\b(implementa|despacha|publica\s+job|abre\s+(um\s+)?pr|acion[ae]|delegue|investigue|execut[ae]|ger[ae])\b/,
     peso: 0.8
   })
 ]);
@@ -305,6 +317,16 @@ export const LEXICO_C2 = Object.freeze([
     id: "e22_qual_prioridade",
     re: /\bqual\s+prioridade\b/,
     peso: 0.93
+  }),
+  Object.freeze({
+    id: "analise_deliberativa",
+    re: /\b(analis[ae]|analisar|avali[ae]|avaliar|compar[ae]|compare)\b/,
+    peso: 0.88
+  }),
+  Object.freeze({
+    id: "recomendacao_deliberativa",
+    re: /\b(recomenda|recomendaria|voce\s+recomenda|diga\s+se\s+devemos)\b/,
+    peso: 0.88
   }),
   Object.freeze({
     id: "e22_como_organizar",

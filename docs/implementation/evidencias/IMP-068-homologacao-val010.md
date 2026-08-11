@@ -1,9 +1,11 @@
-# IMP-068 — Evidências de homologação (VAL-010)
+# IMP-068 — Evidências de homologação (**VAL-010**)
 
 **Data:** 03/08/2026  
 **Commit:** `0c7d205e87d87942d7b7524593cb6986db189918`  
 **Branch:** `cursor/ipr-001-experiencia-f1-f2`  
-**VAL:** [`VAL-010-homologacao-modo-ceo-ouvindo.md`](../../validation/VAL-010-homologacao-modo-ceo-ouvindo.md)
+**VAL oficial:** [`VAL-010-homologacao-modo-ceo-ouvindo.md`](../../validation/VAL-010-homologacao-modo-ceo-ouvindo.md) — *não* VAL-006 (CAP-05).  
+**ENC:** [`ENC-006-encerramento-modo-ceo-ouvindo.md`](../../learning/ENC-006-encerramento-modo-ceo-ouvindo.md).  
+**Cadeia:** ANL-012 → REQ-068 → ARQ-029 → IMP-068 → **VAL-010** → ENC-006.
 
 ## Suites
 
@@ -24,4 +26,5 @@
 
 ## Veredicto laboratorial
 
-**APROVADO** — ver VAL-010. Produção aguarda deploy.
+**APROVADO** — ver **VAL-010**. Produção residual: deploy (ENC-006 §6).  
+Frente **ENCERRADA** (ENC-006). Nenhuma nova alteração nesta frente.

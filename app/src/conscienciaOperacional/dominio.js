@@ -18,11 +18,27 @@
  */
 
 /**
+ * Status aceites no JobResumo (F1 = pending; F2 = acompanhamento aberto).
+ * @typedef {"pending"|"dispatched"|"running"|"result"|"needs_correction"} StatusJobResumo
+ */
+
+/** F2 — Jobs sob Monitoramento (não só running). */
+export const STATUS_JOB_EM_ACOMPANHAMENTO = Object.freeze([
+  "dispatched",
+  "running",
+  "result",
+  "needs_correction"
+]);
+
+/**
  * Resumo mínimo de Job (F1 / F2).
+ * Teste 3: `sinteseResultado` / `evidencia` opcionais quando F2 = result|needs_correction.
  * @typedef {object} JobResumo
  * @property {string} id
  * @property {string} titulo
- * @property {"pending"|"running"} status
+ * @property {StatusJobResumo} status
+ * @property {string} [sinteseResultado]
+ * @property {string} [evidencia]
  */
 
 /**
@@ -255,17 +271,49 @@ export function validarJobResumo(job) {
   if (typeof j.titulo !== "string") {
     return { ok: false, erro: "JobResumo.titulo inválido" };
   }
-  if (j.status !== "pending" && j.status !== "running") {
-    return { ok: false, erro: "JobResumo.status deve ser pending|running" };
+  const statusOk =
+    j.status === "pending" ||
+    STATUS_JOB_EM_ACOMPANHAMENTO.includes(/** @type {string} */ (j.status));
+  if (!statusOk) {
+    return {
+      ok: false,
+      erro:
+        "JobResumo.status deve ser pending|dispatched|running|result|needs_correction"
+    };
+  }
+  /** @type {JobResumo} */
+  const resumo = {
+    id: j.id.trim(),
+    titulo: j.titulo,
+    status: /** @type {StatusJobResumo} */ (j.status)
+  };
+  // Teste 3 — lastro de missão: preservar síntese/evidência sem alterar F2 como fonte
+  if (
+    (j.status === "result" || j.status === "needs_correction") &&
+    typeof j.sinteseResultado === "string" &&
+    j.sinteseResultado.trim()
+  ) {
+    resumo.sinteseResultado = j.sinteseResultado.trim().slice(0, 240);
+  }
+  if (
+    (j.status === "result" || j.status === "needs_correction") &&
+    typeof j.evidencia === "string" &&
+    j.evidencia.trim()
+  ) {
+    resumo.evidencia = j.evidencia.trim().slice(0, 200);
   }
   return {
     ok: true,
-    job: Object.freeze({
-      id: j.id.trim(),
-      titulo: j.titulo,
-      status: /** @type {"pending"|"running"} */ (j.status)
-    })
+    job: Object.freeze(resumo)
   };
+}
+
+/**
+ * @param {string} [status]
+ * @returns {boolean}
+ */
+export function ehStatusJobEmAcompanhamento(status) {
+  return STATUS_JOB_EM_ACOMPANHAMENTO.includes(/** @type {*} */ (status));
 }
 
 /**
@@ -390,8 +438,10 @@ export function criarEstadoExecutivo(parcial = {}) {
   for (const item of Array.isArray(p.jobsEmExecucao) ? p.jobsEmExecucao : []) {
     const v = validarJobResumo(item);
     if (!v.ok) throw new TypeError(v.erro);
-    if (v.job.status !== "running") {
-      throw new TypeError("jobsEmExecucao só aceita status running");
+    if (!ehStatusJobEmAcompanhamento(v.job.status)) {
+      throw new TypeError(
+        "jobsEmExecucao só aceita dispatched|running|result|needs_correction"
+      );
     }
     jobsEmExecucao.push(v.job);
   }
@@ -551,8 +601,10 @@ export function validarEstadoExecutivo(estado) {
     for (const j of e.jobsEmExecucao) {
       const v = validarJobResumo(j);
       if (!v.ok) erros.push(v.erro);
-      else if (v.job.status !== "running") {
-        erros.push("jobsEmExecucao só aceita status running");
+      else if (!ehStatusJobEmAcompanhamento(v.job.status)) {
+        erros.push(
+          "jobsEmExecucao só aceita dispatched|running|result|needs_correction"
+        );
       }
     }
   }

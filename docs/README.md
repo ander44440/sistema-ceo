@@ -49,6 +49,7 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 
 | Documento | Status |
 |-----------|--------|
+| [`requirements/REQ-CEO-etapa-2-correcoes-criticas-v1.md`](requirements/REQ-CEO-etapa-2-correcoes-criticas-v1.md) | **Consolidado** — Etapa 2 Correções Críticas v1 (REQ-CEO-001…015); apta a encerramento; Etapa 3 = Reteste Controlado |
 | [`GATE-009-certificacao-prontidao-sistema-ceo.md`](GATE-009-certificacao-prontidao-sistema-ceo.md) | **Homologado** — Certificação de prontidão; parecer **Apto com ressalvas**; abre deliberação da próxima frente |
 | [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — F1 ENCERRADA; **F2 retirada**; candidatas F3–F8 |
 | [`REL-001-estado-atual-do-sistema-ceo.md`](REL-001-estado-atual-do-sistema-ceo.md) | **Homologado** — Estado atual pós-EIC + MVP CEO Ouvindo; estabilização concluída (patrocinador) |

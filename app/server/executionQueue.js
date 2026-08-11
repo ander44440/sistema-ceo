@@ -1,18 +1,24 @@
 /**
- * Fila de Execução V1 — persistência em ficheiros JSON (REQ-045).
+ * Fila de Execução V1 — persistência em ficheiros JSON (REQ-045 + P0-2).
  * Sem mensageria cloud. CEO publica; executores consomem via protocolo local.
+ * COMPLETED só após verificação (estado result → completed).
  */
 
 import fs from "node:fs";
 import path from "node:path";
-
-const ESTADOS = new Set([
-  "pending",
-  "running",
-  "completed",
-  "failed",
-  "cancelled"
-]);
+import {
+  ehEstadoJob,
+  validarTransicaoJob
+} from "../src/motorExecucao/dominio.js";
+import {
+  anexarHistoricoCiclo,
+  verificarResultadoJob,
+  registrarResultadoBruto,
+  marcarDespachado,
+  marcarRunning,
+  marcarFalhaExecucao,
+  processarResultadoComVerificacao
+} from "../src/motorExecucao/cicloVidaJob.js";
 
 /**
  * @param {string} rootDir — raiz do repo CEO (pai de executive/)
@@ -40,7 +46,6 @@ export function criarFilaExecucao(rootDir) {
     const p = caminhoJob(id);
     if (!fs.existsSync(p)) return null;
     let raw = fs.readFileSync(p, "utf8");
-    // PowerShell Set-Content -Encoding utf8 pode prefixar BOM — não invalidar a fila
     if (raw.charCodeAt(0) === 0xfeff) raw = raw.slice(1);
     return JSON.parse(raw);
   }
@@ -86,7 +91,7 @@ export function criarFilaExecucao(rootDir) {
         "# Próximo Job (pending)",
         "",
         `- **id:** \`${j.id}\``,
-        `- **projeto:** ${j.projeto || "(n/d)"}`,
+        `- **projeto:** ${j.projeto || "(n/d)"}${j.projetoNome ? ` (${j.projetoNome})` : ""}`,
         `- **tipo:** ${j.tipo || "execucao"}`,
         `- **prioridade:** ${j.prioridade || "normal"}`,
         `- **titulo:** ${j.titulo}`,
@@ -95,11 +100,12 @@ export function criarFilaExecucao(rootDir) {
         "",
         j.descricao || "(sem descrição)",
         "",
-        "## Protocolo",
+        "## Protocolo (P0-2)",
         "",
-        "1. Marcar Job como `running`.",
+        "1. Marcar Job como `dispatched` (handoff) e depois `running`.",
         "2. Executar o trabalho pedido.",
-        "3. Marcar `completed` ou `failed` com `resultado`.",
+        "3. Registar resultado em estado `result` (nunca `completed` directo).",
+        "4. CEO verifica → `completed` | `needs_correction` | `failed`.",
         "",
         `Ficheiro: \`executive/queue/${j.id}.json\``,
         ""
@@ -121,6 +127,9 @@ export function criarFilaExecucao(rootDir) {
       id,
       origem: entrada.origem || "ceo",
       projeto: entrada.projeto || null,
+      ...(entrada.projetoNome && String(entrada.projetoNome).trim()
+        ? { projetoNome: String(entrada.projetoNome).trim() }
+        : {}),
       tipo: entrada.tipo || "execucao_tecnica",
       titulo: String(entrada.titulo || "").trim() || "Job sem título",
       descricao: String(entrada.descricao || "").trim() || "",
@@ -128,31 +137,131 @@ export function criarFilaExecucao(rootDir) {
       estado: "pending",
       criadoEm: agora,
       iniciadoEm: null,
+      despachadoEm: null,
       concluidoEm: null,
       resultado: null,
-      ...(entrada.parecerId ? { parecerId: String(entrada.parecerId) } : {})
+      historicoCiclo: [
+        {
+          em: agora,
+          de: null,
+          para: "pending",
+          motivo: "criacao",
+          actor: "ceo"
+        }
+      ],
+      ...(entrada.parecerId ? { parecerId: String(entrada.parecerId) } : {}),
+      ...(entrada.criterioConclusao
+        ? { criterioConclusao: String(entrada.criterioConclusao) }
+        : {})
     };
     escreverJob(job);
     atualizarProximoMd(listarPorEstado("pending"));
     return job;
   }
 
+  /**
+   * Transição controlada. `completed` directo é recusado — use
+   * `registarResultado` (result + verificação automática) ou `verificar`.
+   */
   function atualizarEstado(id, estado, extra = {}) {
-    if (!ESTADOS.has(estado)) {
+    if (!ehEstadoJob(estado)) {
       throw new Error(`Estado inválido: ${estado}`);
     }
     const job = lerJob(id);
     if (!job) throw new Error(`Job não encontrado: ${id}`);
-    job.estado = estado;
+
+    // P0-2: completed só com verificação prévia ou flag explícita pós-verify
+    if (estado === "completed" && extra.verificado !== true) {
+      if (job.estado === "result") {
+        const v = verificarResultadoJob(job, {
+          objetivo: extra.objetivo,
+          criterioFn: extra.criterioFn,
+          actor: extra.actor || "ceo_verificacao"
+        });
+        if (!v.ok) throw new Error(v.mensagem || "Verificação falhou.");
+        escreverJob(v.job);
+        atualizarProximoMd(listarPorEstado("pending"));
+        return v.job;
+      }
+      throw new Error(
+        "COMPLETED exige verificação (estado result → verificar). Handoff/execução ≠ conclusão."
+      );
+    }
+
+    const t = validarTransicaoJob(job.estado, estado);
+    if (!t.ok) throw new Error(t.mensagem);
+
     const agora = new Date().toISOString();
+    job.historicoCiclo = anexarHistoricoCiclo(job, job.estado, estado, {
+      em: agora,
+      motivo: extra.motivo || null,
+      actor: extra.actor || null
+    });
+    job.estado = estado;
+    if (estado === "dispatched" && !job.despachadoEm) job.despachadoEm = agora;
     if (estado === "running" && !job.iniciadoEm) job.iniciadoEm = agora;
     if (estado === "completed" || estado === "failed" || estado === "cancelled") {
       job.concluidoEm = agora;
     }
     if (extra.resultado != null) job.resultado = extra.resultado;
+    if (extra.falha) job.falha = extra.falha;
+    if (extra.correcao) job.correcao = extra.correcao;
+    if (extra.verificacao) job.verificacao = extra.verificacao;
+    if (estado === "result" && extra.resultado != null) {
+      job.resultadoEm = agora;
+    }
     escreverJob(job);
+
+    // P0-2 integração: chegada a RESULT dispara verificação formal do CEO
+    if (estado === "result" && !extra.adiarVerificacao) {
+      const actual = lerJob(id);
+      const v = verificarResultadoJob(actual, {
+        objetivo: extra.objetivo,
+        criterioFn: extra.criterioFn,
+        actor: extra.actor || "ceo_verificacao"
+      });
+      if (v.ok) {
+        escreverJob(v.job);
+        atualizarProximoMd(listarPorEstado("pending"));
+        return v.job;
+      }
+    }
+
     atualizarProximoMd(listarPorEstado("pending"));
-    return job;
+    return lerJob(id);
+  }
+
+  function aplicarEPersistir(resultadoTransicao) {
+    if (!resultadoTransicao.ok) {
+      throw new Error(resultadoTransicao.mensagem || "Transição recusada.");
+    }
+    escreverJob(resultadoTransicao.job);
+    atualizarProximoMd(listarPorEstado("pending"));
+    return resultadoTransicao.job;
+  }
+
+  /**
+   * Agent regista evidência → RESULT → verificação CEO automática.
+   * Não é atalho para COMPLETED: passa por verificarResultadoJob.
+   */
+  function registarResultado(id, resultado, opts = {}) {
+    const reg = registrarResultadoBruto(lerJob(id), resultado, opts);
+    if (!reg.ok) throw new Error(reg.mensagem || "Falha ao registar resultado.");
+    escreverJob(reg.job);
+    if (opts.adiarVerificacao === true) {
+      atualizarProximoMd(listarPorEstado("pending"));
+      return reg.job;
+    }
+    const v = verificarResultadoJob(reg.job, {
+      objetivo: opts.objetivo,
+      criterioFn: opts.criterioFn,
+      actor: opts.actorVerificacao || "ceo_verificacao",
+      forcarFailed: opts.forcarFailed
+    });
+    if (!v.ok) throw new Error(v.mensagem || "Verificação falhou.");
+    escreverJob(v.job);
+    atualizarProximoMd(listarPorEstado("pending"));
+    return v.job;
   }
 
   return {
@@ -160,8 +269,22 @@ export function criarFilaExecucao(rootDir) {
     publicar,
     listarPorEstado,
     listarPendentes: () => listarPorEstado("pending"),
+    listarAguardandoVerificacao: () => listarPorEstado("result"),
     lerJob,
     atualizarEstado,
+    marcarDespachado: (id, opts) =>
+      aplicarEPersistir(marcarDespachado(lerJob(id), opts)),
+    marcarRunning: (id, opts) =>
+      aplicarEPersistir(marcarRunning(lerJob(id), opts)),
+    registarResultado,
+    verificar: (id, opts) =>
+      aplicarEPersistir(verificarResultadoJob(lerJob(id), opts || {})),
+    processarResultado: (id, resultado, opts) =>
+      aplicarEPersistir(
+        processarResultadoComVerificacao(lerJob(id), resultado, opts || {})
+      ),
+    marcarFalha: (id, falha, opts) =>
+      aplicarEPersistir(marcarFalhaExecucao(lerJob(id), falha, opts)),
     atualizarProximoMd: () => atualizarProximoMd(listarPorEstado("pending"))
   };
 }

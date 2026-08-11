@@ -26,6 +26,9 @@ import {
   garantirReflexoEstadoExecutivo
 } from "../../conscienciaOperacional/influenciaDeliberacao.js";
 import { avaliarComplexidadeDecisao } from "../complexidadeDecisao.js";
+import {
+  detectarPedidoAnaliseDeliberativa
+} from "../../mre/politicaAnaliseDeliberativa.js";
 
 function formatarDataAgora() {
   const agora = new Date();
@@ -71,7 +74,16 @@ function respostaLocal(intencaoId, texto) {
   }
 }
 
-function fallbackSemLlm(texto, motivo) {
+function fallbackSemLlm(texto, motivo, opts = {}) {
+  const pedidoAnalise = opts.pedidoAnalise === true;
+  if (pedidoAnalise) {
+    return (
+      `Não consigo concluir a análise deliberativa pedida sobre «${citacaoCurta(texto)}»: ` +
+      `capacidade deliberativa (LLM/MRE) indisponível (${motivo}).\n\n` +
+      "Não invento análise sem motor. Não invento handoff a uma equipa externa inexistente neste sistema. " +
+      "Configure `CEO_LLM_API_KEY` em `app/.env` (veja `.env.example`), reinicie o servidor e volte a pedir a análise."
+    );
+  }
   return (
     `Não consigo deliberar com fluidez sobre «${citacaoCurta(texto)}»: motor de linguagem indisponível (${motivo}).\n\n` +
     "Configure `CEO_LLM_API_KEY` em `app/.env` (veja `.env.example`), reinicie o servidor e volte a tentar.\n\n" +
@@ -138,11 +150,34 @@ async function executarBruto(ctx) {
 
   if (ehRotaDeliberativa(intencao) && flagMre.ativo) {
     const lastro = ctx.lastroConsciencia || null;
+    const pedidoAnalise = detectarPedidoAnaliseDeliberativa(texto);
 
     // REQ-066: só decisões «completa» pagam o pipeline MRE 0–7
     if (complexidade.permiteMreCompleto) {
       const status = await obterStatusLlm();
       if (!status || !status.configurado) {
+        // P1-2: pedido de análise sem LLM → incapacidade explícita (não prosa de lastro nem delegação fictícia)
+        if (pedidoAnalise) {
+          return {
+            ok: true,
+            capacidade: "ia",
+            mensagem: fallbackSemLlm(
+              texto,
+              "chave não configurada — MRE indisponível",
+              { pedidoAnalise: true }
+            ),
+            modo: "fallback",
+            dados: {
+              instrucao: texto,
+              intencao,
+              memoria: mem,
+              coa,
+              llm: status,
+              rota: "analise-sem-llm",
+              complexidadeDecisao: complexidade
+            }
+          };
+        }
         // IMP-059 E4: com lastro operacional, contextualizar mesmo sem LLM
         const prosaLastro = comporProsaLastro(lastro, texto);
         if (prosaLastro) {
@@ -189,14 +224,16 @@ async function executarBruto(ctx) {
           },
           {
             canal: ctx.canalSpeaker || "chat",
-            skipFila: ctx.skipFilaConsciencia === true ? true : undefined
+            // E5-CA1 / P1-2: C2/análise nunca despacha via fallback de fila
+            skipFila:
+              pedidoAnalise || ctx.skipFilaConsciencia === true
+                ? true
+                : undefined
           }
         );
-        const reflexo = garantirReflexoEstadoExecutivo(
-          mreOut.mensagem,
-          lastro,
-          texto
-        );
+        const reflexo = pedidoAnalise
+          ? { mensagem: mreOut.mensagem, aplicada: false, motivo: "analise_p12" }
+          : garantirReflexoEstadoExecutivo(mreOut.mensagem, lastro, texto);
         return {
           ...mreOut,
           mensagem: reflexo.mensagem,
@@ -216,9 +253,12 @@ async function executarBruto(ctx) {
       } catch (err) {
         const fallback = fallbackSemLlm(
           texto,
-          err && err.message ? err.message : "falha no MRE"
+          err && err.message ? err.message : "falha no MRE",
+          { pedidoAnalise }
         );
-        const reflexo = garantirReflexoEstadoExecutivo(fallback, lastro, texto);
+        const reflexo = pedidoAnalise
+          ? { mensagem: fallback, aplicada: false, motivo: "analise_p12" }
+          : garantirReflexoEstadoExecutivo(fallback, lastro, texto);
         return {
           ok: true,
           capacidade: "ia",
@@ -241,6 +281,25 @@ async function executarBruto(ctx) {
     // Nível moderado/leve deliberativo → 1× LLM (sem pipeline MRE)
     const statusMod = await obterStatusLlm();
     if (!statusMod || !statusMod.configurado) {
+      if (pedidoAnalise) {
+        return {
+          ok: true,
+          capacidade: "ia",
+          mensagem: fallbackSemLlm(texto, "chave não configurada", {
+            pedidoAnalise: true
+          }),
+          modo: "fallback",
+          dados: {
+            instrucao: texto,
+            intencao,
+            memoria: mem,
+            coa,
+            llm: statusMod,
+            rota: "analise-rapida-sem-llm",
+            complexidadeDecisao: complexidade
+          }
+        };
+      }
       const prosaLastro = comporProsaLastro(lastro, texto);
       if (prosaLastro) {
         return {
@@ -287,13 +346,26 @@ async function executarBruto(ctx) {
         validacaoContexto: ctx.validacaoContexto || null
       };
       const messages = montarMensagensLlm(paramsMsg);
+      if (pedidoAnalise) {
+        messages.splice(messages.length - 1, 0, {
+          role: "system",
+          content:
+            "P1-2: o utilizador pediu ANÁLISE e RECOMENDAÇÃO executiva. " +
+            "Responda com análise fundamentada no contexto disponível e recomendação explícita " +
+            "(aprovar / modificar / não priorizar). " +
+            "Proibido responder só com «delegar a uma equipe especializada». " +
+            "Proibido criar/assumir Jobs. Não invente factos do Manifesto ou do projecto ausentes do contexto."
+        });
+      }
       const dicMeta = metadadoDicInjecao(paramsMsg);
       const saida = await deliberarComLlm({
         messages,
         temperature: 0.4,
         max_tokens: complexidade.maxTokens
       });
-      const reflexo = garantirReflexoEstadoExecutivo(saida.texto, lastro, texto);
+      const reflexo = pedidoAnalise
+        ? { mensagem: saida.texto, aplicada: false, motivo: "analise_p12" }
+        : garantirReflexoEstadoExecutivo(saida.texto, lastro, texto);
       return {
         ok: true,
         capacidade: "ia",
@@ -319,9 +391,12 @@ async function executarBruto(ctx) {
     } catch (err) {
       const fallback = fallbackSemLlm(
         texto,
-        err && err.message ? err.message : "falha na chamada rápida"
+        err && err.message ? err.message : "falha na chamada rápida",
+        { pedidoAnalise }
       );
-      const reflexo = garantirReflexoEstadoExecutivo(fallback, lastro, texto);
+      const reflexo = pedidoAnalise
+        ? { mensagem: fallback, aplicada: false, motivo: "analise_p12" }
+        : garantirReflexoEstadoExecutivo(fallback, lastro, texto);
       return {
         ok: true,
         capacidade: "ia",
@@ -341,12 +416,15 @@ async function executarBruto(ctx) {
     }
   }
 
+  const pedidoAnaliseLegado = detectarPedidoAnaliseDeliberativa(texto);
   const status = await obterStatusLlm();
   if (!status || !status.configurado) {
     return {
       ok: true,
       capacidade: "ia",
-      mensagem: fallbackSemLlm(texto, "chave não configurada"),
+      mensagem: fallbackSemLlm(texto, "chave não configurada", {
+        pedidoAnalise: pedidoAnaliseLegado
+      }),
       modo: "fallback",
       dados: {
         instrucao: texto,

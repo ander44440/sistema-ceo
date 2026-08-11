@@ -220,7 +220,7 @@ test("CT-G10: Gate + Aprovado → Continuidade", async () => {
   assert.notEqual(out.modo, "clarificacao_objectivo");
 });
 
-test("CT-G11: Gate pendente + mudança de objectivo → clarificação; Gate não auto-fechado", async () => {
+test("CT-G11: Gate pendente + mudança de objectivo → processa (P0); Gate não auto-fechado", async () => {
   const store = obterStoreContinuidadePadrao();
   registarGateAposMotor(
     store,
@@ -244,9 +244,8 @@ test("CT-G11: Gate pendente + mudança de objectivo → clarificação; Gate nã
     { texto: "Agora o objectivo é decidir o pagamento" },
     { storeContinuidade: store }
   );
-  assert.equal(out.modo, "clarificacao_gate_objectivo");
-  assert.match(out.mensagem, /Gate|objectivo|pagamento/i);
-  assert.equal(out.dados?.motorAcionado, false);
+  assert.notEqual(out.modo, "clarificacao_gate_objectivo");
+  assert.notEqual(out.modo, "continuidade_gate_clarificacao");
   assert.ok(store.obterGatePendenteMaisRecente());
 });
 

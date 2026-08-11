@@ -1,9 +1,11 @@
 # IMP-068 — Implementação do Modo CEO Ouvindo (MVP)
 
-> **Status:** Homologada (laboratório) — 03/08/2026; produção condicional (VAL-010).  
+> **Status:** Homologada (lab) / frente **ENCERRADA** (ENC-006) — 03/08/2026.  
 > Norma: **REQ-068**; **ARQ-029** (homologada). Capacidade: CAP-07.  
 > Base: ANL-012; PX-001/PX-002; REQ-047; REQ-050; `experienciaVoz/`; `onboarding/voice/stt.js`.  
-> **VAL:** [`VAL-010-homologacao-modo-ceo-ouvindo.md`](../validation/VAL-010-homologacao-modo-ceo-ouvindo.md).
+> **VAL:** [`VAL-010-homologacao-modo-ceo-ouvindo.md`](../validation/VAL-010-homologacao-modo-ceo-ouvindo.md) — *não* VAL-006 (CAP-05).  
+> **ENC:** [`ENC-006-encerramento-modo-ceo-ouvindo.md`](../learning/ENC-006-encerramento-modo-ceo-ouvindo.md).  
+> **Cadeia oficial:** ANL-012 → REQ-068 → ARQ-029 → IMP-068 → **VAL-010** → ENC-006.
 
 ## Escopo cumprido (MVP)
 
@@ -77,6 +79,8 @@ npm run build
 
 Desactivar uso do botão Ouvindo / não montar Controller — path teclado intacto. Preferência voz PX-002 Desativada continua a omitir TTS automático.
 
-## Próximo
+## Próximo / encerramento
 
-Homologação do patrocinador / CTO. Sem novas evoluções (§ fora de escopo) antes do Gate.
+**ENC-006 homologada.** Frente **encerrada** — [`ENC-006-encerramento-modo-ceo-ouvindo.md`](../learning/ENC-006-encerramento-modo-ceo-ouvindo.md).  
+Validação oficial desta frente: **VAL-010** (não VAL-006).  
+Nenhuma nova implementação nesta frente — aguardar abertura da próxima frente do Sistema CEO.

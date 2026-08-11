@@ -14,6 +14,28 @@ import {
 import { avaliarHeartbeat } from "./heartbeat.js";
 
 /**
+ * @param {object} [job]
+ * @returns {number}
+ */
+export function instanteJob(job) {
+  const t = Date.parse(
+    String(job?.concluidoEm || job?.iniciadoEm || job?.criadoEm || "")
+  );
+  return Number.isFinite(t) ? t : 0;
+}
+
+/**
+ * @param {object[]} lista
+ * @returns {object|null}
+ */
+export function jobMaisRecente(lista) {
+  if (!Array.isArray(lista) || !lista.length) return null;
+  return lista.reduce((acc, cur) =>
+    instanteJob(cur) >= instanteJob(acc) ? cur : acc
+  );
+}
+
+/**
  * @param {{
  *   repoRoot: string,
  *   listarPorEstado?: (estado: string) => object[],
@@ -88,11 +110,16 @@ export function criarFontesColetores(deps) {
         detalhe: { motivo: "fila_ilegivel" }
       };
     }
-    const ultimoFailed = failed.length
-      ? failed[failed.length - 1]
-      : null;
-    // failed "recente": existe failed e não há pending/running a mascarar
-    const failedRecente = Boolean(ultimoFailed) && !pending.length && !running.length;
+    const ultimoFailed = jobMaisRecente(failed);
+    const ultimoCompleted = jobMaisRecente(completed);
+    // Falha «recente» só se for o último evento terminal — falhas antigas
+    // não mantêm Agent em Erro após Jobs completed posteriores.
+    const falhaEhTerminalMaisRecente =
+      Boolean(ultimoFailed) &&
+      (!ultimoCompleted ||
+        instanteJob(ultimoFailed) > instanteJob(ultimoCompleted));
+    const failedRecente =
+      falhaEhTerminalMaisRecente && !pending.length && !running.length;
     const m = mapearAgent({
       pending: pending.length,
       running: running.length,

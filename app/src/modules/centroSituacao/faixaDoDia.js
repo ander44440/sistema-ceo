@@ -88,22 +88,45 @@ export function htmlFaixaDoDia(painelAberto) {
         </div>
       </form>`;
   } else if (painelAberto === "encerrar") {
+    const andou =
+      cont?.oQueAndou && cont.oQueAndou !== "(não informado)"
+        ? cont.oQueAndou
+        : "";
+    const fica =
+      cont?.oQueFica && cont.oQueFica !== "(não informado)" ? cont.oQueFica : "";
+    const amanha =
+      cont?.proximoPassoAmanha && cont.proximoPassoAmanha !== "(não informado)"
+        ? cont.proximoPassoAmanha
+        : "";
+    const soLeitura = status === "encerrado" && Boolean(andou || fica || amanha);
+    const ro = soLeitura ? " readonly" : "";
     painel = `
       <form class="cs-dia-painel" id="cs-form-encerrar-dia" data-painel="encerrar">
         <p class="cs-kicker">Encerrar o dia</p>
-        <p class="cs-dia-painel-desc">Registre a continuidade para retomar amanhã sem ferramenta paralela.</p>
+        <p class="cs-dia-painel-desc">${
+          soLeitura
+            ? "Continuidade registada pelo CEO — campos preenchidos a partir do estado operacional."
+            : "Registre a continuidade para retomar amanhã sem ferramenta paralela."
+        }</p>
         <label class="cs-dia-label" for="cs-dia-andou">O que andou</label>
         <input id="cs-dia-andou" name="andou" type="text" maxlength="500" required
-          placeholder="O que foi feito hoje" autocomplete="off" />
+          placeholder="O que foi feito hoje" autocomplete="off"
+          value="${escaparHtml(andou)}"${ro} />
         <label class="cs-dia-label" for="cs-dia-fica">O que fica</label>
         <input id="cs-dia-fica" name="fica" type="text" maxlength="500" required
-          placeholder="Pendências / o que permanece" autocomplete="off" />
+          placeholder="Pendências / o que permanece" autocomplete="off"
+          value="${escaparHtml(fica)}"${ro} />
         <label class="cs-dia-label" for="cs-dia-amanha">Próximo passo de amanhã</label>
         <input id="cs-dia-amanha" name="amanha" type="text" maxlength="500" required
-          placeholder="Primeiro foco do próximo dia" autocomplete="off" />
+          placeholder="Primeiro foco do próximo dia" autocomplete="off"
+          value="${escaparHtml(amanha)}"${ro} />
         <div class="cs-dia-acoes">
-          <button type="submit" class="cs-dia-btn is-primary">Confirmar encerramento</button>
-          <button type="button" class="cs-dia-btn" data-dia-cancel>Cancelar</button>
+          ${
+            soLeitura
+              ? `<button type="button" class="cs-dia-btn" data-dia-cancel>Fechar</button>`
+              : `<button type="submit" class="cs-dia-btn is-primary">Confirmar encerramento</button>
+          <button type="button" class="cs-dia-btn" data-dia-cancel>Cancelar</button>`
+          }
         </div>
       </form>`;
   }

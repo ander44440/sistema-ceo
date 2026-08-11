@@ -3,6 +3,8 @@
  * Só leitura do Pacote; não altera topologia 0–8.
  */
 
+import { ehFatoBloqueanteNomeado } from "../politicaDecisaoSobConflito.js";
+
 /**
  * @param {object|null|undefined} pacoteNcs
  * @returns {boolean}
@@ -164,15 +166,102 @@ export function aplicarPoliticaDecisaoNcs(decisao, lacunasAcc, pacoteNcs) {
   return decisao;
 }
 
+/** Lacuna genérica de fallback — só quando não há facto bloqueante nomeado. */
+export const LACUNA_GENERICA_ESSENCIAL =
+  "Informação essencial não especificada";
+
 /**
- * Não injetar lacuna genérica pós-solicitar_dados quando inventário não é obrigatório.
+ * @param {string} [texto]
+ * @returns {boolean}
+ */
+export function ehLacunaGenericaEssencial(texto) {
+  return (
+    String(texto || "").trim().toLowerCase() ===
+    LACUNA_GENERICA_ESSENCIAL.toLowerCase()
+  );
+}
+
+/**
+ * Extrai lacuna nominal a partir da recomendação/justificativa (ex.: orçamento Q3).
+ * @param {string} [recomendacao]
+ * @param {string} [justificativa]
+ * @returns {string|null}
+ */
+export function derivarLacunaNomeadaDeRecomendacao(
+  recomendacao,
+  justificativa
+) {
+  const fontes = [recomendacao, justificativa]
+    .map((s) => String(s || "").trim())
+    .filter(Boolean);
+  if (!fontes.length) return null;
+
+  const blob = fontes.join(" ");
+  // Só deriva se o texto nomeia um facto bloqueante (não conflito genérico)
+  if (!ehFatoBloqueanteNomeado(blob)) return null;
+
+  const m =
+    blob.match(/or[cç]amento aprovado do Q\d+/i) ||
+    blob.match(
+      /(?:falta\s+(?:o\s+|a\s+)?)?(or[cç]amento|budget)[^.;!?]{0,60}/i
+    ) ||
+    blob.match(
+      /(?:falta\s+(?:o\s+|a\s+)?)?(prazo|deadline|data\s+limite)[^.;!?]{0,40}/i
+    );
+  if (m) {
+    return String(m[0])
+      .replace(/^(falta\s+(?:o\s+|a\s+)?)/i, "")
+      .replace(/^(solicitar|pedir)\s+(o\s+|a\s+|um\s+|uma\s+)?/i, "")
+      .trim();
+  }
+
+  // Fallback: limpar prefixo «Solicitar…» da recomendação
+  const rec = String(recomendacao || "").trim();
+  if (rec && ehFatoBloqueanteNomeado(rec)) {
+    return rec
+      .replace(/^solicitar\s+(o\s+|a\s+|um\s+|uma\s+)?/i, "")
+      .replace(/\s+antes de fechar\.?$/i, "")
+      .trim()
+      .slice(0, 100);
+  }
+  return null;
+}
+
+/**
+ * Pós-solicitar_dados: garantir lacuna; não acrescentar genérica se já
+ * existir (ou for derivável) uma lacuna bloqueante nomeada.
  * @param {string} estado
  * @param {string[]} lacunasAcc
  * @param {object|null} pacoteNcs
+ * @param {{ recomendacao?: string, justificativa?: string }} [opts]
  */
-export function talvezInjetarLacunaSolicitarDados(estado, lacunasAcc, pacoteNcs) {
+export function talvezInjetarLacunaSolicitarDados(
+  estado,
+  lacunasAcc,
+  pacoteNcs,
+  opts = {}
+) {
   if (estado !== "solicitar_dados") return;
-  if (lacunasAcc.length > 0) return;
   if (politicaInventarioNaoObrigatorio(pacoteNcs)) return;
-  lacunasAcc.push("Informação essencial não especificada");
+
+  const reais = lacunasAcc.filter((l) => !ehLacunaGenericaEssencial(l));
+  if (reais.length > 0) {
+    // Manter só lacunas reais — remover genérica se coexistir
+    lacunasAcc.length = 0;
+    lacunasAcc.push(...reais);
+    return;
+  }
+
+  const derivada = derivarLacunaNomeadaDeRecomendacao(
+    opts.recomendacao,
+    opts.justificativa
+  );
+  if (derivada) {
+    lacunasAcc.length = 0;
+    lacunasAcc.push(derivada);
+    return;
+  }
+
+  if (lacunasAcc.some((l) => ehLacunaGenericaEssencial(l))) return;
+  lacunasAcc.push(LACUNA_GENERICA_ESSENCIAL);
 }

@@ -118,8 +118,16 @@ export function normalizarLeituraFonte(id, bruto) {
       for (const item of bruto) {
         const v = validarJobResumo(item);
         if (!v.ok) return { ok: false, erro: `F2: ${v.erro}` };
-        if (v.job.status !== "running") {
-          return { ok: false, erro: "F2: status deve ser running" };
+        if (
+          v.job.status !== "running" &&
+          v.job.status !== "dispatched" &&
+          v.job.status !== "result" &&
+          v.job.status !== "needs_correction"
+        ) {
+          return {
+            ok: false,
+            erro: "F2: status deve ser dispatched|running|result|needs_correction"
+          };
         }
         jobs.push({ ...v.job });
       }

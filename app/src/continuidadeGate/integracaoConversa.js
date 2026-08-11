@@ -26,11 +26,12 @@ export function resetStoreContinuidadePadrao() {
 }
 
 /**
- * Mensagem curta de Gate (demo / UX) — sem alterar IMP-057.
+ * Mensagem de Gate com postura executiva (DESP-003 / ciclo Decidir).
  * @param {object} [conducao]
  * @param {string} [gateId]
+ * @param {object} [parecer]
  */
-export function mensagemAguardandoGateContinuidade(conducao, gateId) {
+export function mensagemAguardandoGateContinuidade(conducao, gateId, parecer) {
   const gatilhos =
     conducao &&
     conducao.avaliacao &&
@@ -38,13 +39,32 @@ export function mensagemAguardandoGateContinuidade(conducao, gateId) {
     conducao.avaliacao.gatilhos.length
       ? conducao.avaliacao.gatilhos.join(", ")
       : null;
-  if (gatilhos) {
-    return `Aguardando aprovação (Gate ${gatilhos}).`;
+  const label = gatilhos
+    ? `Gate ${gatilhos}`
+    : gateId
+      ? `Gate ${gateId}`
+      : "Gate do Motor";
+
+  const snap =
+    parecer ||
+    (conducao && conducao.parecerSnapshot) ||
+    null;
+  const emCausa = String(
+    snap?.acao?.job?.titulo ||
+      snap?.diagnostico?.objetivoReal ||
+      snap?.decisaoExecutiva?.recomendacao ||
+      ""
+  )
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 100);
+
+  let msg = `Aguardando aprovação (${label}).`;
+  if (emCausa) {
+    msg += ` Em causa: ${emCausa}.`;
   }
-  if (gateId) {
-    return `Aguardando aprovação (Gate ${gateId}).`;
-  }
-  return "Aguardando aprovação (Gate do Motor).";
+  msg += " Responda Aprovado, Cancela ou Adiar.";
+  return msg;
 }
 
 /**
@@ -115,33 +135,38 @@ export function mensagemAposDecisaoGate(decisao, conducao, registo) {
 
   if (decisao === "aprovado") {
     if (conducao && conducao.publicado && conducao.job && conducao.job.id) {
+      const estadoJob =
+        conducao.job.estado || conducao.handoff?.estadoJob || "pending";
       const handoff =
         conducao.fluxoIniciado === true
-          ? " Handoff ao Dispatcher iniciado."
+          ? " Handoff ao Dispatcher iniciado (dispatched — não concluído)."
           : "";
       return (
-        `Gate aprovado. Job ${conducao.job.id} criado em pending.` +
+        `Decisão: Gate aprovado. Job ${conducao.job.id} em ${estadoJob}.` +
         handoff +
-        ` Continuação do «${String(ref).slice(0, 72)}» sem repetir a solicitação.`
+        ` Prosseguimos «${String(ref).slice(0, 72)}» sem repetir o pedido.`
       );
     }
     if (conducao && conducao.motivo === "publicador_ausente") {
       return (
-        `Gate aprovado para «${String(ref).slice(0, 72)}»; ` +
+        `Decisão: Gate aprovado para «${String(ref).slice(0, 72)}»; ` +
         `Motor avançou, mas falta publicador da Fila.`
       );
     }
-    return `Gate aprovado. Motor a continuar «${String(ref).slice(0, 72)}».`;
+    return `Decisão: Gate aprovado. Motor continua «${String(ref).slice(0, 72)}».`;
   }
 
   if (decisao === "rejeitado") {
-    return `Gate rejeitado. Job não criado para «${String(ref).slice(0, 72)}».`;
+    return (
+      `Decisão: Gate rejeitado. Não crio Job para «${String(ref).slice(0, 72)}». ` +
+      `O objectivo permanece — diga o próximo gesto.`
+    );
   }
 
   if (decisao === "adiado") {
     return (
-      `Gate adiado. Permanece pendente para «${String(ref).slice(0, 72)}» — ` +
-      `pode decidir depois sem repetir a solicitação.`
+      `Decisão: Gate adiado. «${String(ref).slice(0, 72)}» fica pendente — ` +
+      `pode autorizar depois sem repetir a solicitação.`
     );
   }
 
@@ -150,6 +175,11 @@ export function mensagemAposDecisaoGate(decisao, conducao, registo) {
 
 /**
  * Interceptação pré-Classificador (E4).
+ * GATE_PENDING ≠ CONVERSATION_LOCK (P0):
+ * - decisão V1 reconhecida → Continuidade (aprova / rejeita / adia execução);
+ * - qualquer outra mensagem → Classificador (conversa / análise / nova prioridade).
+ * A execução do Job continua bloqueada no Motor até autorização válida.
+ *
  * @param {string} texto
  * @param {ReturnType<typeof criarStoreContextoGate>} store
  * @returns {"continuidade"|"clarificacao"|"classificador"}
@@ -158,7 +188,8 @@ export function decidirInterceptacaoContinuidade(texto, store) {
   if (!store || !store.temGatePendente()) return "classificador";
   const r = reconhecerDecisao(texto);
   if (r.reconhecida) return "continuidade";
-  return "clarificacao";
+  // P0: não transformar pedido novo em clarificação que trava o CEO.
+  return "classificador";
 }
 
 /**
@@ -414,9 +445,13 @@ export function aplicarMensagemGateNaResposta(resposta, conducao) {
   }
   const gateId =
     (conducao.continuidadeGate && conducao.continuidadeGate.gateId) || null;
+  const parecer =
+    (resposta.dados && resposta.dados.parecer) ||
+    conducao.parecerSnapshot ||
+    null;
   return {
     ...resposta,
-    mensagem: mensagemAguardandoGateContinuidade(conducao, gateId),
+    mensagem: mensagemAguardandoGateContinuidade(conducao, gateId, parecer),
     dados: {
       ...(resposta.dados && typeof resposta.dados === "object"
         ? resposta.dados

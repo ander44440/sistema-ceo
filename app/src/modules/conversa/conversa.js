@@ -8,6 +8,12 @@ import { textoBoasVindasNatural } from "../../conversacaoNatural/index.js";
 import { enviarAoNucleo } from "./enviarAoNucleo.js";
 import { criarVoiceController, ESTADO_TURNO } from "../../ceoOuvindo/index.js";
 import { obterOrquestradorVozSessao } from "../../experienciaVoz/sessao.js";
+import { EVENTO_PAUSAR_CEO } from "../../botaoPausar.js";
+import {
+  htmlPainelOrquestracao,
+  ligarPainelOrquestracao
+} from "../../orquestracao/ui.js";
+import { obterVistaDiaAtivo } from "../centroSituacao/painelDiaAtivo.js";
 
 const MENSAGEM_BOAS_VINDAS = textoBoasVindasNatural();
 
@@ -59,6 +65,21 @@ function renderMensagem(msg) {
   `;
 }
 
+function htmlResumoExecutivo() {
+  const vista = obterVistaDiaAtivo();
+  const linhas = String(vista.resumo || "")
+    .split("\n")
+    .filter(Boolean)
+    .slice(0, 6);
+  const itens = linhas.length
+    ? linhas.map((l) => `<li>${escaparHtml(l)}</li>`).join("")
+    : "<li>Sem resumo ainda — abra o dia ou consulte o estado.</li>";
+  return `<article class="conversa-rail-card conversa-resumo" aria-label="Resumo executivo do dia">
+    <p class="conversa-rail-kicker">Resumo Executivo do Dia</p>
+    <ul class="conversa-resumo-list">${itens}</ul>
+  </article>`;
+}
+
 function rotuloEstadoOuvindo(estado, mensagemErro) {
   switch (estado) {
     case ESTADO_TURNO.OUVINDO:
@@ -89,36 +110,47 @@ export function montarConversa() {
   root.setAttribute("aria-label", "Conversa com o CEO");
 
   root.innerHTML = `
-    <header class="conversa-cabecalho">
-      <div>
-        <h1>Conversa</h1>
-        <p class="conversa-subtitulo">Canal principal com o Executivo Digital</p>
+    <div class="conversa-layout">
+      <div class="conversa-col-chat">
+        <header class="conversa-cabecalho">
+          <div>
+            <h1>Conversa</h1>
+            <p class="conversa-subtitulo">Canal principal com o Executivo Digital</p>
+          </div>
+          <p class="conversa-estado" id="conversa-estado" aria-live="polite">À escuta do próximo passo</p>
+        </header>
+
+        <div class="conversa-historico" id="conversa-historico" role="log" aria-relevant="additions" aria-label="Histórico da conversa"></div>
+
+        <form class="conversa-composer" id="conversa-form" autocomplete="off">
+          <label class="visually-hidden" for="conversa-input">Instrução para o CEO</label>
+          <textarea
+            id="conversa-input"
+            name="instrucao"
+            rows="2"
+            maxlength="8000"
+            placeholder="Objetivo, decisão ou próximo passo…"
+            aria-describedby="conversa-hint"
+          ></textarea>
+          <div class="conversa-composer-bar">
+            <p class="conversa-hint" id="conversa-hint">Enter envia · Shift+Enter nova linha</p>
+            <div class="conversa-composer-acoes">
+              <button type="button" class="conversa-mic" id="conversa-mic" aria-pressed="false" title="CEO Ouvindo">
+                Ouvindo
+              </button>
+              <button type="submit" class="conversa-enviar" id="conversa-enviar">Enviar</button>
+            </div>
+          </div>
+        </form>
       </div>
-      <p class="conversa-estado" id="conversa-estado" aria-live="polite">À escuta do próximo passo</p>
-    </header>
 
-    <div class="conversa-historico" id="conversa-historico" role="log" aria-relevant="additions" aria-label="Histórico da conversa"></div>
-
-    <form class="conversa-composer" id="conversa-form" autocomplete="off">
-      <label class="visually-hidden" for="conversa-input">Instrução para o CEO</label>
-      <textarea
-        id="conversa-input"
-        name="instrucao"
-        rows="2"
-        maxlength="8000"
-        placeholder="Objetivo, decisão ou próximo passo…"
-        aria-describedby="conversa-hint"
-      ></textarea>
-      <div class="conversa-composer-bar">
-        <p class="conversa-hint" id="conversa-hint">Enter envia · Shift+Enter nova linha</p>
-        <div class="conversa-composer-acoes">
-          <button type="button" class="conversa-mic" id="conversa-mic" aria-pressed="false" title="CEO Ouvindo">
-            Ouvindo
-          </button>
-          <button type="submit" class="conversa-enviar" id="conversa-enviar">Enviar</button>
+      <aside class="conversa-col-rail" aria-label="Orquestração e resumo">
+        <div class="conversa-rail-orq">
+          ${htmlPainelOrquestracao()}
         </div>
-      </div>
-    </form>
+        ${htmlResumoExecutivo()}
+      </aside>
+    </div>
   `;
 
   const historicoEl = root.querySelector("#conversa-historico");
@@ -129,6 +161,7 @@ export function montarConversa() {
   const estadoEl = root.querySelector("#conversa-estado");
 
   let enviando = false;
+  const pararPainelOrq = ligarPainelOrquestracao(root);
 
   function pintarHistorico() {
     historicoEl.innerHTML = listarMensagens().map(renderMensagem).join("");
@@ -196,7 +229,6 @@ export function montarConversa() {
     const texto = textoBruto.trim();
     if (!texto || enviando) return;
 
-    // Teclado tem prioridade: interrompe ciclo de voz
     if (voice.estado() !== ESTADO_TURNO.IDLE) {
       voice.interromper();
     }
@@ -251,7 +283,6 @@ export function montarConversa() {
       definirEstado("À escuta do próximo passo");
       return;
     }
-    // Opt-in PX-002: se voz desactivada, o TTS pode ficar em fila — ainda assim STT funciona
     const orch = obterOrquestradorVozSessao();
     if (orch.preferenciaAtiva()) {
       orch.desbloquearSessao();
@@ -265,10 +296,27 @@ export function montarConversa() {
     }
   });
 
+  window.addEventListener(EVENTO_PAUSAR_CEO, () => {
+    if (voice.estado() !== ESTADO_TURNO.IDLE) {
+      voice.interromper();
+      pintarMic(voice.snapshot());
+      definirEstado("CEO pausado");
+    }
+  });
+
   pintarHistorico();
   sincronizarBotao();
 
   queueMicrotask(() => input.focus());
+
+  // Cleanup quando o módulo for substituído no workspace
+  const obs = new MutationObserver(() => {
+    if (!document.body.contains(root) && typeof pararPainelOrq === "function") {
+      pararPainelOrq();
+      obs.disconnect();
+    }
+  });
+  obs.observe(document.body, { childList: true, subtree: true });
 
   return root;
 }

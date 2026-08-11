@@ -189,20 +189,24 @@ test("E6-CA6: Motor programático sem Continuidade permanece válido", async () 
   assert.equal(fila.jobs.length, 1);
 });
 
-test("E6: CU7 clarificação RF12 — pedido novo com Gate pendente", async () => {
+test("E6: CU7 P0 — pedido novo com Gate pendente processa sem lock", async () => {
   const store = criarStoreContextoGate();
   const fila = criarPublicadorFilaMemoria();
   await executiveEngine.executar("Resolva os bugs.", {
     storeContinuidade: store,
     publicarJob: fila.publicarJob.bind(fila)
   });
-  const clar = await executiveEngine.executar("Implemente o outdoor agora", {
+  assert.equal(
+    decidirInterceptacaoContinuidade("Implemente o outdoor agora", store),
+    "classificador"
+  );
+  const out = await executiveEngine.executar("Implemente o outdoor agora", {
     storeContinuidade: store,
     publicarJob: fila.publicarJob.bind(fila)
   });
-  assert.equal(clar.modo, "continuidade_gate_clarificacao");
-  assert.equal(clar.dados?.clarificacaoGate, true);
-  assert.equal(fila.jobs.length, 0);
+  assert.notEqual(out.modo, "continuidade_gate_clarificacao");
+  assert.notEqual(out.dados?.clarificacaoGate, true);
+  assert.notEqual(out.dados?.decisao, "aprovado");
   assert.equal(store.temGatePendente(), true);
 });
 
@@ -232,8 +236,10 @@ test("E6: inventário entrypoints Continuidade", () => {
   assert.match(ee, /continuarAposDecisaoGate/);
   assert.match(ee, /envolverConduzirMotorComContinuidade/);
 
+  const enviar = ler("modules/conversa/enviarAoNucleo.js");
+  assert.match(enviar, /executiveEngine\.executar/);
   const conversa = ler("modules/conversa/conversa.js");
-  assert.match(conversa, /executiveEngine\.executar/);
+  assert.match(conversa, /enviarAoNucleo/);
 
   const ficheiros = readdirSync(join(rootSrc, "continuidadeGate")).filter((f) =>
     f.endsWith(".js")

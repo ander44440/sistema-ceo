@@ -12,13 +12,15 @@ import {
 } from "../resposta.js";
 import { obterCoaAtivo } from "../coaSessao.js";
 import { listarJobsPendentes, publicarJobFila } from "../filaCliente.js";
+import { extrairObjectivoRealParaJob } from "../../classificadorIntencao/integracaoNucleo.js";
 
 function extrairTituloDescricao(texto) {
   const raw = String(texto || "").trim();
   const apos = raw.match(
     /(?:publicar|criar|despachar|enviar)\s+job\s*:?\s*(.+)$/i
   );
-  const corpo = (apos ? apos[1] : raw).trim();
+  const corpoBruto = (apos ? apos[1] : raw).trim();
+  const corpo = extrairObjectivoRealParaJob(corpoBruto) || corpoBruto;
   const partes = corpo.split(/\s+[—\-]\s+|:\s+/);
   if (partes.length >= 2) {
     return {
@@ -69,7 +71,9 @@ export const capacidadeFila = Object.freeze({
       const { titulo, descricao } = extrairTituloDescricao(texto);
       const job = await publicarJobFila({
         origem: "ceo",
-        projeto: coa ? coa.nome : mem.projetoAtivo?.nome || null,
+        projeto: coa
+          ? coa.id || coa.nome
+          : mem.projetoAtivo?.id || mem.projetoAtivo?.nome || null,
         tipo: "execucao_tecnica",
         titulo,
         descricao,

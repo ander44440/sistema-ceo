@@ -47,7 +47,8 @@ import {
   revogarDelegacaoImediatamente,
   tentarAmpliarPerimetro,
   validarActoDelegacao,
-  verificarEAplicarExpiracao
+  verificarEAplicarExpiracao,
+  ehOrdemExecucaoOperacional
 } from "./autoridadeDelegada.js";
 
 beforeEach(() => {
@@ -774,4 +775,95 @@ test("B5: sem novos estados; ciclo de vida inalterado", () => {
     classificarConceitoOperacional({ tipoEvento: "soberania_usuario" })
   );
   assert.equal(obterUltimoRegistoMo(), null);
+});
+
+test("REGRESSÃO: mandato «autorizado a tomar… que julga necessárias» activa AD", () => {
+  const texto =
+    "VOCE ESTA AUTORIZADO A TOMAR TODAS AS MEDIDAS QUE JULGA NECESSÁRIAS, PARA UMA MELHOR PERFORMANCE DO MG2 OK..";
+  assert.equal(ehAutorizacaoOperacionalPontual(texto), false);
+  assert.equal(ehActoExplicitoDeFecho(texto), true);
+  const r = processarCandidaturaDelegacao({ texto, agente: AGENTES.usuario });
+  assert.equal(r.activado, true);
+  assert.equal(autoridadeDelegadaActiva(), true);
+  assert.equal(
+    obterEstadoAutoridadeDelegada().estado,
+    ESTADO_AUTORIDADE_DELEGADA_ACTIVA
+  );
+});
+
+test("REGRESSÃO: «autorizado»/«Aprovado» pontuais continuam a NÃO activar AD", () => {
+  assert.equal(ehAutorizacaoOperacionalPontual("autorizado"), true);
+  assert.equal(ehAutorizacaoOperacionalPontual("Aprovado"), true);
+  assert.equal(
+    processarCandidaturaDelegacao({ texto: "autorizado" }).activado,
+    false
+  );
+});
+
+test("REGRESSÃO: AD já activa não reactiva (evita loop de ack)", () => {
+  const mandato =
+    "VOCE ESTA AUTORIZADO A TOMAR TODAS AS MEDIDAS QUE JULGA NECESSÁRIAS, PARA UMA MELHOR PERFORMANCE DO MG2 OK..";
+  assert.equal(
+    processarCandidaturaDelegacao({ texto: mandato }).activado,
+    true
+  );
+  const segunda = processarCandidaturaDelegacao({
+    texto: "EXECUTE AS MELHORIAS QUE VC JULGA NECESSARIAS OK"
+  });
+  assert.equal(segunda.activado, false);
+  assert.equal(segunda.jaActivo, true);
+  assert.equal(autoridadeDelegadaActiva(), true);
+
+  const viaMensagem = processarMensagemAutoridadeDelegada({
+    texto: "EXECUTE AS MELHORIAS QUE VC JULGA NECESSARIAS OK",
+    agente: AGENTES.usuario
+  });
+  assert.equal(viaMensagem.activado, false);
+  assert.equal(viaMensagem.jaActivo, true);
+});
+
+test("REGRESSÃO: ehOrdemExecucaoOperacional reconhece EXECUTE / implementa", () => {
+  assert.equal(
+    ehOrdemExecucaoOperacional(
+      "EXECUTE AS MELHORIAS QUE VC JULGA NECESSARIAS OK"
+    ),
+    true
+  );
+  assert.equal(ehOrdemExecucaoOperacional("implementa o LOD"), true);
+  assert.equal(
+    ehOrdemExecucaoOperacional(
+      "VOCE ESTA AUTORIZADO A TOMAR TODAS AS MEDIDAS QUE JULGA NECESSÁRIAS"
+    ),
+    false
+  );
+});
+
+test("P0: ehOrdemExecucaoOperacional não trata «não execute» como ordem", () => {
+  assert.equal(
+    ehOrdemExecucaoOperacional(
+      "Qual é o Gate pendente? Não execute nada. Apenas responda."
+    ),
+    false
+  );
+  assert.equal(ehOrdemExecucaoOperacional("Não execute nada"), false);
+  assert.equal(
+    ehOrdemExecucaoOperacional("Apenas informe o estado do Job"),
+    false
+  );
+});
+
+test("P0: pergunta meta «quando você decide» não activa AD", () => {
+  reiniciarAutoridadeDelegadaParaTestes();
+  assert.equal(
+    ehActoExplicitoDeFecho("Quando você decide criar um Job?"),
+    false
+  );
+  assert.equal(
+    ehActoExplicitoDeFecho(
+      "Em que momento você decide fazer uma pergunta em vez de responder diretamente?"
+    ),
+    false
+  );
+  // Concessão imperativa continua válida
+  assert.equal(ehActoExplicitoDeFecho("Você decide. Assuma o comando."), true);
 });

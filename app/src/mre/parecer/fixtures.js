@@ -3,21 +3,34 @@
  */
 
 import { VERSAO_CONTRATO } from "./enums.js";
+import {
+  PRINCIPIO_USO_DIARIO_ACTIVO,
+  PRINCIPIO_USO_DIARIO_MG2
+} from "../pipeline/catalogoPrincipios.js";
 
 /**
  * Parecer válido completo de referência (T11-01).
+ * Por omissão: princípios globais (sem escopo MG2).
+ * @param {{ escopoMg2?: boolean }} [opts]
  * @returns {object}
  */
-export function parecerValidoCompleto() {
+export function parecerValidoCompleto(opts = {}) {
+  const escopoMg2 = opts.escopoMg2 === true;
+  const principioUso = escopoMg2
+    ? PRINCIPIO_USO_DIARIO_MG2
+    : PRINCIPIO_USO_DIARIO_ACTIVO;
+  const coaId = escopoMg2 ? "coa-mg2-fixture" : "coa-fixture";
+  const rotuloCoa = escopoMg2 ? "MG2" : "projecto activo";
+
   return {
     id: "parecer-fixture-valido-001",
     criadoEm: "2026-07-30T17:00:00.000Z",
     versaoContrato: VERSAO_CONTRATO,
-    coaId: "coa-mg2-fixture",
+    coaId,
     confianca: 0.82,
     lacunas: [],
     diagnostico: {
-      objetivoReal: "Decidir se avança o outdoor lateral no MG2 nesta sprint",
+      objetivoReal: `Decidir se avança o outdoor lateral no ${rotuloCoa} nesta sprint`,
       problemaNegocio: "Escopo visual compete com prazo de integração de pagamento",
       natureza: "tatica"
     },
@@ -27,7 +40,7 @@ export function parecerValidoCompleto() {
       escopo: "Apenas outdoors laterais; não inclui home nem loja"
     },
     dossier: {
-      resumoPainel: "COA MG2 ativo; próximo passo: integração pagamento; outdoor adiado",
+      resumoPainel: `COA ${rotuloCoa} ativo; próximo passo: integração pagamento; outdoor adiado`,
       factosUsados: [
         "Outdoor lateral estava em JOB cancelado",
         "Pagamento é prioridade do dia"
@@ -36,10 +49,10 @@ export function parecerValidoCompleto() {
     },
     principiosAplicados: [
       "Respeito absoluto ao tempo do utilizador",
-      "Priorizar uso diário no MG2 (ADR-015)"
+      principioUso
     ],
     analise:
-      "O outdoor lateral não desbloqueia o uso diário do CEO no MG2; a integração de pagamento sim. Adiar o outdoor preserva foco sem rejeitar o trabalho futuro.",
+      `O outdoor lateral não desbloqueia o uso diário do CEO no ${rotuloCoa}; a integração de pagamento sim. Adiar o outdoor preserva foco sem rejeitar o trabalho futuro.`,
     riscos: [
       {
         nivel: "medio",
@@ -59,7 +72,7 @@ export function parecerValidoCompleto() {
       recomendacao: "Aprovar o adiamento do outdoor e manter pagamento como foco",
       alternativas: ["Executar outdoor em paralelo", "Rejeitar outdoor definitivamente"],
       justificativa:
-        "Com base no princípio Priorizar uso diário no MG2 (ADR-015) e no risco medio de atraso visual controlável, aprova-se adiar o outdoor. A oportunidade de concentrar capacidade na integração supera o polish imediato."
+        `Com base no princípio ${principioUso} e no risco medio de atraso visual controlável, aprova-se adiar o outdoor. A oportunidade de concentrar capacidade na integração supera o polish imediato.`
     },
     acao: {
       tipo: "orientar",
@@ -132,11 +145,11 @@ export function parecerDelegarValido() {
     "decisaoExecutiva.estado": "delegar",
     "decisaoExecutiva.recomendacao": "Delegar implementação do outdoor à fila",
     "decisaoExecutiva.justificativa":
-      "A decisão de executar está tomada; o risco medio de atraso visual é aceite. Delega-se execução preservando Priorizar uso diário no MG2 (ADR-015) no acompanhamento.",
+      "A decisão de executar está tomada; o risco medio de atraso visual é aceite. Delega-se execução preservando Priorizar uso diário no contexto operacional activo (ADR-015) no acompanhamento.",
     "acao.tipo": "despachar",
     "acao.descricao": "Criar job na fila para outdoors laterais",
     "acao.job": {
-      titulo: "Outdoors laterais MG2",
+      titulo: "Outdoors laterais",
       descricao: "Implementar assets laterais conforme briefing",
       prioridade: "baixa"
     }

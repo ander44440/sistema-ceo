@@ -1,11 +1,14 @@
 # ARQ-029 — Arquitectura do Modo CEO Ouvindo
 
-> **Status: Homologada** (03/08/2026).  
+> **Status: Homologada / frente ENCERRADA** (ENC-006) — 03/08/2026.  
 > Tipo ARQ (ADR-010). **Identificação:** ARQ-029.  
 > **Capacidade:** CAP-07 — Comunicação.  
 > Norma superior: CON-001; VIS-002 §3.5–3.6; ADR-006; ADR-015; **REQ-068** (homologada); ANL-012 (homologada); REQ-047; REQ-050; PX-001 E1; PX-002 E1; ARQ-017 (Motor — **não alterado**); ARQ-018 (Classificador — **não alterado**); ARQ-019 (Gate — **não alterado**); ARQ-022…028 / VCA / DIC / complexidade — **não alterados**; EIC — **não alterada**.  
 > **Finalidade:** arquitectura técnica da camada de **entrada/saída por voz** («CEO Ouvindo») sobre o pipeline conversacional existente.  
-> **Gate:** homologada. **IMP:** [`IMP-068-modo-ceo-ouvindo.md`](../implementation/IMP-068-modo-ceo-ouvindo.md).  
+> **Cadeia:** REQ-068 → **esta ARQ** → IMP-068 → **VAL-010** → ENC-006.  
+> **IMP:** [`IMP-068-modo-ceo-ouvindo.md`](../implementation/IMP-068-modo-ceo-ouvindo.md).  
+> **VAL:** [`VAL-010-homologacao-modo-ceo-ouvindo.md`](../validation/VAL-010-homologacao-modo-ceo-ouvindo.md) — *não* VAL-006 (CAP-05).  
+> **ENC:** [`ENC-006-encerramento-modo-ceo-ouvindo.md`](../learning/ENC-006-encerramento-modo-ceo-ouvindo.md).  
 > **Nota IMP-068:** o MVP implementa **retorno automático a Ouvindo** após TTS (D3), em vez do Idle-por-gesto de §4.4.
 
 ---
@@ -393,7 +396,9 @@ Contratos **lógicos** (sem assinaturas de código nesta ARQ).
 | Capacidade | CAP-07 |
 | Norma | REQ-068; ANL-012; CON-001 Art. 9º; ADR-015; ADR-006 |
 | Peças preservadas | ARQ-017, 018, 019, 022–028; REQ-047, 050; PX-002 |
-| Implementação | *(IMP — não nesta entrega)* |
+| Implementação | IMP-068 |
+| Validação | **VAL-010** |
+| Encerramento | ENC-006 |
 
 ---
 
@@ -402,8 +407,10 @@ Contratos **lógicos** (sem assinaturas de código nesta ARQ).
 | Versão | Data | Quem | O quê | Resultado |
 |--------|------|------|-------|-----------|
 | 0.1 | 03/08/2026 | Engenheiro (Cursor) | ARQ completa — visão, componentes, fluxo, estados, eventos, interfaces, falhas, desacoplamento | Em análise — aguarda homologação |
+| 0.2 | 03/08/2026 | Engenheiro (Cursor) | Homologação; ligação IMP-068 / VAL-010 / ENC-006 | Homologada / frente ENCERRADA |
 
 ---
 
-**Estado:** Em análise. **Sem código. Sem IMP.**  
-**Próximo passo:** Homologação → IMP do Modo CEO Ouvindo.
+**Estado:** Homologada / frente **ENCERRADA** (ENC-006).  
+**Cadeia oficial:** ANL-012 → REQ-068 → ARQ-029 → IMP-068 → **VAL-010** → ENC-006.  
+Nenhuma nova implementação nesta frente — aguardar próxima frente do Sistema CEO.

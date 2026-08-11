@@ -48,11 +48,12 @@ test("E4-CA1: intenção → plano → (gate se preciso) → Job pending → flu
 
   assert.equal(r.publicado, true);
   assert.equal(r.despachado, true);
-  assert.equal(r.job.estado, "pending");
+  assert.equal(r.job.estado, "dispatched");
   assert.equal(r.fluxoIniciado, true);
   assert.equal(r.ciclo.etapa, "Dispatcher");
   assert.equal(r.ciclo.jobId, r.job.id);
   assert.equal(r.handoff.para, "dispatcher_req053");
+  assert.equal(r.handoff.estadoJob, "dispatched");
   assert.equal(r.execucaoConcluida, false);
   assert.equal(fila.jobs.length, 1);
 
@@ -82,7 +83,7 @@ test("E4-CA1: intenção → plano → (gate se preciso) → Job pending → flu
     publicarJob: fila2.publicarJob.bind(fila2)
   });
   assert.equal(aposGate.publicado, true);
-  assert.equal(aposGate.job.estado, "pending");
+  assert.equal(aposGate.job.estado, "dispatched");
   assert.equal(aposGate.fluxoIniciado, true);
   assert.equal(aposGate.ciclo.etapa, "Dispatcher");
 });

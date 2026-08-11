@@ -23,7 +23,9 @@ export {
   fonteEstaActiva,
   temContextoOperacionalRelevante,
   priorizarFontes,
-  fontePrioritaria
+  fontePrioritaria,
+  STATUS_JOB_EM_ACOMPANHAMENTO,
+  ehStatusJobEmAcompanhamento
 } from "./dominio.js";
 
 export {
@@ -45,6 +47,9 @@ export {
 export {
   prosaMencionaJobEmExecucao,
   prosaMencionaGatePendente,
+  contarMencoesTopicoActivo,
+  deduplicarFactoTopicoActivo,
+  mensagemJaReflecteProsaLastro,
   comporProsaLastro,
   schemaHintConsciencia,
   garantirReflexoEstadoExecutivo,

@@ -7,8 +7,7 @@ import { test, beforeEach } from "node:test";
 import { LIMIAR_CONFIANCA } from "./dominio.js";
 import {
   classificar,
-  ehIntencaoExecutivaE21,
-  ehPerguntaDeliberativa
+  ehIntencaoExecutivaE21
 } from "./regras.js";
 import { classificarEEncaminhar } from "./encaminhador.js";
 import { executiveEngine } from "../executiveEngine/index.js";
@@ -20,12 +19,11 @@ beforeEach(() => {
   resetStoreContinuidadePadrao();
 });
 
-/** Exemplos obrigatórios C3 — Emenda E2.1 */
+/** Exemplos obrigatórios C3 — Emenda E2.1 (P0: análise deliberativa saiu desta lista) */
 export const EXEMPLOS_C3_E21 = Object.freeze([
   "Resolva os bugs.",
   "Corrija esse problema.",
   "Faça um diagnóstico.",
-  "Analise este projeto.",
   "Implemente esta funcionalidade.",
   "Acione o CTO.",
   "Acione o Engenheiro.",
@@ -36,12 +34,14 @@ export const EXEMPLOS_C3_E21 = Object.freeze([
   "Investigue este erro."
 ]);
 
-/** Exemplos obrigatórios C2 — Emenda E2.1 */
+/** Exemplos obrigatórios C2 — Emenda E2.1 (+ P0 análise/recomendação) */
 export const EXEMPLOS_C2_E21 = Object.freeze([
   "Como devemos priorizar os bugs?",
   "O que você acha dessa arquitetura?",
   "Qual seria a melhor estratégia?",
-  "Explique esse módulo."
+  "Explique esse módulo.",
+  "Analise este projeto.",
+  "Analise a proposta do bairro."
 ]);
 
 test("CA-E2.1-1: todos os verbos executivos → C3 / motor_execucao", () => {
@@ -76,7 +76,6 @@ test("CA-E2.1-2: frente activa não rebaixa E2.1 para C2", () => {
 
 test("CA-E2.1-3: exemplos deliberativos permanecem C2", () => {
   for (const texto of EXEMPLOS_C2_E21) {
-    assert.equal(ehPerguntaDeliberativa(texto.toLowerCase().replace(/[?.!]+$/g, "")) || /\bexplique\b/i.test(texto), true, texto);
     const s = classificar(texto, { frenteActiva: true });
     assert.equal(s.classe, "conversa_projeto", texto);
     assert.equal(s.permiteJob, false, texto);

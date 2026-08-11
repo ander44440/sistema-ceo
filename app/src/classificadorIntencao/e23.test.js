@@ -2,9 +2,10 @@
  * Emenda E2.3 — Autoexplicação Institucional do CEO (IMP-057).
  */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test, beforeEach } from "node:test";
 
 import { executiveEngine } from "../executiveEngine/index.js";
+import { reiniciarAutoridadeDelegadaParaTestes } from "../autoridadeDelegada/autoridadeDelegada.js";
 import { LIMIAR_CONFIANCA } from "./dominio.js";
 import {
   classificar,
@@ -13,6 +14,10 @@ import {
   normalizarTexto
 } from "./regras.js";
 import { classificarEEncaminhar } from "./encaminhador.js";
+
+beforeEach(() => {
+  reiniciarAutoridadeDelegadaParaTestes();
+});
 
 /** Exemplos obrigatórios CA-E2.3-1…7 */
 export const EXEMPLOS_E23 = Object.freeze([

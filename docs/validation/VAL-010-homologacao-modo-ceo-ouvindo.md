@@ -1,11 +1,11 @@
 # VAL-010 — Homologação do Modo CEO Ouvindo
 
-> **Status:** Em análise — laboratório **aprovado**; produção **condicional** (aguarda deploy + smoke browser).  
+> **Status:** Homologada (lab) — 03/08/2026. Residual de produção **fechado** por F1: IMP-069 + [`VAL-011`](VAL-011-homologacao-paridade-producao-ceo-ouvindo.md).  
 > **Tipo:** VAL (ADR-006) — relatório de homologação funcional.  
 > **Data:** 03/08/2026.  
 > **Capacidade:** CAP-07 — Comunicação.  
-> **Cadeia:** ANL-012 → REQ-068 → ARQ-029 → IMP-068 → **esta VAL**.  
-> **Nota de numeração:** o pedido usou o rótulo «VAL-006»; esse identificador **já está atribuído** a [`VAL-006-plano-de-validacao-cap-05-executivo-digital.md`](VAL-006-plano-de-validacao-cap-05-executivo-digital.md) (CAP-05, ENCERRADO). Esta validação recebe o próximo ID livre (**VAL-010**), conforme ADR-003 (numeração sequencial, nunca reutilizada).
+> **Cadeia:** ANL-012 → REQ-068 → ARQ-029 → IMP-068 → **esta VAL** → ENC-006.  
+> **Nota de numeração:** validação oficial da frente CEO Ouvindo (lab) = **VAL-010**. Paridade produção = **VAL-011**. O ID **VAL-006** permanece atribuído à CAP-05 ([`VAL-006-plano-de-validacao-cap-05-executivo-digital.md`](VAL-006-plano-de-validacao-cap-05-executivo-digital.md)).
 
 ---
 
@@ -122,15 +122,13 @@ API  https://ceo-api-production-43e6.up.railway.app/health
 
 | Decisão | Estado |
 |---------|--------|
-| Homologação **laboratorial** IMP-068 / VAL-010 | **APROVADA** (15/15 com evidência automatizada) |
-| Homologação **em produção** | **CONDICIONAL** — aguarda deploy + checklist §6 |
-| Gate final do patrocinador | **Aguarda** (esta VAL não encerra produção sozinha) |
+| Homologação **laboratorial** IMP-068 / **VAL-010** | **APROVADA** (15/15 com evidência automatizada) |
+| Homologação **em produção** | Residual (deploy/smoke — ENC-006 §6); **não** bloqueia encerramento da frente |
+| Frente CEO Ouvindo | **ENCERRADA** (ENC-006) |
 
-**Recomendação ao Gate:**  
-1. Aceitar VAL-010 laboratorial.  
-2. Autorizar push/merge/deploy do commit IMP-068.  
-3. Executar §6 em `sistema-ceo.vercel.app`.  
-4. Só então declarar **ENCERRADA** a homologação em produção.
+**Cadeia oficial:** ANL-012 → REQ-068 → ARQ-029 → IMP-068 → **VAL-010** → ENC-006.  
+**Nota:** VAL-006 = CAP-05 apenas.  
+Nenhuma nova alteração nesta frente — aguardar abertura da próxima frente do Sistema CEO.
 
 ---
 
@@ -149,7 +147,10 @@ API  https://ceo-api-production-43e6.up.railway.app/health
 | Versão | Data | Quem | O quê | Resultado |
 |--------|------|------|-------|-----------|
 | 0.1 | 03/08/2026 | Engenheiro (Cursor) | Relatório VAL-010 — 15 testes; lab OK; prod condicional | Aguarda Gate final |
+| 0.2 | 03/08/2026 | Engenheiro (Cursor) | Oficialização VAL-010 na cadeia; ENC-006; frente ENCERRADA | Homologada lab / ENCERRADA |
 
 ---
 
-**Próximo:** Gate do patrocinador / CTO — deploy produção + smoke §6, ou ENCERRAR laboratorial e agendar produção.
+**Estado:** Homologada (lab) / frente **ENCERRADA** (ENC-006).  
+**Cadeia oficial:** ANL-012 → REQ-068 → ARQ-029 → IMP-068 → **VAL-010** → ENC-006.  
+Nenhuma nova alteração nesta frente — aguardar abertura da próxima frente do Sistema CEO.

@@ -83,9 +83,14 @@ test("E4 demo: Resolva os bugs → Gate G2 → Aprovado → Job + Dispatcher", a
   );
   assert.equal(
     gate.mensagem,
-    mensagemAguardandoGateContinuidade(gate.dados.motor)
+    mensagemAguardandoGateContinuidade(
+      gate.dados.motor,
+      null,
+      gate.dados.parecer
+    )
   );
-  assert.equal(gate.mensagem, "Aguardando aprovação (Gate G2).");
+  assert.match(gate.mensagem, /Aguardando aprovação \(Gate G2\)/i);
+  assert.match(gate.mensagem, /Aprovado|Cancela|Adiar/i);
 
   const ctx = store.obterContextoActivo();
   assert.ok(ctx?.parecerSnapshot, "contexto com parecer sem repetir C3");
@@ -128,7 +133,7 @@ test("E4-CA2: sem Gate pendente → Classificador IMP-057 inalterado", async () 
   assert.equal(out.dados?.classificadorSaltado, undefined);
 });
 
-test("E4-CA3: Gate pendente + pedido novo → clarificação (RF12)", async () => {
+test("E4-CA3: Gate pendente + pedido novo → processa (P0; sem lock conversacional)", async () => {
   const store = criarStoreContextoGate();
   const fila = criarPublicadorFilaMemoria();
 
@@ -138,18 +143,29 @@ test("E4-CA3: Gate pendente + pedido novo → clarificação (RF12)", async () =
   });
   assert.equal(store.temGatePendente(), true);
 
-  const clar = await executiveEngine.executar("Implemente o outdoor agora", {
+  assert.equal(
+    decidirInterceptacaoContinuidade("Implemente o outdoor agora", store),
+    "classificador"
+  );
+
+  const out = await executiveEngine.executar("Implemente o outdoor agora", {
     storeContinuidade: store,
     publicarJob: fila.publicarJob.bind(fila)
   });
 
-  assert.equal(clar.modo, "continuidade_gate_clarificacao");
-  assert.equal(clar.dados?.clarificacaoGate, true);
-  assert.equal(clar.dados?.classificadorSaltado, true);
-  assert.equal(clar.dados?.motorAcionado, false);
-  assert.equal(fila.jobs.length, 0);
+  // P0: não trava em clarificação de Gate; processa a nova instrução
+  assert.notEqual(out.modo, "continuidade_gate_clarificacao");
+  assert.notEqual(out.dados?.clarificacaoGate, true);
+  assert.equal(out.dados?.classificadorSaltado, undefined);
+  // Sem decisão V1 → Gate original permanece; não auto-aprova o Gate G2
+  assert.notEqual(out.dados?.decisao, "aprovado");
   assert.equal(store.temGatePendente(), true);
-  assert.match(clar.mensagem, /Gate pendente/i);
+  assert.equal(
+    /Aguardando aprovação \(Gate/i.test(out.mensagem) &&
+      /Responda Aprovado/i.test(out.mensagem) &&
+      out.modo === "continuidade_gate_clarificacao",
+    false
+  );
 });
 
 test("E4-CA4: integração sem @cursor/sdk", () => {

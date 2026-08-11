@@ -1,0 +1,14 @@
+{
+  "id": "JOB-000001",
+  "origem": "ceo",
+  "projeto": null,
+  "tipo": "execucao_tecnica",
+  "titulo": "IMP-060 E6 T3 Agent",
+  "descricao": "Espelho ciclo JOB-000028",
+  "prioridade": "normal",
+  "estado": "completed",
+  "criadoEm": "2026-08-02T02:17:51.260Z",
+  "iniciadoEm": "2026-08-02T02:17:51.271Z",
+  "concluidoEm": "2026-08-02T02:17:51.279Z",
+  "resultado": "IMP-060 E6 T3 — ciclo Agent"
+}

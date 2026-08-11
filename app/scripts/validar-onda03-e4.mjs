@@ -112,6 +112,24 @@ assert(
   "ainda em_curso sem continuidade",
   obterDiaExecutivo()?.status === "em_curso"
 );
+assert(
+  "encerrar vazio pede os três elementos",
+  /três elementos|o que andou/i.test(rEncerrarVazio.mensagem || "")
+);
+
+const rEncerrarParcial = await executiveEngine.executar({
+  texto: "encerrar o dia: Só o que andou"
+});
+assert("encerrar parcial → ok false", rEncerrarParcial.ok === false);
+assert(
+  "ainda em_curso após parcial",
+  obterDiaExecutivo()?.status === "em_curso"
+);
+assert(
+  "parcial não grava continuidade incompleta",
+  !obterUltimaContinuidade()?.oQueAndou?.includes("Só o que andou") ||
+    obterDiaExecutivo()?.status === "em_curso"
+);
 
 const rEncerrar = await executiveEngine.executar({
   texto:
@@ -126,6 +144,14 @@ assert(
 assert(
   "continuidade gravada",
   obterUltimaContinuidade()?.oQueAndou?.includes("Persistência E4")
+);
+assert(
+  "mensagem encerrar cita O QUE ANDOU",
+  /O QUE ANDOU/i.test(rEncerrar.mensagem || "")
+);
+assert(
+  "mensagem encerrar cita PRÓXIMO PASSO",
+  /PRÓXIMO PASSO DE AMANHÃ/i.test(rEncerrar.mensagem || "")
 );
 
 // Regressão: continuidade que menciona "abrir dia" não reclassifica.
@@ -144,11 +170,39 @@ assert(
   /dia encerrado/i.test(rEstadoFim.mensagem || "")
 );
 
+const rReabrir = await executiveEngine.executar({
+  texto: "abrir o dia"
+});
+assert("reabrir por conversa ok", rReabrir.ok === true);
+assert(
+  "reabrir reapresenta O QUE ANDOU",
+  /O QUE ANDOU/i.test(rReabrir.mensagem || "") &&
+    /Persistência E4/i.test(rReabrir.mensagem || "")
+);
+assert(
+  "reabrir reapresenta O QUE FICA",
+  /O QUE FICA/i.test(rReabrir.mensagem || "") &&
+    /Validar Gate E4/i.test(rReabrir.mensagem || "")
+);
+assert(
+  "reabrir reapresenta PRÓXIMO PASSO DE AMANHÃ",
+  /PRÓXIMO PASSO DE AMANHÃ/i.test(rReabrir.mensagem || "") &&
+    /Retomar amanhã/i.test(rReabrir.mensagem || "")
+);
+assert(
+  "reabrir declara dia retomado",
+  /Dia retomado/i.test(rReabrir.mensagem || "")
+);
+assert(
+  "após reabrir status em_curso",
+  obterDiaExecutivo()?.status === "em_curso"
+);
+
 recarregarCatalogo();
 selecionarProjeto("prj-mg2", { registrarAlteracao: false });
 assert(
-  "reabrir status encerrado",
-  obterDiaExecutivo()?.status === "encerrado"
+  "reabrir status em_curso após reload",
+  obterDiaExecutivo()?.status === "em_curso"
 );
 assert(
   "reabrir continuidade",

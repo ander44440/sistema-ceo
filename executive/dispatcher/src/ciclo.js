@@ -1,9 +1,15 @@
 /**
- * Ciclo de observação da fila + despacho (REQ-053).
+ * Ciclo de observação da fila + despacho (REQ-053 + P0-2).
+ * Agent SDK "finished" ≠ Job completed.
  */
 
 import { listarPendentes } from "./listPending.js";
 import { adquirirLock, libertarLock, lerLock } from "./lock.js";
+import {
+  prepararDespacho,
+  reconciliarAposAgent,
+  verificarJobsEmResult
+} from "./posAgent.js";
 
 /**
  * @param {{
@@ -14,13 +20,30 @@ import { adquirirLock, libertarLock, lerLock } from "./lock.js";
  *   dryRun: boolean,
  *   log?: (msg: string) => void
  * }} ctx
- * @returns {Promise<"idle"|"dry"|"busy"|"dispatched"|"skipped_no_key"|"error">}
+ * @returns {Promise<"idle"|"dry"|"busy"|"dispatched"|"skipped_no_key"|"error"|"failed_no_result"|"verified">}
  */
 export async function ciclo(ctx) {
   const log = ctx.log || console.log;
+
+  // P0-2: RESULT → verificação CEO (mesmo sem pending — Agent pode ter gravado o ficheiro)
+  const passVerify = verificarJobsEmResult(ctx.queueDir);
+  if (passVerify.resultados.length) {
+    for (const r of passVerify.resultados) {
+      log(
+        `[dispatcher] verificação ${r.job?.id || "?"}: ${r.acao} — ${r.mensagem}`
+      );
+    }
+  }
+
   const pending = listarPendentes(ctx.queueDir);
 
   if (!pending.length) {
+    if (passVerify.verificados.length) {
+      log(
+        `[dispatcher] ${passVerify.verificados.length} Job(s) verificados; nenhum pending`
+      );
+      return "verified";
+    }
     log("[dispatcher] nenhum Job pending");
     return "idle";
   }
@@ -57,6 +80,11 @@ export async function ciclo(ctx) {
   }
 
   try {
+    const prep = prepararDespacho(ctx.queueDir, job.id);
+    if (prep) {
+      log(`[dispatcher] Job ${job.id} → ${prep.estado} (handoff ≠ conclusão)`);
+    }
+
     log(`[dispatcher] a acordar Agent local para ${job.id}…`);
     const { despacharAgent } = await import("./despachar.js");
     const out = await despacharAgent({
@@ -66,17 +94,36 @@ export async function ciclo(ctx) {
       jobId: job.id,
       titulo: job.titulo || ""
     });
-    if (out.ok) {
-      log(
-        `[dispatcher] Agent terminou (${out.status}) run=${out.runId || "?"} ${out.durationMs || "?"}ms`
-      );
-      return "dispatched";
+
+    const rec = reconciliarAposAgent(ctx.queueDir, job.id);
+    log(`[dispatcher] reconciliação: ${rec.acao} — ${rec.mensagem}`);
+
+    // Segunda passagem: se o Agent gravou result noutro ID, ou este job ficou em result
+    const pass2 = verificarJobsEmResult(ctx.queueDir);
+    for (const r of pass2.resultados) {
+      if (r.job?.id !== rec.job?.id) {
+        log(
+          `[dispatcher] verificação ${r.job?.id || "?"}: ${r.acao} — ${r.mensagem}`
+        );
+      }
     }
-    const detalhe = out.error || out.result || "(sem detalhe)";
+
+    if (!out.ok) {
+      const detalhe = out.error || out.result || "(sem detalhe)";
+      log(
+        `[dispatcher] Agent não concluído: status=${out.status} — ${detalhe}`
+      );
+      return "error";
+    }
+
     log(
-      `[dispatcher] Agent não concluído: status=${out.status} — ${detalhe}`
+      `[dispatcher] Agent terminou (${out.status}) run=${out.runId || "?"} ${out.durationMs || "?"}ms — estado Job=${rec.job?.estado || "?"}`
     );
-    return "error";
+
+    if (rec.acao === "failed" || rec.job?.estado === "failed") {
+      return "failed_no_result";
+    }
+    return "dispatched";
   } finally {
     libertarLock(ctx.queueDir);
   }

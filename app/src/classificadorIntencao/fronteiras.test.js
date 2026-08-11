@@ -132,13 +132,17 @@ test("E6-CA4: razaoCurta sem segredos (amostra + validação)", () => {
 
 test("E6: Conversa e Centro/Painel passam pelo Núcleo (não saltam Classificador)", () => {
   const conversa = ler("modules/conversa/conversa.js");
+  const enviar = ler("modules/conversa/enviarAoNucleo.js");
   const centro = ler("modules/centroSituacao/centroSituacao.js");
-  assert.match(conversa, /executiveEngine\.executar/);
+  // Conversa delega ao Núcleo via enviarAoNucleo (não classifica à margem)
+  assert.match(enviar, /executiveEngine\.executar/);
+  assert.match(conversa, /enviarAoNucleo/);
   assert.match(centro, /executiveEngine\.executar/);
-  // Não classificam à margem do Núcleo
   assert.equal(/classificarIntencao\s*\(/.test(conversa), false);
+  assert.equal(/classificarIntencao\s*\(/.test(enviar), false);
   assert.equal(/classificarIntencao\s*\(/.test(centro), false);
   assert.equal(/from\s+["'].*classificadorIntencao\/regras/.test(conversa), false);
+  assert.equal(/from\s+["'].*classificadorIntencao\/regras/.test(enviar), false);
   assert.equal(/from\s+["'].*classificadorIntencao\/regras/.test(centro), false);
 });
 

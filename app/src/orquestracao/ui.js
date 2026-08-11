@@ -155,9 +155,9 @@ export function contarDetalhesExpandidosHtml(html) {
  * Shell estático do painel (inserido no Centro, abaixo da Conversa).
  */
 export function htmlPainelOrquestracao() {
-  return `<section class="cs-orq" aria-label="Orquestração" data-cs-orq>
+  return `<section class="cs-orq" aria-label="Orquestração Executiva" data-cs-orq>
     <div class="cs-section-head cs-orq-head">
-      <h2>Orquestração</h2>
+      <h2>Orquestração Executiva</h2>
       <span class="cs-orq-hint" id="cs-orq-hint" aria-live="polite">A actualizar…</span>
     </div>
     <div class="cs-orq-grid" id="cs-orq-grid" role="list" aria-live="polite"></div>

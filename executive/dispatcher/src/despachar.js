@@ -15,7 +15,8 @@ export async function despacharAgent(opts) {
     "Siga o skill consumir-fila-execucao e a regra fila-execucao.",
     `Há pelo menos o Job pending ${jobId}` +
       (titulo ? ` («${titulo}»).` : "."),
-    "Protocolo: marcar running → executar só o pedido em titulo/descricao → completed ou failed com resultado.",
+    "Protocolo P0-2: pending→dispatched→running→result (com evidência) ou failed.",
+    "NUNCA marque completed — a verificação é do CEO/dispatcher após result.",
     "Não peça ao utilizador para colar o Job.",
     "Não invente Jobs. Não altere Constituição/Governança.",
     "Ao terminar, responda com um resumo curto do resultado."

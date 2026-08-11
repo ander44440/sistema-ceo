@@ -80,7 +80,7 @@ test("E6-CA1: suite negativa REQ-054/055 — CTO e Painel não publicam Jobs", (
   }
 });
 
-test("E6-CA2: sem Dispatcher — Job permanece pending (≠ failed)", async () => {
+test("E6-CA2: sem Agent — Job fica dispatched (≠ completed/failed)", async () => {
   const fila = criarPublicadorFilaMemoria();
   const parecer = {
     ...parecerDelegarValido(),
@@ -90,33 +90,35 @@ test("E6-CA2: sem Dispatcher — Job permanece pending (≠ failed)", async () =
     publicarJob: fila.publicarJob.bind(fila)
   });
   assert.equal(r.publicado, true);
-  assert.equal(r.job.estado, "pending");
+  assert.equal(r.job.estado, "dispatched");
   assert.equal(r.fluxoIniciado, true);
   assert.equal(r.ciclo.etapa, "Dispatcher");
-  assert.equal(r.ciclo.estadoJob, "pending");
+  assert.equal(r.ciclo.estadoJob, "dispatched");
   assert.equal(r.execucaoConcluida, false);
 
-  // Simula PC/watcher ausente: nenhum tick de execução — estado não degrada a failed
+  // Simula PC/watcher ausente: nenhum tick de execução — não completa
   const ainda = processarResultadoEEncerrar(r.ciclo, {
     id: r.job.id,
-    estado: "pending"
+    estado: "dispatched"
   });
   assert.equal(ainda.execucaoConcluida, false);
-  assert.equal(ainda.motivo, "aguarda_execucao");
+  assert.equal(ainda.motivo, "despachado_aguarda_execucao");
   assert.notEqual(ainda.ciclo?.estadoJob, "failed");
-  assert.equal(fila.jobs[0].estado, "pending");
+  assert.notEqual(ainda.ciclo?.estadoJob, "completed");
+  assert.equal(fila.jobs[0].estado, "dispatched");
 
-  // Handoff sem Agent: Job continua pending
+  // Handoff sem Agent: Job fica dispatched (≠ completed)
   const handoff = iniciarFluxoAposJob(
     montarCiclo("c", "CriacaoDoJob", {
       jobId: r.job.id,
       estadoJob: "pending",
       requerDespacho: true
     }),
-    { id: r.job.id, estado: "pending" }
+    { id: r.job.id, estado: "pending", historicoCiclo: [] }
   );
   assert.equal(handoff.ok, true);
-  assert.equal(handoff.ciclo.estadoJob, "pending");
+  assert.equal(handoff.ciclo.estadoJob, "dispatched");
+  assert.notEqual(handoff.ciclo.estadoJob, "completed");
 });
 
 test("E6-CA3: inventário — Motor não introduz segundo watcher/acordador", () => {
@@ -198,21 +200,21 @@ test("E6: isolamento UI — Motor sem document/window; prosa ≠ completed", () 
     assert.equal(/document\.|window\.|localStorage/.test(src), false, nome);
   }
   assert.equal(tentarEncerrarPorProsa("feito").ok, false);
-  assert.equal(ESTADOS_JOB.length, 5);
+  assert.equal(ESTADOS_JOB.length, 8);
   assert.equal(validarTransicaoJob("pending", "failed").ok, false);
+  assert.equal(validarTransicaoJob("running", "completed").ok, false);
 });
 
 test("E6: checklist operacional PC off / CU5 (documentado + comportamento)", async () => {
-  // Comportamento CU5: pending sem watcher
+  // Comportamento CU5: dispatched sem executor ≠ completed/failed
   const fila = criarPublicadorFilaMemoria();
   const r = await conduzirAposParecer(
     { ...parecerDelegarValido(), id: "parecer-e6-cu5" },
     { publicarJob: fila.publicarJob.bind(fila) }
   );
-  assert.equal(r.job.estado, "pending");
+  assert.equal(r.job.estado, "dispatched");
   assert.equal(r.handoff.para, "dispatcher_req053");
-  // Checklist existe no README (E7) — verificado em e7 / aqui se ficheiro existir
-  // Smoke lógico: sem processarResultado com terminal, ciclo não encerra
   assert.equal(r.ciclo.etapa, "Dispatcher");
   assert.equal(r.execucaoConcluida, false);
+  assert.notEqual(r.job.estado, "completed");
 });

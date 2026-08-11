@@ -1,10 +1,13 @@
 # REQ-068 — Modo CEO Ouvindo
 
-> **Status:** Homologada  
+> **Status:** Homologada / frente **ENCERRADA** (ENC-006)  
 > **Versão:** 0.1 — 03/08/2026  
 > **Capacidade:** CAP-07 — Comunicação  
 > **Origem analítica:** [`ANL-012-arquitetura-modo-ceo-ouvindo.md`](../analysis/ANL-012-arquitetura-modo-ceo-ouvindo.md) (**homologada**).  
-> **ARQ derivada:** [`ARQ-029-modo-ceo-ouvindo.md`](../architecture/ARQ-029-modo-ceo-ouvindo.md) (Em análise v0.1).
+> **ARQ:** [`ARQ-029-modo-ceo-ouvindo.md`](../architecture/ARQ-029-modo-ceo-ouvindo.md) (**homologada**).  
+> **IMP:** [`IMP-068-modo-ceo-ouvindo.md`](../implementation/IMP-068-modo-ceo-ouvindo.md) (**homologada** lab).  
+> **VAL:** [`VAL-010-homologacao-modo-ceo-ouvindo.md`](../validation/VAL-010-homologacao-modo-ceo-ouvindo.md) (**homologada** lab) — *não* VAL-006 (CAP-05).  
+> **ENC:** [`ENC-006-encerramento-modo-ceo-ouvindo.md`](../learning/ENC-006-encerramento-modo-ceo-ouvindo.md) (**encerrado**).
 
 ## Enunciado
 
@@ -186,9 +189,9 @@ A **ANL-012** (homologada) estabelece que a EIC já governa o diálogo por texto
 | Capacidade | CAP-07 — Comunicação |
 | Norma superior | CON-001 Art. 9º; VIS-002 §3.5–3.6; ADR-015; ADR-006 |
 | Origem | ANL-012 homologada; comando patrocinador 03/08/2026 |
-| Decisões derivadas | ARQ-029 (Homologada); IMP-068 (Implementada — aguarda homologação) |
+| Decisões derivadas | ARQ-029 (Homologada); IMP-068; VAL-010; ENC-006 |
 | Implementação | IMP-068 — `app/src/ceoOuvindo/*`, `conversa/enviarAoNucleo.js` |
-| Testes | *(TST — após IMP)* |
+| Testes | VAL-010 — CT-CO01…10 + suites voz/E2.3/DIC |
 
 ---
 
@@ -198,9 +201,11 @@ A **ANL-012** (homologada) estabelece que a EIC já governa o diálogo por texto
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 03/08/2026 | Engenheiro (Cursor) | Criação REQ-068 | ANL-012 homologada; próximo passo de governança | Em análise — aguarda homologação |
 | 0.1 | 03/08/2026 | Engenheiro (Cursor) | Marcação homologada; ligação ARQ-029 | Gate REQ; abertura ARQ | Homologada — ARQ em análise |
+| 0.1 | 03/08/2026 | Engenheiro (Cursor) | Cadeia fechada VAL-010 + ENC-006 | Consistência documental; frente encerrada | Homologada / ENCERRADA |
 
 ---
 
-**Estado:** **Homologada.** **Sem código nesta REQ.**  
-**ARQ derivada:** [`ARQ-029-modo-ceo-ouvindo.md`](../architecture/ARQ-029-modo-ceo-ouvindo.md) (Em análise v0.1).  
-**Próximo passo:** Homologação da ARQ-029 → IMP.
+**Estado:** Homologada / frente **ENCERRADA** (ENC-006).  
+**Cadeia oficial:** ANL-012 → REQ-068 → ARQ-029 → IMP-068 → **VAL-010** → ENC-006.  
+**Nota:** VAL-006 permanece exclusiva da CAP-05; não se aplica a esta frente.  
+Nenhuma nova implementação nesta frente — aguardar próxima frente do Sistema CEO.

@@ -10,7 +10,12 @@ import {
   obterUltimaContinuidade
 } from "../catalogoProjetos/index.js";
 import { classificarEstadoExecutivo } from "../catalogoProjetos/estadoExecutivo.js";
-import { obterCoaAtivo } from "./coaSessao.js";
+import { obterCoaAtivo, obterEmpresaAtiva } from "./coaSessao.js";
+import {
+  REFINO_EIC_ATIVO,
+  formatarMemoriaTrabalhoParaContexto,
+  obterMemoriaTrabalhoExecutiva
+} from "./refinoEic.js";
 
 /**
  * @param {string[]} itens
@@ -66,10 +71,15 @@ function derivarRiscosConhecidos(estadoOperacional, pendenciasAbertas) {
  */
 export function construirContextoSessao({ memoria, coa, intencao }) {
   const coaAtual = coa || obterCoaAtivo();
+  const empresaAtual = obterEmpresaAtiva();
   const mem = memoria || {};
   const projeto = obterProjetoAtivo();
   const dia = obterDiaExecutivo();
   const continuidade = obterUltimaContinuidade();
+
+  const empresaAtivaNome = empresaAtual
+    ? `${empresaAtual.nome} (${empresaAtual.id}, ${empresaAtual.status || "ativa"})`
+    : "(nenhuma)";
 
   const projetoAtivoNome = coaAtual
     ? `${coaAtual.nome} (${coaAtual.id}, ${coaAtual.status || "ativo"})`
@@ -126,6 +136,7 @@ export function construirContextoSessao({ memoria, coa, intencao }) {
     "══════════════════════════════════════",
     "1. ESTADO EXECUTIVO (fonte principal da deliberação)",
     "══════════════════════════════════════",
+    `Empresa ativa: ${empresaAtivaNome}`,
     `Projeto ativo: ${projetoAtivoNome}`,
     `Objetivo atual: ${valorOuVazio(objetivoAtual)}`,
     `Estado operacional: ${estadoOperacional}`,
@@ -227,5 +238,15 @@ export function construirContextoSessao({ memoria, coa, intencao }) {
     } → ${(intencao && intencao.capacidade) || "n/d"}`
   ];
 
-  return [...secao1, ...secao2, ...secao3, ...secao4].join("\n");
+  // Refino EIC: estado actual da conversa (interno ao raciocínio; sem UI).
+  const blocoTrabalho =
+    REFINO_EIC_ATIVO && obterMemoriaTrabalhoExecutiva()
+      ? formatarMemoriaTrabalhoParaContexto()
+      : "";
+
+  const partes = [...secao1, ...secao2, ...secao3, ...secao4];
+  if (blocoTrabalho) {
+    partes.push("", blocoTrabalho);
+  }
+  return partes.join("\n");
 }

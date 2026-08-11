@@ -59,21 +59,47 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
       : "";
 
   // Redação PX-001 E2 / PX-011 — mesmos campos deliberativos; só a prosa muda.
-  const textoChat = [
-    `Sobre: ${objetivo}.`,
-    `${rotulo}: ${recomendacao}.${cautela}`,
-    `Porquê: ${encurtar(justificativa, preferencias.brevidade ? 180 : 320)}`,
-    `Próximo gesto: ${acaoDesc}.`,
-    perguntas.length ? `Para avançar: ${perguntas.join(" ")}` : null,
-    lacunas.length && estado !== "solicitar_dados"
-      ? `Lacunas residuais: ${lacunas.join("; ")}.`
-      : null,
-    estado === "aprovar" || estado === "delegar" || estado === "monitorar"
-      ? "Quando quiser, seguimos."
-      : null
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  // P1-2: pedido de análise → liderar com parecer.analise + recomendação (não «Delego…»).
+  let textoChat;
+  if (preferencias.pedidoAnalise === true) {
+    const analiseTxt = encurtar(
+      parecer.analise || "",
+      preferencias.brevidade ? 400 : 900
+    );
+    const principios = Array.isArray(parecer.principiosAplicados)
+      ? parecer.principiosAplicados.filter(Boolean).slice(0, 4)
+      : [];
+    textoChat = [
+      analiseTxt
+        ? analiseTxt.endsWith(".")
+          ? analiseTxt
+          : `${analiseTxt}.`
+        : `Sobre: ${objetivo}.`,
+      `Recomendação: ${recomendacao}.`,
+      principios.length
+        ? `Princípios que influenciam esta posição: ${principios.join("; ")}.`
+        : `Porquê: ${encurtar(justificativa, preferencias.brevidade ? 180 : 320)}`,
+      lacunas.length ? `Lacunas: ${lacunas.slice(0, 3).join("; ")}.` : null
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  } else {
+    textoChat = [
+      `Sobre: ${objetivo}.`,
+      `${rotulo}: ${recomendacao}.${cautela}`,
+      `Porquê: ${encurtar(justificativa, preferencias.brevidade ? 180 : 320)}`,
+      `Próximo gesto: ${acaoDesc}.`,
+      perguntas.length ? `Para avançar: ${perguntas.join(" ")}` : null,
+      lacunas.length && estado !== "solicitar_dados"
+        ? `Lacunas residuais: ${lacunas.join("; ")}.`
+        : null,
+      estado === "aprovar" || estado === "delegar" || estado === "monitorar"
+        ? "Quando quiser, seguimos."
+        : null
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  }
 
   const guiãoVoz = [
     `Sobre ${objetivo}.`,

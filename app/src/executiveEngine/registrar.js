@@ -3,7 +3,7 @@
  * Preparado para integrações futuras — nesta etapa, stubs.
  */
 
-/** @typedef {"dashboard" | "projetos" | "conhecimento" | "navegacao" | "ia" | "ferramentas" | "memoria" | "fila" | "consultar_cto"} CapacidadeId */
+/** @typedef {"dashboard" | "projetos" | "empresas" | "conhecimento" | "navegacao" | "ia" | "ferramentas" | "memoria" | "fila" | "consultar_cto"} CapacidadeId */
 
 /**
  * @typedef {object} Capacidade
@@ -50,6 +50,7 @@ export function limparRegistro() {
 export const CAPACIDADES_CANONICAS = Object.freeze([
   "dashboard",
   "projetos",
+  "empresas",
   "conhecimento",
   "navegacao",
   "ia",

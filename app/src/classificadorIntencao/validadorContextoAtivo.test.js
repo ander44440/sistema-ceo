@@ -34,6 +34,7 @@ import {
   registarGateAposMotor
 } from "../continuidadeGate/integracaoConversa.js";
 import { criarPublicadorFilaMemoria } from "../motorExecucao/ponteParecerJob.js";
+import { reiniciarAutoridadeDelegadaParaTestes } from "../autoridadeDelegada/autoridadeDelegada.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootSrc = join(__dirname, "..");
@@ -45,6 +46,7 @@ beforeEach(() => {
   resetEstadoTopicosSessao();
   resetEstadoObjectivoSessao();
   definirVcaAtivo(true);
+  reiniciarAutoridadeDelegadaParaTestes();
 });
 
 test("CT-V01: baseline pertença — deixis com tópico activo → pertence + CSC", async () => {

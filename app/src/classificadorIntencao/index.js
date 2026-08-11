@@ -28,6 +28,16 @@ export {
   aplicarDesambiguacaoHistorico,
   ehIntencaoExecutivaE21,
   ehPerguntaDeliberativa,
+  ehProibicaoExecucaoExplicita,
+  ehAutorizacaoExplicitaCriarJob,
+  extrairIdsJobMencionados,
+  ehReferenciaExplicitaJobId,
+  ehConsultaEstadoOperacional,
+  ehPedidoContinuidadeMissao,
+  ehPedidoRelatoEncerramento,
+  ehConsultaEstadoParaC4,
+  ehPedidoAnaliseOuRecomendacao,
+  ehComandoExecucaoExplicito,
   ehConhecimentoGeralE22,
   ehDeliberacaoProjetoE22,
   ehAutoexplicacaoInstitucionalE23,
@@ -35,6 +45,22 @@ export {
   temContextoProjetoE22,
   normalizarTexto
 } from "./regras.js";
+
+export {
+  ehRecomendacaoOperacional,
+  ehDeliberacaoDeProposta,
+  ehPedidoMistoEstadoERecomendacaoOperacional,
+  identificarObjetoRecomendacaoOperacional,
+  temObjetoOperacional,
+  temObjetoPropostaDeliberativa,
+  temMarcadorRecomendacao
+} from "./recomendacaoOperacional.js";
+
+export { detectarPedidoDecisaoExplicita } from "./pedidoDecisaoExplicita.js";
+export {
+  detectarAncoraEmpresa,
+  temAncoraExplicitaProjeto
+} from "./ancoraEmpresa.js";
 
 export {
   seleccionarHistoricoRecente,
@@ -91,6 +117,14 @@ export {
 } from "./gestorObjectivo.js";
 
 export {
+  devePreservarMissao,
+  montarConfirmacaoNatural,
+  sanitizarProsaUtilizador,
+  historicoSugereMissao,
+  lastroSugereMissao
+} from "./preservarMissao.js";
+
+export {
   GESTOR_OBJECTIVO_ATIVO,
   definirGestorObjectivoAtivo,
   obterEstadoObjectivoSessao,
@@ -119,7 +153,8 @@ export {
   montarParecerTrabalhoExecutivo,
   mensagemInicioExecucao,
   contemSugiroComoRespostaFinal,
-  tituloJobDeInstrucao
+  tituloJobDeInstrucao,
+  extrairObjectivoRealParaJob
 } from "./integracaoNucleo.js";
 
 export {
@@ -128,6 +163,7 @@ export {
   executarDestinoC2,
   executarDestinoC3,
   executarDestinoC4,
+  executarDestinoClarificacao,
   CAPACIDADES_C4
 } from "./destinos.js";
 

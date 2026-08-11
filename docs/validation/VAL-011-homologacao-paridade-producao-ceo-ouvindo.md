@@ -1,14 +1,15 @@
 # VAL-011 — Homologação da Paridade em Produção do CEO Ouvindo
 
-> **Status:** Homologada (engenharia) — 03/08/2026; aguarda **Gate final** do patrocinador.  
-> **Nota pós-defeito:** STT — ver [`VAL-011R`](VAL-011R-revalidacao-pos-correcao-stt.md) (revalidação; GATE-010 cancelado até aprovação VAL-011R).  
+> **Status:** **Homologada** — Gate final aprovado 06/08/2026 (Alçada do Patrocinador / mandato CTO Opção B — REG-A04).  
+> **Nota pós-defeito:** STT — ver [`VAL-011R`](VAL-011R-revalidacao-pos-correcao-stt.md) (**Homologada** — Gate 06/08/2026).  
 > **Tipo:** VAL (ADR-006) — relatório de homologação em **produção**.  
-> **Data:** 03/08/2026.  
+> **Data:** 03/08/2026 (engenharia); Gate final 06/08/2026.  
 > **Capacidade:** CAP-07 — Comunicação.  
-> **Frente:** F1 — Paridade Produção CEO Ouvindo.  
-> **Cadeia:** ANL-013 → REQ-069 → ARQ-030 → IMP-069 → **esta VAL**.  
+> **Frente:** F1 — Paridade Produção CEO Ouvindo — **ENCERRADA**.  
+> **Cadeia:** ANL-013 → REQ-069 → ARQ-030 → IMP-069 → **esta VAL** (+ VAL-011R).  
 > **Lastro:** REQ-068 · ARQ-029 · IMP-068 · VAL-010 (lab) · ENC-006 · GATE-009.  
-> **Nota:** VAL-010 = homologação **laboratorial** do MVP; VAL-011 = homologação da **paridade em produção**.
+> **Nota:** VAL-010 = homologação **laboratorial** do MVP; VAL-011 = homologação da **paridade em produção**.  
+> **Regularização:** REG-001 pacote mínimo (A01–A05 + ROADMAP) — 06/08/2026.
 
 ---
 
@@ -137,12 +138,14 @@ getUserMedia audio → track readyState=live
 
 | Decisão | Estado |
 |---------|--------|
-| Homologação **produção** F1 / VAL-011 | **APROVADA** (engenharia) — 13/13 |
+| Homologação **produção** F1 / VAL-011 | **APROVADA** (engenharia 03/08/2026) |
 | Paridade lab ↔ produção | **Confirmada** |
-| Gate final | Aguarda patrocinador |
-| Frente F1 | Pronta para **encerramento** após Gate |
+| Gate final | **APROVADO** — 06/08/2026 (Alçada do Patrocinador; mandato CTO Opção B / REG-A04) |
+| Frente F1 | **ENCERRADA** |
 
-**Cadeia oficial F1:** ANL-013 → REQ-069 → ARQ-030 → IMP-069 → **VAL-011**.
+**Cadeia oficial F1:** ANL-013 → REQ-069 → ARQ-030 → IMP-069 → **VAL-011** (+ VAL-011R).
+
+**NC-I2 (smoke oral humano):** **ACEITE_RISCO** no Gate — evidência engenharia (arranque STT + lab + VAL-011R) aceite; smoke oral adicional do patrocinador permanece recomendação opcional, não bloqueante do fecho F1.
 
 ---
 
@@ -150,8 +153,9 @@ getUserMedia audio → track readyState=live
 
 | Versão | Data | Quem | O quê | Resultado |
 |--------|------|------|-------|-----------|
-| 0.1 | 03/08/2026 | Engenheiro (Cursor) | VAL-011 — 13 testes produção; paridade confirmada | Aguarda Gate final |
+| 0.1 | 03/08/2026 | Engenheiro (Cursor) | VAL-011 — 13 testes produção; paridade confirmada | Homologada engenharia — aguardava Gate |
+| 0.2 | 06/08/2026 | Engenheiro (Cursor) | REG-A04 — Gate final; F1 encerrada | **Homologada** — Gate aprovado |
 
 ---
 
-**Estado:** Homologada (engenharia) / aguarda **Gate final** do patrocinador.
+**Estado:** **Homologada** — Gate final aprovado. F1 **encerrada**.

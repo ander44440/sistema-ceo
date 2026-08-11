@@ -29,6 +29,59 @@ export function prosaMencionaGatePendente(mensagem) {
 }
 
 /**
+ * Conta ocorrências de menção a tópico activo (facto oficial).
+ * @param {string} mensagem
+ */
+export function contarMencoesTopicoActivo(mensagem) {
+  const m = String(mensagem || "").match(/\bt[oó]pico\s+activo\b/gi);
+  return m ? m.length : 0;
+}
+
+/**
+ * Um facto oficial de tópico activo no máximo uma vez na resposta final.
+ * @param {string} mensagem
+ */
+export function deduplicarFactoTopicoActivo(mensagem) {
+  const texto = String(mensagem ?? "");
+  if (contarMencoesTopicoActivo(texto) <= 1) return texto;
+
+  let visto = false;
+  return texto
+    .split(/\n/)
+    .filter((linha) => {
+      if (!/\bt[oó]pico\s+activo\b/i.test(linha)) return true;
+      if (visto) return false;
+      visto = true;
+      return true;
+    })
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/**
+ * O corpo já contém o núcleo factual da prosa de lastro (evita prefixo duplicado).
+ * @param {string} mensagem
+ * @param {string} prosa
+ */
+export function mensagemJaReflecteProsaLastro(mensagem, prosa) {
+  const msg = String(mensagem || "");
+  const p = String(prosa || "").trim();
+  if (!msg || !p) return false;
+  const primeira = p.split(/\n/)[0].replace(/\.\s*$/, "").trim();
+  if (primeira.length < 8) return false;
+  const esc = primeira.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (new RegExp(esc, "i").test(msg)) return true;
+  if (
+    /\bt[oó]pico\s+activo\b/i.test(p) &&
+    contarMencoesTopicoActivo(msg) >= 1
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Extrai título do primeiro Job em execução a partir dos factos.
  * @param {LastroConscienciaNucleo} lastro
  */
@@ -39,6 +92,95 @@ function tituloJobEmExecucao(lastro) {
   if (!facto) return "trabalho em curso";
   const m = String(facto).match(/Job em execução\s+\S+:\s*(.+)$/i);
   return (m && m[1].trim()) || "trabalho em curso";
+}
+
+/**
+ * Teste 3 — resultado reconciliado já no lastro (result|needs_correction).
+ * @param {LastroConscienciaNucleo} lastro
+ * @returns {{
+ *   jobId: string,
+ *   estado: string,
+ *   sintese: string,
+ *   evidencia: string|null,
+ *   proximaAcao: string|null
+ * }|null}
+ */
+function extrairResultadoReconciliadoDoLastro(lastro) {
+  const activo = lastro?.resultadoMissaoActivo;
+  if (activo && typeof activo === "object" && activo.jobId && activo.sintese) {
+    return {
+      jobId: String(activo.jobId),
+      estado: String(activo.estado || "result"),
+      sintese: String(activo.sintese),
+      evidencia: activo.evidencia ? String(activo.evidencia) : null,
+      proximaAcao:
+        lastro.memoriaTrabalhoExecutiva?.proximaAcao != null
+          ? String(lastro.memoriaTrabalhoExecutiva.proximaAcao)
+          : null
+    };
+  }
+
+  const factos = Array.isArray(lastro?.factosOficiais)
+    ? lastro.factosOficiais
+    : [];
+  for (const f of factos) {
+    const s = String(f || "");
+    let m = s.match(
+      /Resultado reconciliado\s+(JOB-\d+)\s*\((result|needs_correction)\)\s*:\s*(.+?)(?:\s*\|\s*evidência:\s*(.+))?$/i
+    );
+    if (m) {
+      return {
+        jobId: m[1],
+        estado: m[2].toLowerCase(),
+        sintese: m[3].trim(),
+        evidencia: m[4] ? m[4].trim() : null,
+        proximaAcao:
+          lastro.memoriaTrabalhoExecutiva?.proximaAcao != null
+            ? String(lastro.memoriaTrabalhoExecutiva.proximaAcao)
+            : null
+      };
+    }
+    m = s.match(
+      /Job (?:com resultado|em correção)\s+(JOB-\d+):.+?—\s*resultado:\s*(.+?)(?:\s*\|\s*evidência:\s*(.+))?$/i
+    );
+    if (m) {
+      const estado = /em correção/i.test(s) ? "needs_correction" : "result";
+      return {
+        jobId: m[1],
+        estado,
+        sintese: m[2].trim(),
+        evidencia: m[3] ? m[3].trim() : null,
+        proximaAcao:
+          lastro.memoriaTrabalhoExecutiva?.proximaAcao != null
+            ? String(lastro.memoriaTrabalhoExecutiva.proximaAcao)
+            : null
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * Prosa de continuidade quando o resultado já está no lastro (≠ “ainda a executar”).
+ * @param {ReturnType<typeof extrairResultadoReconciliadoDoLastro>} r
+ */
+function comporProsaResultadoMissao(r) {
+  if (!r) return null;
+  const sintese = String(r.sintese || "").replace(/\.\s*$/, "");
+  const ev = r.evidencia ? ` Evidência: ${r.evidencia}.` : "";
+  const estadoTxt =
+    r.estado === "needs_correction"
+      ? "needs_correction (resultado disponível; não completed)"
+      : "result (aguarda verificação; não completed)";
+  const proximo =
+    r.proximaAcao ||
+    (r.estado === "needs_correction"
+      ? `Retomar ${r.jobId} a partir deste resultado e continuar a missão`
+      : `Usar o resultado de ${r.jobId} na continuidade da missão`);
+  return (
+    `Já incorporei o resultado reconciliado de ${r.jobId} à missão: ${sintese}.${ev}\n\n` +
+    `Estado operacional: ${estadoTxt}. Próximo passo: ${proximo}.`
+  );
 }
 
 /**
@@ -55,6 +197,7 @@ function sufixoPrioridades(instrucao) {
 /**
  * Prosa canónica de lastro (natural, 2 blocos) — P1 Gate > P2 Job running.
  * Alinha ARQ-020 §3.3 e demos IMP-059 E5.
+ * Teste 3: result|needs_correction com payload → continuidade da missão (não “ainda a executar”).
  *
  * @param {LastroConscienciaNucleo|null|undefined} lastro
  * @param {string} [instrucao]
@@ -75,7 +218,13 @@ export function comporProsaLastro(lastro, instrucao = "") {
     );
   }
 
-  // P2 — Job em execução (demo E5 / ARQ-020 §3.3)
+  // Teste 3 — resultado já reconciliado no lastro: continuidade, não “execução em andamento”
+  const resultadoMissao = extrairResultadoReconciliadoDoLastro(lastro);
+  if (resultadoMissao && (prioridade === "F2" || running > 0)) {
+    return comporProsaResultadoMissao(resultadoMissao);
+  }
+
+  // P2 — Job em execução (demo E5 / ARQ-020 §3.3) — dispatched|running sem resultado
   if (prioridade === "F2" || running > 0) {
     const titulo = tituloJobEmExecucao(lastro);
     return (
@@ -104,13 +253,16 @@ export function comporProsaLastro(lastro, instrucao = "") {
 export function schemaHintConsciencia(lastro, instrucao = "") {
   const prosa = comporProsaLastro(lastro, instrucao) || "";
   const gates = lastro.contagens?.gatesPendentes || 0;
+  const resultadoMissao = extrairResultadoReconciliadoDoLastro(lastro);
   const prioridade =
     gates > 0 || lastro.fontePrioritaria?.id === "F3"
       ? "Gate pendente tem PRIORIDADE ABSOLUTA — mencionar e recomendar concluir a aprovação antes de novas frentes."
-      : lastro.fontePrioritaria?.id === "F2" ||
-          (lastro.contagens?.jobsEmExecucao || 0) > 0
-        ? "Job em execução deve influenciar a recomendação — concluir antes de redefinir prioridades."
-        : "Usar o Estado Executivo nos factosOficiais.";
+      : resultadoMissao
+        ? "Resultado reconciliado do Job já está no lastro — incorporar à continuidade da missão; result/needs_correction ≠ completed; não pedir o contexto de novo."
+        : lastro.fontePrioritaria?.id === "F2" ||
+            (lastro.contagens?.jobsEmExecucao || 0) > 0
+          ? "Job em execução deve influenciar a recomendação — concluir antes de redefinir prioridades."
+          : "Usar o Estado Executivo nos factosOficiais.";
 
   return (
     "CONSCIÊNCIA OPERACIONAL (Estado Executivo Atual nos factosOficiais): " +
@@ -141,7 +293,7 @@ export function garantirReflexoEstadoExecutivo(
   const original = String(mensagem ?? "");
   if (!lastro || lastro.temContextoRelevante !== true) {
     return {
-      mensagem: original,
+      mensagem: deduplicarFactoTopicoActivo(original),
       aplicada: false,
       motivo: "sem_lastro"
     };
@@ -155,7 +307,11 @@ export function garantirReflexoEstadoExecutivo(
 
   const prosa = comporProsaLastro(lastro, instrucao);
   if (!prosa) {
-    return { mensagem: original, aplicada: false, motivo: "sem_prosa" };
+    return {
+      mensagem: deduplicarFactoTopicoActivo(original),
+      aplicada: false,
+      motivo: "sem_prosa"
+    };
   }
 
   // Já reflecte de forma canónica / suficiente → não forçar
@@ -163,7 +319,11 @@ export function garantirReflexoEstadoExecutivo(
     if (
       /concluir essa aprova[cç][aã]o|iniciar novas frentes/i.test(original)
     ) {
-      return { mensagem: original, aplicada: false, motivo: "ja_reflecte_gate" };
+      return {
+        mensagem: deduplicarFactoTopicoActivo(original),
+        aplicada: false,
+        motivo: "ja_reflecte_gate"
+      };
     }
   }
   if (
@@ -171,18 +331,35 @@ export function garantirReflexoEstadoExecutivo(
     prosaMencionaJobEmExecucao(original) &&
     /redefinir.*prioridades/i.test(original)
   ) {
-    return { mensagem: original, aplicada: false, motivo: "ja_reflecte_job" };
+    return {
+      mensagem: deduplicarFactoTopicoActivo(original),
+      aplicada: false,
+      motivo: "ja_reflecte_job"
+    };
+  }
+
+  // Facto oficial (ex. tópico activo) já no corpo → não prefixar de novo
+  if (
+    !prioridadeGate &&
+    !prioridadeJob &&
+    mensagemJaReflecteProsaLastro(original, prosa)
+  ) {
+    return {
+      mensagem: deduplicarFactoTopicoActivo(original),
+      aplicada: false,
+      motivo: "ja_reflecte_facto"
+    };
   }
 
   const resto = original.trim();
   const eFallback =
     !resto ||
-    /motor de linguagem indisponível|não consigo deliberar/i.test(resto);
+    /modelo de linguagem indisponível|não consigo deliberar/i.test(resto);
 
   // Gate / Job: prosa canónica é a resposta natural ao utilizador (E5 demos)
   if (prioridadeGate || prioridadeJob) {
     return {
-      mensagem: prosa,
+      mensagem: deduplicarFactoTopicoActivo(prosa),
       aplicada: true,
       motivo: eFallback ? "prosa_canonica_fallback" : "prosa_canonica_e5"
     };
@@ -190,14 +367,14 @@ export function garantirReflexoEstadoExecutivo(
 
   if (eFallback) {
     return {
-      mensagem: prosa,
+      mensagem: deduplicarFactoTopicoActivo(prosa),
       aplicada: true,
       motivo: "substituicao_fallback"
     };
   }
 
   return {
-    mensagem: `${prosa}\n\n${resto}`,
+    mensagem: deduplicarFactoTopicoActivo(`${prosa}\n\n${resto}`),
     aplicada: true,
     motivo: "prefixo_lastro"
   };

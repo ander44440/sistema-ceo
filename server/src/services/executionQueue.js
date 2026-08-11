@@ -1,19 +1,81 @@
 /**
- * Fila de Execução V1 — persistência em ficheiros JSON (REQ-045).
+ * Fila de Execução V1 — persistência em ficheiros JSON (REQ-045 + P0-2).
  * Cópia operacional de app/server/executionQueue.js (BP-001 E4).
- * Sem mensageria cloud. CEO publica; executores consomem via protocolo local.
+ * COMPLETED só após verificação (estado result → completed).
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** Resolve domínio/ciclo a partir do monorepo (app/). */
+function carregarCicloVida() {
+  const candidatos = [
+    path.resolve(__dirname, '../../../app/src/motorExecucao/dominio.js'),
+    path.resolve(__dirname, '../../../../app/src/motorExecucao/dominio.js'),
+  ];
+  // Dynamic import path for ESM — use absolute file URL via known monorepo layout
+  const repoApp = path.resolve(__dirname, '../../../app/src/motorExecucao');
+  return {
+    dominioUrl: pathToFileUrl(path.join(repoApp, 'dominio.js')),
+    cicloUrl: pathToFileUrl(path.join(repoApp, 'cicloVidaJob.js')),
+  };
+}
+
+function pathToFileUrl(p) {
+  const normalized = path.resolve(p).replace(/\\/g, '/');
+  return normalized.startsWith('/')
+    ? `file://${normalized}`
+    : `file:///${normalized}`;
+}
 
 const ESTADOS = new Set([
   'pending',
+  'dispatched',
   'running',
+  'result',
+  'needs_correction',
   'completed',
   'failed',
   'cancelled',
 ]);
+
+const TRANSICOES = {
+  pending: ['dispatched', 'running', 'cancelled'],
+  dispatched: ['running', 'failed', 'cancelled'],
+  running: ['result', 'failed', 'cancelled'],
+  result: ['completed', 'needs_correction', 'failed', 'cancelled'],
+  needs_correction: ['running', 'failed', 'cancelled'],
+  completed: [],
+  failed: [],
+  cancelled: [],
+};
+
+function validarTransicaoLocal(de, para) {
+  if (!ESTADOS.has(de) || !ESTADOS.has(para)) {
+    return { ok: false, mensagem: `Estado inválido: ${de} → ${para}` };
+  }
+  if (!TRANSICOES[de].includes(para)) {
+    return { ok: false, mensagem: `Transição de Job ilegal: ${de} → ${para}.` };
+  }
+  return { ok: true };
+}
+
+function anexarHistorico(job, de, para, meta = {}) {
+  const hist = Array.isArray(job.historicoCiclo) ? [...job.historicoCiclo] : [];
+  hist.push({
+    em: meta.em || new Date().toISOString(),
+    de,
+    para,
+    motivo: meta.motivo || null,
+    actor: meta.actor || null,
+  });
+  return hist;
+}
 
 /** Remove BOM UTF-8 se presente — não altera o ficheiro em disco. */
 function textoSemBom(raw) {
@@ -99,11 +161,12 @@ export function criarFilaExecucao(rootDir) {
         '',
         j.descricao || '(sem descrição)',
         '',
-        '## Protocolo',
+        '## Protocolo (P0-2)',
         '',
-        '1. Marcar Job como `running`.',
+        '1. Marcar Job como `dispatched` (handoff) e depois `running`.',
         '2. Executar o trabalho pedido.',
-        '3. Marcar `completed` ou `failed` com `resultado`.',
+        '3. Registar resultado em estado `result` (nunca `completed` directo).',
+        '4. CEO verifica → `completed` | `needs_correction` | `failed`.',
         '',
         `Ficheiro: \`executive/queue/${j.id}.json\``,
         '',
@@ -132,8 +195,18 @@ export function criarFilaExecucao(rootDir) {
       estado: 'pending',
       criadoEm: agora,
       iniciadoEm: null,
+      despachadoEm: null,
       concluidoEm: null,
       resultado: null,
+      historicoCiclo: [
+        {
+          em: agora,
+          de: null,
+          para: 'pending',
+          motivo: 'criacao',
+          actor: 'ceo',
+        },
+      ],
       ...(entrada.parecerId ? { parecerId: String(entrada.parecerId) } : {}),
     };
     escreverJob(job);
@@ -147,13 +220,32 @@ export function criarFilaExecucao(rootDir) {
     }
     const job = lerJob(id);
     if (!job) throw new Error(`Job não encontrado: ${id}`);
-    job.estado = estado;
+
+    if (estado === 'completed' && extra.verificado !== true) {
+      throw new Error(
+        'COMPLETED exige verificação (estado result → verificar). Handoff/execução ≠ conclusão.',
+      );
+    }
+
+    const t = validarTransicaoLocal(job.estado, estado);
+    if (!t.ok) throw new Error(t.mensagem);
+
     const agora = new Date().toISOString();
+    job.historicoCiclo = anexarHistorico(job, job.estado, estado, {
+      em: agora,
+      motivo: extra.motivo || null,
+      actor: extra.actor || null,
+    });
+    job.estado = estado;
+    if (estado === 'dispatched' && !job.despachadoEm) job.despachadoEm = agora;
     if (estado === 'running' && !job.iniciadoEm) job.iniciadoEm = agora;
     if (estado === 'completed' || estado === 'failed' || estado === 'cancelled') {
       job.concluidoEm = agora;
     }
     if (extra.resultado != null) job.resultado = extra.resultado;
+    if (extra.falha) job.falha = extra.falha;
+    if (extra.correcao) job.correcao = extra.correcao;
+    if (extra.verificacao) job.verificacao = extra.verificacao;
     escreverJob(job);
     atualizarProximoMd(listarPorEstado('pending'));
     return job;
@@ -169,3 +261,7 @@ export function criarFilaExecucao(rootDir) {
     atualizarProximoMd: () => atualizarProximoMd(listarPorEstado('pending')),
   };
 }
+
+// silence unused helpers in this copy (domínio canónico vive em app/)
+void carregarCicloVida;
+void require;

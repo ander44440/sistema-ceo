@@ -16,6 +16,7 @@ import {
   fontePrioritaria,
   temContextoOperacionalRelevante
 } from "./dominio.js";
+import { montarEstadoOperacionalNoLastro } from "../conversacaoNatural/estadoOperacional.js";
 
 /**
  * @typedef {import("./dominio.js").EstadoExecutivoAtual} EstadoExecutivoAtual
@@ -86,9 +87,35 @@ export function montarFactosLastro(consulta) {
     );
   }
   for (const job of estado.jobsEmExecucao.slice(0, 2)) {
-    factos.push(
-      `Estado Executivo — Job em execução ${job.id}: ${job.titulo}`
-    );
+    const st = job.status || "running";
+    const sintese =
+      typeof job.sinteseResultado === "string" && job.sinteseResultado.trim()
+        ? job.sinteseResultado.trim()
+        : "";
+    const evidencia =
+      typeof job.evidencia === "string" && job.evidencia.trim()
+        ? job.evidencia.trim()
+        : "";
+    const anexoResultado = sintese
+      ? ` — resultado: ${sintese}${evidencia ? ` | evidência: ${evidencia}` : ""}`
+      : "";
+    if (st === "dispatched") {
+      factos.push(
+        `Estado Executivo — Job em handoff (dispatched) ${job.id}: ${job.titulo} — não concluído`
+      );
+    } else if (st === "result") {
+      factos.push(
+        `Estado Executivo — Job com resultado ${job.id}: ${job.titulo} — aguarda verificação${anexoResultado}`
+      );
+    } else if (st === "needs_correction") {
+      factos.push(
+        `Estado Executivo — Job em correção ${job.id}: ${job.titulo} — acompanhamento aberto${anexoResultado}`
+      );
+    } else {
+      factos.push(
+        `Estado Executivo — Job em execução ${job.id}: ${job.titulo}`
+      );
+    }
   }
   for (const job of estado.jobsPendentes.slice(0, 2)) {
     factos.push(
@@ -131,6 +158,10 @@ export function montarLastroParaNucleo(consulta) {
   const prioridade = fontePrioritaria(consulta.estado, {
     incluirFrente: false
   });
+  const factos = montarFactosLastro(consulta);
+  const estadoOperacional = montarEstadoOperacionalNoLastro(consulta, {
+    factosOficiais: factos
+  });
   return Object.freeze({
     consultadoEm: consulta.consultadoEm,
     temContextoRelevante: true,
@@ -138,12 +169,14 @@ export function montarLastroParaNucleo(consulta) {
       ? Object.freeze({ ...prioridade })
       : null,
     prioridadeActiva: consulta.prioridadeActiva,
-    factosOficiais: Object.freeze(montarFactosLastro(consulta)),
+    factosOficiais: Object.freeze(factos),
     contagens: Object.freeze({
       jobsPendentes: consulta.estado.jobsPendentes.length,
       jobsEmExecucao: consulta.estado.jobsEmExecucao.length,
       gatesPendentes: consulta.estado.gatesPendentes.length
-    })
+    }),
+    /** CTO-003 — persistência do estado operacional no lastro */
+    estadoOperacional
   });
 }
 

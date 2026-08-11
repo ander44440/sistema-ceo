@@ -3,11 +3,78 @@
  * Um único limiar/caminho: `classificadorIntencao` → Intencao legada (capacidade).
  */
 
+import { normalizarTexto } from "../classificadorIntencao/lexicon.js";
 import { classificar as classificarCanonico } from "../classificadorIntencao/regras.js";
 import { ID_POR_CLASSE } from "../classificadorIntencao/dominio.js";
-import { normalizarTexto } from "../classificadorIntencao/lexicon.js";
+import { ehRecomendacaoOperacional } from "../classificadorIntencao/recomendacaoOperacional.js";
+import { detectarPedidoDecisaoExplicita } from "../classificadorIntencao/pedidoDecisaoExplicita.js";
+import {
+  detectarAncoraEmpresa,
+  temAncoraExplicitaProjeto
+} from "../classificadorIntencao/ancoraEmpresa.js";
 
 export { normalizarTexto };
+
+/**
+ * @typedef {"empresa"|"projeto"|"missao"|null} AlvoContexto
+ * @typedef {"trocar"|"consultar"|"decidir"|"mencionar"|null} AcaoContexto
+ */
+
+/**
+ * Metadado de alvo/ação — sem novo destino canónico.
+ * @param {string} texto
+ * @returns {{ alvoContexto: AlvoContexto, acaoContexto: AcaoContexto }}
+ */
+export function resolverMetadadosContexto(texto) {
+  const t = normalizarTexto(texto);
+  if (!t) return { alvoContexto: null, acaoContexto: null };
+
+  if (detectarPedidoDecisaoExplicita(texto)) {
+    return { alvoContexto: null, acaoContexto: "decidir" };
+  }
+  if (temAncoraExplicitaProjeto(texto)) {
+    return { alvoContexto: "projeto", acaoContexto: "trocar" };
+  }
+  if (detectarAncoraEmpresa(texto)) {
+    return { alvoContexto: "empresa", acaoContexto: "trocar" };
+  }
+  if (
+    /\bnova\s+missao\s+(no|em|dentro\s+d[oe])\s+projeto\b/.test(t) ||
+    /\b(iniciar|comecar|quero)\b[\s\S]{0,80}?\bmissao\s+(no|em|dentro\s+d[oe])\s+projeto\b/.test(
+      t
+    )
+  ) {
+    return { alvoContexto: "missao", acaoContexto: "trocar" };
+  }
+  if (
+    /\bempresa\b/.test(t) &&
+    /\b(estado|situacao|como\s+esta|qual\s+[eé])\b/.test(t)
+  ) {
+    return { alvoContexto: "empresa", acaoContexto: "consultar" };
+  }
+  if (
+    /\b(projeto|coa)\b/.test(t) &&
+    /\b(estado|situacao|como\s+esta|qual\s+[eé]|atrasad)/.test(t)
+  ) {
+    return { alvoContexto: "projeto", acaoContexto: "consultar" };
+  }
+  if (/^\s*empresa\b/.test(t) || /\bempresa\b/.test(t)) {
+    return { alvoContexto: "empresa", acaoContexto: "mencionar" };
+  }
+  if (/\b(projeto|coa|mg2|motoboy)\b/.test(t)) {
+    return { alvoContexto: "projeto", acaoContexto: "mencionar" };
+  }
+  return { alvoContexto: null, acaoContexto: null };
+}
+
+/**
+ * @param {object} intencao
+ * @param {string} texto
+ */
+function comMetadadosContexto(intencao, texto) {
+  const meta = resolverMetadadosContexto(texto);
+  return { ...intencao, ...meta };
+}
 
 /**
  * @typedef {object} Intencao
@@ -18,6 +85,8 @@ export { normalizarTexto };
  * @property {string} [classe]
  * @property {string} [destino]
  * @property {object} [classificacao]
+ * @property {AlvoContexto} [alvoContexto]
+ * @property {AcaoContexto} [acaoContexto]
  */
 
 /**
@@ -31,6 +100,42 @@ export function mapearCapacidadePorTexto(texto) {
 
   if (!t) {
     return { id: "instrucao_vazia", capacidade: "ia", confianca: 1 };
+  }
+
+  // Precedência: âncora projecto > âncora empresa > E4 (decisão não mapeia WRITE aqui)
+  if (
+    !detectarPedidoDecisaoExplicita(texto) &&
+    temAncoraExplicitaProjeto(texto)
+  ) {
+    return { id: "atuar_em_projetos", capacidade: "projetos", confianca: 0.8 };
+  }
+
+  if (
+    !detectarPedidoDecisaoExplicita(texto) &&
+    detectarAncoraEmpresa(texto)
+  ) {
+    return { id: "atuar_em_empresas", capacidade: "empresas", confianca: 0.8 };
+  }
+
+  // E4 — recomendação operacional antes de consulta genérica / deliberação
+  if (ehRecomendacaoOperacional(t)) {
+    return {
+      id: "recomendar_operacional",
+      capacidade: "memoria",
+      confianca: 0.95
+    };
+  }
+
+  // Relato/encerramento (três campos) — antes de consulta de estado
+  if (
+    /\b(encerrar|fechar)\s+(o\s+)?dia\b/.test(t) ||
+    /\bencerramento\s+executivo\b/.test(t) ||
+    /\brelato\s+(da\s+)?(missao|encerramento|executivo)\b/.test(t) ||
+    (/\bo\s+que\s+andou\b/.test(t) &&
+      /\bo\s+que\s+fica\b/.test(t) &&
+      /\bpr[oó]ximo\s+passo\b/.test(t))
+  ) {
+    return { id: "encerrar_dia", capacidade: "memoria", confianca: 0.97 };
   }
 
   if (
@@ -68,7 +173,18 @@ export function mapearCapacidadePorTexto(texto) {
   if (
     /qual\s+[eé]\s+o\s+estado\s+atual/.test(t) ||
     /\bestado\s+atual\b/.test(t) ||
-    /\b(resumo\s+(executivo|da\s+sess[aã]o)|mem[oó]ria\s+executiva)\b/.test(t)
+    /\bestado\s+da\s+fila\b/.test(t) ||
+    /\b(resumo\s+(executivo|da\s+sess[aã]o)|mem[oó]ria\s+executiva)\b/.test(t) ||
+    /\bgates?\s+pendentes?\b/.test(t) ||
+    /\bquais\s+gates?\b/.test(t) ||
+    /\bqual\s+[eé]?\s*(o\s+)?gates?\b/.test(t) ||
+    /\bid\s+(do\s+)?gates?\b/.test(t) ||
+    /\bestado\s+(do\s+)?jobs?-?\d*\b/.test(t) ||
+    /\bjobs?-\d+\b/.test(t) ||
+    /\b(resultado|verificad|verificacao).*\bjobs?-\d*\b/.test(t) ||
+    /\bconsulte?\s+(o\s+)?estado\b/.test(t) ||
+    /\bo\s+que\s+esta\s+(pendente|aguardando)\b/.test(t) ||
+    /\bme\s+diga\s+o\s+que\s+esta\s+pendente\b/.test(t)
   ) {
     return { id: "consultar_estado", capacidade: "memoria", confianca: 0.95 };
   }
@@ -163,6 +279,15 @@ export function mapearCapacidadePorTexto(texto) {
     return { id: "atuar_em_projetos", capacidade: "projetos", confianca: 0.8 };
   }
 
+  // Braço curto: «empresa …» sem verbo de troca — consulta/classificação, SEM WRITE
+  if (/^\s*empresa\b/.test(t) && t.length < 80) {
+    return {
+      id: "consultar_empresa",
+      capacidade: "empresas",
+      confianca: 0.75
+    };
+  }
+
   if (
     /\b(dashboard|painel|visão executiva|visao executiva|posto de comando|centro de situa)/.test(
       t
@@ -223,30 +348,36 @@ export function classificarIntencao(texto, saidaPrevia = null) {
   const idClasse = ID_POR_CLASSE[saida.classe] || "C?";
 
   if (saida.classe === "trabalho_executivo" && !saida.precisaClarificacao) {
-    return {
-      id: "trabalho_executivo",
-      capacidade: "motor_execucao",
-      confianca: saida.confianca,
-      origem: "classificador_canonico",
-      classe: saida.classe,
-      destino: saida.destino,
-      classificacao: saida,
-      idClasse
-    };
+    return comMetadadosContexto(
+      {
+        id: "trabalho_executivo",
+        capacidade: "motor_execucao",
+        confianca: saida.confianca,
+        origem: "classificador_canonico",
+        classe: saida.classe,
+        destino: saida.destino,
+        classificacao: saida,
+        idClasse
+      },
+      texto
+    );
   }
 
   if (saida.precisaClarificacao || saida.destino === "clarificacao") {
-    return {
-      id: "clarificacao",
-      capacidade: "ia",
-      confianca: saida.confianca,
-      origem: "classificador_canonico",
-      classe: saida.classe,
-      destino: "clarificacao",
-      classificacao: saida,
-      idClasse,
-      precisaClarificacao: true
-    };
+    return comMetadadosContexto(
+      {
+        id: "clarificacao",
+        capacidade: "ia",
+        confianca: saida.confianca,
+        origem: "classificador_canonico",
+        classe: saida.classe,
+        destino: "clarificacao",
+        classificacao: saida,
+        idClasse,
+        precisaClarificacao: true
+      },
+      texto
+    );
   }
 
   const mapa = mapearCapacidadePorTexto(texto);
@@ -261,8 +392,50 @@ export function classificarIntencao(texto, saidaPrevia = null) {
       "instrucao_vazia"
     ]);
     const id = locais.has(mapa.id) ? mapa.id : "resposta_leve";
-    return {
-      id,
+    return comMetadadosContexto(
+      {
+        id,
+        capacidade: "ia",
+        confianca: saida.confianca,
+        origem: "classificador_canonico",
+        classe: saida.classe,
+        destino: saida.destino,
+        classificacao: saida,
+        idClasse
+      },
+      texto
+    );
+  }
+
+  if (saida.classe === "comando_operacional") {
+    let mapaC4 = mapearCapacidadePorTexto(texto);
+    // P0-3: C4 de consulta nunca pode cair em capacidade «ia» (destino inválido).
+    if (mapaC4.capacidade === "ia" || mapaC4.capacidade === "motor_execucao") {
+      mapaC4 = {
+        id: "consultar_estado",
+        capacidade: "memoria",
+        confianca: Math.max(0.9, mapaC4.confianca || 0.9)
+      };
+    }
+    return comMetadadosContexto(
+      {
+        id: mapaC4.id,
+        capacidade: mapaC4.capacidade,
+        confianca: saida.confianca,
+        origem: "classificador_canonico",
+        classe: saida.classe,
+        destino: saida.destino,
+        classificacao: saida,
+        idClasse
+      },
+      texto
+    );
+  }
+
+  // C2 — conversa de projecto → IA/MRE
+  return comMetadadosContexto(
+    {
+      id: mapa.capacidade === "ia" ? mapa.id : "deliberar_objetivo",
       capacidade: "ia",
       confianca: saida.confianca,
       origem: "classificador_canonico",
@@ -270,31 +443,7 @@ export function classificarIntencao(texto, saidaPrevia = null) {
       destino: saida.destino,
       classificacao: saida,
       idClasse
-    };
-  }
-
-  if (saida.classe === "comando_operacional") {
-    return {
-      id: mapa.id,
-      capacidade: mapa.capacidade,
-      confianca: saida.confianca,
-      origem: "classificador_canonico",
-      classe: saida.classe,
-      destino: saida.destino,
-      classificacao: saida,
-      idClasse
-    };
-  }
-
-  // C2 — conversa de projecto → IA/MRE
-  return {
-    id: mapa.capacidade === "ia" ? mapa.id : "deliberar_objetivo",
-    capacidade: "ia",
-    confianca: saida.confianca,
-    origem: "classificador_canonico",
-    classe: saida.classe,
-    destino: saida.destino,
-    classificacao: saida,
-    idClasse
-  };
+    },
+    texto
+  );
 }

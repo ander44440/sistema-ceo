@@ -18,12 +18,19 @@ import {
   historicoTemReferenciaProjeto,
   mensagemEhDeixisOuFollowUp
 } from "./historicoRecente.js";
+import { ehRecomendacaoOperacional } from "./recomendacaoOperacional.js";
+import {
+  detectarAncoraEmpresa,
+  temAncoraExplicitaProjeto
+} from "./ancoraEmpresa.js";
+import { detectarPedidoDecisaoExplicita } from "./pedidoDecisaoExplicita.js";
 
 /**
  * @typedef {object} ContextoClassificacao
  * @property {boolean} [frenteActiva] — COA/frente presente (RF9)
  * @property {ReadonlyArray<{ papel: "usuario"|"ceo", texto: string }>} [historicoRecente] — IMP-061 / REQ-061 (opcional)
  * @property {object} [objetivoConversacional] — IMP-064 (contexto; não decide classe / não influencia C3)
+ * @property {boolean} [operacaoAberta] — Teste 3: Job F2 aberto (continuidade ≠ C4 isolada)
  */
 
 /**
@@ -40,6 +47,267 @@ export function ehPerguntaDeliberativa(t) {
       t
     ) ||
     /\b(explique|explica|descreva|descreve)\b/.test(t)
+  );
+}
+
+/**
+ * IDs `JOB-NNNNNN` mencionados explicitamente no texto.
+ * @param {string} t
+ * @returns {string[]}
+ */
+export function extrairIdsJobMencionados(t) {
+  if (!t) return [];
+  const ids = [];
+  const re = /\bJOB-(\d+)\b/gi;
+  let m;
+  while ((m = re.exec(String(t)))) {
+    const n = String(m[1] || "").replace(/^0+/, "") || "0";
+    ids.push(`JOB-${n.padStart(6, "0")}`);
+  }
+  return [...new Set(ids)];
+}
+
+/**
+ * Texto referencia um Job concreto (JOB-ID) — continuidade, não criação.
+ * @param {string} t
+ */
+export function ehReferenciaExplicitaJobId(t) {
+  return extrairIdsJobMencionados(t).length > 0;
+}
+
+/**
+ * Autorização explícita para criar/publicar Job (texto normalizado ou bruto).
+ * Precedência: menção a JOB-NNNNNN concreto ≠ criar Job wrapper/novo.
+ * @param {string} t
+ */
+export function ehAutorizacaoExplicitaCriarJob(t) {
+  if (!t) return false;
+  const s = String(t);
+  // «Despache o JOB-000075» / «Acompanhe o JOB-…» — operar no existente
+  if (ehReferenciaExplicitaJobId(s)) return false;
+  return (
+    /\b(crie|cria|criar|publique|publicar|despache|despachar)\s+(o\s+|um\s+|novo\s+)?jobs?\b/.test(
+      s
+    ) ||
+    /\b(publicar|criar|despachar|enviar)\s+job\b/.test(s) ||
+    /\bcrie\s+o\s+job\s+necessario\b/.test(s) ||
+    /\b(criar|crie|cria)\s+o\s+job\b/.test(s)
+  );
+}
+
+/**
+ * P0 — bloqueio absoluto: instrução explícita de NÃO executar / NÃO criar Job.
+ * Texto já normalizado (sem acentos). Deve correr ANTES de qualquer rota C3.
+ * Excepção: autorização explícita de criar/publicar Job no mesmo turno
+ * não é anulada por «não execute ainda a próxima acção».
+ * @param {string} t
+ */
+export function ehProibicaoExecucaoExplicita(t) {
+  if (!t) return false;
+
+  // Com «crie/publique o Job», só honrar proibições que anulam a própria criação
+  if (ehAutorizacaoExplicitaCriarJob(t)) {
+    return (
+      /\bnao\s+(crie|cria|criar)\s+(um\s+|o\s+|novo\s+)?jobs?\b/.test(t) ||
+      /\bsem\s+criar\s+jobs?\b/.test(t) ||
+      /\bnunca\s+(crie|cria|criar)\s+jobs?\b/.test(t)
+    );
+  }
+
+  return (
+    /\bnao\s+(execute|executa|executar)(\s+nada)?\b/.test(t) ||
+    /\bnao\s+(implemente|implementa|implementar)\b/.test(t) ||
+    /\bnao\s+(crie|cria|criar)\s+(um\s+)?jobs?\b/.test(t) ||
+    /\bnao\s+(faca|faz|fazer)\s+(altera|mudan|nada)\b/.test(t) ||
+    /\bnao\s+faca\s+alteracoes?\b/.test(t) ||
+    /\bapenas\s+(responda|informe|diga|analise|analisar|mostre)\b/.test(t) ||
+    /\bsomente\s+(responda|informe|diga|analise|analisar|mostre)\b/.test(t) ||
+    /\bso\s+(responda|informe|diga)\b/.test(t) ||
+    /\bsem\s+(executar|execucao|criar\s+jobs?|alterar|implementar)\b/.test(t) ||
+    /\bnunca\s+(execute|executa|implemente|crie\s+jobs?)\b/.test(t)
+  );
+}
+
+/**
+ * P0 — consulta de estado operacional (Gate/Job/pendência/fila/status).
+ * Produz resposta informativa — nunca Job.
+ * Não captura deliberação («qual seria a próxima decisão…»).
+ * @param {string} t
+ */
+export function ehConsultaEstadoOperacional(t) {
+  if (!t) return false;
+  if (ehComandoExecucaoExplicito(t)) return false;
+
+  // Âncoras operacionais explícitas
+  const ancoraOperacional =
+    /\bgates?\b/.test(t) ||
+    /\bjobs?-\d+\b/.test(t) ||
+    /\bjobs?\s+pendentes?\b/.test(t) ||
+    /\bestado\s+(do\s+)?(jobs?|gates?|sistema|ceo|atual|fila)\b/.test(t) ||
+    /\bestado\s+da\s+fila\b/.test(t) ||
+    /\bstatus\s+(do\s+)?(jobs?|gates?|sistema|ceo|fila)\b/.test(t) ||
+    /\bestado\s+atual\b/.test(t) ||
+    /^status$/.test(t) ||
+    /\bfila\s+(de\s+)?(execucao|jobs?)\b/.test(t) ||
+    /\b(resultado|verificad|verificacao).*\bjobs?-\d+\b/.test(t) ||
+    /\bjobs?-\d+\b.*\b(resultado|verificad|verificacao|agent)\b/.test(t) ||
+    /\bo\s+que\s+esta\s+(pendente|aguardando)\b/.test(t) ||
+    /\bo\s+que\s+(foi\s+)?implementado\b/.test(t) ||
+    /\b(pendencias?|pendente)\b/.test(t) ||
+    /\baguardando\s+(minha\s+)?decisao\b/.test(t) ||
+    /\bqual\s+[eé]?\s*(o\s+)?(id\s+(do\s+)?)?gates?\b/.test(t);
+
+  if (!ancoraOperacional) return false;
+
+  const perguntaOuPedidoInfo =
+    ehPerguntaDeliberativa(t) ||
+    /^(qual|quais|o\s+que|me\s+mostre|mostra|mostrar|diga|informe|liste|listar|mostre)\b/.test(
+      t
+    ) ||
+    /^(o\s+)?jobs?-\d+\b/.test(t) ||
+    /\b(me\s+diga|me\s+informe|me\s+mostre)\b/.test(t) ||
+    /\b(estado|status|resultado|verificad|verificacao|pendenc|fila|gates?)\b/.test(
+      t
+    ) ||
+    /\bconsulte?\b/.test(t) ||
+    ehProibicaoExecucaoExplicita(t);
+
+  return perguntaOuPedidoInfo;
+}
+
+/**
+ * Teste 3 — continuidade da missão com resultado/operação (≠ consulta factual isolada).
+ * Texto já normalizado (sem acentos) quando possível.
+ * @param {string} t
+ */
+export function ehPedidoContinuidadeMissao(t) {
+  if (!t) return false;
+  if (
+    /\b(continuidade\s+(da\s+)?missao)\b/.test(t) ||
+    /\b(continuar\s+(a\s+)?missao|continua\s+(a\s+)?missao)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(continua(?:r)?|retomar|retome|prossiga|avance|avancar)\b/.test(t) &&
+    /\b(missao|resultado|com\s+base\s+n)/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(usa|usar|utilize|utilizar|adot[ae]|adopt[ae]|incorpore|incorporar|aproveit[ae])\b/.test(
+      t
+    ) &&
+    /\b(resultado|artefato|evidencia)\b/.test(t)
+  ) {
+    return true;
+  }
+  if (
+    /\b(com\s+base\s+n(isso|este|esse)|a\s+partir\s+(d(isso|este|esse)|do\s+resultado))\b/.test(
+      t
+    )
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Pedido conversacional de RELATO / ENCERRAMENTO (três campos).
+ * Deve prevalecer sobre C4 consulta de estado.
+ * Texto já normalizado (sem acentos).
+ * @param {string} t
+ */
+export function ehPedidoRelatoEncerramento(t) {
+  if (!t) return false;
+  if (
+    /\b(encerrar|fechar)\s+(o\s+)?dia\b/.test(t) ||
+    /\bencerramento\s+executivo\b/.test(t) ||
+    /\brelato\s+(da\s+)?(missao|encerramento|executivo)\b/.test(t) ||
+    /\bfechamento\s+(da\s+)?(operacao|missao)\b/.test(t)
+  ) {
+    return true;
+  }
+  const tresCampos =
+    /\bo\s+que\s+andou\b/.test(t) &&
+    /\bo\s+que\s+fica\b/.test(t) &&
+    /\bpr[oó]ximo\s+passo\b/.test(t);
+  if (
+    tresCampos &&
+    (/\b(preencha|preencher|relate|relato|consolid|encerr)\b/.test(t) ||
+      /\bcampos?\b/.test(t))
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * C4 só para consulta factual isolada.
+ * Com operação aberta + continuidade de missão, não força C4.
+ * @param {string} t — texto normalizado
+ * @param {ContextoClassificacao} [ctx]
+ */
+export function ehConsultaEstadoParaC4(t, ctx = {}) {
+  if (!ehConsultaEstadoOperacional(t)) return false;
+  if (ehPedidoAnaliseOuRecomendacao(t)) return false;
+  if (ehPedidoRelatoEncerramento(t)) return false;
+  if (ctx.operacaoAberta && ehPedidoContinuidadeMissao(t)) return false;
+  return true;
+}
+
+/**
+ * P0 — pedido de análise / recomendação / avaliação (não é execução).
+ * «Não execute» / «não crie Job» NÃO anulam análise — só bloqueiam C3.
+ * @param {string} t
+ */
+export function ehPedidoAnaliseOuRecomendacao(t) {
+  if (!t) return false;
+  if (ehComandoExecucaoExplicito(t)) return false;
+  // E4: recomendação operacional (prioridade/sprint/job/…) ≠ deliberação C2
+  if (ehRecomendacaoOperacional(t)) return false;
+  return (
+    /\b(analisa|analise|analisar)\b/.test(t) ||
+    /\b(avalia|avalie|avaliar)\b/.test(t) ||
+    /\b(compara|compare|comparar)\b/.test(t) ||
+    /\b(recomenda|recomendaria|recomendacao|voce\s+recomenda)\b/.test(t) ||
+    /\b(pros?\s+e\s+contras?|pontos?\s+(positivos?|negativos?))\b/.test(t) ||
+    /\b(aprovaria|modificaria|priorizaria|nao\s+priorizaria)\b/.test(t) ||
+    /\bdiga\s+se\s+(devemos|devo|podemos|aprovaria)\b/.test(t) ||
+    /\bdevemos\s+(fazer|aprovar|seguir)\b/.test(t) ||
+    /\best[aá]\s+alinhad[oa]\s+(ao|com)\s+(o\s+)?manifesto\b/.test(t) ||
+    /\bsegundo\s+o\s+manifesto\b/.test(t)
+  );
+}
+
+/**
+ * P0 — comando de execução explícito (hierarquia: só esta etapa cria Job).
+ * Negação («não execute») e perguntas deliberativas anulam.
+ * @param {string} t
+ */
+export function ehComandoExecucaoExplicito(t) {
+  if (!t || ehProibicaoExecucaoExplicita(t)) return false;
+  if (ehPerguntaDeliberativa(t)) return false;
+  return (
+    /\b(implementa|implemente|implementar)\b/.test(t) ||
+    /\b(executa|execute|executar)\b/.test(t) ||
+    /\b(cria(r)?|crie)\s+(um\s+)?jobs?\b/.test(t) ||
+    /\b(despacha(r)?|despache)\b/.test(t) ||
+    /\bpode\s+executar\b/.test(t) ||
+    /\bfaca\s+agora\b/.test(t) ||
+    /\b(resolva|resolve|resolver)\b.*\b(bugs?|erros?|falhas?|problemas?)\b/.test(
+      t
+    ) ||
+    /\b(corrija|corrige|corrigir|fix)\b.*\b(problema|codigo|bug|erro)\b/.test(
+      t
+    ) ||
+    /\b(acione|aciona|acionar)\b.*\b(cto|engenheiro|cursor)\b/.test(t) ||
+    /\b(delegue|delegar)\b.*\b(tarefa|trabalho|isto|isso|esta|este)\b/.test(t) ||
+    /\b(investigue|investigar)\b.*\b(erro|bug|falha|problema)\b/.test(t) ||
+    /\b(faca|faz|fazer)\b.*\b(diagnostico|feature|funcionalidade|patch)\b/.test(
+      t
+    ) ||
+    /\b(gera|gere|gerar)\b.*\b(relatorio|parecer)\b/.test(t)
   );
 }
 
@@ -504,34 +772,60 @@ export function ehConhecimentoGeralE22(t) {
 /**
  * Emenda E2.1 — verbo imperativo dirigido ao CEO + acção potencialmente executável.
  * Independente da frente activa.
+ * P0: análise/recomendação isolada NÃO é E2.1; proibição explícita anula.
  * @param {string} t
  */
 export function ehIntencaoExecutivaE21(t) {
   if (!t || ehPerguntaDeliberativa(t)) return false;
+  if (ehProibicaoExecucaoExplicita(t)) return false;
+  // Análise / recomendação deliberativa → C2 (hierarquia: ANÁLISE ≠ EXECUÇÃO)
+  if (ehPedidoAnaliseOuRecomendacao(t) && !ehComandoExecucaoExplicito(t)) {
+    return false;
+  }
 
   const padroes = [
     /\b(resolv[ae]|resolver)\b.*\b(bugs?|erros?|falhas?|problemas?)\b/,
     /\b(corrija|corrige|corrigir|fix)\b.*\b(problema|c[oó]digo|bug|erro)\b/,
-    /\b(fa[cç]a|faz|fazer)\b.*\b(diagn[oó]stico|an[aá]lise|relat[oó]rio|feature|funcionalidade)\b/,
-    /\b(analis[ae]|analisar)\b.*\b(projeto|sistema|c[oó]digo|erro|situa[cç][aã]o|isto|isso|este|esta)\b/,
+    /\b(fa[cç]a|faz|fazer)\b.*\b(diagn[oó]stico|relat[oó]rio|feature|funcionalidade)\b/,
     /\b(implement[ae]|implementar)\b/,
     /\b(acion[ae]|acionar)\b.*\b(cto|engenheiro|cursor)\b/,
     /\b(delegue|delegar)\b.*\b(tarefa|trabalho|isto|isso|esta|este)\b/,
-    /\b(execut[ae]|executar)\b.*\b(an[aá]lise|tarefa|trabalho|isto|isso|diagn[oó]stico)\b/,
+    // missão / tarefa / trabalho — «Execute essa missão…»
+    /\b(execut[ae]|executar)\b.*\b(miss[aã]o|tarefa|trabalho|an[aá]lise|isto|isso|diagn[oó]stico)\b/,
     /\b(ger[ae]|gerar)\b.*\b(relat[oó]rio|parecer|diagn[oó]stico)\b/,
     /\b(cria(r)?|crie|cria)\s+(um\s+)?jobs?\b/,
     /\b(investigue|investigar)\b.*\b(erro|bug|falha|problema|isto|isso|este|esta)\b/,
     /\b(despacha(r)?|despache)\b/
   ];
 
-  return padroes.some((re) => re.test(t));
+  if (padroes.some((re) => re.test(t))) return true;
+
+  // Criar ficheiro/arquivo com efeito concreto (caminho, extensão ou conteúdo)
+  const criarFicheiro =
+    /\b(cria(r)?|crie|cria)\s+(o\s+|um\s+|uma\s+)?(arquivo|ficheiro)\b/.test(t) ||
+    /\b(implement[ae]|implementar)\b.*\b(arquivo|ficheiro|cria[cç][aã]o)\b/.test(
+      t
+    );
+  const efeitoConcreto =
+    /\.[a-z0-9]{1,12}\b/i.test(t) ||
+    /[/\\]/.test(t) ||
+    /\b(conte[uú]do|linhas?|exactamente|exacta?mente|exatos?|exactos?)\b/.test(
+      t
+    );
+  return Boolean(criarFicheiro && efeitoConcreto);
 }
 
 /**
  * Detecta verbo / indício claro de execução (empate C2/C3 → C3; inclui E2.1).
+ * P0: negação («não execute»), análise isolada e perguntas meta não contam.
  * @param {string} t
  */
 export function temVerboExecucao(t) {
+  if (!t || ehProibicaoExecucaoExplicita(t)) return false;
+  if (ehPerguntaDeliberativa(t)) return false;
+  if (ehPedidoAnaliseOuRecomendacao(t) && !ehComandoExecucaoExplicito(t)) {
+    return false;
+  }
   if (ehIntencaoExecutivaE21(t)) return true;
   return (
     /\b(implementa(r)?|implemente|despacha(r)?|despache)\b/.test(t) ||
@@ -539,9 +833,7 @@ export function temVerboExecucao(t) {
     /\b(publica(r)?|abre)\s+(um\s+)?(job|pr)\b/.test(t) ||
     /\b(corrija|corrige|fix)\b.*\b(c[oó]digo|bug|problema)\b/.test(t) ||
     /\b(resolv[ae]|resolver|arranja(r)?)\b.*\b(bugs?|erros?|falhas?|problemas?)\b/.test(t) ||
-    /\b(acion[ae]|delegue|investigue|analis[ae]|execut[ae]|ger[ae])\b/.test(
-      t
-    )
+    /\b(acion[ae]|delegue|investigue|execut[ae]|ger[ae])\b/.test(t)
   );
 }
 
@@ -588,6 +880,58 @@ export function calcularConfianca(scoreVencedor, scoreSegundo, vago) {
  * @returns {{ classe: import("./dominio.js").ClasseIntencao, razao: string }}
  */
 export function resolverEmpates(scores, t, ctx = {}) {
+  // FASE 3: âncoras explícitas antes de E4 (decisão trata-se fora — não é C4 de troca)
+  if (
+    !detectarPedidoDecisaoExplicita(t) &&
+    (temAncoraExplicitaProjeto(t) || detectarAncoraEmpresa(t))
+  ) {
+    return {
+      classe: "comando_operacional",
+      razao: "FASE 3: âncora explícita de contexto → C4"
+    };
+  }
+  // E4 — recomendação operacional (prioridade/próxima decisão/sprint/job) → C4
+  if (ehRecomendacaoOperacional(t)) {
+    return {
+      classe: "comando_operacional",
+      razao: "E4: recomendação operacional → C4 (não deliberação de proposta)"
+    };
+  }
+  // Relato/encerramento (três campos) → C4 memória — antes de consulta factual
+  if (ehPedidoRelatoEncerramento(t)) {
+    return {
+      classe: "comando_operacional",
+      razao: "Relato/encerramento → C4 (encerrar_dia)"
+    };
+  }
+  // Teste 3 — continuidade com operação aberta → C2 (não C4 isolada)
+  if (ctx.operacaoAberta && ehPedidoContinuidadeMissao(t)) {
+    return {
+      classe: "conversa_projeto",
+      razao: "Teste 3: continuidade de missão com operação aberta → C2"
+    };
+  }
+  // P0 / P1-1 — hierarquia: consulta factual C4 | análise C2 | proibição → C2
+  // ANÁLISE NÃO É CONSULTA. «Não crie Job» não transforma C2 em C4.
+  if (ehConsultaEstadoParaC4(t, ctx)) {
+    return {
+      classe: "comando_operacional",
+      razao: "P0: consulta de estado operacional → C4"
+    };
+  }
+  if (ehPedidoAnaliseOuRecomendacao(t)) {
+    return {
+      classe: "conversa_projeto",
+      razao: "P0/P1-1: análise/recomendação → C2 (sem Job)"
+    };
+  }
+  if (ehProibicaoExecucaoExplicita(t)) {
+    return {
+      classe: "conversa_projeto",
+      razao: "P0: proibição explícita de execução → C2"
+    };
+  }
+
   // Emenda E2.1 — prioridade máxima sobre RF8/RF9 e frente activa
   if (ehIntencaoExecutivaE21(t)) {
     return {
@@ -793,6 +1137,73 @@ export function classificar(texto, contexto = {}) {
     return montarSaida("conhecimento_geral", 0.3, "Mensagem vazia — clarificação", {
       precisaClarificacao: true
     });
+  }
+
+  // 0) recomendação operacional → C4
+  // 0b) relato/encerramento (três campos) → C4 memória encerrar_dia
+  // 1) continuidade missão + operação aberta → C2 (Teste 3)
+  // 2) consulta factual pura → C4
+  // 3) análise/deliberação de proposta → C2
+  // 4) proibição sem análise → C2
+  // ANÁLISE NÃO É CONSULTA DE ESTADO. «Não crie Job» ≠ âncora C4.
+  // Precedência FASE 3: decisão (fluxo normal C2) > âncora projecto/empresa > E4
+  if (
+    !detectarPedidoDecisaoExplicita(texto) &&
+    (temAncoraExplicitaProjeto(texto) || detectarAncoraEmpresa(texto))
+  ) {
+    return montarSaida(
+      "comando_operacional",
+      0.92,
+      "FASE 3: âncora explícita de contexto (projecto/empresa) → C4"
+    );
+  }
+
+  if (ehRecomendacaoOperacional(t)) {
+    return montarSaida(
+      "comando_operacional",
+      0.95,
+      "E4: recomendação operacional → C4 (sem Job; sem deliberação de proposta)"
+    );
+  }
+
+  if (ehPedidoRelatoEncerramento(t)) {
+    return montarSaida(
+      "comando_operacional",
+      0.97,
+      "Relato/encerramento (três campos) → C4 memória encerrar_dia"
+    );
+  }
+
+  if (contexto.operacaoAberta && ehPedidoContinuidadeMissao(t)) {
+    return montarSaida(
+      "conversa_projeto",
+      0.94,
+      "Teste 3: continuidade de missão com operação aberta → C2 (não C4 isolada)"
+    );
+  }
+
+  if (ehConsultaEstadoParaC4(t, contexto)) {
+    return montarSaida(
+      "comando_operacional",
+      0.96,
+      "P0: consulta de estado operacional → C4 (sem Job)"
+    );
+  }
+
+  if (ehPedidoAnaliseOuRecomendacao(t)) {
+    return montarSaida(
+      "conversa_projeto",
+      0.94,
+      "P0/P1-1: análise/recomendação → C2 (sem Job)"
+    );
+  }
+
+  if (ehProibicaoExecucaoExplicita(t)) {
+    return montarSaida(
+      "conversa_projeto",
+      0.95,
+      "P0: proibição explícita de execução → C2 (sem Job)"
+    );
   }
 
   // Emenda E2.1 — atalho obrigatório (antes de boost de frente activa)

@@ -1,111 +1,330 @@
-/* Centro de Situação — layout inspirado na referência */
+/* Centro de Situação — posto de comando (referência) */
 
 .shell-workspace.is-centro {
   overflow: auto;
   background:
-    radial-gradient(ellipse 55% 35% at 40% -5%, rgba(59, 130, 246, 0.12), transparent 60%),
-    linear-gradient(180deg, rgba(8, 12, 20, 0.2), transparent 30%),
+    radial-gradient(ellipse 55% 35% at 35% -5%, rgba(59, 130, 246, 0.14), transparent 60%),
+    linear-gradient(180deg, rgba(8, 12, 20, 0.25), transparent 28%),
     transparent;
 }
 
 .centro-situacao {
-  padding: 1.15rem 1.25rem 1.75rem;
+  padding: 1rem 1.2rem 1.5rem;
   min-height: calc(100vh - var(--header-h));
 }
 
-.cs-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(17rem, 0.9fr);
-  gap: 1rem;
-  align-items: start;
-}
-
-.cs-main {
+.cs-cmd {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  min-width: 0;
+  gap: 0.9rem;
+  max-width: 92rem;
+  margin: 0 auto;
 }
 
-.cs-hero {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-end;
-  padding: 0.35rem 0.25rem 0.15rem;
-  position: relative;
+.cs-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--panel-solid) 92%, transparent);
+  box-shadow: var(--shadow-sm);
+  padding: 1rem 1.05rem;
 }
 
-.cs-hero::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 -0.5rem auto;
-  width: min(42%, 18rem);
-  height: 4.5rem;
-  background:
-    linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.12)),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0 10px,
-      rgba(148, 163, 184, 0.08) 10px 12px
-    );
-  mask-image: linear-gradient(180deg, transparent, #000 40%, transparent);
-  pointer-events: none;
-  opacity: 0.7;
-}
-
-.cs-hero-copy h1 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.7rem, 3vw, 2.35rem);
+.cs-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: -0.03em;
-}
-
-.cs-hero-copy p {
-  margin: 0.45rem 0 0;
-  max-width: 36rem;
-  color: var(--muted-strong);
-  line-height: 1.5;
-  font-size: 0.95rem;
-}
-
-.cs-hero-meta {
-  text-align: right;
-  z-index: 1;
-}
-
-.cs-hero-meta strong {
-  display: block;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
-}
-
-.cs-hero-meta span {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
-.cs-chat {
-  border: 1px solid rgba(59, 130, 246, 0.35);
-  border-radius: var(--radius-xl);
-  padding: 1.1rem 1.15rem 1rem;
-  background:
-    linear-gradient(145deg, rgba(37, 99, 235, 0.28), rgba(15, 23, 42, 0.85) 55%),
-    rgba(17, 24, 39, 0.9);
-  box-shadow: var(--glow), var(--shadow-md);
-  backdrop-filter: blur(12px);
+.cs-cmd-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(14rem, 0.85fr) minmax(13rem, 0.75fr);
+  gap: 0.9rem;
+  align-items: stretch;
 }
 
-/* Painel de Orquestração — apoio (Progressividade); Conversa permanece dominante */
+.cs-missao-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.cs-missao-icon {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.16);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  flex-shrink: 0;
+}
+
+.cs-missao-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.cs-missao-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-missao-titles h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 650;
+}
+
+.cs-pill {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+}
+
+.cs-pill--exec {
+  color: #dbeafe;
+  background: rgba(37, 99, 235, 0.35);
+  border: 1px solid rgba(96, 165, 250, 0.45);
+}
+
+.cs-missao-desc {
+  margin: 0 0 0.85rem;
+  color: var(--muted-strong);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.cs-missao-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.cs-missao-grid p:last-child {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.cs-link-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--brand-mid);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cs-link-btn:hover {
+  color: #93c5fd;
+}
+
+.cs-progresso-body {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.cs-ring {
+  --pct: 0;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background:
+    radial-gradient(circle at center, var(--panel-solid) 58%, transparent 59%),
+    conic-gradient(#3b82f6 calc(var(--pct) * 1%), rgba(148, 163, 184, 0.18) 0);
+}
+
+.cs-ring strong {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+
+.cs-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.8rem;
+  color: var(--muted-strong);
+}
+
+.cs-step-n {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.cs-steps li.is-feito .cs-step-n {
+  background: var(--ok-soft);
+  border-color: rgba(34, 197, 94, 0.45);
+  color: #86efac;
+}
+
+.cs-steps li.is-curso .cs-step-n {
+  background: var(--brand-soft);
+  border-color: rgba(59, 130, 246, 0.55);
+  color: #93c5fd;
+}
+
+.cs-steps li.is-feito span:last-child {
+  color: var(--ink-soft);
+}
+
+.cs-estado-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.cs-cmd-mid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+  align-items: stretch;
+}
+
+.cs-resumo-list {
+  margin: 0.35rem 0 0.75rem;
+  padding: 0 0 0 1.1rem;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.cs-resumo-list li + li {
+  margin-top: 0.35rem;
+}
+
+.cs-cmd-bot {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(12rem, 0.85fr);
+  gap: 0.9rem;
+}
+
+.cs-decisoes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background:
+    linear-gradient(110deg, rgba(37, 99, 235, 0.18), transparent 55%),
+    color-mix(in srgb, var(--panel-solid) 92%, transparent);
+}
+
+.cs-decisoes p:last-child {
+  margin: 0.25rem 0 0;
+  color: var(--muted-strong);
+  font-size: 0.86rem;
+  max-width: 36rem;
+}
+
+.cs-cta {
+  appearance: none;
+  border: none;
+  flex-shrink: 0;
+  background: linear-gradient(145deg, #3b82f6, #2563eb);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 0.85rem 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
+}
+
+.cs-cta:hover {
+  filter: brightness(1.06);
+}
+
+.cs-proximas-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.cs-proximas-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.cs-proximas-n {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
+.cs-proximas-list p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+
+.cs-tag.is-now {
+  color: #86efac;
+  background: var(--ok-soft);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.cs-tag.is-next {
+  color: var(--muted-strong);
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid var(--line);
+}
+
+/* Painel de Orquestração */
 .cs-orq {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  padding: 0.85rem 0.95rem 0.95rem;
-  background: color-mix(in srgb, var(--panel-solid) 88%, transparent);
+  padding: 0.95rem 1rem 1rem;
+  background: color-mix(in srgb, var(--panel-solid) 92%, transparent);
 }
 
 .cs-orq-head {
@@ -113,15 +332,14 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.75rem;
 }
 
 .cs-orq-head h2 {
   margin: 0;
-  font-size: 0.92rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--ink-soft);
 }
 
 .cs-orq-hint {
@@ -132,7 +350,7 @@
 
 .cs-orq-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.55rem;
 }
 
@@ -422,6 +640,13 @@
   background: rgba(59, 130, 246, 0.18);
 }
 
+.cs-chat {
+  border-color: rgba(59, 130, 246, 0.28);
+  background:
+    linear-gradient(145deg, rgba(37, 99, 235, 0.16), rgba(15, 23, 42, 0.9) 55%),
+    color-mix(in srgb, var(--panel-solid) 92%, transparent);
+}
+
 .cs-section-head h2 {
   margin: 0 0 0.75rem;
   font-family: var(--font-display);
@@ -523,6 +748,13 @@
   padding: 0.65rem 0.55rem;
   border-radius: 12px;
   background: rgba(2, 6, 23, 0.28);
+}
+
+.cs-activity-list time {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  min-width: 2.5rem;
 }
 
 .cs-activity-icon {
@@ -1017,9 +1249,44 @@
   border-color: color-mix(in srgb, var(--brand-mid, #7aa2ff) 45%, var(--line));
 }
 
+@media (max-width: 1280px) {
+  .cs-orq-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 1180px) {
+  .cs-cmd-top {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cs-estado {
+    grid-column: 1 / -1;
+  }
+
   .cs-prio-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cs-cmd-bot {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cs-proximas {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 980px) {
+  .cs-cmd-top,
+  .cs-cmd-mid,
+  .cs-cmd-bot {
+    grid-template-columns: 1fr;
+  }
+
+  .cs-estado,
+  .cs-proximas {
+    grid-column: auto;
   }
 
   .cs-orq-grid {
@@ -1027,24 +1294,9 @@
   }
 }
 
-@media (max-width: 980px) {
-  .cs-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 860px) {
   .centro-situacao {
     padding: 1rem;
-  }
-
-  .cs-hero {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .cs-hero-meta {
-    text-align: left;
   }
 
   .cs-prio-grid {
@@ -1056,6 +1308,15 @@
   }
 
   .cs-composer {
+    grid-template-columns: 1fr;
+  }
+
+  .cs-decisoes {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cs-missao-grid {
     grid-template-columns: 1fr;
   }
 }

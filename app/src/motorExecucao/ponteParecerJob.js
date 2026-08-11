@@ -16,6 +16,14 @@ import {
   podeCriarJob,
   exigeAprovacao
 } from "./politicaAprovacao.js";
+import {
+  marcarDespachado,
+  marcarRunning,
+  registrarResultadoBruto,
+  verificarResultadoJob,
+  processarResultadoComVerificacao,
+  marcarFalhaExecucao
+} from "./cicloVidaJob.js";
 
 /** Campos que nunca entram no payload publicado (REQ-045 / RES4). */
 export const CAMPOS_PROIBIDOS_JOB = Object.freeze([
@@ -133,8 +141,9 @@ export function sanitizarPayloadJob(pedido) {
 
 /**
  * Adaptador parecer|acao → payload Job (REQ-045), sem publicar.
+ * Correção 8: inclui `projetoNome` estável além do id `projeto`.
  * @param {object} parecer
- * @param {{ origem?: string, projeto?: string|null, tipo?: string }} [opts]
+ * @param {{ origem?: string, projeto?: string|null, projetoNome?: string|null, tipo?: string }} [opts]
  * @returns {{ ok: true, payload: object } | { ok: false, motivo: string, mensagem?: string }}
  */
 export function montarPayloadJobDoParecer(parecer, opts = {}) {
@@ -150,18 +159,41 @@ export function montarPayloadJobDoParecer(parecer, opts = {}) {
       ? parecer.id.trim()
       : undefined;
 
+  const projetoId =
+    opts.projeto !== undefined
+      ? opts.projeto
+      : parecer.coaId || parecer.projeto || null;
+
+  let projetoNome =
+    opts.projetoNome !== undefined
+      ? opts.projetoNome
+      : parecer.projetoNome != null
+        ? parecer.projetoNome
+        : null;
+  if (projetoNome != null) {
+    projetoNome = String(projetoNome).trim() || null;
+  }
+  // Se só temos um rótulo humano em `projeto` (sem id), espelha em projetoNome.
+  if (
+    !projetoNome &&
+    typeof projetoId === "string" &&
+    projetoId.trim() &&
+    !/^prj-/i.test(projetoId) &&
+    !/^coa-/i.test(projetoId)
+  ) {
+    projetoNome = projetoId.trim();
+  }
+
   /** @type {Record<string, unknown>} */
   const bruto = {
     origem: opts.origem || "ceo",
-    projeto:
-      opts.projeto !== undefined
-        ? opts.projeto
-        : parecer.coaId || null,
+    projeto: projetoId,
     tipo: opts.tipo || "execucao_tecnica",
     titulo: spec.job.titulo,
     descricao: spec.job.descricao,
     prioridade: spec.job.prioridade || "normal"
   };
+  if (projetoNome) bruto.projetoNome = projetoNome;
   if (parecerId) bruto.parecerId = parecerId;
 
   const s = sanitizarPayloadJob(bruto);
@@ -177,19 +209,87 @@ export function montarPayloadJobDoParecer(parecer, opts = {}) {
 export function criarPublicadorFilaMemoria() {
   let n = 0;
   const jobs = [];
+
+  function aplicar(r) {
+    if (!r.ok) throw new Error(r.mensagem || "Transição recusada.");
+    const idx = jobs.findIndex((j) => j.id === r.job.id);
+    if (idx >= 0) jobs[idx] = r.job;
+    else jobs.push(r.job);
+    return r.job;
+  }
+
   return {
     jobs,
     async publicarJob(pedido) {
       n += 1;
       const id = `JOB-TEST-${String(n).padStart(6, "0")}`;
+      const agora = new Date().toISOString();
       const job = {
         id,
         ...pedido,
         estado: "pending",
-        criadoEm: new Date().toISOString()
+        criadoEm: agora,
+        iniciadoEm: null,
+        despachadoEm: null,
+        concluidoEm: null,
+        resultado: null,
+        historicoCiclo: [
+          {
+            em: agora,
+            de: null,
+            para: "pending",
+            motivo: "criacao",
+            actor: "ceo"
+          }
+        ]
       };
       jobs.push(job);
       return job;
+    },
+    marcarDespachado(id, opts) {
+      const j = jobs.find((x) => x.id === id);
+      if (!j) throw new Error(`Job não encontrado: ${id}`);
+      return aplicar(marcarDespachado(j, opts));
+    },
+    marcarRunning(id, opts) {
+      const j = jobs.find((x) => x.id === id);
+      if (!j) throw new Error(`Job não encontrado: ${id}`);
+      return aplicar(marcarRunning(j, opts));
+    },
+    registarResultado(id, resultado, opts = {}) {
+      const j = jobs.find((x) => x.id === id);
+      if (!j) throw new Error(`Job não encontrado: ${id}`);
+      const reg = aplicar(registrarResultadoBruto(j, resultado, opts));
+      if (opts.adiarVerificacao === true) return reg;
+      // P0-2: chegada a result dispara verificação formal
+      return aplicar(
+        verificarResultadoJob(reg, {
+          objetivo: opts.objetivo,
+          criterioFn: opts.criterioFn,
+          actor: opts.actorVerificacao || "ceo_verificacao",
+          forcarFailed: opts.forcarFailed
+        })
+      );
+    },
+    verificar(id, opts) {
+      const j = jobs.find((x) => x.id === id);
+      if (!j) throw new Error(`Job não encontrado: ${id}`);
+      return aplicar(verificarResultadoJob(j, opts || {}));
+    },
+    processarResultado(id, resultado, opts) {
+      const j = jobs.find((x) => x.id === id);
+      if (!j) throw new Error(`Job não encontrado: ${id}`);
+      return aplicar(
+        processarResultadoComVerificacao(j, resultado, opts || {})
+      );
+    },
+    marcarFalha(id, falha, opts) {
+      const j = jobs.find((x) => x.id === id);
+      if (!j) throw new Error(`Job não encontrado: ${id}`);
+      return aplicar(marcarFalhaExecucao(j, falha, opts));
+    },
+    lerJob(id) {
+      return jobs.find((x) => x.id === id) || null;
     }
   };
 }
@@ -256,7 +356,8 @@ export async function criarJobDoParecer(parecer, deps) {
 
   const montado = montarPayloadJobDoParecer(parecer, {
     origem: deps.origem,
-    projeto: deps.projeto
+    projeto: deps.projeto,
+    projetoNome: deps.projetoNome
   });
   if (!montado.ok) {
     return {
@@ -363,7 +464,7 @@ export async function criarJobDoParecer(parecer, deps) {
 
   return {
     publicado: true,
-    job: { ...job, estado: job.estado || "pending" },
+    job,
     payload: montado.payload,
     avaliacao,
     ciclo: cicloOut,

@@ -124,10 +124,13 @@ test("E1-CA2: aprovação ausente bloqueia Criação do Job", () => {
 });
 
 test("E1-CA3: mapeamento etapa → estados Job (REQ-045) sem inventar estados", () => {
-  assert.equal(ESTADOS_JOB.length, 5);
+  assert.equal(ESTADOS_JOB.length, 8);
   assert.deepEqual([...ESTADOS_JOB], [
     "pending",
+    "dispatched",
     "running",
+    "result",
+    "needs_correction",
     "completed",
     "failed",
     "cancelled"
@@ -179,11 +182,17 @@ test("E1-CA4: domínio não importa UI, Dispatcher SDK nem escreve na fila", () 
   assert.ok(typeof validarTransicaoJob === "function");
 });
 
-test("estados Job: transições legais e ilegais (protocolo)", () => {
+test("estados Job: transições legais e ilegais (protocolo P0-2)", () => {
+  assert.equal(validarTransicaoJob("pending", "dispatched").ok, true);
   assert.equal(validarTransicaoJob("pending", "running").ok, true);
   assert.equal(validarTransicaoJob("pending", "cancelled").ok, true);
-  assert.equal(validarTransicaoJob("running", "completed").ok, true);
+  assert.equal(validarTransicaoJob("dispatched", "running").ok, true);
+  assert.equal(validarTransicaoJob("running", "result").ok, true);
   assert.equal(validarTransicaoJob("running", "failed").ok, true);
+  assert.equal(validarTransicaoJob("running", "completed").ok, false);
+  assert.equal(validarTransicaoJob("result", "completed").ok, true);
+  assert.equal(validarTransicaoJob("result", "needs_correction").ok, true);
+  assert.equal(validarTransicaoJob("needs_correction", "running").ok, true);
   assert.equal(validarTransicaoJob("completed", "pending").ok, false);
   assert.equal(validarTransicaoJob("pending", "failed").ok, false);
   assert.equal(validarTransicaoJob("pending", "completed").ok, false);

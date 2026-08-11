@@ -37,6 +37,24 @@ export function sanitizarProsaUsuario(texto) {
   t = t.replace(/\bRejeito:\s*/gi, "");
   t = t.replace(/\bPorquê:\s*/gi, "");
   t = t.replace(/\bLacunas residuais:\s*[^\n]*/gi, "");
+  // DESP-010 (evidência missão): fragmentos técnicos de .env / chave
+  t = t.replace(/CEO_LLM_API_KEY/gi, "");
+  t = t.replace(/\.env\.example/gi, "");
+  t = t.replace(/\benv`\s*\(?/gi, "");
+  t = t.replace(/`+\s*\(?\s*$/gm, "");
+  // CTO-002: nunca ecoar objectivo inventado pelo sistema
+  t = t.replace(
+    /Objectivo principal:\s*Definir o efeito esperado da [uú]ltima instru[cç][aã]o[^.]*\.?/gi,
+    ""
+  );
+  t = t.replace(
+    /Pr[oó]ximo passo j[aá] em vista:\s*Definir o efeito esperado[^.]*\.?/gi,
+    ""
+  );
+  t = t.replace(
+    /Definir o efeito esperado da [uú]ltima instru[cç][aã]o ou pedir o estado atual\.?/gi,
+    ""
+  );
   t = t.replace(/\n{3,}/g, "\n\n").trim();
 
   return t;

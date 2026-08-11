@@ -159,8 +159,15 @@ export function atualizarAposInstrucao(evento) {
     resumo: mensagem.slice(0, 180)
   });
 
+  const modo = String(
+    (evento.dados && evento.dados.modo) || evento.modo || ""
+  ).trim();
+
   if (
     intencaoId === "consultar_estado" ||
+    intencaoId === "recomendar_operacional" ||
+    modo === "recomendacao_operacional" ||
+    modo === "consulta_estado" ||
     intencaoId === "abrir_dia" ||
     intencaoId === "encerrar_dia" ||
     intencaoId === "pergunta_data" ||
@@ -175,12 +182,8 @@ export function atualizarAposInstrucao(evento) {
 
   const lower = instrucao.toLowerCase();
 
-  if (capacidade === "projetos" || /\b(projeto|coa|mg2|motoboy)\b/.test(lower)) {
-    const nome =
-      (evento.dados && evento.dados.projeto) ||
-      extrairNomeProjeto(instrucao);
-    if (nome) registrarProjetoAtivo({ nome: String(nome) });
-  }
+  // CTO-003.1: não alterar projeto ativo por menção incidental (mg2/motoboy/…).
+  // Troca de activo fica em caminhos explícitos (capacidade projetos / UI / C3).
 
   const jaPersistido = Boolean(evento.dados && evento.dados.jaPersistido);
 
@@ -235,18 +238,23 @@ function extrairConteudo(instrucao, marcador) {
   return raw;
 }
 
-function extrairNomeProjeto(instrucao) {
-  const mg2 = instrucao.match(/\b(MG2|Motoboy Game 2)\b/i);
-  if (mg2) return mg2[1] === "MG2" ? "Motoboy Game 2" : mg2[1];
-  const citado = instrucao.match(/projeto\s+[«"']?([^«"'.!?,;]+)[»"']?/i);
-  if (citado) return citado[1].trim();
-  return null;
-}
-
+/**
+ * CTO-002: nunca inventar objectivo placeholder.
+ * Preferir efeito esperado explícito ou a própria instrução substantiva.
+ */
 function derivarProximoPasso({ capacidade, ok, instrucao }) {
   if (!ok) {
     return "Revisar a última instrução que falhou e reenviar com mais clareza.";
   }
+  const inst = String(instrucao || "").trim();
+  const efeito = extrairEfeitoEsperadoLocal(inst);
+  if (efeito) return efeito;
+
+  // Confirmações / ordens operacionais não substituem o passo activo
+  if (ehConfirmacaoOuOrdemCurta(inst)) {
+    return null;
+  }
+
   switch (capacidade) {
     case "projetos":
       return "Confirmar o projeto ativo ou detalhar o próximo passo do trabalho.";
@@ -261,10 +269,36 @@ function derivarProximoPasso({ capacidade, ok, instrucao }) {
     case "memoria":
       return "Escolher o próximo objetivo executivo com base no resumo.";
     default:
-      return instrucao
-        ? "Definir o efeito esperado da última instrução ou pedir o estado atual."
-        : "Enviar uma instrução executiva concreta.";
+      if (!inst) return null;
+      // Usar a instrução do utilizador — nunca inventar «Definir o efeito esperado…»
+      return encurtarPasso(inst, 140);
   }
+}
+
+function extrairEfeitoEsperadoLocal(instrucao) {
+  const m = String(instrucao || "").match(
+    /(?:efeito\s+esperado|objectivo|objetivo)\s*:\s*(.+?)(?:\.\s*(?:envie|despacha|enviar)|$)/i
+  );
+  if (!m) return null;
+  const efeito = m[1].replace(/\s+/g, " ").trim();
+  return efeito.length >= 8 ? encurtarPasso(efeito, 140) : null;
+}
+
+function ehConfirmacaoOuOrdemCurta(instrucao) {
+  const t = String(instrucao || "").trim();
+  if (!t) return false;
+  if (t.length <= 48 && /^(ok|sim|certo|autorizado|aprovado|segue|pode|confirmo)\.?$/i.test(t)) {
+    return true;
+  }
+  return /\b(autorizad[oa]|n[aã]o\s+mudamos|reenviar|force?\s+o\s+envio|despacha(?:r)?\s+(novamente|ao)|envie?\s+ao\s+cursor)\b/i.test(
+    t
+  );
+}
+
+function encurtarPasso(s, max) {
+  const t = String(s || "").trim();
+  if (t.length <= max) return t;
+  return `${t.slice(0, max - 1)}…`;
 }
 
 /**

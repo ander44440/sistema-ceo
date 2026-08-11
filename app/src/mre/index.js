@@ -6,7 +6,7 @@ export * from "./parecer/index.js";
 
 export { executarPipeline07, assertTransicao } from "./pipeline/orquestrador.js";
 export { mapearTipoAcao } from "./pipeline/mapeamentoAcao.js";
-export { CATALOGO_PRINCIPIOS } from "./pipeline/catalogoPrincipios.js";
+export { CATALOGO_PRINCIPIOS, PRINCIPIOS_GLOBAIS, PRINCIPIOS_ESCOPO_MG2, catalogoPrincipiosParaCoa, ehCoaMg2, ehPrincipioEscopoMg2, PRINCIPIO_USO_DIARIO_ACTIVO, PRINCIPIO_USO_DIARIO_MG2 } from "./pipeline/catalogoPrincipios.js";
 export { criarChamarLlmMock, mapaLlmFluxoFeliz } from "./pipeline/llmMock.js";
 
 export {

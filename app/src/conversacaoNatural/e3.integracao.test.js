@@ -96,7 +96,15 @@ test("fluxo encerramento — tipo fecho", () => {
     dados: { coa: { nome: "Motoboy Game 2" } }
   });
   assert.equal(cn.tipoTurno, TIPO_TURNO.FECHO);
-  assert.match(cn.texto, /Encerro|preservado|Feito/i);
+  assert.match(cn.texto, /Encerro/i);
+});
+
+test("DESP-010: sanitizar remove fragmento técnico env`", () => {
+  const limpa = sanitizarProsaUsuario(
+    "Motor indisponível.\n\nenv` (\n\nEnquanto isso, seguimos no local."
+  );
+  assert.ok(!/env`/i.test(limpa));
+  assert.match(limpa, /seguimos no local/i);
 });
 
 test("sanitizarProsaUsuario remove templates residuais", () => {

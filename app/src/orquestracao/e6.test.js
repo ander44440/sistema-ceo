@@ -45,6 +45,71 @@ test("E6-CA4: fila pending/running/failed → estados Agent", () => {
   assert.equal(mapearAgent({}).estado, "Ocioso");
 });
 
+test("Agent: falha antiga não mascara completed posterior", async () => {
+  const fontes = criarFontesColetores({
+    repoRoot: ".",
+    listarPorEstado: (e) => {
+      if (e === "failed") {
+        return [
+          {
+            id: "JOB-000008",
+            estado: "failed",
+            concluidoEm: "2026-07-30T21:26:42.438Z"
+          }
+        ];
+      }
+      if (e === "completed") {
+        return [
+          {
+            id: "JOB-000040",
+            estado: "completed",
+            concluidoEm: "2026-08-07T00:36:48.758Z"
+          }
+        ];
+      }
+      return [];
+    },
+    llmConfigurado: () => true,
+    healthOk: () => true
+  });
+  const agent = await fontes.agent();
+  assert.equal(agent.estado, "Ocioso");
+  assert.equal(agent.detalhe.failed, 1);
+  assert.equal(agent.detalhe.completed, 1);
+});
+
+test("Agent: falha mais recente que completed → Erro", async () => {
+  const fontes = criarFontesColetores({
+    repoRoot: ".",
+    listarPorEstado: (e) => {
+      if (e === "failed") {
+        return [
+          {
+            id: "JOB-FAIL",
+            estado: "failed",
+            concluidoEm: "2026-08-07T12:00:00.000Z"
+          }
+        ];
+      }
+      if (e === "completed") {
+        return [
+          {
+            id: "JOB-OK",
+            estado: "completed",
+            concluidoEm: "2026-08-07T11:00:00.000Z"
+          }
+        ];
+      }
+      return [];
+    },
+    llmConfigurado: () => true,
+    healthOk: () => true
+  });
+  const agent = await fontes.agent();
+  assert.equal(agent.estado, "Erro");
+  assert.equal(agent.detalhe.jobId, "JOB-FAIL");
+});
+
 test("E6-CA3: heartbeat TTL — fresco vs expirado", () => {
   const agora = Date.parse("2026-08-01T12:00:00.000Z");
   const fresco = new Date(agora - 10_000).toISOString();

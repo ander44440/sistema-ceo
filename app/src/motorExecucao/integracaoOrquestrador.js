@@ -22,6 +22,7 @@ import {
   criarJobDoParecer,
   extrairJobSpec
 } from "./ponteParecerJob.js";
+import { marcarDespachado } from "./cicloVidaJob.js";
 
 /**
  * Avança o ciclo após Job `pending` criado: CriacaoDoJob → Dispatcher.
@@ -44,26 +45,31 @@ export function iniciarFluxoAposJob(ciclo, job) {
     };
   }
   const estado = job.estado || "pending";
-  if (estado !== "pending") {
+  if (estado !== "pending" && estado !== "dispatched") {
     return {
       ok: false,
-      mensagem: `Handoff exige Job pending (recebido: ${estado}).`,
+      mensagem: `Handoff exige Job pending/dispatched (recebido: ${estado}).`,
       fluxoIniciado: false
     };
   }
 
+  // P0-2: handoff marca DISPATCHED no objecto Job (se mutável / cópia)
+  let jobHandoff = job;
+  if (estado === "pending") {
+    const r = marcarDespachado(job, { actor: "motor", motivo: "handoff_logico" });
+    if (r.ok) {
+      jobHandoff = r.job;
+      Object.assign(job, jobHandoff);
+    }
+  }
+
   let actual = base.ciclo;
   if (actual.etapa === "CriacaoDoJob") {
-    const t = validarTransicaoCiclo("CriacaoDoJob", "Dispatcher", {
-      requerDespacho: true,
-      estadoJob: "pending"
-    });
-    if (!t.ok) {
-      return { ok: false, mensagem: t.mensagem, fluxoIniciado: false };
-    }
+    const estadoCiclo =
+      jobHandoff.estado === "dispatched" ? "dispatched" : "pending";
     const av = avancarCiclo(actual, "Dispatcher", {
       jobId: job.id,
-      estadoJob: "pending",
+      estadoJob: estadoCiclo,
       parecerId: actual.parecerId
     });
     if (!av.ok) {
@@ -83,15 +89,16 @@ export function iniciarFluxoAposJob(ciclo, job) {
     ciclo: {
       ...actual,
       jobId: job.id,
-      estadoJob: "pending"
+      estadoJob: jobHandoff.estado || "dispatched"
     },
     fluxoIniciado: true,
-    /** Handoff — execução real fica com Dispatcher/Agent (fora desta E4). */
+    /** Handoff — DISPATCHED ≠ COMPLETED (P0-2). */
     handoff: {
       para: "dispatcher_req053",
       jobId: job.id,
-      estadoJob: "pending"
-    }
+      estadoJob: jobHandoff.estado || "dispatched"
+    },
+    job: jobHandoff
   };
 }
 
@@ -309,7 +316,8 @@ export async function conduzirAposParecer(parecer, deps = {}) {
       decisaoAprovacao: decisao,
       ciclo,
       origem: deps.origem,
-      projeto: deps.projeto
+      projeto: deps.projeto,
+      projetoNome: deps.projetoNome
     });
   } catch (err) {
     return {
@@ -348,12 +356,18 @@ export async function conduzirAposParecer(parecer, deps = {}) {
 
   let fluxoIniciado = false;
   let handoff;
+  let jobFinal = publicado.job;
   if (deps.iniciarFluxo !== false) {
     const fluxo = consumirJobCriadoParaFluxo(publicado.job, ciclo);
     if (fluxo.ok) {
       ciclo = fluxo.ciclo;
       fluxoIniciado = true;
       handoff = fluxo.handoff;
+      if (fluxo.job) {
+        jobFinal = fluxo.job;
+        // Manter referência da fila alinhada com DISPATCHED
+        Object.assign(publicado.job, fluxo.job);
+      }
     }
   }
 
@@ -363,7 +377,7 @@ export async function conduzirAposParecer(parecer, deps = {}) {
     execucaoConcluida: false,
     parecerExecucaoConcluida: false,
     fluxoIniciado,
-    job: publicado.job,
+    job: jobFinal,
     payload: publicado.payload,
     ciclo,
     avaliacao: publicado.avaliacao || avaliacao,

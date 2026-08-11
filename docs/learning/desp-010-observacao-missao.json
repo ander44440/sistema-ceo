@@ -1,0 +1,159 @@
+{
+  "quando": "2026-08-06T22:35:54.966Z",
+  "missao": "MG2 pagamento vs outdoor",
+  "turns": [
+    "abrir o dia: Missão MG2 — fechar pagamento nesta sprint; outdoor fica atrás",
+    "Adiar outdoor e focar pagamento. Decide e conduz a missão.",
+    "ok",
+    "Agora quero falar da arte do outdoor",
+    "encerrar o dia"
+  ],
+  "registo": [
+    {
+      "turno": 1,
+      "usuario": "abrir o dia: Missão MG2 — fechar pagamento nesta sprint; outdoor fica atrás",
+      "ceo": "Objectivo principal: Missão MG2 — fechar pagamento nesta sprint; outdoor fica atrás.\n\nAbrir o dia em «Motoboy Game 2».\n\nDia em curso. Foco: Missão MG2 — fechar pagamento nesta sprint; outdoor fica atrás.\n\nContexto desta sessão: projeto ativo: Motoboy Game 2; sem pendências abertas.\n\nPróximo passo sugerido: Trabalhe no Centro ou peça o estado atual.\n\nO que mudaria esta decisão — prazo, risco ou evidência?",
+      "modo": "capacidade_operacional",
+      "destino": "capacidade_operacional",
+      "flags": {
+        "temObjectivo": true,
+        "temPergunta": true,
+        "muletaPassiva": false,
+        "templateSobre": false,
+        "modoAdaptacao": null,
+        "missaoActiva": false,
+        "camadas": [
+          "prosa",
+          "E",
+          "D"
+        ],
+        "tipoTurno": "deliberacao",
+        "comprimento": 407
+      },
+      "sintomas": [],
+      "refino": {
+        "proximaAcao": null,
+        "pendencias": [],
+        "decisoesTomadas": []
+      }
+    },
+    {
+      "turno": 2,
+      "usuario": "Adiar outdoor e focar pagamento. Decide e conduz a missão.",
+      "ceo": "Tópico activo: «pagamento» (shift).\n\nTenha isto em conta antes de avançar com novas prioridades.",
+      "modo": "consciencia_operacional",
+      "destino": "nucleo_mre",
+      "flags": {
+        "temObjectivo": true,
+        "temPergunta": false,
+        "muletaPassiva": false,
+        "templateSobre": false,
+        "modoAdaptacao": null,
+        "missaoActiva": true,
+        "camadas": [
+          "sistema"
+        ],
+        "tipoTurno": "sistema",
+        "comprimento": 96
+      },
+      "sintomas": [],
+      "refino": {
+        "proximaAcao": null,
+        "pendencias": [],
+        "decisoesTomadas": []
+      }
+    },
+    {
+      "turno": 3,
+      "usuario": "ok",
+      "ceo": "Referente conversacional: «pagamento» (topico_projeto).\n\nTenha isto em conta antes de avançar com novas prioridades.",
+      "modo": "consciencia_operacional",
+      "destino": "nucleo_mre",
+      "flags": {
+        "temObjectivo": true,
+        "temPergunta": false,
+        "muletaPassiva": false,
+        "templateSobre": false,
+        "modoAdaptacao": null,
+        "missaoActiva": true,
+        "camadas": [
+          "sistema"
+        ],
+        "tipoTurno": "sistema",
+        "comprimento": 116
+      },
+      "sintomas": [
+        "ok_mid_missao_sem_iniciativa"
+      ],
+      "refino": {
+        "proximaAcao": "Definir o efeito esperado da última instrução ou pedir o estado atual.",
+        "pendencias": [],
+        "decisoesTomadas": []
+      }
+    },
+    {
+      "turno": 4,
+      "usuario": "Agora quero falar da arte do outdoor",
+      "ceo": "Não consigo deliberar com fluidez sobre «Agora quero falar da arte do outdoor»: motor de linguagem indisponível (motor indisponível).\n\nEnquanto isso, seguimos no local: data/hora, estado da sessão, projetos e navegação. Qual frente atacamos agora?",
+      "modo": "fallback",
+      "destino": "nucleo_mre",
+      "flags": {
+        "temObjectivo": true,
+        "temPergunta": true,
+        "muletaPassiva": false,
+        "templateSobre": false,
+        "modoAdaptacao": null,
+        "missaoActiva": true,
+        "camadas": [
+          "sistema"
+        ],
+        "tipoTurno": "sistema",
+        "comprimento": 247
+      },
+      "sintomas": [
+        "shift_perdeu_objectivo"
+      ],
+      "refino": {
+        "proximaAcao": "Definir o efeito esperado da última instrução ou pedir o estado atual.",
+        "pendencias": [],
+        "decisoesTomadas": []
+      }
+    },
+    {
+      "turno": 5,
+      "usuario": "encerrar o dia",
+      "ceo": "Encerro o ponto aqui. Objectivo «Missão MG2 — fechar pagamento nesta sprint; outdoor fica atrás» permanece em curso. Próxima acção: Definir o efeito esperado da última instrução ou pedir o estado atual..",
+      "modo": "capacidade_operacional",
+      "destino": "capacidade_operacional",
+      "flags": {
+        "temObjectivo": true,
+        "temPergunta": false,
+        "muletaPassiva": false,
+        "templateSobre": false,
+        "modoAdaptacao": null,
+        "missaoActiva": true,
+        "camadas": [
+          "fecho"
+        ],
+        "tipoTurno": "fecho",
+        "comprimento": 203
+      },
+      "sintomas": [],
+      "refino": {
+        "proximaAcao": "Definir o efeito esperado da última instrução ou pedir o estado atual.",
+        "pendencias": [],
+        "decisoesTomadas": []
+      }
+    }
+  ],
+  "sintomas": [
+    {
+      "turno": 3,
+      "s": "ok_mid_missao_sem_iniciativa"
+    },
+    {
+      "turno": 4,
+      "s": "shift_perdeu_objectivo"
+    }
+  ]
+}

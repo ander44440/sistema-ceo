@@ -17,7 +17,7 @@ const ROTULOS = Object.freeze({
   [ESTADO_VOZ.AGUARDANDO_AUTORIZACAO]: "Aguardando autorização",
   [ESTADO_VOZ.ATIVA]: "Voz ativa",
   [ESTADO_VOZ.FALANDO]: "CEO a falar",
-  [ESTADO_VOZ.OUVINDO]: "A ouvir",
+  [ESTADO_VOZ.OUVINDO]: "CEO Ouvindo",
   [ESTADO_VOZ.ERRO]: "Erro de voz"
 });
 

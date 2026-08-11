@@ -22,6 +22,15 @@ import {
   talvezInjetarLacunaSolicitarDados
 } from "../ncs/politicas.js";
 import { obterPacoteNcs } from "../ncs/portador.js";
+import {
+  aplicarPoliticaAnaliseDeliberativa,
+  detectarPedidoAnaliseDeliberativa,
+  ehPedidoDelegacaoExplicita
+} from "../politicaAnaliseDeliberativa.js";
+import {
+  aplicarPoliticaDecisaoSobConflito,
+  detectarPedidoDecisaoExplicita
+} from "../politicaDecisaoSobConflito.js";
 
 /**
  * @typedef {object} EntradaMre
@@ -119,6 +128,47 @@ export async function executarPipeline07(entrada, deps) {
       deps.pacoteNcs = pacoteNcs;
     }
 
+    const msgUsuario = String(entrada.mensagem || "")
+      .split("[DIRETRIZ CANÓNICA — Manifesto")[0]
+      .trim();
+    const pedidoAnalise =
+      deps.pedidoAnaliseDeliberativa === true ||
+      detectarPedidoAnaliseDeliberativa(msgUsuario);
+    const pedidoDecisao =
+      deps.pedidoDecisaoExplicita === true ||
+      detectarPedidoDecisaoExplicita(msgUsuario);
+    const pedidoDelegacaoExplicita =
+      deps.pedidoDelegacaoExplicita === true ||
+      ehPedidoDelegacaoExplicita(msgUsuario);
+    if (pedidoAnalise) {
+      deps.pedidoAnaliseDeliberativa = true;
+      if (deps.proibirDespacho !== false) deps.proibirDespacho = true;
+    }
+    if (pedidoDecisao) {
+      deps.pedidoDecisaoExplicita = true;
+      if (deps.proibirDespacho !== false) deps.proibirDespacho = true;
+    }
+
+    // COA activo para filtro de princípios (escopo MG2 vs global)
+    if (!deps.coaAtivo) {
+      deps.coaAtivo =
+        entrada.coaAtivo ||
+        (entrada.coaId ? { id: entrada.coaId } : null);
+    }
+    if (entrada.coaId && !deps.coaId) {
+      deps.coaId = entrada.coaId;
+    }
+
+    // P1-3: princípios do estágio 3 = secções do Manifesto canónico quando anexado
+    if (
+      entrada.manifestoMg2?.ok &&
+      Array.isArray(entrada.manifestoMg2.principiosSelecionaveis) &&
+      entrada.manifestoMg2.principiosSelecionaveis.length
+    ) {
+      deps.catalogoPrincipiosManifesto =
+        entrada.manifestoMg2.principiosSelecionaveis;
+    }
+
     registrar("0");
     const diagnostico = await estagio0Diagnostico(entrada, deps);
 
@@ -209,6 +259,22 @@ export async function executarPipeline07(entrada, deps) {
       lacunasAcc,
       pacoteNcs
     );
+    // Opção A: pedido explícito de decisão → P1-2 não processa primeiro
+    // (evita prosa genérica que impede fecho com alternativas).
+    // Sem pedido de decisão → P1-2 intacto («analisa e recomenda»).
+    if (!pedidoDecisao) {
+      decisaoExecutiva = aplicarPoliticaAnaliseDeliberativa(decisaoExecutiva, {
+        pedidoAnalise,
+        pedidoDelegacaoExplicita,
+        analise
+      });
+    }
+    decisaoExecutiva = aplicarPoliticaDecisaoSobConflito(decisaoExecutiva, {
+      pedidoDecisao,
+      pedidoDelegacaoExplicita,
+      lacunas: lacunasAcc,
+      analise
+    });
     decisaoExecutiva = {
       ...decisaoExecutiva,
       justificativa: assegurarJustificativaV5(
@@ -224,7 +290,11 @@ export async function executarPipeline07(entrada, deps) {
     talvezInjetarLacunaSolicitarDados(
       decisaoExecutiva.estado,
       lacunasAcc,
-      pacoteNcs
+      pacoteNcs,
+      {
+        recomendacao: decisaoExecutiva.recomendacao,
+        justificativa: decisaoExecutiva.justificativa
+      }
     );
 
     registrar("7");

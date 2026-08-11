@@ -10,6 +10,7 @@ import { obterGovernancaLlm } from "./governancaLlm.js";
 import { construirContextoSessao } from "./contextoSessao.js";
 import { obterProjecaoBriefing } from "./briefingsProjeto.js";
 import { factosViaPorta } from "../camadaConhecimento/portaRecuperacao.js";
+import { textoGovernancaAutoridadeDelegadaActiva } from "../autoridadeDelegada/autoridadeDelegada.js";
 import {
   DIC_ID,
   DIC_VERSAO,
@@ -72,6 +73,12 @@ export function montarMensagensLlm({
         "PORTA DE RECUPERAÇÃO (lastro oficial apto — única superfície de leitura):\n" +
         factosOficiais.join("\n")
     });
+  }
+
+  // CAP-01 / IMP-071: AD activa modula deliberação (fecho no perímetro)
+  const govAd = textoGovernancaAutoridadeDelegadaActiva();
+  if (govAd) {
+    messages.push({ role: "system", content: govAd });
   }
 
   // ARQ-028 C-COA: sem briefing COA por omissão no path meta

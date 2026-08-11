@@ -215,6 +215,70 @@ export function montarPerguntaCurtaTopico(candidatos) {
 }
 
 /**
+ * DESP-010 — decisão explícita de prioridade entre dois tópicos (não ambiguidade).
+ * Ex.: «Adiar outdoor e focar pagamento» ≠ «Outdoor ou pagamento?»
+ * @param {string} mensagem
+ */
+export function mensagemDecidePrioridadeEntreTopicos(mensagem) {
+  const m = String(mensagem || "");
+  if (/\bou\b|\bou\s+ao\b|\bvs\.?\b|\bou\s+então\b/i.test(m) && !/\b(adi|focar|prioriz)/i.test(m)) {
+    return false;
+  }
+  return (
+    /\b(adi(ar|amos|e)|atrasar|pausar|deixar(\s+para\s+depois)?)\b[\s\S]{0,80}\b(focar|prioriz|concentra|avançar\s+(em|com)|seguir\s+com|fechar)\b/i.test(
+      m
+    ) ||
+    /\b(focar|prioriz|concentra)\b[\s\S]{0,80}\b(adi(ar|amos)|atrasar|depois|fica\s+atrás)\b/i.test(
+      m
+    ) ||
+    /\b(em\s+vez\s+de|antes\s+(de|do)|em\s+detrimento)\b/i.test(m)
+  );
+}
+
+/**
+ * Escolhe a âncora priorizada na decisão (junto a focar/priorizar; senão a não adiada).
+ * @param {string} mensagem
+ * @param {Array<{ ancora: string, familia: string, confianca?: number }>} ancorasMsg
+ */
+export function ancoraPreferidaPorDecisao(mensagem, ancorasMsg) {
+  const lista = Array.isArray(ancorasMsg) ? ancorasMsg : [];
+  if (!lista.length) return null;
+  const m = String(mensagem || "").toLowerCase();
+
+  // Verbo de prioridade **antes** da âncora (evita «adiar outdoor e focar…» marcar outdoor)
+  for (const a of lista) {
+    const anc = String(a.ancora || "").toLowerCase();
+    if (!anc) continue;
+    const idx = m.indexOf(anc);
+    if (idx < 0) continue;
+    const antes = m.slice(Math.max(0, idx - 48), idx);
+    if (
+      /\b(focar|prioriz|concentra|avançar\s+(em|com)|seguir\s+com|fechar)\b/i.test(
+        antes
+      )
+    ) {
+      return a;
+    }
+  }
+
+  const adiadas = lista.filter((a) => {
+    const anc = String(a.ancora || "").toLowerCase();
+    const idx = m.indexOf(anc);
+    if (idx < 0) return false;
+    const antes = m.slice(Math.max(0, idx - 48), idx);
+    return /\b(adi(ar|amos|e)|atrasar|pausar)\b/i.test(antes);
+  });
+  if (adiadas.length >= 1) {
+    const outra = lista.find(
+      (a) => !adiadas.some((d) => d.familia === a.familia)
+    );
+    if (outra) return outra;
+  }
+
+  return lista[0] || null;
+}
+
+/**
  * @param {string} gateHint
  * @param {string} novoAssunto
  */
@@ -252,6 +316,7 @@ export function gestorTopicos(entrada = {}) {
   const activo = entrada.topicoActivo || null;
   const pausas = Array.isArray(entrada.pausas) ? [...entrada.pausas] : [];
   const gatePendente = entrada.gatePendente === true;
+  void gatePendente; // P0: flag preservada na API; já não bloqueia conversa
   const hist = Array.isArray(entrada.historicoRecente)
     ? entrada.historicoRecente
     : [];
@@ -322,12 +387,7 @@ export function gestorTopicos(entrada = {}) {
         razaoTopico: `retomar «${alvo.ancora}»`,
         commitEstado: true
       };
-      if (gatePendente) {
-        out.clarificacaoGateShift = montarClarificacaoGateShift(
-          "Gate pendente",
-          alvo.ancora
-        );
-      }
+      // P0: Gate pendente não bloqueia retoma de tópico (GATE ≠ CONVERSATION_LOCK)
       return out;
     }
   }
@@ -353,14 +413,7 @@ export function gestorTopicos(entrada = {}) {
       razaoTopico: `shift explícito → «${novo.ancora}»`,
       commitEstado: true
     };
-    if (gatePendente) {
-      out.clarificacaoGateShift = montarClarificacaoGateShift(
-        "Gate pendente",
-        novo.ancora
-      );
-      // Não abandona Gate nem activo anterior (já em pausa); pergunta combinada
-      // Mantém commit do shift temático; Gate fica para o utilizador decidir
-    }
+    // P0: Gate pendente não bloqueia mudança de assunto
     return out;
   }
 
@@ -389,6 +442,32 @@ export function gestorTopicos(entrada = {}) {
   if (ancorasMsg.length >= 2) {
     const a0 = ancorasMsg[0];
     const a1 = ancorasMsg[1];
+
+    // DESP-010 (evidência missão): «Adiar X e focar Y» não é ambiguidade —
+    // é decisão de prioridade. «Outdoor ou pagamento?» continua ambiguo.
+    if (mensagemDecidePrioridadeEntreTopicos(mensagem)) {
+      const preferida = ancoraPreferidaPorDecisao(mensagem, ancorasMsg);
+      if (preferida) {
+        if (familiaActiva(activo, preferida.familia)) {
+          const p = preservado();
+          return {
+            evento: "continuar",
+            ...p,
+            razaoTopico: "decisão de prioridade — manter activo preferido",
+            commitEstado: true
+          };
+        }
+        const novo = criarTopico(preferida.ancora, "usuario", agora);
+        const estado = aplicarShiftEstado(activo, pausas, novo);
+        return {
+          evento: "shift",
+          ...estado,
+          razaoTopico: `decisão de prioridade → «${novo.ancora}»`,
+          commitEstado: true
+        };
+      }
+    }
+
     const matchActivo = activo
       ? ancorasMsg.find((a) => familiaActiva(activo, a.familia))
       : null;
@@ -467,12 +546,7 @@ export function gestorTopicos(entrada = {}) {
         razaoTopico: `shift implícito curto → «${novo.ancora}»`,
         commitEstado: true
       };
-      if (gatePendente) {
-        out.clarificacaoGateShift = montarClarificacaoGateShift(
-          "Gate pendente",
-          novo.ancora
-        );
-      }
+      // P0: Gate pendente não bloqueia shift implícito
       return out;
     }
     if (!activo) {
