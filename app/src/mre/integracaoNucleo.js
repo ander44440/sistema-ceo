@@ -8,7 +8,10 @@ import {
   obterFactosBriefingProjeto,
   obterProjecaoBriefing
 } from "../executiveEngine/briefingsProjeto.js";
-import { factosViaPorta } from "../camadaConhecimento/portaRecuperacao.js";
+import {
+  factosViaPorta,
+  hintEstagio6LacunaFonteOficial
+} from "../camadaConhecimento/portaRecuperacao.js";
 import { criarChamarLlmCeo } from "./adaptadorLlmCeo.js";
 import { gerarComunicadoExecutivo } from "./speaker/speakerExecutivo.js";
 import { textoParaVoz } from "./canais/adaptarCanal.js";
@@ -320,7 +323,8 @@ function enriquecerMensagemComBriefing(texto, factosBriefing) {
     "A Fonte Oficial é o Acervo; se factosOficiais contiverem LACUNA EXPLÍCITA, " +
     "não inventar conhecimento organizacional. A projecção pode orientar o contexto " +
     "mas em divergência prevalece o Acervo. Não solicitar de novo dados já na projecção; " +
-    "só declare lacuna oficial quando o Acervo não tiver item apto.]"
+    "só declare lacuna oficial quando o Acervo não tiver item apto. " +
+    "LACUNA EXPLÍCITA do Acervo ≠ lacuna material de decisão (REQ-048).]"
   );
 }
 
@@ -387,7 +391,9 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     ? false
     : mensagemEhExploratoria(msgUser);
   const diagnosticoFactos = mensagemPedeDiagnosticoFactos(msgUser);
-  const pedidoAnalise = detectarPedidoAnaliseDeliberativa(msgUser);
+  // Opção A: fecho prevalece — não activar hint/prosa P1-2 em paralelo
+  const pedidoAnalise =
+    !pedidoDecisao && detectarPedidoAnaliseDeliberativa(msgUser);
   const pedidoDelegacaoExplicita = ehPedidoDelegacaoExplicita(msgUser);
   const temManifesto = Boolean(entrada.manifestoMg2?.ok);
 
@@ -418,10 +424,7 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
               hint += hintEstagio6DecisaoSobConflito();
             }
             if (temLacunaFonteOficial) {
-              hint +=
-                " Fonte Oficial (Acervo) sem item apto: há LACUNA EXPLÍCITA. " +
-                "Não inventar conhecimento organizacional; a projecção subordinada " +
-                "(briefing), se existir, não substitui o Acervo.";
+              hint += hintEstagio6LacunaFonteOficial();
             }
             if (temLastroBriefing) {
               hint +=

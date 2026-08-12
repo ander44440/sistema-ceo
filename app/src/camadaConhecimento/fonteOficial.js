@@ -13,6 +13,26 @@ export const LACUNA_SEM_ITEM_APTO =
   "LACUNA EXPLÍCITA (Fonte Oficial / Acervo): não há item de conhecimento apto registado no Acervo Oficial para este âmbito. Não inventar factos nem tratar projecções (ex.: briefing) como património oficial.";
 
 /**
+ * Hint estágio 6 — declara lacuna de Acervo sem a tratar como lacuna material de decisão
+ * (REQ-070 CA-070-5/6; distinto de REQ-048 solicitar_dados).
+ * @returns {string}
+ */
+export function hintEstagio6LacunaFonteOficial() {
+  return (
+    " Fonte Oficial (Acervo) sem item apto: há LACUNA EXPLÍCITA. " +
+    "Não inventar conhecimento organizacional; a projecção subordinada " +
+    "(briefing), se existir, não substitui o Acervo. " +
+    "LACUNA EXPLÍCITA do Acervo indica ausência de conhecimento oficial persistente; " +
+    "NÃO constitui, por si só, lacuna material de decisão nem facto bloqueante. " +
+    "NÃO use estado=solicitar_dados nem estado=monitorar apenas porque o Acervo está vazio. " +
+    "Se a mensagem/conversa já fornecer factos suficientes para a decisão pedida, " +
+    "delibere sobre esses factos sem os apresentar como património oficial do Acervo. " +
+    "solicitar_dados só se faltar informação MATERIALMENTE necessária à decisão e essa " +
+    "informação estiver realmente ausente do contexto corrente."
+  );
+}
+
+/**
  * @typedef {object} ItemConhecimentoOficial
  * @property {string} id — KNW-nnn
  * @property {string} conteudo

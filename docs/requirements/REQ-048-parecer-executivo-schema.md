@@ -149,7 +149,7 @@ O parecer é um **objeto** com os blocos abaixo. Campos marcados **Obrig.** deve
 | `rejeitar` | Recusar o caminho |
 | `delegar` | Transferir execução |
 | `monitorar` | Não agir agora; acompanhar |
-| `solicitar_dados` | Falta informação essencial |
+| `solicitar_dados` | Falta informação essencial *(lacuna **material** de decisão no contexto deliberativo — REQ-049. Distinto de LACUNA EXPLÍCITA do Acervo / REQ-070: Acervo vazio, por si só, não obriga este estado.)* |
 | `adiar` | Adiar deliberação com motivo |
 
 ---

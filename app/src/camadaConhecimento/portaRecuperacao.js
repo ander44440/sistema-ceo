@@ -5,9 +5,15 @@
  * nem governação, curadoria ou actualização.
  */
 
-import { lerAptoParaConsumo } from "./fonteOficial.js";
+import {
+  lerAptoParaConsumo,
+  hintEstagio6LacunaFonteOficial
+} from "./fonteOficial.js";
 
 export const PORTA_RECUPERACAO_ID = "porta_recuperacao_eic";
+
+/** Hint estágio 6 (REQ-070 CA-070-5/6) — reexport via Porta (CA-072-1). */
+export { hintEstagio6LacunaFonteOficial };
 
 /**
  * @typedef {object} PedidoPorta

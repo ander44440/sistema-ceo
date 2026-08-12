@@ -96,7 +96,7 @@ Em conflito aparente: prevalecem ARQ-006/007 no que já decidem; esta ARQ só **
 2. Pertença oficial ⇔ entrada no **índice** com identificador `KNW-nnn` e referência à entrada (ARQ-006/007).  
 3. Conhecimento estratégico de COA (ex.: MG2) vive como **itens** com âmbito de contexto — não como string no motor.  
 4. Projecções de leitura (incl. eventual briefing derivado) são **subordinadas**; em divergência, prevalece o acervo.  
-5. Ausência no acervo apto ⇒ **lacuna explícita**; nunca invenção.
+5. Ausência no acervo apto ⇒ **lacuna explícita**; nunca invenção. **LACUNA EXPLÍCITA** ≠ lacuna material de decisão (REQ-048/049): declara-se e não inventa património; **não** bloqueia, por si só, deliberação sobre factos suficientes do contexto corrente (REQ-070 CA-070-5/6).
 
 ---
 
