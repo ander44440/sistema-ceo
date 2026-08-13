@@ -21,7 +21,8 @@ import {
   REFINO_EIC_ATIVO,
   obterMemoriaTrabalhoExecutiva,
   definirMemoriaTrabalhoExecutiva,
-  clonarMemoria
+  clonarMemoria,
+  normalizarCoaIdMte
 } from "./refinoEicSessao.js";
 
 /** Máximo de itens em listas de estado actual (não histórico). */
@@ -128,6 +129,7 @@ const MAPA_TERMINOLOGIA = Object.freeze({
  * @property {CicloEvidenciaDiagnosticoAjuste|null} analiseTecnica
  * @property {EstadoExecutivoConversa} estadoConversa
  * @property {CriterioEncerramento|null} encerramento
+ * @property {string|null} [coaId]
  * @property {string} actualizadoEm
  */
 
@@ -193,6 +195,7 @@ export function memoriaTrabalhoVazia(agoraIso) {
       bloqueio: null
     },
     encerramento: null,
+    coaId: null,
     actualizadoEm: agoraIso || new Date().toISOString()
   };
 }
@@ -584,7 +587,18 @@ export function actualizarMemoriaTrabalhoExecutiva(entrada = {}) {
   if (!REFINO_EIC_ATIVO) return obterMemoriaTrabalhoExecutiva();
 
   const agora = entrada.agoraIso || new Date().toISOString();
-  const prev = obterMemoriaTrabalhoExecutiva() || memoriaTrabalhoVazia(agora);
+  const coaIdTurno = normalizarCoaIdMte(entrada.coa?.id);
+  const prevBruto = obterMemoriaTrabalhoExecutiva();
+  const coaIdSlot = normalizarCoaIdMte(prevBruto?.coaId);
+
+  // VCA negou lastro / sem COA válido: não escrever sobre o slot de outro COA.
+  if (!coaIdTurno && coaIdSlot) {
+    return prevBruto;
+  }
+
+  const mesmoCoa = coaIdTurno === coaIdSlot;
+  const prev =
+    mesmoCoa && prevBruto ? prevBruto : memoriaTrabalhoVazia(agora);
   const mem = entrada.memoriaExecutiva || lerMemoria();
   const mensagem = String(entrada.mensagem || "");
 
@@ -639,6 +653,7 @@ export function actualizarMemoriaTrabalhoExecutiva(entrada = {}) {
     pendencias,
     proximaAcao,
     hierarquia,
+    coaId: coaIdTurno,
     actualizadoEm: agora
   };
 
@@ -947,5 +962,6 @@ export {
   definirRefinoEicAtivo,
   obterMemoriaTrabalhoExecutiva,
   definirMemoriaTrabalhoExecutiva,
-  resetMemoriaTrabalhoExecutiva
+  resetMemoriaTrabalhoExecutiva,
+  normalizarCoaIdMte
 } from "./refinoEicSessao.js";

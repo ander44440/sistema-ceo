@@ -1,7 +1,8 @@
 /**
  * Sessão da Memória de Trabalho Executiva — refino interno EIC.
  * Estado em memória do processo; injectável / resetável em testes.
- * Não é histórico completo; não toca contratos públicos, UI, Gate, Jobs.
+ * Um único slot, amarrado ao coaId do projecto activo (não é histórico;
+ * não particiona por missão; não toca contratos públicos, UI, Gate, Jobs).
  */
 
 /**
@@ -22,10 +23,27 @@ export function definirRefinoEicAtivo(ativo) {
 let estado = null;
 
 /**
+ * @param {unknown} id
+ * @returns {string|null}
+ */
+export function normalizarCoaIdMte(id) {
+  const t = id != null ? String(id).trim() : "";
+  return t || null;
+}
+
+/**
+ * @param {string|null} [coaIdActual]
+ *   Se passado (incluindo `null`), só devolve o snapshot desse COA.
+ *   Sem argumento, devolve o slot bruto (continuidade / testes).
  * @returns {MemoriaTrabalhoExecutiva|null}
  */
-export function obterMemoriaTrabalhoExecutiva() {
+export function obterMemoriaTrabalhoExecutiva(coaIdActual) {
   if (!estado) return null;
+  if (arguments.length >= 1) {
+    const actual = normalizarCoaIdMte(coaIdActual);
+    const slot = normalizarCoaIdMte(estado.coaId);
+    if (actual !== slot) return null;
+  }
   return clonarMemoria(estado);
 }
 

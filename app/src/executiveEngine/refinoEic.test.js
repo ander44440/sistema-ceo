@@ -287,6 +287,7 @@ describe("Refino EIC — integração lastro / contexto (sem contrato UI)", () =
   });
 
   test("contexto de sessão inclui Memória de Trabalho quando activa", () => {
+    const coa = { id: "ceo", nome: "Sistema CEO" };
     actualizarMemoriaTrabalhoExecutiva({
       fase: "pre",
       mensagem: "foco na paridade",
@@ -296,6 +297,7 @@ describe("Refino EIC — integração lastro / contexto (sem contrato UI)", () =
         origem: "usuario",
         actualizadoEm: "t"
       },
+      coa,
       memoriaExecutiva: {
         decisoes: [],
         pendencias: [],
@@ -318,7 +320,7 @@ describe("Refino EIC — integração lastro / contexto (sem contrato UI)", () =
         projetosAtivos: [],
         ultimasAcoes: []
       },
-      coa: null,
+      coa,
       intencao: { id: "x", capacidade: "ia" }
     });
     assert.match(ctx, /MEMÓRIA DE TRABALHO EXECUTIVA/);

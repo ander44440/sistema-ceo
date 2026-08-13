@@ -239,9 +239,11 @@ export function construirContextoSessao({ memoria, coa, intencao }) {
   ];
 
   // Refino EIC: estado actual da conversa (interno ao raciocínio; sem UI).
+  // Só o snapshot do COA actual — residual de outro projecto não entra no Painel.
+  const mteActual = obterMemoriaTrabalhoExecutiva(coaAtual?.id ?? null);
   const blocoTrabalho =
-    REFINO_EIC_ATIVO && obterMemoriaTrabalhoExecutiva()
-      ? formatarMemoriaTrabalhoParaContexto()
+    REFINO_EIC_ATIVO && mteActual
+      ? formatarMemoriaTrabalhoParaContexto(mteActual)
       : "";
 
   const partes = [...secao1, ...secao2, ...secao3, ...secao4];
