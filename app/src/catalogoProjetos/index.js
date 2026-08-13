@@ -17,6 +17,7 @@ import {
   garantirDiaNoProjeto,
   obterUltimaContinuidadeDoProjeto
 } from "./diaExecutivo.js";
+import { resetMemoriaTrabalhoExecutiva } from "../executiveEngine/refinoEicSessao.js";
 
 const MAX_DECISOES = 50;
 const MAX_PENDENCIAS = 50;
@@ -498,6 +499,24 @@ export function selecionarProjeto(id, opts = {}) {
 }
 
 /**
+ * Remove o contexto activo sem apagar o projecto do catálogo.
+ * Histórico, decisões, Jobs e continuidade do dia permanecem.
+ * Fecha também a MTE residual do COA (Opção C).
+ * @returns {null}
+ */
+export function limparProjetoAtivo() {
+  reidratarAntesDeMutacaoIdentidade();
+  garantirDoc();
+  resetMemoriaTrabalhoExecutiva();
+  if (doc.projetoAtivoId == null) {
+    return null;
+  }
+  doc.projetoAtivoId = null;
+  persistir();
+  return null;
+}
+
+/**
  * Resolve por id exacto, nome exacto (case-insensitive) ou alias exacto "mg2".
  * CTO-003.1: sem match por substring (includes) — evita regressão silenciosa a MG2.
  * @param {{ id?: string, nome?: string }} ref
@@ -854,6 +873,7 @@ export const catalogoProjetos = {
   obterProjetoAtivoId,
   selecionarProjeto,
   selecionarProjetoPorRef,
+  limparProjetoAtivo,
   criarProjeto,
   listarEmpresas,
   obterEmpresa,
