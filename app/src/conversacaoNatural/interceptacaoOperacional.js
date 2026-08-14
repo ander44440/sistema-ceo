@@ -19,8 +19,13 @@ import {
   ehPedidoRelatoEncerramento,
   ehAutorizacaoExplicitaCriarJob,
   ehReferenciaExplicitaJobId,
+  ehProibicaoExecucaoExplicita,
+  ehPedidoAnaliseOuRecomendacao,
+  ehComandoExecucaoExplicito,
   normalizarTexto
 } from "../classificadorIntencao/regras.js";
+import { detectarPedidoDecisaoExplicita } from "../classificadorIntencao/pedidoDecisaoExplicita.js";
+import { reconhecerDecisao } from "../continuidadeGate/reconhecerDecisao.js";
 import {
   filtrarJobsPorMissaoActiva,
   ehEstadoAcompanhamentoAberto
@@ -39,10 +44,33 @@ export function deveInterceptarOperacional(opts = {}) {
   const texto = String(opts.texto || "").trim();
   if (!texto || !ehComandoSobreJobActivo(texto)) return false;
   const t = normalizarTexto(texto);
+
+  // Polaridade P0 ANTES de forçar Motor: proibição / análise-sem-autorização
+  // não entram em motor_execucao por CTO-003 (detectores existentes).
+  const autorizaCriarJob = ehAutorizacaoExplicitaCriarJob(t);
+  if (!autorizaCriarJob && ehProibicaoExecucaoExplicita(t)) return false;
+  if (
+    ehPedidoAnaliseOuRecomendacao(t) &&
+    !ehComandoExecucaoExplicito(t) &&
+    !autorizaCriarJob
+  ) {
+    return false;
+  }
+
   // Teste 3: continuidade de missão com resultado ≠ comando C3 sobre Job
   if (ehPedidoContinuidadeMissao(t)) return false;
   // Relato/encerramento (três campos) ≠ comando C3 — segue memória encerrar_dia
   if (ehPedidoRelatoEncerramento(t)) return false;
+
+  // C3 — precedência: pedidoDecisao > CTO-003 quando o objecto não é a operação/Gate.
+  // Reutiliza detectarPedidoDecisaoExplicita + reconhecerDecisao (sem detector novo).
+  // Léxico Gate/continuidade («Aprovado.» / «Pode prosseguir.») permanece soberano.
+  if (
+    detectarPedidoDecisaoExplicita(texto) &&
+    !reconhecerDecisao(texto).reconhecida
+  ) {
+    return false;
+  }
 
   let missaoActiva = opts.missaoActiva || null;
   if (!missaoActiva) {

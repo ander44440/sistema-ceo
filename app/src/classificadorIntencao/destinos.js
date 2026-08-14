@@ -18,6 +18,13 @@ import {
   ehComandoSobreJobActivo,
   extrairEstadoOperacional
 } from "../conversacaoNatural/estadoOperacional.js";
+import {
+  ehAutorizacaoExplicitaCriarJob,
+  ehProibicaoExecucaoExplicita,
+  ehPedidoAnaliseOuRecomendacao,
+  ehComandoExecucaoExplicito,
+  normalizarTexto
+} from "./regras.js";
 
 /** Capacidades operacionais válidas para C4 (nunca Motor/MRE). */
 export const CAPACIDADES_C4 = Object.freeze([
@@ -345,8 +352,20 @@ export async function executarDestinoClarificacao(ctx) {
     estadoOperacional: ctx.deps?.lastroConsciencia?.estadoOperacional
   });
 
-  // CTO-003 REGRA 1+3: operação aberta + comando sobre Job → Motor (não reclassificar)
-  if (estadoOp.operacaoAberta && ehComandoSobreJobActivo(ctx.texto)) {
+  // CTO-003 REGRA 1+3: operação aberta + comando sobre Job → Motor (não reclassificar).
+  // Polaridade P0: proibição / análise-sem-autorização não forçam motor_execucao.
+  const tClar = normalizarTexto(ctx.texto);
+  const autorizaCriarJobClar = ehAutorizacaoExplicitaCriarJob(tClar);
+  const recusaMotorPorPolaridade =
+    (!autorizaCriarJobClar && ehProibicaoExecucaoExplicita(tClar)) ||
+    (ehPedidoAnaliseOuRecomendacao(tClar) &&
+      !ehComandoExecucaoExplicito(tClar) &&
+      !autorizaCriarJobClar);
+  if (
+    estadoOp.operacaoAberta &&
+    ehComandoSobreJobActivo(ctx.texto) &&
+    !recusaMotorPorPolaridade
+  ) {
     const intencaoRec = {
       ...ctx.intencao,
       id: "publicar_job_fila",
