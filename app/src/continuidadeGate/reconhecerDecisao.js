@@ -75,11 +75,85 @@ export function normalizarEnunciadoDecisao(texto) {
  */
 
 /**
- * Reconhece decisão de Gate no léxico V1 (determinístico).
+ * Ack curto que, mesmo com Gate pendente, não autoriza sozinho (RF5 / CON-001).
+ * Só o enunciado inteiro — não detecta «ok» no meio de um pedido novo.
+ * @type {ReadonlySet<string>}
+ */
+const ACK_AMBIGUO_GATE = Object.freeze(
+  new Set([
+    "sim",
+    "ok",
+    "pode",
+    "yes",
+    "certo",
+    "isso",
+    "beleza",
+    "uhum",
+    "ta",
+    "tá",
+    "combinado",
+    "fechado",
+    "tudo bem",
+    "pode ser"
+  ])
+);
+
+/**
+ * Aprovação inequívoca em prosa, só aplicável com Gate pendente.
+ * Não alarga o léxico V1; não trata «sim» / «ok» / «pode» isolados.
+ * @param {string} enunciadoNormalizado
+ * @returns {boolean}
+ */
+function ehAprovacaoInequivocaComGate(enunciadoNormalizado) {
+  if (!enunciadoNormalizado) return false;
+  if (
+    /^(quando|como|por que|porque|qual|o que|quem)\b/.test(enunciadoNormalizado)
+  ) {
+    return false;
+  }
+  if (
+    /\bn[aã]o\s+(est[aá]\s+)?(aprovo|aprovado|autorizo|autorizado|pode executar|pode prosseguir)\b/.test(
+      enunciadoNormalizado
+    )
+  ) {
+    return false;
+  }
+  if (
+    enunciadoNormalizado.includes("pode executar") ||
+    enunciadoNormalizado.includes("pode prosseguir")
+  ) {
+    return true;
+  }
+  return /\b(aprovado|aprovo|autorizado|autorizo)\b/.test(enunciadoNormalizado);
+}
+
+/**
+ * Enunciado inteiro é ack vazio (sim/ok/pode…), sem token de aprovação V1.
  * @param {unknown} texto
+ * @returns {boolean}
+ */
+export function ehAckAmbiguoDecisaoGate(texto) {
+  const n = normalizarEnunciadoDecisao(texto);
+  if (!n || ehAprovacaoInequivocaComGate(n)) return false;
+  if (LEXICO_DECISAO_GATE[n]) return false;
+  if (ACK_AMBIGUO_GATE.has(n)) return true;
+  const partes = n.split(" ");
+  return (
+    partes.length >= 2 &&
+    partes.length <= 3 &&
+    partes.every((p) => ACK_AMBIGUO_GATE.has(p))
+  );
+}
+
+/**
+ * Reconhece decisão de Gate no léxico V1 (determinístico).
+ * Com `opts.gatePendente`, aceita aprovação inequívoca em prosa do Gate actual
+ * (sem alargar o léxico fechado; sem dar significado a «sim»/«ok»/«pode» isolados).
+ * @param {unknown} texto
+ * @param {{ gatePendente?: boolean }} [opts]
  * @returns {ResultadoReconhecimentoDecisao}
  */
-export function reconhecerDecisao(texto) {
+export function reconhecerDecisao(texto, opts = {}) {
   const enunciadoNormalizado = normalizarEnunciadoDecisao(texto);
   if (!enunciadoNormalizado) {
     return {
@@ -117,6 +191,15 @@ export function reconhecerDecisao(texto) {
     };
   }
 
+  if (opts.gatePendente === true && ehAprovacaoInequivocaComGate(enunciadoNormalizado)) {
+    return {
+      reconhecida: true,
+      decisao: "aprovado",
+      enunciadoNormalizado,
+      sinonimo: "aprovacao_contextual_gate"
+    };
+  }
+
   return {
     reconhecida: false,
     decisao: null,
@@ -142,7 +225,11 @@ export function reconhecerDecisao(texto) {
  * }}
  */
 export function reconhecerParaGate(texto, gate, opts = {}) {
-  const reconhecimento = reconhecerDecisao(texto);
+  const gatePendente =
+    gate != null &&
+    typeof gate === "object" &&
+    /** @type {{ estado?: string }} */ (gate).estado === "pendente";
+  const reconhecimento = reconhecerDecisao(texto, { gatePendente });
   if (!reconhecimento.reconhecida || !reconhecimento.decisao) {
     return {
       reconhecimento,

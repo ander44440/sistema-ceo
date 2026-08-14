@@ -5,7 +5,7 @@
  */
 
 import { criarStoreContextoGate } from "./contexto.js";
-import { reconhecerDecisao } from "./reconhecerDecisao.js";
+import { ehAckAmbiguoDecisaoGate, reconhecerDecisao } from "./reconhecerDecisao.js";
 
 /** @type {ReturnType<typeof criarStoreContextoGate>|null} */
 let storePadrao = null;
@@ -176,7 +176,8 @@ export function mensagemAposDecisaoGate(decisao, conducao, registo) {
 /**
  * Interceptação pré-Classificador (E4).
  * GATE_PENDING ≠ CONVERSATION_LOCK (P0):
- * - decisão V1 reconhecida → Continuidade (aprova / rejeita / adia execução);
+ * - decisão V1 ou aprovação inequívoca do Gate actual → Continuidade;
+ * - ack ambíguo (sim / ok / pode isolados) → clarificação, sem autorizar;
  * - qualquer outra mensagem → Classificador (conversa / análise / nova prioridade).
  * A execução do Job continua bloqueada no Motor até autorização válida.
  *
@@ -186,9 +187,9 @@ export function mensagemAposDecisaoGate(decisao, conducao, registo) {
  */
 export function decidirInterceptacaoContinuidade(texto, store) {
   if (!store || !store.temGatePendente()) return "classificador";
-  const r = reconhecerDecisao(texto);
+  const r = reconhecerDecisao(texto, { gatePendente: true });
   if (r.reconhecida) return "continuidade";
-  // P0: não transformar pedido novo em clarificação que trava o CEO.
+  if (ehAckAmbiguoDecisaoGate(texto)) return "clarificacao";
   return "classificador";
 }
 

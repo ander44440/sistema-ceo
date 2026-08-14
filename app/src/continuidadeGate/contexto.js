@@ -157,7 +157,10 @@ export function criarStoreContextoGate() {
    * }}
    */
   function localizarParaDecisao(texto) {
-    const reconhecimento = reconhecerDecisao(texto);
+    const registoActivo = obterContextoActivo();
+    const reconhecimento = reconhecerDecisao(texto, {
+      gatePendente: Boolean(registoActivo)
+    });
     if (!reconhecimento.reconhecida) {
       return {
         reconhecimento,
@@ -167,7 +170,7 @@ export function criarStoreContextoGate() {
         mensagem: "Enunciado fora do léxico de decisão V1."
       };
     }
-    const registo = obterContextoActivo();
+    const registo = registoActivo;
     if (!registo) {
       return {
         reconhecimento,
