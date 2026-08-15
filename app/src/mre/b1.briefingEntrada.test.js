@@ -115,7 +115,7 @@ test("DEC-010: montarEntradaMre ancora Memória de Trabalho EIC", () => {
   assert.match(entrada.mensagem, /Restrições activas/i);
 });
 
-test("DESP-009: montarEntradaMre leva decisão, pendência e em execução ao MRE", () => {
+test("DESP-009: montarEntradaMre leva decisão já promovida, pendência e em execução ao MRE", () => {
   const entrada = montarEntradaMre({
     instrucao: "ok",
     coaAtivo: { id: "prj-mg2", nome: "Motoboy Game 2" },
@@ -143,7 +143,9 @@ test("DESP-009: montarEntradaMre leva decisão, pendência e em execução ao MR
       }
     }
   });
-  assert.match(entrada.mensagem, /Decisão em vigor|Adiar outdoor/i);
+  // Fixture = decisão já promovida pelo utilizador, não recomendação do parecer.
+  assert.match(entrada.mensagem, /Decisão em vigor/i);
+  assert.match(entrada.mensagem, /Adiar outdoor/i);
   assert.match(entrada.mensagem, /Pendências abertas|Sprint 1/i);
   assert.match(entrada.mensagem, /Em execução|integração/i);
   assert.match(entrada.mensagem, /conduzir a missão|hierarquia de objectivos/i);

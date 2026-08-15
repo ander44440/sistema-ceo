@@ -254,6 +254,16 @@ export function enriquecerMensagemComMemoriaTrabalho(texto, lastro) {
   if (Array.isArray(mte.decisoesTomadas) && mte.decisoesTomadas.length) {
     linhas.push(`Decisão em vigor: ${mte.decisoesTomadas[0]}`);
   }
+  if (mte.posicaoCeoNaoVigente) {
+    const vigente0 = Array.isArray(mte.decisoesTomadas)
+      ? String(mte.decisoesTomadas[0] || "")
+      : "";
+    if (!vigente0 || mte.posicaoCeoNaoVigente !== vigente0) {
+      linhas.push(
+        `Posição do CEO (não vigente): ${mte.posicaoCeoNaoVigente}`
+      );
+    }
+  }
   if (Array.isArray(mte.pendencias) && mte.pendencias.length) {
     linhas.push(
       `Pendências abertas: ${mte.pendencias.slice(0, 3).join("; ")}`

@@ -364,7 +364,7 @@ describe("Refino EIC — integração lastro / contexto (sem contrato UI)", () =
     assert.ok(factos.some((f) => /Em execução|integração/i.test(f)));
   });
 
-  test("DESP-009: pós-turno colhe próxima acção e decisão do parecer", () => {
+  test("F3-10 / DESP-009 emendado: parecer aprovar colhe proposta, não decisão vigente", () => {
     actualizarMemoriaTrabalhoExecutiva({
       fase: "pre",
       mensagem: "focar pagamento",
@@ -398,8 +398,18 @@ describe("Refino EIC — integração lastro / contexto (sem contrato UI)", () =
       }
     });
     assert.match(String(pos.proximaAcao), /Sprint 1/i);
+    assert.equal(
+      pos.decisoesTomadas.some((d) => /Adiar outdoor|pagamento/i.test(d)),
+      false
+    );
+    assert.match(String(pos.posicaoCeoNaoVigente || ""), /Adiar outdoor/i);
+    const factos = factosLastroRefinoEic(pos);
+    assert.equal(
+      factos.some((f) => /Decisão em vigor/i.test(f) && /Adiar outdoor/i.test(f)),
+      false
+    );
     assert.ok(
-      pos.decisoesTomadas.some((d) => /Adiar outdoor|pagamento/i.test(d))
+      factos.some((f) => /Posição do CEO \(não vigente\)/i.test(f) && /Adiar outdoor/i.test(f))
     );
   });
 });

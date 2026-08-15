@@ -89,7 +89,7 @@ Rollback: `REFINO_EIC_ATIVO=false`.
 | **DESP-006** | Adaptar (profundidade, detalhe, intenção, coerência) | **Homologado** — [`desp-006`](2026-08-06-desp-006-calibracao-adaptacao.md) |
 | **DESP-007** | Memória executiva (continuidade, decisões, pendências) | **Homologado** — [`desp-007`](2026-08-06-desp-007-calibracao-memoria-executiva.md) |
 | **DESP-008** | Inteligência executiva (conduzir missão ponta a ponta) | **Homologado** — [`desp-008`](2026-08-06-desp-008-calibracao-inteligencia-executiva.md) |
-| **DESP-009** | Execução executiva (CN/EIC → Engine/Runtime) | **Homologado** — [`desp-009`](2026-08-06-desp-009-calibracao-execucao-executiva.md) |
+| **DESP-009** | Execução executiva (CN/EIC → Engine/Runtime) | **Homologado** 06/08 · **Emendado** 15/08 (Frente 3 / VAL-073) — [`desp-009`](2026-08-06-desp-009-calibracao-execucao-executiva.md) |
 | **DESP-010** | Calibração em produção (missões reais) | **Homologado** — [`desp-010`](2026-08-06-desp-010-calibracao-producao.md) |
 
 Baseline vigente: EIC-001 + DESP-002 … **DESP-010**.

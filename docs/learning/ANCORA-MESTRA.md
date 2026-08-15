@@ -1,7 +1,7 @@
 # Âncora Mestra — Estado operacional vigente
 
 > **Tipo:** aprendizado / continuidade operacional (sem efeito normativo sobre CON/ADR).  
-> **Atualização:** 07/08/2026 — **BASELINE OFICIAL ACTUALIZADA** · **MODO MATURIDADE POR EVIDÊNCIAS ACTIVO**.  
+> **Atualização:** 15/08/2026 — Frente 3 / VAL-073: DESP-009 emendado (disciplina factual). Anterior: 07/08/2026 — **BASELINE OFICIAL ACTUALIZADA**.  
 > **Finalidade:** ponto único de retomada — frentes homologadas, autonomia actual, operação sob Baseline.
 
 ### Baseline operacional oficial
@@ -70,7 +70,7 @@ Metadado `dados.refinoEic` — só diagnóstico.
 | **DESP-006** | Ciclo Adaptar | **Homologado** 06/08/2026 | Profundidade/detalhe/condução ao momento |
 | **DESP-007** | Ciclo Memória executiva | **Homologado** 06/08/2026 | Continuidade cognitiva em conversas longas |
 | **DESP-008** | Inteligência executiva | **Homologado** 06/08/2026 | Conduzir missão do início ao fim |
-| **DESP-009** | Execução executiva | **Homologado** 06/08/2026 | Comportamento EIC influencia execução |
+| **DESP-009** | Execução executiva | **Homologado** 06/08/2026 · **Emendado** 15/08/2026 (Frente 3) | Costura decide→executar **sem** promover recomendação a vigente; VAL-073 |
 | **DESP-010** | Calibração em produção | **Homologado** 06/08/2026 | 1.º ciclo por evidências; mode contínuo |
 | **DEC-010** | Foco dos ciclos | **Aprovado com ressalvas** | Comportamento em operação, não engenharia de processo |
 | **REL-001 / GATE-009** | Estado + prontidão | Homologados | Apto com ressalvas (paridade voz F1) |
@@ -86,6 +86,7 @@ Metadado `dados.refinoEic` — só diagnóstico.
 
 | Item | Descrição | Prioridade |
 |------|-----------|------------|
+| `Aprovo a recomendação` sem objecto | Risco residual da Frente 3 (VAL-073 FORA DE ESCOPO) | Separado; **não** reabre F3 |
 | Calibração contínua | Só com **evidência objectiva** de missão real | Aguarda evidência |
 | **Dispatcher V3** | Cloud / 24×7 com máquina desligada | **Backlog** |
 | NCS em produção | `flagNcs` off — só com mandato | Não declarado |
@@ -116,6 +117,18 @@ Metadado `dados.refinoEic` — só diagnóstico.
 ---
 
 ## 6. Memória organizacional (este update)
+
+| Campo | Registro |
+|-------|----------|
+| Quem | Cursor (Engenheiro) |
+| Quando | 15/08/2026 |
+| Por quê | Encerrar Frente 3 após VAL-073 |
+| Baseado em quê | VAL-073 aprovada; emenda DESP-009 |
+| Resultado | Âncora: DESP-009 emendado; residual `Aprovo a recomendação` no backlog consciente |
+
+---
+
+## 6b. Memória organizacional (update anterior 06/08)
 
 | Campo | Registro |
 |-------|----------|

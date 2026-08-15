@@ -15,7 +15,10 @@
  */
 
 import { obterDiaExecutivo } from "../catalogoProjetos/index.js";
-import { lerMemoria } from "../executiveMemory/index.js";
+import {
+  detectarPromocaoDecisaoProduto,
+  lerMemoria
+} from "../executiveMemory/index.js";
 import { ordenarPromocoesPorRecencia } from "../motorExecucao/acompanhamentoJob.js";
 import {
   REFINO_EIC_ATIVO,
@@ -122,6 +125,7 @@ const MAPA_TERMINOLOGIA = Object.freeze({
  * @property {string|null} objectivoAtivo
  * @property {string[]} restricoesAtivas
  * @property {string[]} decisoesTomadas
+ * @property {string|null} [posicaoCeoNaoVigente] — recomendação/posição do CEO (não é decisão)
  * @property {string[]} pendencias
  * @property {string|null} proximaAcao
  * @property {HierarquiaObjectivos} hierarquia
@@ -172,6 +176,7 @@ export function memoriaTrabalhoVazia(agoraIso) {
     objectivoAtivo: null,
     restricoesAtivas: [],
     decisoesTomadas: [],
+    posicaoCeoNaoVigente: null,
     pendencias: [],
     proximaAcao: null,
     hierarquia: {
@@ -650,6 +655,7 @@ export function actualizarMemoriaTrabalhoExecutiva(entrada = {}) {
     objectivoAtivo,
     restricoesAtivas,
     decisoesTomadas,
+    posicaoCeoNaoVigente: prev.posicaoCeoNaoVigente || null,
     pendencias,
     proximaAcao,
     hierarquia,
@@ -701,7 +707,8 @@ export function actualizarMemoriaTrabalhoExecutiva(entrada = {}) {
   }
 
   if (entrada.fase === "pos") {
-    // DESP-009: colher decisão/próxima acção do parecer ou CN (fecho decide→executar)
+    // DESP-009 (emenda Frente 3): colher posição do CEO ≠ decisão vigente.
+    // Só acto inequívoco do utilizador promove a decisoesTomadas.
     const parecer = entrada.resposta?.dados?.parecer || null;
     const cnCtx =
       entrada.resposta?.dados?.conversacaoNatural?.contextoImediato || null;
@@ -709,12 +716,28 @@ export function actualizarMemoriaTrabalhoExecutiva(entrada = {}) {
     const rec = String(parecer?.decisaoExecutiva?.recomendacao || "").trim();
     const acaoDesc = String(parecer?.acao?.descricao || "").trim();
     const proxCn = String(cnCtx?.proximaAcao || "").trim();
+    let promocao = detectarPromocaoDecisaoProduto(mensagem);
 
     if (rec) {
+      base.posicaoCeoNaoVigente = normalizarTerminologia(rec).slice(0, 160);
+    }
+
+    if (promocao?.usarPosicaoCorrente) {
+      const corrente = String(
+        rec || base.posicaoCeoNaoVigente || ""
+      ).trim();
+      promocao = corrente
+        ? { tipo: "aceite", texto: corrente.slice(0, 160) }
+        : null;
+    }
+
+    if (promocao) {
+      const vigente = normalizarTerminologia(promocao.texto).slice(0, 160);
       base.decisoesTomadas = uniqCap(
-        [normalizarTerminologia(rec).slice(0, 160), ...base.decisoesTomadas],
+        [vigente, ...base.decisoesTomadas],
         MAX_ITENS
       );
+      base.posicaoCeoNaoVigente = null;
     }
 
     if (proxCn) {
@@ -729,12 +752,15 @@ export function actualizarMemoriaTrabalhoExecutiva(entrada = {}) {
     }
 
     const respMsg = String(entrada.resposta?.mensagem || "").trim();
-    if (respMsg) {
+    if (promocao) {
       base.ciclo = {
         ...base.ciclo,
-        decisao: normalizarTerminologia(
-          rec || respMsg
-        ).slice(0, 160),
+        decisao: normalizarTerminologia(promocao.texto).slice(0, 160),
+        proximaAcao: base.proximaAcao
+      };
+    } else if (respMsg) {
+      base.ciclo = {
+        ...base.ciclo,
         proximaAcao: base.proximaAcao
       };
     }
@@ -789,6 +815,13 @@ export function factosLastroRefinoEic(memoria) {
     factos.push(
       `Decisão em vigor: «${memoria.decisoesTomadas[0]}»`
     );
+  }
+  const posicao = String(memoria.posicaoCeoNaoVigente || "").trim();
+  if (posicao) {
+    const vigente0 = String(memoria.decisoesTomadas?.[0] || "");
+    if (!vigente0 || posicao !== vigente0) {
+      factos.push(`Posição do CEO (não vigente): «${posicao}»`);
+    }
   }
   if (memoria.pendencias?.length) {
     factos.push(
@@ -853,6 +886,9 @@ export function formatarMemoriaTrabalhoParaContexto(memoria) {
       m.decisoesTomadas?.length
         ? m.decisoesTomadas.map((d) => `- ${d}`).join("\n")
         : "(nenhuma)"
+    }`,
+    `Posição do CEO (não vigente): ${
+      m.posicaoCeoNaoVigente || "(nenhuma)"
     }`,
     `Pendências: ${
       m.pendencias?.length
@@ -920,6 +956,7 @@ export function metadadoRefinoEicParaDados(memoria) {
       decisoesTomadas: Array.isArray(memoria.decisoesTomadas)
         ? memoria.decisoesTomadas.slice(0, 5)
         : [],
+      posicaoCeoNaoVigente: memoria.posicaoCeoNaoVigente || null,
       pendencias: memoria.pendencias,
       proximaAcao: memoria.proximaAcao,
       estadoConversa: memoria.estadoConversa,

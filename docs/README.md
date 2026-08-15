@@ -49,6 +49,7 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 
 | Documento | Status |
 |-----------|--------|
+| [`validation/VAL-073-frente-3-disciplina-factual-lastro.md`](validation/VAL-073-frente-3-disciplina-factual-lastro.md) | **VAL-073 CONCLUÍDA e APROVADA** — Frente 3 disciplina factual; 0 FAIL; DESP-009 emendado |
 | [`requirements/REQ-CEO-etapa-2-correcoes-criticas-v1.md`](requirements/REQ-CEO-etapa-2-correcoes-criticas-v1.md) | **Consolidado** — Etapa 2 Correções Críticas v1 (REQ-CEO-001…015); apta a encerramento; Etapa 3 = Reteste Controlado |
 | [`GATE-009-certificacao-prontidao-sistema-ceo.md`](GATE-009-certificacao-prontidao-sistema-ceo.md) | **Homologado** — Certificação de prontidão; parecer **Apto com ressalvas**; abre deliberação da próxima frente |
 | [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — F1 ENCERRADA; **F2 retirada**; candidatas F3–F8 |

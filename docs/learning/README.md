@@ -4,6 +4,8 @@ Registros educacionais: por que cada decisão foi tomada, alternativas, riscos e
 
 | Registro | Tema |
 |----------|------|
+| [`2026-08-15-encerramento-frente-3-disciplina-factual.md`](2026-08-15-encerramento-frente-3-disciplina-factual.md) | **Frente 3 encerrada** · VAL-073 aprovada · DESP-009 emendado (15/08/2026) |
+| [`../validation/VAL-073-frente-3-disciplina-factual-lastro.md`](../validation/VAL-073-frente-3-disciplina-factual-lastro.md) | VAL-073 — disciplina factual / lastro · **7 PASS / 0 FAIL / 1 FORA DE ESCOPO** |
 | [`2026-08-07-despacho-baseline-oficial-maturidade.md`](2026-08-07-despacho-baseline-oficial-maturidade.md) | **BASELINE OFICIAL ACTUALIZADA** · Maturidade por Evidências **ACTIVO** |
 | [`2026-08-07-encerramento-imp-071-baseline-cap-01.md`](2026-08-07-encerramento-imp-071-baseline-cap-01.md) | **IMP-071 Homologada** · CAP-01 Autoridade Delegada na **Baseline** (07/08/2026) |
 | [`2026-08-07-despacho-cap-04-baseline-maturidade.md`](2026-08-07-despacho-cap-04-baseline-maturidade.md) | Despacho — CAP-04 Baseline · maturidade por evidências restabelecida |

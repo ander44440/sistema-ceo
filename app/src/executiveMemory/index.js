@@ -144,6 +144,106 @@ export function registrarAcao(acao) {
  *
  * @param {object} evento
  */
+/**
+ * Pedido de análise/recomendação — não é acto de fecho (Frente 3).
+ * @param {string} [texto]
+ */
+export function ehPedidoAnaliseSemFechoDecisao(texto) {
+  const t = String(texto || "")
+    .normalize("NFKC")
+    .toLowerCase();
+  if (!t.trim()) return false;
+  if (/\bn[aã]o\s+decida\s+por\s+mim\b/.test(t)) return true;
+  if (/\banali[sz]e\s+e\s+recomende/.test(t)) return true;
+  if (/\baprovar,\s*modificar\s+ou\s+n[aã]o\s+priorizar/.test(t)) return true;
+  if (
+    /\b(analisa|analise|analisar|recomende|recomendaria|d[eê]\s+(uma\s+)?recomenda[cç][aã]o)\b/.test(
+      t
+    ) &&
+    !/\bfica\s+decidido\s*:/.test(t) &&
+    !/\bdecidi\s*:/.test(t) &&
+    !/\brejeito\s+\S/.test(t)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+const ENUNCIADO_GATE_CURTO =
+  /^(aprovado|pode executar|autorizado|pode prosseguir|cancela|rejeitado|depois|adiar)\.?$/i;
+
+/**
+ * Acto inequívoco do utilizador que promove decisão de produto.
+ * Gate curto (ARQ-019) e pedidos de análise não promovem.
+ * @param {string} [texto]
+ * @returns {{ tipo: "aceite"|"recusa", texto: string, usarPosicaoCorrente?: boolean }|null}
+ */
+export function detectarPromocaoDecisaoProduto(texto) {
+  const raw = String(texto || "").trim();
+  if (!raw) return null;
+  const compacto = raw
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[.!?…]+$/u, "")
+    .replace(/\s+/gu, " ")
+    .trim();
+  if (ENUNCIADO_GATE_CURTO.test(compacto)) return null;
+
+  const temFechoNomeado =
+    /\bfica\s+decidido\s*:/.test(raw) ||
+    /\bdecidi\s*:/.test(raw) ||
+    /\bdecidi\s+que\b/i.test(raw) ||
+    /\bdefini\s+que\b/i.test(raw) ||
+    /\brejeito\s+\S/i.test(raw) ||
+    /\bn[aã]o\s+seguimos\s+com\b/i.test(raw);
+
+  if (ehPedidoAnaliseSemFechoDecisao(raw) && !temFechoNomeado) return null;
+
+  if (
+    /^(aprovo\s+(?:a\s+)?recomenda[cç][aã]o|fica\s+a\s+recomenda[cç][aã]o)$/i.test(
+      compacto
+    )
+  ) {
+    return { tipo: "aceite", texto: "", usarPosicaoCorrente: true };
+  }
+
+  const aceite =
+    raw.match(/\bfica\s+decidido\s*:\s*(.+)$/is) ||
+    raw.match(/\bdecidi\s*:\s*(.+)$/is) ||
+    raw.match(/\bdecidi\s+que\s+(.+)$/is) ||
+    raw.match(/\bdefini\s+que\s+(.+)$/is) ||
+    raw.match(/\bseguimos\s+com\s+[«"']?(.+?)[»"']?\s*$/is) ||
+    raw.match(/\bfica\s+a\s+recomenda[cç][aã]o\s*:?\s*(.+)$/is) ||
+    raw.match(/\baprovo\s+(?:a\s+)?op[cç][aã]o\s+([ABC])\b/i) ||
+    raw.match(/\baprovo\s+(?:a\s+)?recomenda[cç][aã]o\s*:?\s*(.+)$/is);
+
+  if (aceite) {
+    const corpo = String(aceite[1] || "")
+      .trim()
+      .replace(/[.!?…]+$/u, "")
+      .trim();
+    if (corpo.length >= 1) {
+      return { tipo: "aceite", texto: corpo.slice(0, 160) };
+    }
+  }
+
+  const recusa =
+    raw.match(/\brejeito\s+(.+)$/is) ||
+    raw.match(/\bn[aã]o\s+seguimos\s+com\s+(.+)$/is);
+
+  if (recusa) {
+    const objecto = String(recusa[1] || "")
+      .trim()
+      .replace(/[.!?…]+$/u, "")
+      .trim();
+    if (objecto.length >= 1) {
+      return { tipo: "recusa", texto: `Recusa: ${objecto}`.slice(0, 160) };
+    }
+  }
+
+  return null;
+}
+
 export function atualizarAposInstrucao(evento) {
   const instrucao = String(evento.instrucao || "").trim();
   const capacidade = evento.capacidade || "desconhecida";
@@ -186,16 +286,21 @@ export function atualizarAposInstrucao(evento) {
   // Troca de activo fica em caminhos explícitos (capacidade projetos / UI / C3).
 
   const jaPersistido = Boolean(evento.dados && evento.dados.jaPersistido);
+  const promocaoProduto = detectarPromocaoDecisaoProduto(instrucao);
 
   if (
     !jaPersistido &&
     (intencaoId === "registrar_decisao" ||
-      /\b(decidi|decidir|aprovado|aprovar|defini que|fica decidido|decis[aã]o\s*:)\b/.test(
-        lower
-      ) ||
-      /\bregistrar\s+decis/.test(lower))
+      /\bregistrar\s+decis/.test(lower) ||
+      (promocaoProduto && promocaoProduto.texto))
   ) {
-    registrarDecisao(extrairConteudo(instrucao, /decis/i), capacidade);
+    const conteudo =
+      intencaoId === "registrar_decisao" || /\bregistrar\s+decis/.test(lower)
+        ? extrairConteudo(instrucao, /decis/i)
+        : promocaoProduto.texto;
+    if (String(conteudo || "").trim()) {
+      registrarDecisao(conteudo, capacidade);
+    }
   }
 
   if (
@@ -330,6 +435,8 @@ export const executiveMemory = {
   obterEstado,
   lerMemoria,
   resumirEstado,
+  ehPedidoAnaliseSemFechoDecisao,
+  detectarPromocaoDecisaoProduto,
   atualizarAposInstrucao,
   registrarProjetoAtivo,
   registrarDecisao,
