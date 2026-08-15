@@ -49,6 +49,16 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 
 | Documento | Status |
 |-----------|--------|
+| [`adr/ADR-020-institui-cap-13-memoria-evolucao-produto.md`](adr/ADR-020-institui-cap-13-memoria-evolucao-produto.md) | **Aceita v1.0** — institui **CAP-13** (CAP-E) |
+| [`cap-13/README.md`](cap-13/README.md) | Sede CAP-13 — **HOMOLOGADA** (contrato mínimo; C1+C2); C3/UI/persistência física/integrações fora |
+| [`cap-13/homologacao-cap-13.md`](cap-13/homologacao-cap-13.md) | **Registo formal** — homologação CAP-13 (CTO + Usuário, 14/08/2026) |
+| [`analysis/ANL-018-analise-mep-ceo.md`](analysis/ANL-018-analise-mep-ceo.md) | **Aprovada v1.0** — Regularização MEP-CEO; CAP-13 (ADR-020) |
+| [`vision/VIS-009-memoria-evolucao-produto-ceo.md`](vision/VIS-009-memoria-evolucao-produto-ceo.md) | **Homologada v1.0** — MEP-CEO / CAP-13 |
+| [`requirements/REQ-085-requisitos-minimos-mep-ceo.md`](requirements/REQ-085-requisitos-minimos-mep-ceo.md) | **Homologado v1.0** — Pacote mínimo MEP-CEO; IDs `MCP`…`MEV`; transições ANL-018 |
+| [`architecture/ARQ-033-fronteira-mep-ceo.md`](architecture/ARQ-033-fronteira-mep-ceo.md) | **Homologada v1.0** — Fronteira CAP-13; isolamento intacto; C3 **não** implementada |
+| [`implementation/IMP-072-nucleo-persistente-mep-ceo.md`](implementation/IMP-072-nucleo-persistente-mep-ceo.md) | **IMP-072 HOMOLOGADA** — núcleo C1+C2 da CAP-13 |
+| [`implementation/evidencias/IMP-072-homologacao.md`](implementation/evidencias/IMP-072-homologacao.md) | Registo formal de homologação da IMP-072 (14/08/2026) |
+| [`validation/VAL-072-nucleo-persistente-mep-ceo.md`](validation/VAL-072-nucleo-persistente-mep-ceo.md) | **VAL-072 CONCLUÍDA** — 0 FAIL; base da IMP-072 e da CAP-13 |
 | [`validation/VAL-073-frente-3-disciplina-factual-lastro.md`](validation/VAL-073-frente-3-disciplina-factual-lastro.md) | **VAL-073 CONCLUÍDA e APROVADA** — Frente 3 disciplina factual; 0 FAIL; DESP-009 emendado |
 | [`requirements/REQ-CEO-etapa-2-correcoes-criticas-v1.md`](requirements/REQ-CEO-etapa-2-correcoes-criticas-v1.md) | **Consolidado** — Etapa 2 Correções Críticas v1 (REQ-CEO-001…015); apta a encerramento; Etapa 3 = Reteste Controlado |
 | [`GATE-009-certificacao-prontidao-sistema-ceo.md`](GATE-009-certificacao-prontidao-sistema-ceo.md) | **Homologado** — Certificação de prontidão; parecer **Apto com ressalvas**; abre deliberação da próxima frente |
@@ -58,11 +68,12 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`CON-001-constituicao.md`](CON-001-constituicao.md) | Aprovado v1.2 — mandato temporário revogado; papéis permanentes restabelecidos |
 | [`vision/VIS-001-visao-do-produto.md`](vision/VIS-001-visao-do-produto.md) | Aprovado v1.0 |
 | [`vision/VIS-002-identidade-institucional-do-produto.md`](vision/VIS-002-identidade-institucional-do-produto.md) | Homologado v1.0 |
-| [`CAP-001-mapa-de-capacidades.md`](CAP-001-mapa-de-capacidades.md) | Aprovado v1.0 — CAP-05/07/08 homologadas; **CAP-03 aberta** (25/07/2026, ciclo COA) |
+| [`CAP-001-mapa-de-capacidades.md`](CAP-001-mapa-de-capacidades.md) | Aprovado **v1.1** — CAP-13 instituída (ADR-020) e **HOMOLOGADA** (mínimo C1+C2); CAP-01…12 preservadas; CAP-05/07/08 homologadas; **CAP-03 aberta** (25/07/2026, ciclo COA) |
 | [`adr/ADR-016-cria-tipo-documental-roadmap.md`](adr/ADR-016-cria-tipo-documental-roadmap.md) | Aceita v1.0 — tipo ROADMAP instituído |
 | [`adr/ADR-017-institui-cap-r-consolidacao-de-release.md`](adr/ADR-017-institui-cap-r-consolidacao-de-release.md) | Aceita v1.0 — classificação CAP-E / CAP-R instituída; nenhuma CAP-R aberta |
 | [`adr/ADR-018-mandato-cto-temporario.md`](adr/ADR-018-mandato-cto-temporario.md) | **Revogada v1.1** — nenhum trabalho técnico aberto sob o mandato |
 | [`adr/ADR-019-motor-de-raciocinio-executivo.md`](adr/ADR-019-motor-de-raciocinio-executivo.md) | **Aceita para modelagem v0.1** — MRE; modelagem REQ-048…051 **encerrada** (ver ARQ-013) |
+| [`adr/ADR-020-institui-cap-13-memoria-evolucao-produto.md`](adr/ADR-020-institui-cap-13-memoria-evolucao-produto.md) | **Aceita v1.0** — CAP-13 (CAP-E) Memória de Evolução do Produto |
 | [`requirements/REQ-048-parecer-executivo-schema.md`](requirements/REQ-048-parecer-executivo-schema.md) | **Aprovado v0.1** — contrato formal do ParecerExecutivo |
 | [`requirements/REQ-049-pipeline-motor-raciocinio-executivo.md`](requirements/REQ-049-pipeline-motor-raciocinio-executivo.md) | **Aprovado v0.1** — pipeline operacional do MRE |
 | [`requirements/REQ-050-speaker-executivo.md`](requirements/REQ-050-speaker-executivo.md) | **Aprovado v0.1** — Speaker Executivo (comunicação do parecer) |
