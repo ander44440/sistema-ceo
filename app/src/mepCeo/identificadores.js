@@ -25,3 +25,20 @@ export function peekProximo(tipo) {
   const n = (contadores[tipo] || 0) + 1;
   return `${tipo}-${String(n).padStart(3, "0")}`;
 }
+
+/**
+ * Reconstitui sequências a partir dos IDs já emitidos no log. Nunca reutiliza.
+ */
+export function restaurarContadoresDesdeIds(ids) {
+  const next = Object.fromEntries(TIPOS_OBJECTO.map((t) => [t, 0]));
+  for (const id of ids) {
+    const m = String(id || "").match(/^([A-Z]+)-(\d+)$/);
+    if (!m) continue;
+    const tipo = m[1];
+    const n = Number(m[2]);
+    if (TIPOS_OBJECTO.includes(tipo) && Number.isFinite(n) && n > next[tipo]) {
+      next[tipo] = n;
+    }
+  }
+  contadores = next;
+}

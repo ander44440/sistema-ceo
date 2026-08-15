@@ -30,8 +30,24 @@ export {
   criarObjecto,
   definirEstadoTrabalho,
   historico,
+  inicializarPersistenciaFisica,
   listarObjectos,
   promoverMaturidade,
   proporMaturidade,
   reiniciarMepParaTestes
 } from "./registo.js";
+
+export {
+  PATH_CANONICO,
+  desactivarPersistenciaFisica,
+  persistenciaActiva
+} from "./persistencia.js";
+
+export {
+  apagarEventoFisico,
+  apagarObjectoFisico,
+  appendRegistoFisico,
+  compactarStoreFisico,
+  lerProjeccaoCache,
+  validarEnvelope
+} from "./adapterFs.js";

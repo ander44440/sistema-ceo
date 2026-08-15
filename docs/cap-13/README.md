@@ -14,6 +14,8 @@
 
 ```
 ANL-018 → ADR-020 → VIS-009 → REQ-085 → ARQ-033 → IMP-072 → VAL-072 → HOMOLOGAÇÃO
+                                                                                 ↓
+                                                                          IMP-073 → VAL-074 **APROVADA**
 ```
 
 | Elo | Artefacto | Estado |
@@ -27,6 +29,7 @@ ANL-018 → ADR-020 → VIS-009 → REQ-085 → ARQ-033 → IMP-072 → VAL-072 
 | VAL | [`VAL-072`](../validation/VAL-072-nucleo-persistente-mep-ceo.md) | **CONCLUÍDA** — 0 FAIL |
 | Homologação IMP | [`IMP-072-homologacao`](../implementation/evidencias/IMP-072-homologacao.md) | **Registo** — IMP-072 (acto anterior; CAP-13 ainda não homologada *nesse* acto) |
 | Homologação CAP-13 | [`homologacao-cap-13.md`](homologacao-cap-13.md) | **HOMOLOGADA** — 14/08/2026 |
+| IMP persistência | [`IMP-073`](../implementation/IMP-073-persistencia-fisica-mep-ceo.md) | **IMPLEMENTADA** · **VAL-074 APROVADA** |
 
 ---
 

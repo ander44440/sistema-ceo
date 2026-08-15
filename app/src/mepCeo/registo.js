@@ -1,7 +1,7 @@
 /**
- * IMP-072 / ARQ-033 C2 — Registo persistente da MEP-CEO (núcleo em memória).
- * Append-only: eventos nunca apagados. Projecção de objecto subordinada ao log.
- * Sem C3. Sem persistência em ficheiro (não especificada). Sem adapters extra.
+ * IMP-072 / ARQ-033 C2 — Registo da MEP-CEO.
+ * IMP-073 — persistência física via adapter (log canónico; projecção subordinada).
+ * Append-only: eventos nunca apagados. Sem C3. Sem writers externos.
  */
 
 import {
@@ -14,8 +14,19 @@ import {
   evidenciaValida,
   normalizarPapeis
 } from "./dominio.js";
-import { emitirIdentificador, reiniciarIdentificadores } from "./identificadores.js";
+import {
+  emitirIdentificador,
+  reiniciarIdentificadores,
+  restaurarContadoresDesdeIds
+} from "./identificadores.js";
 import { avaliarIsolamento } from "./isolamento.js";
+import {
+  activarDirectorioPersistencia,
+  carregarStore,
+  desactivarPersistenciaFisica,
+  PATH_CANONICO,
+  persistirSeActivo
+} from "./persistencia.js";
 import { alçadaSuficiente, saltoIlicito } from "./transicoes.js";
 
 /** @type {Map<string, object>} */
@@ -39,15 +50,29 @@ function ok(extra = {}) {
   return Object.freeze({ ok: true, ...extra });
 }
 
-function appendEvento(campos) {
+function construirEvento(campos) {
   const id = emitirIdentificador("MEV");
-  const evento = Object.freeze({
+  return Object.freeze({
     id,
     quando: agoraIso(),
     ...campos
   });
+}
+
+/**
+ * Persistência física só depois de C1+C2 aceitarem. Disco primeiro; memória depois.
+ * Sem persistência activa (suite IMP-072), grava só em processo.
+ */
+function comprometer(evento, objectoSnapshot, aplicar) {
+  const persistido = persistirSeActivo(evento, objectoSnapshot);
+  if (!persistido.ok) {
+    return recusa(persistido.motivo || "falha_persistencia", {
+      motivos: persistido.motivos
+    });
+  }
+  aplicar();
   eventos.push(evento);
-  return evento;
+  return ok({ evento, medium: persistido.medium });
 }
 
 function exigirEvidenciaOuLacuna(opts, { permitirLacuna }) {
@@ -136,8 +161,7 @@ export function criarObjecto(entrada = {}) {
     precedenteBsl: entrada.precedenteBsl || null
   };
 
-  objectos.set(id, objecto);
-  const mev = appendEvento({
+  const mev = construirEvento({
     objectoId: id,
     tipoObjecto: tipo,
     estadoAnterior: null,
@@ -149,6 +173,10 @@ export function criarObjecto(entrada = {}) {
     classificacao: objecto.classificacao,
     acto: "criar"
   });
+  const gravado = comprometer(mev, objecto, () => {
+    objectos.set(id, objecto);
+  });
+  if (!gravado.ok) return gravado;
 
   return ok({ objecto: clonar(objecto), evento: mev });
 }
@@ -166,7 +194,7 @@ export function proporMaturidade(id, para, opts = {}) {
   if (saltoIlicito(objecto.maturidade, para)) {
     return recusa("salto_ilicito");
   }
-  const mev = appendEvento({
+  const mev = construirEvento({
     objectoId: id,
     tipoObjecto: objecto.tipo,
     estadoAnterior: { maturidade: objecto.maturidade, trabalho: objecto.trabalho },
@@ -178,6 +206,8 @@ export function proporMaturidade(id, para, opts = {}) {
     classificacao: "hipotese",
     acto: "propor"
   });
+  const gravado = comprometer(mev, clonar(objecto), () => {});
+  if (!gravado.ok) return gravado;
   return ok({ objecto: clonar(objecto), evento: mev });
 }
 
@@ -213,25 +243,34 @@ export function promoverMaturidade(id, para, opts = {}) {
     trabalho: objecto.trabalho
   };
 
-  objecto.maturidade = para;
-  objecto.classificacao = classificacaoDeMaturidade(para);
-  objecto.evidencia = { ...opts.evidencia };
-  objecto.lacunaEvidencia = null;
+  const proximo = clonar(objecto);
+  proximo.maturidade = para;
+  proximo.classificacao = classificacaoDeMaturidade(para);
+  proximo.evidencia = { ...opts.evidencia };
+  proximo.lacunaEvidencia = null;
   if (para === "BASELINE") {
-    objecto.congelado = true;
+    proximo.congelado = true;
   }
 
-  const mev = appendEvento({
+  const mev = construirEvento({
     objectoId: id,
     tipoObjecto: objecto.tipo,
     estadoAnterior: anterior,
-    estadoNovo: { maturidade: objecto.maturidade, trabalho: objecto.trabalho },
+    estadoNovo: { maturidade: proximo.maturidade, trabalho: proximo.trabalho },
     papel: papeis.includes("usuario") && para === "BASELINE" ? "usuario" : papeis[0],
     papeis,
     evidencia: { ...opts.evidencia },
-    classificacao: objecto.classificacao,
+    classificacao: proximo.classificacao,
     acto: "promover"
   });
+  const gravado = comprometer(mev, proximo, () => {
+    objecto.maturidade = proximo.maturidade;
+    objecto.classificacao = proximo.classificacao;
+    objecto.evidencia = proximo.evidencia;
+    objecto.lacunaEvidencia = proximo.lacunaEvidencia;
+    objecto.congelado = proximo.congelado;
+  });
+  if (!gravado.ok) return gravado;
 
   return ok({
     objecto: clonar(objecto),
@@ -265,8 +304,7 @@ function emitirNovaBaselineInterna({ cobre, evidencia, papeis, precedenteBsl }) 
     cobre: [...cobre],
     precedenteBsl: precedenteBsl || null
   };
-  objectos.set(id, objecto);
-  appendEvento({
+  const mev = construirEvento({
     objectoId: id,
     tipoObjecto: "BSL",
     estadoAnterior: null,
@@ -279,7 +317,11 @@ function emitirNovaBaselineInterna({ cobre, evidencia, papeis, precedenteBsl }) 
     cobre: [...cobre],
     precedenteBsl: precedenteBsl || null
   });
-  return objecto;
+  const gravado = comprometer(mev, objecto, () => {
+    objectos.set(id, objecto);
+  });
+  if (!gravado.ok) return gravado;
+  return ok({ objecto });
 }
 
 /**
@@ -315,13 +357,14 @@ export function criarNovaBaseline(opts = {}) {
   }
 
   const precedente = opts.precedenteBsl || ultimoBslId();
-  const bsl = emitirNovaBaselineInterna({
+  const emitido = emitirNovaBaselineInterna({
     cobre,
     evidencia: opts.evidencia,
     papeis,
     precedenteBsl: precedente
   });
-  return ok({ objecto: clonar(bsl), precedenteBsl: precedente });
+  if (!emitido.ok) return emitido;
+  return ok({ objecto: clonar(emitido.objecto), precedenteBsl: precedente });
 }
 
 export function definirEstadoTrabalho(id, trabalho, opts = {}) {
@@ -331,6 +374,7 @@ export function definirEstadoTrabalho(id, trabalho, opts = {}) {
     return recusa("baseline_congelada");
   }
   if (!TRABALHOS.includes(trabalho)) return recusa("trabalho_invalido");
+  const proximo = clonar(objecto);
   if (trabalho === "PENDÊNCIA_ATIVA") {
     const pnds = Array.isArray(opts.pndIds) ? opts.pndIds : objecto.pndIds;
     if (!pnds || pnds.length === 0) return recusa("pendencia_ativa_sem_pnd");
@@ -338,25 +382,30 @@ export function definirEstadoTrabalho(id, trabalho, opts = {}) {
       const p = objectos.get(pid);
       if (!p || p.tipo !== "PND") return recusa("pnd_invalido", { id: pid });
     }
-    objecto.pndIds = [...pnds];
+    proximo.pndIds = [...pnds];
   }
   const anterior = {
     maturidade: objecto.maturidade,
     trabalho: objecto.trabalho
   };
-  objecto.trabalho = trabalho;
+  proximo.trabalho = trabalho;
   const papeis = normalizarPapeis(opts.papel || opts.papeis);
-  const mev = appendEvento({
+  const mev = construirEvento({
     objectoId: id,
     tipoObjecto: objecto.tipo,
     estadoAnterior: anterior,
-    estadoNovo: { maturidade: objecto.maturidade, trabalho: objecto.trabalho },
+    estadoNovo: { maturidade: proximo.maturidade, trabalho: proximo.trabalho },
     papel: papeis[0] || "ceo_agente",
     papeis,
     evidencia: evidenciaValida(opts.evidencia) ? { ...opts.evidencia } : null,
     classificacao: objecto.classificacao,
     acto: "trabalho"
   });
+  const gravado = comprometer(mev, proximo, () => {
+    objecto.trabalho = proximo.trabalho;
+    objecto.pndIds = proximo.pndIds;
+  });
+  if (!gravado.ok) return gravado;
   return ok({ objecto: clonar(objecto), evento: mev });
 }
 
@@ -387,10 +436,55 @@ export function apagarObjecto() {
   return recusa("historico_append_only");
 }
 
+function hidratarDesdeLog(registos) {
+  objectos = new Map();
+  eventos = [];
+  const ids = [];
+  for (const rec of registos) {
+    const snapshot = rec.objecto ? clonar(rec.objecto) : null;
+    const evento = { ...rec };
+    delete evento.objecto;
+    eventos.push(Object.freeze(evento));
+    if (snapshot) {
+      objectos.set(snapshot.id, snapshot);
+      ids.push(snapshot.id);
+    }
+    if (evento.id) ids.push(evento.id);
+    if (evento.objectoId) ids.push(evento.objectoId);
+  }
+  restaurarContadoresDesdeIds(ids);
+}
+
+/**
+ * Boot da persistência física. Rehidrata C2 a partir do log.
+ * Falha fechada: não cria store vazio por cima de corrupção.
+ */
+export function inicializarPersistenciaFisica(dir = PATH_CANONICO) {
+  desactivarPersistenciaFisica();
+  const carga = carregarStore(dir);
+  if (!carga.ok) {
+    return recusa(carga.motivo, {
+      motivos: carga.motivos,
+      extra: carga.extra,
+      campo: carga.campo,
+      linha: carga.linha
+    });
+  }
+  hidratarDesdeLog(carga.eventos);
+  activarDirectorioPersistencia(dir);
+  return ok({
+    manifesto: carga.manifesto,
+    eventos: carga.eventos.length,
+    primeiroBoot: carga.primeiroBoot === true,
+    directorio: dir
+  });
+}
+
 export function reiniciarMepParaTestes() {
   objectos = new Map();
   eventos = [];
   reiniciarIdentificadores();
+  desactivarPersistenciaFisica();
 }
 
 export function contagemEventos() {

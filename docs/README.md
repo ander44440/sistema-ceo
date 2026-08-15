@@ -57,9 +57,11 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`requirements/REQ-085-requisitos-minimos-mep-ceo.md`](requirements/REQ-085-requisitos-minimos-mep-ceo.md) | **Homologado v1.0** — Pacote mínimo MEP-CEO; IDs `MCP`…`MEV`; transições ANL-018 |
 | [`architecture/ARQ-033-fronteira-mep-ceo.md`](architecture/ARQ-033-fronteira-mep-ceo.md) | **Homologada v1.0** — Fronteira CAP-13; isolamento intacto; C3 **não** implementada |
 | [`implementation/IMP-072-nucleo-persistente-mep-ceo.md`](implementation/IMP-072-nucleo-persistente-mep-ceo.md) | **IMP-072 HOMOLOGADA** — núcleo C1+C2 da CAP-13 |
+| [`implementation/IMP-073-persistencia-fisica-mep-ceo.md`](implementation/IMP-073-persistencia-fisica-mep-ceo.md) | **IMP-073 IMPLEMENTADA** · **VAL-074 APROVADA** — persistência física + adapter FS |
 | [`implementation/evidencias/IMP-072-homologacao.md`](implementation/evidencias/IMP-072-homologacao.md) | Registo formal de homologação da IMP-072 (14/08/2026) |
 | [`validation/VAL-072-nucleo-persistente-mep-ceo.md`](validation/VAL-072-nucleo-persistente-mep-ceo.md) | **VAL-072 CONCLUÍDA** — 0 FAIL; base da IMP-072 e da CAP-13 |
 | [`validation/VAL-073-frente-3-disciplina-factual-lastro.md`](validation/VAL-073-frente-3-disciplina-factual-lastro.md) | **VAL-073 CONCLUÍDA e APROVADA** — Frente 3 disciplina factual; 0 FAIL; DESP-009 emendado |
+| [`validation/VAL-074-persistencia-fisica-mep-ceo.md`](validation/VAL-074-persistencia-fisica-mep-ceo.md) | **VAL-074 CONCLUÍDA e APROVADA** — persistência física CAP-13 (IMP-073); 0 FAIL |
 | [`requirements/REQ-CEO-etapa-2-correcoes-criticas-v1.md`](requirements/REQ-CEO-etapa-2-correcoes-criticas-v1.md) | **Consolidado** — Etapa 2 Correções Críticas v1 (REQ-CEO-001…015); apta a encerramento; Etapa 3 = Reteste Controlado |
 | [`GATE-009-certificacao-prontidao-sistema-ceo.md`](GATE-009-certificacao-prontidao-sistema-ceo.md) | **Homologado** — Certificação de prontidão; parecer **Apto com ressalvas**; abre deliberação da próxima frente |
 | [`roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md`](roadmap/ROADMAP-002-planejamento-proxima-onda-evolucao.md) | **Em análise** — F1 ENCERRADA; **F2 retirada**; candidatas F3–F8 |
