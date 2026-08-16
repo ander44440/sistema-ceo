@@ -1,0 +1,39 @@
+# Railway ignore — reduz artefacto do ceo-api.
+# Obrigatorio: preservar app/src/mepCeo (unico nucleo MEP canonico).
+
+.git
+.github
+.cursor
+.vercel
+**/.vercel
+**/node_modules
+app/node_modules
+app/dist
+**/dist
+**/.tmp
+**/.cache
+**/*.log
+
+# Dados locais (producao: volume /data)
+mep-ceo/store/**
+executive/**
+
+# Documentacao e metadados
+docs
+
+# Frontend / plugins Vite — nao necessarios no processo Hono
+app/public
+app/index.html
+app/vite.config.js
+app/package.json
+app/package-lock.json
+app/server
+app/scripts
+app/styles
+app/src/**
+!app/src/mepCeo/
+!app/src/mepCeo/**
+
+# Testes (runtime nao precisa)
+**/*.test.js
+**/coverage
