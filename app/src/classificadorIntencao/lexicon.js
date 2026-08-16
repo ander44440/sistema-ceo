@@ -249,7 +249,7 @@ export const LEXICO_C3 = Object.freeze([
   }),
   Object.freeze({
     id: "verbo_execucao",
-    re: /\b(implementa|despacha|publica\s+job|abre\s+(um\s+)?pr|acion[ae]|delegue|investigue|execut[ae]|ger[ae]|analis[ae])\b/,
+    re: /\b(implementa|despacha|publica\s+job|abre\s+(um\s+)?pr|acion[ae]|delegue|investigue|execut[ae]|ger[ae])\b/,
     peso: 0.8
   })
 ]);

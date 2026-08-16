@@ -21,6 +21,10 @@ export {
 
 export {
   classificar,
+  ehProibicaoExecucaoExplicita,
+  ehAutorizacaoExplicitaCriarJob,
+  ehPedidoAnaliseOuRecomendacao,
+  ehComandoExecucaoExplicito,
   temVerboExecucao,
   desambiguarJobs,
   calcularConfianca,

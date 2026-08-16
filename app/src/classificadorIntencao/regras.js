@@ -27,9 +27,95 @@ import {
  */
 
 /**
- * Pedido interrogativo / deliberativo — permanece fora de E2.1 C3.
+ * Polaridade F1: «crie/publique o Job» dentro de proibição não autoriza Job.
  * @param {string} t
  */
+export function ehAutorizacaoExplicitaCriarJob(t) {
+  if (!t) return false;
+  const s = String(t);
+  if (/\bJOB-\d+\b/i.test(s)) return false;
+  if (
+    /\bnao\s+(quero|desejo|permito|autorizo)\b/i.test(s) &&
+    /\b(crie|cria|criar|publique|publicar)\s+(um\s+|o\s+|novo\s+)?jobs?\b/i.test(
+      s
+    )
+  ) {
+    return false;
+  }
+  return (
+    /\b(crie|cria|criar|publique|publicar|despache|despachar)\s+(o\s+|um\s+|novo\s+)?jobs?\b/.test(
+      s
+    ) ||
+    /\b(publicar|criar|despachar|enviar)\s+job\b/.test(s) ||
+    /\bcrie\s+o\s+job\s+necessario\b/.test(s) ||
+    /\b(criar|crie|cria)\s+o\s+job\b/.test(s)
+  );
+}
+
+/**
+ * P0 — bloqueio: NÃO executar / NÃO criar Job / apenas responder.
+ * Texto já normalizado (sem acentos). Corre ANTES de qualquer rota C3.
+ * @param {string} t
+ */
+export function ehProibicaoExecucaoExplicita(t) {
+  if (!t) return false;
+  if (ehAutorizacaoExplicitaCriarJob(t)) {
+    return (
+      /\bnao\s+(crie|cria|criar)\s+(um\s+|o\s+|novo\s+)?jobs?\b/.test(t) ||
+      /\bsem\s+criar\s+jobs?\b/.test(t) ||
+      /\bnunca\s+(crie|cria|criar)\s+jobs?\b/.test(t)
+    );
+  }
+  return (
+    /\bnao\s+(execute|executa|executar)(\s+nada)?\b/.test(t) ||
+    /\bnao\s+(implemente|implementa|implementar)\b/.test(t) ||
+    /\bnao\s+(crie|cria|criar)\s+(um\s+)?jobs?\b/.test(t) ||
+    /\bnao\s+(faca|faz|fazer)\s+(altera|mudan|nada)\b/.test(t) ||
+    /\bnao\s+faca\s+alteracoes?\b/.test(t) ||
+    /\bapenas\s+(responda|informe|diga|analise|analisar|mostre)\b/.test(t) ||
+    /\bsomente\s+(responda|informe|diga|analise|analisar|mostre)\b/.test(t) ||
+    /\bso\s+(responda|informe|diga)\b/.test(t) ||
+    /\bsem\s+(executar|execucao|criar\s+jobs?|alterar|implementar)\b/.test(t) ||
+    /\bnunca\s+(execute|executa|implemente|crie\s+jobs?)\b/.test(t)
+  );
+}
+
+/**
+ * Pedido de análise / recomendação deliberativa — não é execução.
+ * Sem E4/recomendação operacional (fora do recorte F1).
+ * @param {string} t
+ */
+export function ehPedidoAnaliseOuRecomendacao(t) {
+  if (!t) return false;
+  if (ehComandoExecucaoExplicito(t)) return false;
+  return (
+    /\b(analisa|analise|analisar)\b/.test(t) ||
+    /\b(avalia|avalie|avaliar)\b/.test(t) ||
+    /\b(compara|compare|comparar)\b/.test(t) ||
+    /\b(recomenda|recomendaria|recomendacao|voce\s+recomenda)\b/.test(t) ||
+    /\b(pros?\s+e\s+contras?|pontos?\s+(positivos?|negativos?))\b/.test(t) ||
+    /\bo\s+que\s+(voce|tu)\s+sabe\b/.test(t) ||
+    /\bo\s+que\s+sabe\s+(atualmente\s+)?sobre\b/.test(t)
+  );
+}
+
+/**
+ * P0 — comando de execução explícito. Negação e perguntas deliberativas anulam.
+ * @param {string} t
+ */
+export function ehComandoExecucaoExplicito(t) {
+  if (!t || ehProibicaoExecucaoExplicita(t)) return false;
+  if (ehPerguntaDeliberativa(t)) return false;
+  return (
+    /\b(implementa|implemente|implementar)\b/.test(t) ||
+    /\b(executa|execute|executar)\b/.test(t) ||
+    /\b(cria(r)?|crie)\s+(um\s+)?jobs?\b/.test(t) ||
+    /\b(despacha(r)?|despache)\b/.test(t) ||
+    /\bpode\s+executar\b/.test(t) ||
+    /\bfaca\s+agora\b/.test(t)
+  );
+}
+
 export function ehPerguntaDeliberativa(t) {
   return (
     /^(como|o que|qual|quando|onde|por que|porque|quem)\b/.test(t) ||
@@ -508,6 +594,10 @@ export function ehConhecimentoGeralE22(t) {
  */
 export function ehIntencaoExecutivaE21(t) {
   if (!t || ehPerguntaDeliberativa(t)) return false;
+  if (ehProibicaoExecucaoExplicita(t)) return false;
+  if (ehPedidoAnaliseOuRecomendacao(t) && !ehComandoExecucaoExplicito(t)) {
+    return false;
+  }
 
   const padroes = [
     /\b(resolv[ae]|resolver)\b.*\b(bugs?|erros?|falhas?|problemas?)\b/,
@@ -532,6 +622,11 @@ export function ehIntencaoExecutivaE21(t) {
  * @param {string} t
  */
 export function temVerboExecucao(t) {
+  if (!t || ehProibicaoExecucaoExplicita(t)) return false;
+  if (ehPerguntaDeliberativa(t)) return false;
+  if (ehPedidoAnaliseOuRecomendacao(t) && !ehComandoExecucaoExplicito(t)) {
+    return false;
+  }
   if (ehIntencaoExecutivaE21(t)) return true;
   return (
     /\b(implementa(r)?|implemente|despacha(r)?|despache)\b/.test(t) ||
@@ -588,6 +683,18 @@ export function calcularConfianca(scoreVencedor, scoreSegundo, vago) {
  * @returns {{ classe: import("./dominio.js").ClasseIntencao, razao: string }}
  */
 export function resolverEmpates(scores, t, ctx = {}) {
+  if (ehPedidoAnaliseOuRecomendacao(t)) {
+    return {
+      classe: "conversa_projeto",
+      razao: "P0/F1: análise/recomendação → C2 (sem Job)"
+    };
+  }
+  if (ehProibicaoExecucaoExplicita(t)) {
+    return {
+      classe: "conversa_projeto",
+      razao: "P0/F1: proibição explícita de execução → C2"
+    };
+  }
   // Emenda E2.1 — prioridade máxima sobre RF8/RF9 e frente activa
   if (ehIntencaoExecutivaE21(t)) {
     return {
@@ -793,6 +900,21 @@ export function classificar(texto, contexto = {}) {
     return montarSaida("conhecimento_geral", 0.3, "Mensagem vazia — clarificação", {
       precisaClarificacao: true
     });
+  }
+
+  if (ehPedidoAnaliseOuRecomendacao(t)) {
+    return montarSaida(
+      "conversa_projeto",
+      0.94,
+      "P0/F1: análise/recomendação → C2 (sem Job)"
+    );
+  }
+  if (ehProibicaoExecucaoExplicita(t)) {
+    return montarSaida(
+      "conversa_projeto",
+      0.95,
+      "P0/F1: proibição explícita de execução → C2 (sem Job)"
+    );
   }
 
   // Emenda E2.1 — atalho obrigatório (antes de boost de frente activa)

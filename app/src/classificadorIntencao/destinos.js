@@ -9,6 +9,13 @@ import {
   contemSugiroComoRespostaFinal
 } from "./integracaoNucleo.js";
 import { gerarRespostaConhecimentoGeral } from "./respostaLeve.js";
+import { normalizarTexto } from "./lexicon.js";
+import {
+  ehAutorizacaoExplicitaCriarJob,
+  ehProibicaoExecucaoExplicita,
+  ehPedidoAnaliseOuRecomendacao,
+  ehComandoExecucaoExplicito
+} from "./regras.js";
 
 /** Capacidades operacionais válidas para C4 (nunca Motor/MRE). */
 export const CAPACIDADES_C4 = Object.freeze([
@@ -185,6 +192,34 @@ export async function executarDestinoC3(ctx) {
   }
 
   try {
+    const tC3 = normalizarTexto(ctx.texto);
+    const autorizaC3 = ehAutorizacaoExplicitaCriarJob(tC3);
+    if (
+      (!autorizaC3 && ehProibicaoExecucaoExplicita(tC3)) ||
+      (ehPedidoAnaliseOuRecomendacao(tC3) &&
+        !ehComandoExecucaoExplicito(tC3) &&
+        !autorizaC3)
+    ) {
+      const bloqueado = await conduzirTrabalhoExecutivoC3(
+        ctx.texto,
+        ctx.classificacao,
+        deps
+      );
+      return baseResposta(ctx, {
+        ok: true,
+        mensagem: bloqueado.mensagem,
+        capacidade: "motor_execucao",
+        modo: bloqueado.modo || "consulta_sem_execucao",
+        dados: {
+          ...(bloqueado.dados || {}),
+          mreInvocado: false,
+          mreFallback: false,
+          motorAcionado: false,
+          rota: "nucleo_mre"
+        }
+      });
+    }
+
     const resultadoC3 = await conduzirTrabalhoExecutivoC3(
       ctx.texto,
       ctx.classificacao,
