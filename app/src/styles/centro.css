@@ -27,6 +27,53 @@
   min-width: 0;
 }
 
+.cs-mep-c3 {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1rem 1.1rem;
+}
+
+.cs-mep-c3 .cs-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cs-mep-c3-origem {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--muted, #94a3b8);
+}
+
+.cs-mep-c3-vazio {
+  margin: 0;
+  color: var(--muted, #94a3b8);
+}
+
+.cs-mep-c3-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cs-mep-c3-lista li {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.cs-mep-c3-id,
+.cs-mep-c3-estado {
+  font-weight: 600;
+}
+
+.cs-mep-c3-lista p {
+  margin: 0;
+}
+
 .cs-hero {
   display: flex;
   justify-content: space-between;
