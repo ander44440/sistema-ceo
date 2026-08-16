@@ -1,6 +1,6 @@
 # ARQ-033 — Fronteira da Memória de Evolução do Produto CEO (MEP-CEO)
 
-> **Status: Homologada — v1.1 (CTO + Usuário, 16/08/2026).** v1.0 permanece a fronteira C1+C2 homologada em 14/08/2026.  
+> **Status: Homologada — v1.1 (CTO + Usuário, 16/08/2026).** v1.0 permanece a fronteira C1+C2 homologada em 14/08/2026. Emenda **v1.2 Homologada** (transporte runtime): [`ARQ-033-fronteira-mep-ceo-v1.2.md`](./ARQ-033-fronteira-mep-ceo-v1.2.md).  
 > Tipo ARQ (ADR-010). **Identificação:** ARQ-033.  
 > **Capacidade proprietária:** **CAP-13 — Memória de Evolução do Produto** (CAP-E; ADR-020).  
 > Norma superior: CON-001; ADR-006; ADR-010; ADR-020; VIS-009 Homologada v1.1; REQ-085 Homologado v1.1; ANL-018.  

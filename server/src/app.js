@@ -6,6 +6,7 @@ import { registrarCto } from './routes/cto.js';
 import { registrarQueue } from './routes/queue.js';
 import { registrarOnboarding } from './routes/onboarding.js';
 import { registrarOrquestracao } from './routes/orquestracao.js';
+import { registrarMepC3Vista } from './routes/mepC3Vista.js';
 import { resolverRepoRoot } from './config.js';
 
 /**
@@ -22,5 +23,6 @@ export function createApp(env = process.env) {
   registrarQueue(app, { repoRoot });
   registrarOnboarding(app, { repoRoot });
   registrarOrquestracao(app, env);
+  registrarMepC3Vista(app, { repoRoot });
   return app;
 }

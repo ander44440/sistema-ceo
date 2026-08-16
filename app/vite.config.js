@@ -3,7 +3,6 @@ import { ceoLlmPlugin } from "./server/ceoLlmPlugin.js";
 import { executionQueuePlugin } from "./server/executionQueuePlugin.js";
 import { onboardingPlugin } from "./server/onboardingPlugin.js";
 import { orquestracaoPlugin } from "./server/orquestracaoPlugin.js";
-import { mepC3VistaPlugin } from "./server/mepC3VistaPlugin.js";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -14,8 +13,7 @@ export default defineConfig(({ mode }) => {
       ceoLlmPlugin(env),
       executionQueuePlugin(),
       onboardingPlugin(),
-      orquestracaoPlugin(env),
-      mepC3VistaPlugin()
+      orquestracaoPlugin(env)
     ],
     server: {
       port: 5173,
