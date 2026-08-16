@@ -5,7 +5,7 @@
 > **Implementação homologada:** núcleo **C1 + C2** da IMP-072; persistência física IMP-073 / VAL-074.  
 > **VAL-072:** **CONCLUÍDA** (0 FAIL).  
 > **Registo formal:** [`homologacao-cap-13.md`](homologacao-cap-13.md) (acto 14/08/2026 — C1+C2; C3/UI **não** autorizados *por esse acto*).  
-> **C3 / UI:** **IMP-074** · **VAL-075 HOMOLOGADA** · **VAL-076 HOMOLOGADA** · **IMP-075** · **VAL-077 HOMOLOGADA** (transporte runtime da vista). Integrações Motor/MRE/EIC: **fora**.  
+> **C3 / UI:** **IMP-074** · **VAL-075 HOMOLOGADA** · **VAL-076 HOMOLOGADA** · **IMP-075** · **VAL-077 HOMOLOGADA** (transporte) · **IMP-076** · **VAL-078 HOMOLOGADA** (invocador Node). Integrações Motor/MRE/EIC: **fora**.  
 > Sede deste README.
 
 ---
@@ -20,6 +20,7 @@ ANL-018 → ADR-020 → VIS-009 → REQ-085 → ARQ-033 → IMP-072 → VAL-072 
                                               VIS-009 v1.1 + REQ-085 v1.1 **HOMOLOGADOS** (contrato C3/UI)
                                               ARQ-033 v1.1 **HOMOLOGADA** → IMP-074 **IMPLEMENTADA** → VAL-075 **HOMOLOGADA** → VAL-076 **HOMOLOGADA** (fronteira)
                                               ARQ-033 v1.2 **HOMOLOGADA** → IMP-075 **IMPLEMENTADA** → VAL-077 **HOMOLOGADA** (transporte runtime)
+                                              ARQ-034 proposta (Opção A) → IMP-076 **IMPLEMENTADA** → VAL-078 **HOMOLOGADA** (invocador C3 interno)
 ```
 
 | Elo | Artefacto | Estado |
@@ -40,6 +41,8 @@ ANL-018 → ADR-020 → VIS-009 → REQ-085 → ARQ-033 → IMP-072 → VAL-072 
 | VAL fronteira UI/Node | [`VAL-076`](../validation/VAL-076-correcao-fronteira-browser-node-imp-074.md) | **HOMOLOGADA** — 16/08/2026 · 11/11 PASS · L1/L2 preservadas |
 | IMP transporte | [`IMP-075`](../implementation/IMP-075-transporte-runtime-vista-c3.md) | **IMPLEMENTADA** · **VAL-077 HOMOLOGADA** |
 | VAL transporte | [`VAL-077`](../validation/VAL-077-transporte-runtime-vista-c3.md) | **HOMOLOGADA** — 16/08/2026 · 12/12 PASS |
+| IMP invocador | [`IMP-076`](../implementation/IMP-076-invocador-c3-interno.md) | **IMPLEMENTADA** · **VAL-078 HOMOLOGADA** |
+| VAL invocador | [`VAL-078`](../validation/VAL-078-invocador-c3-interno.md) | **HOMOLOGADA** — 16/08/2026 · 12/12 PASS |
 
 ---
 

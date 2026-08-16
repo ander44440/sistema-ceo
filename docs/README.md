@@ -62,11 +62,14 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`implementation/IMP-073-persistencia-fisica-mep-ceo.md`](implementation/IMP-073-persistencia-fisica-mep-ceo.md) | **IMP-073 IMPLEMENTADA** · **VAL-074 APROVADA** — persistência física + adapter FS |
 | [`implementation/IMP-074-c3-ui-minima-mep-ceo.md`](implementation/IMP-074-c3-ui-minima-mep-ceo.md) | **IMP-074 IMPLEMENTADA** — C3 + UI só-leitura Centro |
 | [`implementation/IMP-075-transporte-runtime-vista-c3.md`](implementation/IMP-075-transporte-runtime-vista-c3.md) | **IMP-075 IMPLEMENTADA** — transporte runtime GET vista C3 |
+| [`implementation/IMP-076-invocador-c3-interno.md`](implementation/IMP-076-invocador-c3-interno.md) | **IMP-076 IMPLEMENTADA** — invocador C3 interno Node |
+| [`architecture/ARQ-034-invocador-c3-producao-proposta.md`](architecture/ARQ-034-invocador-c3-producao-proposta.md) | **ARQ-034 PROPOSTA** — desenho do invocador (Opção A) |
 | [`validation/VAL-072-nucleo-persistente-mep-ceo.md`](validation/VAL-072-nucleo-persistente-mep-ceo.md) | **VAL-072 CONCLUÍDA** — 0 FAIL; base da IMP-072 e da CAP-13 |
 | [`validation/VAL-074-persistencia-fisica-mep-ceo.md`](validation/VAL-074-persistencia-fisica-mep-ceo.md) | **VAL-074 CONCLUÍDA e APROVADA** — persistência física CAP-13 (IMP-073); 0 FAIL |
 | [`validation/VAL-075-c3-ui-minima-mep-ceo.md`](validation/VAL-075-c3-ui-minima-mep-ceo.md) | **VAL-075 HOMOLOGADA** — CTO + Usuário, 16/08/2026; 25/25 PASS; L1/L2 limitações |
 | [`validation/VAL-076-correcao-fronteira-browser-node-imp-074.md`](validation/VAL-076-correcao-fronteira-browser-node-imp-074.md) | **VAL-076 HOMOLOGADA** — fronteira browser/Node da IMP-074; 11/11 PASS |
 | [`validation/VAL-077-transporte-runtime-vista-c3.md`](validation/VAL-077-transporte-runtime-vista-c3.md) | **VAL-077 HOMOLOGADA** — transporte runtime vista C3; 12/12 PASS |
+| [`validation/VAL-078-invocador-c3-interno.md`](validation/VAL-078-invocador-c3-interno.md) | **VAL-078 HOMOLOGADA** — invocador C3 interno; 12/12 PASS |
 | [`D0-fundacao.md`](D0-fundacao.md) | Histórico (fundação) |
 | [`CON-001-constituicao.md`](CON-001-constituicao.md) | Aprovado v1.2 — mandato temporário revogado; papéis permanentes restabelecidos |
 | [`vision/VIS-001-visao-do-produto.md`](vision/VIS-001-visao-do-produto.md) | Aprovado v1.0 |
