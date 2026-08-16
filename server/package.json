@@ -9,7 +9,8 @@
     "dev": "node --watch src/index.js",
     "test:orquestracao:e2": "node --test src/routes/orquestracao.test.js",
     "test:orquestracao:e5": "node --test src/routes/orquestracao.test.js",
-    "test:mep-c3-vista": "node --test src/routes/mepC3Vista.test.js"
+    "test:mep-c3-vista": "node --test src/routes/mepC3Vista.test.js",
+    "test:mep-c3-invocador": "node --test src/services/mepC3Invocador.test.js"
   },
   "engines": {
     "node": ">=20"
