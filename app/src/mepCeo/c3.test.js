@@ -4,9 +4,11 @@
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { beforeEach, test } from "node:test";
 import { FICHEIRO_EVENTOS } from "./adapterFs.js";
+import { htmlBlocoMepC3 } from "../modules/centroSituacao/blocoMepC3.js";
 import {
   listarPropostasC3,
   proporEvolucaoDesidentificada
@@ -30,6 +32,22 @@ const ACTO_OK = Object.freeze({
 
 beforeEach(() => {
   reiniciarMepParaTestes();
+});
+
+test("bloco UI C3 não importa mepCeo nem adapter; markup usa vista já filtrada", () => {
+  const fonte = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../modules/centroSituacao/blocoMepC3.js"),
+    "utf8"
+  );
+  assert.equal(/from ["'].*mepCeo/.test(fonte), false);
+  assert.equal(/adapterFs/.test(fonte), false);
+  const vazio = htmlBlocoMepC3([]);
+  assert.match(vazio, /Nenhuma proposta de produto em CONCEBIDO/);
+  assert.match(vazio, /aria-label="Propostas de evolução do produto"/);
+  proporEvolucaoDesidentificada({ ...ACTO_OK });
+  const html = htmlBlocoMepC3(listarPropostasC3());
+  assert.match(html, /MDL-001/);
+  assert.equal(/transcript|origemCanal/.test(html), false);
 });
 
 test("C3 cria exactamente um objecto CONCEBIDO / hipótese com origemCanal C3", () => {
