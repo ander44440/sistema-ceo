@@ -1,14 +1,15 @@
 # CAP-001 — Mapa de Capacidades do CEO
 
 > **Status: APROVADA.**
+> Versão 1.1 — 14/08/2026 (CAP-13 instituída; ADR-020). Conteúdo CAP-01…12 da v1.0 **preservado**.
 > Versão 1.0 — 21/07/2026, aprovada na decisão final da Fase 0 (ADR-004).
-> Norma superior: CON-001 v1.0 e VIS-001 v1.0. Origem: ADR-002 (Decisão 6) e ADR-003.
+> Norma superior: CON-001 v1.0 e VIS-001 v1.0. Origem: ADR-002 (Decisão 6); ADR-003; **ADR-020** (CAP-13).
 
 ---
 
 ## Padrão documental (ADR-002, Decisão 1)
 
-**O que é?** O mapa das capacidades que o CEO deverá desenvolver ao longo de sua evolução, com identificadores permanentes (CAP-01 a CAP-12) e estrutura padronizada. Organiza o domínio do problema antes do detalhamento dos requisitos — não define arquitetura, implementação nem prioridades.
+**O que é?** O mapa das capacidades que o CEO deverá desenvolver ao longo de sua evolução, com identificadores permanentes (CAP-01 a CAP-13) e estrutura padronizada. Organiza o domínio do problema antes do detalhamento dos requisitos — não define arquitetura, implementação nem prioridades.
 
 **Por que existe?** Para que os futuros grupos de requisitos nasçam organizados por capacidade, com rastreabilidade clara até a Constituição e a Visão, evitando requisitos soltos e lacunas no domínio (CON-001, Art. 1º e 5º).
 
@@ -22,7 +23,9 @@
 
 * Cada capacidade descreve **o que o CEO precisa saber fazer** (domínio do problema), nunca **como** será construído.
 * Os identificadores CAP-01 a CAP-12 são **permanentes** (ADR-003, Decisão 3): não serão renumerados nem reutilizados.
+* O identificador **CAP-13** é permanente (ADR-020): primeiro CAP-E emitido após a Fase 0; não renumera nem reutiliza CAP-01…12. Novos IDs CAP-E só nascem por ADR.
 * O **BCO (Banco de Competências Organizacionais)** não é uma capacidade: é conceito arquitetural candidato (ADR-002, Decisão 4; ADR-003, Decisão 2) que futuramente dará suporte a capacidades como a CAP-06.
+* A **MEP-CEO** não é uma capacidade à parte do mapa: é a memória da CAP-13.
 
 ---
 
@@ -164,6 +167,19 @@
 * **Fontes Normativas:** CON-001 Art. 1º e Art. 10; D0 (Objetivo educacional); VIS-001 §3, §6 e §7.
 * **Observações:** Proposta pelo Engenheiro na v0.1 como "Formação do Usuário"; aprovada e renomeada pelo CTO (ADR-003, Decisão 1) para refletir a missão do Art. 1º.
 
+### CAP-13 — Memória de Evolução do Produto
+
+* **Identificador:** CAP-13
+* **Nome:** Memória de Evolução do Produto
+* **Classificação:** **CAP-E** (ADR-017 / ADR-020)
+* **Ciclo:** ANL-018 **aprovada**. VIS-009 → REQ-085 → ARQ-033 **homologados v1.0**. IMP-072 **HOMOLOGADA** (C1+C2). VAL-072 **CONCLUÍDA** (0 FAIL). CAP-13 **HOMOLOGADA** (14/08/2026). IMP-073 persistência física · **VAL-074 APROVADA**. Sede: [`cap-13/`](cap-13/README.md).
+* **Objetivo:** Manter a memória institucional da evolução do **produto** Sistema CEO, distinta da memória de qualquer organização ou cliente.
+* **Descrição:** Registrar, organizar, consultar e propor a evolução do produto — capacidades de produto, épicos, módulos, decisões de produto, evidências, pendências, baselines, roadmap de produto e histórico append-only — com isolamento do eixo organização / cliente, evidência obrigatória em mudanças relevantes e homologação de baseline fora da alçada unilateral do CEO-agente. A memória desta capacidade chama-se **MEP-CEO**.
+* **Fora do Escopo:** Memória organizacional e decisões Art. 8º de clientes (CAP-05); acervo / itens KNW (CAP-04); aprendizado e BCO (CAP-06); observabilidade / visibilidade de execução (CAP-09); governação normativa e Autoridade Delegada (CAP-01 — a CAP-13 **consome** alçadas, não as emite); canal C3; UI; dados, conversas, conhecimento operacional, decisões privadas e factos de organizações; Motor / MRE / EIC / Gate G2 / MTE.
+* **Pilares Fortalecidos:** Conhecimento; Governança.
+* **Fontes Normativas:** CON-001 Art. 4º e Art. 5º §2º; VIS-001 §4; VIS-009; ANL-018; **ADR-020**; REQ-085; ARQ-033.
+* **Observações:** Instituída pela deliberação CTO 14/08/2026 (ADR-020). Especificação **homologada**. Capacidade **HOMOLOGADA** (14/08/2026) no contrato mínimo; implementação C1+C2. Persistência física IMP-073 **VAL-074**. **Não** absorve CAP-04 ou CAP-05. C3/UI/integrações **não** autorizados.
+
 ---
 
 ## Matriz de Rastreabilidade Estratégica (CON → VIS → CAP)
@@ -184,6 +200,7 @@ Origem explícita de cada capacidade (ADR-003, Decisão 5, item 2):
 | CAP-10 Segurança | Art. 6º (autoridade do usuário); Art. 11 | §5 escopo: não decidir pelo usuário | — |
 | CAP-11 Integrações | Art. 7º §2º (independência de ferramenta) | §4; §5 | REQ-001; ADR-002 D5 |
 | CAP-12 Desenvolvimento do Usuário | Art. 1º (propósito); Art. 10 (educacional) | §3; §6; §7 | D0; ADR-003 D1 |
+| CAP-13 Memória de Evolução do Produto | Art. 4º (pilares Conhecimento e Governança); Art. 5º §2º (fluxo do produto) | §4 visão de longo prazo (produto que evolui) | VIS-009; ANL-018; **ADR-020** |
 
 Toda capacidade possui pelo menos uma origem constitucional e uma origem na Visão: não há capacidade órfã nem norma estratégica sem capacidade correspondente.
 
@@ -205,6 +222,7 @@ Toda capacidade possui pelo menos uma origem constitucional e uma origem na Vis�
 | CAP-10 Segurança | ● | | | |
 | CAP-11 Integrações | ● | | ● | |
 | CAP-12 Desenvolvimento do Usuário | | | | ● |
+| CAP-13 Memória de Evolução do Produto | ● | ● | | |
 
 Todos os quatro pilares estão cobertos por pelo menos duas capacidades.
 
@@ -223,8 +241,8 @@ Todos os quatro pilares estão cobertos por pelo menos duas capacidades.
 | Elo | Referência |
 |-----|------------|
 | Norma superior | CON-001 v1.0; VIS-001 v1.0 |
-| Origem | ADR-002 (Decisão 6); ADR-003 (Decisões 1 a 5) |
-| Gera | CAP-002 (priorização); grupos de REQ-xxx por capacidade (após encerramento da Fase 0) |
+| Origem | ADR-002 (Decisão 6); ADR-003 (Decisões 1 a 5); **ADR-020** (CAP-13) |
+| Gera | CAP-002 (priorização); grupos de REQ-xxx por capacidade (após encerramento da Fase 0); ciclo MEP-CEO (REQ-085) sob CAP-13 |
 
 ## Histórico de versões
 
@@ -232,3 +250,6 @@ Todos os quatro pilares estão cobertos por pelo menos duas capacidades.
 |--------|------|------|-------|---------|-----------|
 | 0.1 | 21/07/2026 | Engenheiro (Cursor) | Rascunho inicial: 11 capacidades do CTO + 1 proposta | ADR-002, Decisão 6 | Revisado pelo CTO |
 | 1.0 | 21/07/2026 | CTO decidiu; Engenheiro consolidou; Usuário aprovou | CAP-12 renomeada para Desenvolvimento do Usuário; estrutura padronizada de 8 campos; IDs permanentes; matriz CON → VIS → CAP incorporada; BCO explicitado como mecanismo, não capacidade | ADR-003 | **Aprovada — decisão final da Fase 0 (ADR-004)** |
+| 1.1 | 14/08/2026 | CTO deliberou; Engenheiro formalizou | Instituição da **CAP-13 — Memória de Evolução do Produto** (CAP-E). CAP-01…12 intactas. | ADR-020; ANL-018 | **Aprovada — mapa estendido** |
+| 1.1 (anotação) | 14/08/2026 | CTO + Usuário; Engenheiro formalizou | CAP-13 **HOMOLOGADA** (contrato mínimo; C1+C2). C3/UI/integrações fora | Acto formal de homologação da CAP-13 | Sem nova versão de mapa |
+| 1.1 (anotação) | 15/08/2026 | Engenheiro | IMP-073 persistência física · VAL-074 **APROVADA** | Contrato persistência física CAP-13 | Sem nova versão de mapa |
