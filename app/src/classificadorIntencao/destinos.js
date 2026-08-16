@@ -25,6 +25,7 @@ import {
   ehComandoExecucaoExplicito,
   normalizarTexto
 } from "./regras.js";
+import { executarConsultaFactualCatalogo } from "../catalogoProjetos/consultaFactual.js";
 
 /** Capacidades operacionais válidas para C4 (nunca Motor/MRE). */
 export const CAPACIDADES_C4 = Object.freeze([
@@ -79,6 +80,28 @@ function baseResposta(ctx, parcial) {
     origem: "executiveEngine",
     modo: parcial.modo || "stub"
   };
+}
+
+/**
+ * Consulta factual de catálogo — sem MRE, sem CN, sem Motor.
+ * @param {ContextoDestino} ctx
+ */
+function responderConsultaFactualCatalogo(ctx) {
+  const factual = executarConsultaFactualCatalogo(ctx.texto);
+  if (!factual) return null;
+  return baseResposta(ctx, {
+    ok: true,
+    mensagem: factual.mensagem,
+    capacidade: null,
+    modo: "consulta_factual_catalogo",
+    dados: {
+      mreInvocado: false,
+      motorAcionado: false,
+      publicarJobProibido: true,
+      rota: "consulta_factual_catalogo",
+      consultaFactual: factual.dados
+    }
+  });
 }
 
 /**
@@ -458,6 +481,9 @@ export async function executarDestinoClarificacao(ctx) {
  * @param {ContextoDestino} ctx
  */
 export async function executarPorDestino(ctx) {
+  const factual = responderConsultaFactualCatalogo(ctx);
+  if (factual) return factual;
+
   const destino = ctx.rota?.destino;
 
   switch (destino) {
