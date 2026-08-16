@@ -4,6 +4,8 @@ Registros educacionais: por que cada decisão foi tomada, alternativas, riscos e
 
 | Registro | Tema |
 |----------|------|
+| [`2026-08-14-homologacao-cap-13-mep-ceo.md`](2026-08-14-homologacao-cap-13-mep-ceo.md) | **CAP-13 Homologada** (contrato mínimo C1+C2) · C3/UI fora (14/08/2026); persistência física = IMP-073 / VAL-074 |
+| [`2026-08-14-homologacao-imp-072-mep-ceo.md`](2026-08-14-homologacao-imp-072-mep-ceo.md) | **IMP-072 Homologada** (C1+C2) · CAP-13 ainda não homologada *nesse* acto (14/08/2026) |
 | [`2026-07-21-conceitos-organizacionais.md`](2026-07-21-conceitos-organizacionais.md) | Conceitos organizacionais |
 | [`2026-07-21-r1-revisao-organizacional.md`](2026-07-21-r1-revisao-organizacional.md) | Revisão organizacional R1 |
 | [`2026-07-22-ancora-operacional-pos-cnc-005.md`](2026-07-22-ancora-operacional-pos-cnc-005.md) | Âncora pós-CNC-005 |
