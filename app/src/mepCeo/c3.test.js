@@ -41,6 +41,24 @@ test("bloco UI C3 não importa mepCeo nem adapter; markup usa vista já filtrada
   );
   assert.equal(/from ["'].*mepCeo/.test(fonte), false);
   assert.equal(/adapterFs/.test(fonte), false);
+  const centro = readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../modules/centroSituacao/centroSituacao.js"
+    ),
+    "utf8"
+  );
+  assert.equal(/from ["'].*mepCeo/.test(centro), false);
+  assert.equal(/adapterFs|virtual:mep-c3/.test(centro), false);
+  assert.match(centro, /carregarVistaMepC3/);
+  const cliente = readFileSync(
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../modules/centroSituacao/carregarVistaMepC3.js"
+    ),
+    "utf8"
+  );
+  assert.equal(/from ["'].*mepCeo|adapterFs|node:/.test(cliente), false);
   const vazio = htmlBlocoMepC3([]);
   assert.match(vazio, /Nenhuma proposta de produto em CONCEBIDO/);
   assert.match(vazio, /aria-label="Propostas de evolução do produto"/);

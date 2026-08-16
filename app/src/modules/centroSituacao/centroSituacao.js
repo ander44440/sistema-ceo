@@ -24,7 +24,7 @@ import {
   htmlPainelOrquestracao,
   ligarPainelOrquestracao
 } from "../../orquestracao/ui.js";
-import propostasMepC3 from "virtual:mep-c3-propostas";
+import { carregarVistaMepC3 } from "./carregarVistaMepC3.js";
 import { htmlBlocoMepC3 } from "./blocoMepC3.js";
 
 function htmlDeliberacaoNatural(dados) {
@@ -128,6 +128,8 @@ export function montarCentroSituacao() {
   let painelDia = null;
   /** @type {null | (() => void)} */
   let pararPainelOrq = null;
+  /** Vista C3 em runtime (GET interno); fail-closed começa vazia. */
+  let propostasMepC3 = [];
 
   function pintar() {
     if (pararPainelOrq) {
@@ -363,6 +365,13 @@ export function montarCentroSituacao() {
   }
 
   pintar();
+  void carregarVistaMepC3().then((vista) => {
+    propostasMepC3 = vista;
+    const bloco = root.querySelector(".cs-mep-c3");
+    if (bloco) {
+      bloco.outerHTML = htmlBlocoMepC3(propostasMepC3);
+    }
+  });
   queueMicrotask(() => {
     const input = root.querySelector("#cs-input");
     if (input) input.focus();

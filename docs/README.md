@@ -56,14 +56,17 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`vision/VIS-009-memoria-evolucao-produto-ceo.md`](vision/VIS-009-memoria-evolucao-produto-ceo.md) | **Homologada v1.0** · **Homologada v1.1** (C3/UI contrato) |
 | [`requirements/REQ-085-requisitos-minimos-mep-ceo.md`](requirements/REQ-085-requisitos-minimos-mep-ceo.md) | **Homologado v1.0** · **Homologado v1.1** (RF-08 C3; RNF-02 Centro só-leitura) |
 | [`architecture/ARQ-033-fronteira-mep-ceo.md`](architecture/ARQ-033-fronteira-mep-ceo.md) | **Homologada v1.0** · **Homologada v1.1** (C3 + UI Centro) |
+| [`architecture/ARQ-033-fronteira-mep-ceo-v1.2.md`](architecture/ARQ-033-fronteira-mep-ceo-v1.2.md) | **Homologada v1.2** — transporte runtime vista C3; sede Railway |
 | [`implementation/IMP-072-nucleo-persistente-mep-ceo.md`](implementation/IMP-072-nucleo-persistente-mep-ceo.md) | **IMP-072 HOMOLOGADA** — núcleo C1+C2 da CAP-13 |
 | [`implementation/evidencias/IMP-072-homologacao.md`](implementation/evidencias/IMP-072-homologacao.md) | Registo formal de homologação da IMP-072 (14/08/2026) |
 | [`implementation/IMP-073-persistencia-fisica-mep-ceo.md`](implementation/IMP-073-persistencia-fisica-mep-ceo.md) | **IMP-073 IMPLEMENTADA** · **VAL-074 APROVADA** — persistência física + adapter FS |
 | [`implementation/IMP-074-c3-ui-minima-mep-ceo.md`](implementation/IMP-074-c3-ui-minima-mep-ceo.md) | **IMP-074 IMPLEMENTADA** — C3 + UI só-leitura Centro |
+| [`implementation/IMP-075-transporte-runtime-vista-c3.md`](implementation/IMP-075-transporte-runtime-vista-c3.md) | **IMP-075 IMPLEMENTADA** — transporte runtime GET vista C3 |
 | [`validation/VAL-072-nucleo-persistente-mep-ceo.md`](validation/VAL-072-nucleo-persistente-mep-ceo.md) | **VAL-072 CONCLUÍDA** — 0 FAIL; base da IMP-072 e da CAP-13 |
 | [`validation/VAL-074-persistencia-fisica-mep-ceo.md`](validation/VAL-074-persistencia-fisica-mep-ceo.md) | **VAL-074 CONCLUÍDA e APROVADA** — persistência física CAP-13 (IMP-073); 0 FAIL |
 | [`validation/VAL-075-c3-ui-minima-mep-ceo.md`](validation/VAL-075-c3-ui-minima-mep-ceo.md) | **VAL-075 HOMOLOGADA** — CTO + Usuário, 16/08/2026; 25/25 PASS; L1/L2 limitações |
 | [`validation/VAL-076-correcao-fronteira-browser-node-imp-074.md`](validation/VAL-076-correcao-fronteira-browser-node-imp-074.md) | **VAL-076 HOMOLOGADA** — fronteira browser/Node da IMP-074; 11/11 PASS |
+| [`validation/VAL-077-transporte-runtime-vista-c3.md`](validation/VAL-077-transporte-runtime-vista-c3.md) | **VAL-077 HOMOLOGADA** — transporte runtime vista C3; 12/12 PASS |
 | [`D0-fundacao.md`](D0-fundacao.md) | Histórico (fundação) |
 | [`CON-001-constituicao.md`](CON-001-constituicao.md) | Aprovado v1.2 — mandato temporário revogado; papéis permanentes restabelecidos |
 | [`vision/VIS-001-visao-do-produto.md`](vision/VIS-001-visao-do-produto.md) | Aprovado v1.0 |
