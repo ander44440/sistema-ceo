@@ -5,7 +5,7 @@
 > **Implementação homologada:** núcleo **C1 + C2** da IMP-072; persistência física IMP-073 / VAL-074.  
 > **VAL-072:** **CONCLUÍDA** (0 FAIL).  
 > **Registo formal:** [`homologacao-cap-13.md`](homologacao-cap-13.md) (acto 14/08/2026 — C1+C2; C3/UI **não** autorizados *por esse acto*).  
-> **C3 / UI:** **IMP-074** · **VAL-075 HOMOLOGADA** (CTO + Usuário, 16/08/2026; 25/25 PASS; L1/L2 limitações, não FAIL). Primeira superfície UI (bloco só-leitura no Centro) **validada**. Integrações Motor/MRE/EIC: **fora**.  
+> **C3 / UI:** **IMP-074** · **VAL-075 HOMOLOGADA** · **VAL-076 HOMOLOGADA** (fronteira browser/Node; 11/11 PASS). Primeira superfície UI (bloco só-leitura no Centro) **validada**. Integrações Motor/MRE/EIC: **fora**.  
 > Sede deste README.
 
 ---
@@ -18,7 +18,7 @@ ANL-018 → ADR-020 → VIS-009 → REQ-085 → ARQ-033 → IMP-072 → VAL-072 
                                                                           IMP-073 → VAL-074 **APROVADA**
                                                                                  ↓
                                               VIS-009 v1.1 + REQ-085 v1.1 **HOMOLOGADOS** (contrato C3/UI)
-                                              ARQ-033 v1.1 **HOMOLOGADA** → IMP-074 **IMPLEMENTADA** → VAL-075 **HOMOLOGADA**
+                                              ARQ-033 v1.1 **HOMOLOGADA** → IMP-074 **IMPLEMENTADA** → VAL-075 **HOMOLOGADA** → VAL-076 **HOMOLOGADA** (fronteira)
 ```
 
 | Elo | Artefacto | Estado |
@@ -35,6 +35,7 @@ ANL-018 → ADR-020 → VIS-009 → REQ-085 → ARQ-033 → IMP-072 → VAL-072 
 | IMP persistência | [`IMP-073`](../implementation/IMP-073-persistencia-fisica-mep-ceo.md) | **IMPLEMENTADA** · **VAL-074 APROVADA** |
 | IMP C3/UI | [`IMP-074`](../implementation/IMP-074-c3-ui-minima-mep-ceo.md) | **IMPLEMENTADA** |
 | VAL C3/UI | [`VAL-075`](../validation/VAL-075-c3-ui-minima-mep-ceo.md) | **HOMOLOGADA** — 16/08/2026 · 25/25 PASS · L1/L2 preservadas |
+| VAL fronteira UI/Node | [`VAL-076`](../validation/VAL-076-correcao-fronteira-browser-node-imp-074.md) | **HOMOLOGADA** — 16/08/2026 · 11/11 PASS · L1/L2 preservadas |
 
 ---
 

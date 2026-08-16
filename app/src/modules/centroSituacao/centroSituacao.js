@@ -24,6 +24,7 @@ import {
   htmlPainelOrquestracao,
   ligarPainelOrquestracao
 } from "../../orquestracao/ui.js";
+import propostasMepC3 from "virtual:mep-c3-propostas";
 import { htmlBlocoMepC3 } from "./blocoMepC3.js";
 
 function htmlDeliberacaoNatural(dados) {
@@ -162,7 +163,7 @@ export function montarCentroSituacao() {
 
           ${htmlDeliberacaoNatural(lerDestaquesDeliberacao())}
 
-          ${htmlBlocoMepC3()}
+          ${htmlBlocoMepC3(propostasMepC3)}
 
           <section class="cs-chat" aria-label="Conversa com o Executivo Digital">
             <div class="cs-chat-head">

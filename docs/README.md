@@ -63,6 +63,7 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`validation/VAL-072-nucleo-persistente-mep-ceo.md`](validation/VAL-072-nucleo-persistente-mep-ceo.md) | **VAL-072 CONCLUÍDA** — 0 FAIL; base da IMP-072 e da CAP-13 |
 | [`validation/VAL-074-persistencia-fisica-mep-ceo.md`](validation/VAL-074-persistencia-fisica-mep-ceo.md) | **VAL-074 CONCLUÍDA e APROVADA** — persistência física CAP-13 (IMP-073); 0 FAIL |
 | [`validation/VAL-075-c3-ui-minima-mep-ceo.md`](validation/VAL-075-c3-ui-minima-mep-ceo.md) | **VAL-075 HOMOLOGADA** — CTO + Usuário, 16/08/2026; 25/25 PASS; L1/L2 limitações |
+| [`validation/VAL-076-correcao-fronteira-browser-node-imp-074.md`](validation/VAL-076-correcao-fronteira-browser-node-imp-074.md) | **VAL-076 HOMOLOGADA** — fronteira browser/Node da IMP-074; 11/11 PASS |
 | [`D0-fundacao.md`](D0-fundacao.md) | Histórico (fundação) |
 | [`CON-001-constituicao.md`](CON-001-constituicao.md) | Aprovado v1.2 — mandato temporário revogado; papéis permanentes restabelecidos |
 | [`vision/VIS-001-visao-do-produto.md`](vision/VIS-001-visao-do-produto.md) | Aprovado v1.0 |

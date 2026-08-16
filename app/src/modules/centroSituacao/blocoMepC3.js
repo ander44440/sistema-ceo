@@ -1,9 +1,8 @@
 /**
- * IMP-074 — Bloco só-leitura C3 no Centro de Situação.
+ * IMP-074 — Markup só-leitura C3 no Centro de Situação.
  * Sem formulário. Sem escrita. Sem Conversa.
+ * Sem imports MEP/Node: recebe a vista já filtrada (CONCEBIDO + origemCanal C3).
  */
-import { listarPropostasC3 } from "../../mepCeo/c3.js";
-
 function escaparHtml(texto) {
   return String(texto)
     .replace(/&/g, "&amp;")
@@ -12,12 +11,12 @@ function escaparHtml(texto) {
     .replace(/"/g, "&quot;");
 }
 
-export function htmlBlocoMepC3() {
-  const propostas = listarPropostasC3();
+export function htmlBlocoMepC3(propostas) {
+  const lista = Array.isArray(propostas) ? propostas : [];
   const corpo =
-    propostas.length === 0
+    lista.length === 0
       ? `<p class="cs-mep-c3-vazio">Nenhuma proposta de produto em CONCEBIDO.</p>`
-      : `<ul class="cs-mep-c3-lista">${propostas
+      : `<ul class="cs-mep-c3-lista">${lista
           .map(
             (p) => `<li>
             <span class="cs-mep-c3-id">${escaparHtml(p.id)}</span>
