@@ -6,6 +6,13 @@
 import { classificarEEncaminhar } from "./encaminhador.js";
 import { ID_POR_CLASSE } from "./dominio.js";
 import { VERSAO_CONTRATO } from "../mre/parecer/enums.js";
+import { normalizarTexto } from "./lexicon.js";
+import {
+  ehAutorizacaoExplicitaCriarJob,
+  ehProibicaoExecucaoExplicita,
+  ehPedidoAnaliseOuRecomendacao,
+  ehComandoExecucaoExplicito
+} from "./regras.js";
 
 /**
  * @typedef {object} DepsE4
@@ -193,6 +200,38 @@ export function mensagemInicioExecucao(conducao, textoInstrucao = "") {
  * @param {DepsE4} deps
  */
 export async function conduzirTrabalhoExecutivoC3(texto, classificacao, deps = {}) {
+  const t = normalizarTexto(texto);
+  const autorizaCriarJob = ehAutorizacaoExplicitaCriarJob(t);
+  if (
+    (!autorizaCriarJob && ehProibicaoExecucaoExplicita(t)) ||
+    (ehPedidoAnaliseOuRecomendacao(t) &&
+      !ehComandoExecucaoExplicito(t) &&
+      !autorizaCriarJob)
+  ) {
+    return {
+      ok: true,
+      mensagem:
+        "Pedido interpretado como consulta/análise — sem criar Job nem iniciar execução.",
+      modo: "consulta_sem_execucao",
+      capacidade: "motor_execucao",
+      dados: {
+        classificacao,
+        destino: "nucleo_mre",
+        motorAcionado: false,
+        motorFalhou: false,
+        mreFallback: false,
+        motor: {
+          publicado: false,
+          aguardandoGate: false,
+          motivo: "p0_bloqueio_nao_execucao"
+        },
+        parecerPonte: null,
+        antiSugiro: true,
+        bloqueioP0: true
+      }
+    };
+  }
+
   const parecer = montarParecerTrabalhoExecutivo(texto, classificacao);
   const conduzir =
     typeof deps.conduzirMotor === "function"
