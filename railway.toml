@@ -1,0 +1,16 @@
+# Railway — ceo-api (CAP-13 packaging Opcao A)
+# Root Directory do servico: repositorio raiz (`.`).
+# Processo executavel: server/ (Hono). MEP canonico: app/src/mepCeo (sem copia).
+
+[build]
+builder = "RAILPACK"
+# Install explicito do backend apenas (nao instalar app/ Vite).
+buildCommand = "npm ci --prefix server"
+watchPatterns = ["server/**", "app/src/mepCeo/**"]
+
+[deploy]
+startCommand = "npm start --prefix server"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
