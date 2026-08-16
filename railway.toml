@@ -1,15 +1,13 @@
-# Railway — ceo-api (CAP-13 packaging Opcao A)
-# Root Directory do servico: repositorio raiz (`.`).
-# Processo executavel: server/ (Hono). MEP canonico: app/src/mepCeo (sem copia).
+# Railway — ceo-api (CAP-13 packaging Opção C / Dockerfile)
+# Root Directory do serviço: repositório raiz (`.`).
+# Processo executável: server/ (Hono). MEP canónico: app/src/mepCeo (sem cópia).
 
 [build]
-builder = "RAILPACK"
-# Install explicito do backend apenas (nao instalar app/ Vite).
-buildCommand = "npm ci --prefix server"
-watchPatterns = ["server/**", "app/src/mepCeo/**"]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+watchPatterns = ["server/**", "app/src/mepCeo/**", "Dockerfile", ".dockerignore"]
 
 [deploy]
-startCommand = "npm start --prefix server"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"

@@ -1,0 +1,44 @@
+# Contexto Docker — ceo-api (CAP-13)
+# Não excluir: Dockerfile, server/package*.json, server/src, app/src/mepCeo
+
+.git
+.github
+.cursor
+.vercel
+**/.vercel
+**/node_modules
+**/dist
+**/.tmp
+**/.cache
+**/*.log
+**/coverage
+**/*.test.js
+
+# Dados locais (produção: volume /data)
+mep-ceo/store
+executive
+
+# Documentação e metadados
+docs
+*.md
+!server/README.md
+
+# Frontend / Vite — fora do processo Hono
+app/public
+app/index.html
+app/vite.config.js
+app/package.json
+app/package-lock.json
+app/server
+app/scripts
+app/styles
+app/src/**
+!app/src/mepCeo/
+!app/src/mepCeo/**
+
+# Outros pacotes do monorepo
+executive/dispatcher
+
+# Env locais (segredos)
+**/.env
+**/.env.*
