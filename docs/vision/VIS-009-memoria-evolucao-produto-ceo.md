@@ -1,11 +1,11 @@
 # VIS-009 — Visão da Memória de Evolução do Produto CEO (MEP-CEO)
 
-> **Status: Homologada — v1.0 (CTO, 14/08/2026).** Pacote MEP-CEO VIS → REQ → ARQ **homologado como especificação**. **IMP não aberta.** Sem código.  
+> **Status: Homologada — v1.1 (CTO, 16/08/2026).** v1.0 permanece homologada (14/08/2026) como visão do contrato mínimo C1+C2.  
 > Tipo VIS. **Identificação:** VIS-009.  
 > **Capacidade proprietária:** **CAP-13 — Memória de Evolução do Produto** (CAP-E; ADR-020). A MEP-CEO é a memória desta capacidade.  
-> **Ciclo:** ANL-018 aprovada → esta VIS → REQ-085 → ARQ-033 (homologados). IMP / C3 / código / UI: **não existem**.  
+> **Ciclo:** ANL-018 aprovada → esta VIS → REQ-085 → ARQ-033. **v1.1:** §7 autoriza o recorte C3/UI no contrato. ARQ-033 **v1.1 homologada**. IMP / código / UI de C3 **ainda não existem**.  
 > Norma superior: CON-001; VIS-001; VIS-002; CAP-001 v1.1; ADR-002; ADR-006; ADR-015; ADR-016; ADR-017; ADR-020.  
-> **Não altera / não reabre:** CAP-04; CAP-05; ARQ-009; ARQ-031; REQ-033; REQ-070…074; Motor; MRE; EIC; Gate G2; MTE; `monitorar`.
+> **Não altera / não reabre:** CAP-04; CAP-05; ARQ-009; ARQ-031; REQ-033; REQ-070…074; Motor; MRE; EIC; Gate G2; MTE; `monitorar`; C1/C2/IMP-073.
 
 ---
 
@@ -59,7 +59,8 @@ A capacidade dona é a **CAP-13**. A MEP-CEO é a memória dessa capacidade — 
 A MEP-CEO **não** é a Memória Organizacional (CAP-05).  
 A MEP-CEO **não** é o Acervo de Conhecimento (CAP-04).  
 A MEP-CEO **não** é evolução autónoma de organizações.  
-A MEP-CEO **não** tem, nesta homologação: código, UI, IMP, C3, nem integração com Motor, MRE, EIC, Gate G2 ou MTE.
+A MEP-CEO **não** integra Motor, MRE, EIC, Gate G2 ou MTE.  
+A homologação **v1.0** não incluía código, UI, IMP nem C3. O **v1.1** autoriza no contrato o canal C3 (proposta desidentificada → `CONCEBIDO` / hipótese) e um bloco só-leitura no Centro de Situação; **não** autoriza implementação neste acto (ARQ/IMP/VAL futuros).
 
 ---
 
@@ -145,16 +146,19 @@ Estados anteriores nunca são apagados. Mudanças geram eventos de evolução. A
 
 ---
 
-## 7. Ponte futura (visão — não implementar agora)
+## 7. Ponte C3 (visão v1.1 — recorte mínimo autorizado no contrato)
 
-Uma necessidade **observada num cliente** poderá, no futuro, originar uma **proposta de evolução do produto**, desde que:
+Uma necessidade **observada num cliente** origina uma **proposta de evolução do produto** **somente** mediante acto **explícito** de proposta desidentificada (canal **C3**), desde que:
 
 1. a Memória da Organização **não** seja copiada para a MEP-CEO;
-2. o que atravessa a fronteira seja apenas um **enunciado de produto desidentificado** (tipo de lacuna, capacidade candidata, hipótese);
-3. esse enunciado nasça como **CONCEBIDO / hipótese**, nunca como facto nem como baseline;
-4. dados, conversas, conhecimento operacional, decisões privadas e factos da organização **permaneçam** no eixo organização / cliente.
+2. o que atravessa a fronteira seja apenas um **enunciado de produto desidentificado** (tipo de lacuna, capacidade/épico/módulo candidato, hipótese, evidência não privada);
+3. esse enunciado nasça como **exactamente um** objecto MEP em **`CONCEBIDO` / hipótese**, nunca como facto, `HOMOLOGADO` nem `BASELINE`; C3 **não** promove maturidade;
+4. dados, conversas, conhecimento operacional, decisões privadas e factos da organização **permaneçam** no eixo organização / cliente; conteúdo proibido = recusa fail-closed;
+5. não haja ingestão automática (conversa, COA, CAP-04, CAP-05, MRE, EIC, fila).
 
-Esta visão **autoriza especificar a fronteira** dessa ponte. **Não autoriza** construí-la, automatizá-la nem testá-la em código nesta etapa.
+A primeira superfície perceptível é um **bloco só-leitura no Centro de Situação** (identificador, tipo `MCP`/`EPC`/`MDL`, enunciado desidentificado, maturidade `CONCEBIDO`). Sem formulário, sem Conversa, sem rota nova.
+
+Esta visão **autoriza o contrato** desse recorte (REQ-085 v1.1). **Não autoriza**, neste acto: código, API, ARQ-033 v1.1, IMP, VAL, automação nem teste de produto.
 
 ---
 
@@ -166,21 +170,23 @@ A VIS-009 terá cumprido o seu papel quando o CTO e o Usuário puderem afirmar:
 2. Está explícito o que a MEP-CEO **nunca** armazena automaticamente.
 3. Os nove objectos mínimos e os dois eixos de estado estão nomeados.
 4. A regra de autoridade (propor ≠ homologar; hipótese ≠ facto; histórico não se apaga) está na visão de produto.
-5. A ponte futura está descrita como fronteira, não como mecanismo a implementar agora.
+5. A ponte C3 está descrita como canal de proposta desidentificada para `CONCEBIDO` / hipótese, com fail-closed e UI só-leitura no Centro de Situação (contrato v1.1); implementação permanece ciclo ARQ → IMP → VAL.
 6. Nenhuma outra frente (Motor, Gate G2, MTE, `monitorar`, CAP-04, CAP-05) foi reaberta para esta visão existir.
 
 ---
 
 ## 9. Fora do escopo desta visão
 
-* Implementação, UI, persistência, APIs, módulos de código.
+* Implementação, API, formulário, ARQ-033 v1.1, IMP e VAL de C3/UI **neste acto**.
 * Memória de clientes / organizações (CAP-05 permanece a sede).
 * Curadoria do Acervo (CAP-04 permanece a sede).
 * Evolução autónoma de organizações.
 * Aprendizado Executivo do MRE (REQ-051) — retenção pós-deliberação **da organização**, não catálogo de produto.
 * Correcção de problemas existentes do CEO.
 * Qualquer alteração ao Motor, MRE, EIC, Gate G2, MTE ou `monitorar`.
-* Código, testes de produto, UI, IMP, C3.
+* Alteração de C1, C2 ou IMP-073.
+
+A CAP-13 **já está instituída** (ADR-020). Esta VIS não a cria de novo; declara-a como capacidade proprietária da MEP-CEO.
 
 A CAP-13 **já está instituída** (ADR-020). Esta VIS não a cria de novo; declara-a como capacidade proprietária da MEP-CEO.
 
@@ -203,7 +209,7 @@ A CAP-13 **já está instituída** (ADR-020). Esta VIS não a cria de novo; decl
 
 ## 11. Declaração de homologação
 
-Esta VIS está **homologada** como visão da CAP-13. Não autoriza IMP, C3, código, UI nem integração com Motor / MRE / EIC / Gate G2 / MTE.
+Esta VIS **v1.0** e **v1.1** estão **homologadas** como visão da CAP-13 (v1.1 = recorte C3/UI no contrato). Não autoriza IMP, código, API nem integração com Motor / MRE / EIC / Gate G2 / MTE neste acto. ARQ-033 **v1.1 está homologada**; IMP C3/UI permanece acto próprio.
 
 ---
 
@@ -214,3 +220,4 @@ Esta VIS está **homologada** como visão da CAP-13. Não autoriza IMP, C3, cód
 | 0.1 | 14/08/2026 | Engenheiro (Cursor) | Criação da visão da MEP-CEO | Contrato CTO — iniciar a frente; sem código | Rascunho |
 | 0.1 (anotação) | 14/08/2026 | Engenheiro (Cursor) | Rastreio à **CAP-13** (ADR-020) | Formalização da CAP; VIS ainda não homologada | Rascunho técnico aprovado |
 | 1.0 | 14/08/2026 | CTO despachou homologação; Engenheiro incorporou CAP-13, eixos, objectos | Homologação do pacote VIS→REQ→ARQ | Despacho CTO — homologar especificação MEP-CEO | **Homologada** |
+| 1.1 | 16/08/2026 | CTO homologou; Engenheiro formalizou | §7 autoriza contrato C3 (`CONCEBIDO` / hipótese, fail-closed) e UI só-leitura no Centro de Situação | Formalização normativa C3/UI; mesmo gate que REQ-085 v1.1 | **Homologada** |

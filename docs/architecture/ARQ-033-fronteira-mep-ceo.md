@@ -1,12 +1,12 @@
 # ARQ-033 — Fronteira da Memória de Evolução do Produto CEO (MEP-CEO)
 
-> **Status: Homologada — v1.0 (CTO, 14/08/2026).** Pacote MEP-CEO VIS → REQ → ARQ **homologado como especificação de fronteira**. **IMP não aberta.** Sem código.  
+> **Status: Homologada — v1.1 (CTO + Usuário, 16/08/2026).** v1.0 permanece a fronteira C1+C2 homologada em 14/08/2026.  
 > Tipo ARQ (ADR-010). **Identificação:** ARQ-033.  
 > **Capacidade proprietária:** **CAP-13 — Memória de Evolução do Produto** (CAP-E; ADR-020).  
-> Norma superior: CON-001; ADR-006; ADR-010; ADR-020; VIS-009 Homologada v1.0; REQ-085 Homologado v1.0; ANL-018.  
-> **Finalidade:** fronteira da MEP-CEO — eixos, objectos, espaços de ID, estados, transições, alçadas, isolamento, C3 só como fronteira.  
-> **Não é:** IMP; tecnologia; UI; C3 implementado; reabertura de ARQ-006, ARQ-009, ARQ-031, ARQ-017, ARQ-032.  
-> **Não toca:** Motor; MRE; EIC; Gate G2; MTE; `monitorar`; CAP-04; CAP-05.
+> Norma superior: CON-001; ADR-006; ADR-010; ADR-020; VIS-009 Homologada v1.1; REQ-085 Homologado v1.1; ANL-018.  
+> **Finalidade:** fronteira da MEP-CEO — eixos, objectos, espaços de ID, estados, transições, alçadas, isolamento; **v1.1:** canal C3 e UI só-leitura no Centro de Situação (contrato de arquitectura; **sem** código neste acto).  
+> **Não é:** IMP; VAL; API pública; formulário; reabertura de ARQ-006, ARQ-009, ARQ-031, ARQ-017, ARQ-032; alteração de C1/C2/IMP-073.  
+> **Não toca:** Motor; MRE; EIC; Gate G2; MTE; `monitorar`; CAP-04; CAP-05; F1/F2/F3; CN.
 
 ---
 
@@ -16,7 +16,7 @@ Responder exclusivamente à pergunta:
 
 > **Como se separam, logicamente, a memória do produto CEO e a memória da organização / cliente, de modo a satisfazer REQ-085 sem absorver CAP-04/CAP-05 e sem antecipar implementação?**
 
-Esta ARQ **não** descreve o interior de um motor, um schema físico nem um fluxo de ecrãs.
+A v1.0 **não** descrevia ecrãs. A v1.1 acrescenta **localização lógica** do bloco só-leitura no Centro de Situação e o contrato do acto C3 — sem markup, sem API pública e sem IMP.
 
 ---
 
@@ -24,10 +24,10 @@ Esta ARQ **não** descreve o interior de um motor, um schema físico nem um flux
 
 | Pergunta | Resposta |
 |----------|----------|
-| **O que é?** | Arquitectura de **fronteira** da MEP-CEO: dois bounded contexts, um portão de isolamento, objectos e estados mínimos, alçadas, log de evolução e um canal futuro de proposta desidentificada — este último só especificado. |
-| **Por que existe?** | REQ-085 exige isolamento e objectos; sem fronteira explícita, a implementação futura misturaria produto e cliente. |
-| **Para quem existe?** | CTO (homologação da fronteira); Usuário (alçada de baseline); Engenheiro (IMP futura — **não nesta etapa**). |
-| **Como medir sucesso?** | (1) Dois eixos inconfundíveis; (2) cinco proibições de ingestão automática; (3) nove objectos + dois eixos de estado; (4) autoridade do agente limitada; (5) ponte futura descrita e **não** construída; (6) zero tecnologia; (7) zero alteração a módulos existentes. |
+| **O que é?** | Arquitectura de **fronteira** da MEP-CEO: dois bounded contexts, portão C1, registo C2, canal C3 de proposta desidentificada e superfície só-leitura no Centro de Situação. |
+| **Por que existe?** | REQ-085 v1.1 exige isolamento, objectos e o recorte C3/UI; sem fronteira explícita, a IMP misturaria produto e cliente ou inventaria campos. |
+| **Para quem existe?** | CTO (homologação da fronteira); Usuário (alçada de baseline); Engenheiro (IMP futura — **não neste acto**). |
+| **Como medir sucesso?** | (1) Dois eixos inconfundíveis; (2) fail-closed C3; (3) C3 só cria `CONCEBIDO` via C2; (4) UI só-leitura no Centro; (5) zero alteração a C1/C2/IMP-073 neste acto; (6) zero Motor/MRE/EIC/CAP-04/05. |
 
 ---
 
@@ -41,7 +41,7 @@ Esta ARQ **não** descreve o interior de um motor, um schema físico nem um flux
 | **P4** | Hipótese ≠ facto ≠ baseline | Três níveis de vigência; só a alçada do projecto sobe o nível | RF-03; RF-05 |
 | **P5** | Append-only | O passado não se apaga; correcção é novo evento | RF-07 |
 | **P6** | Agente propõe, projecto homologa | O CEO-agente não é dono da baseline do produto | RF-05; CON-001 Art. 6º |
-| **P7** | Ponte futura é canal estreito | Necessidade de cliente vira, no máximo, proposta desidentificada — e **não agora** | RF-08 |
+| **P7** | Ponte C3 é canal estreito | Necessidade de cliente vira, no máximo, um objecto `CONCEBIDO` / hipótese por acto explícito; fail-closed a conteúdo privado | RF-08 v1.1 |
 | **P8** | Extensão, não invasão | A MEP-CEO não emenda CAP-04, CAP-05, Motor, G2, MTE, `monitorar` | RNF-05 |
 | **P9** | Independência tecnológica | Fronteira lógica; sem stack | RNF-04; ADR-010 |
 
@@ -62,7 +62,7 @@ Esta ARQ **não** descreve o interior de um motor, um schema físico nem um flux
                           · recusa ingestão automática
                           · referência por ID sem cópia
                           · proposta desidentificada (C3)
-                            [especificado; NÃO implementado]
+                            [arquitectado v1.1; NÃO implementado neste acto]
                                        │
                     ┌──────────────────┴───────────────────────┐
                     │  EIXO ORGANIZAÇÃO / CLIENTE              │
@@ -89,7 +89,7 @@ Três componentes. Nenhum é módulo de código. Nenhum substitui H/I/J da ARQ-0
 |----|------------|------------------------|---------|
 | **C1** | **Portão de isolamento** | Decidir pertença (produto vs organização); recusar os cinco tipos proibidos; permitir só referência por ID | Não curar Acervo; não gravar decisão Art. 8º; não ler transcripts para «aprender produto» |
 | **C2** | **Registo de evolução do produto** | Guardar os nove objectos; estados; eventos append-only; consultas de produto | Não homologar sozinho; não apagar; não absorver CAP-05 |
-| **C3** | **Canal de proposta desidentificada** | *(fronteira futura)* Aceitar apenas proposta `CONCEBIDO`/hipótese sem payload privado | **Não existe implementação nesta etapa**; não copia Memória da Organização; não promove facto |
+| **C3** | **Canal de proposta desidentificada** | Validar acto explícito (quatro campos); recusar conteúdo proibido; pedir a C2 a criação de **um** objecto `CONCEBIDO` / hipótese; marcar origem C3 | Não duplica domínio C2; não promove maturidade; não copia Memória da Organização; não expõe API pública; não desenha formulário |
 
 ### 3.1 Relação com o que já existe (sem alteração)
 
@@ -198,44 +198,149 @@ A escrita é recusada se o payload incluir, como conteúdo armazenado:
 
 ---
 
-## 7. Canal C3 — ponte futura (especificação de fronteira apenas)
+## 7. Canal C3 e UI só-leitura (v1.1)
 
-C3 **não se implementa** nesta etapa. A fronteira, quando o CTO abrir ciclo próprio, é:
+C3 **está arquitectado** neste recorte. **Não** está implementado neste acto (IMP futura). C1, C2 e o adapter/store da IMP-073 **não** são emendados por esta ARQ; C3 e a UI **consomem** a superfície pública já homologada.
+
+### 7.1 Módulo responsável
+
+| Peça | Sede lógica (IMP futura) | Relação |
+|------|--------------------------|---------|
+| **C3** | Novo módulo **dentro** da pasta MEP-CEO (`mepCeo`), **irmão** de C1/C2 — não um pacote externo | Só chama a API pública de C1 (isolamento, se exposta) e de C2 (`criarObjecto`, `listarObjectos`, `consultarObjecto`). **Não** edita `isolamento.js`, `registo.js`, `adapterFs.js`, `persistencia.js`. |
+| **UI C3** | Bloco no Centro de Situação (`montarCentroSituacao`, rota `dashboard` existente) | Só **lê** via C2 (`listarObjectos` filtrado). Não escreve MEP; não altera Conversa, router, Motor, MRE. |
+
+Decisão: **não** há API HTTP, fila, webhook nem interceptor de conversa neste ciclo. O acto C3 é uma **operação interna explícita** (chamada pelo IMP de teste ou por um invocador interno futuro). Formulário = fora.
+
+### 7.2 Acto explícito — entrada
+
+Nome lógico: `proporEvolucaoDesidentificada`.
+
+Entrada **única** permitida (além do papel de quem propõe):
+
+| Campo | Tipo lógico | Obrigatório | Valores |
+|-------|-------------|-------------|---------|
+| `tipoLacunaProduto` | texto curto de produto | Sim | Não vazio; **não** é ID de cliente, COA, Job ou `KNW` |
+| `objectoCandidato` | enumeração | Sim | exactamente `MCP` **ou** `EPC` **ou** `MDL` |
+| `enunciadoDesidentificado` | texto de hipótese de produto | Sim | Sem identidade de cliente; sem transcript |
+| `evidenciaNaoPrivada` | apontador | Sim | Ex.: ID de VAL/VIS/REQ/ARQ de **produto**, ou enunciado «padrão observado» — **não** ID de conversa, decisão Art. 8º, `KNW` com conteúdo, nem path de cliente |
+| `papel` | papel MEP já definido em RF-05 | Sim | Usuário, CTO, CEO-agente ou Engenheiro |
+
+Qualquer outro campo no acto (incluindo `maturidade`, `payload` privado, `transcript`, IDs de organização) → **recusa**. Omissão de qualquer obrigatório → **recusa**.
+
+### 7.3 Sequência C3 (fail-closed)
 
 ```
-[Observação no eixo organização]
-        │  NÃO copia memória, conversa, facto, decisão privada
+[Acto explícito proporEvolucaoDesidentificada]
+        │
+        ├─ 1. Quatro campos + papel presentes? senão RECUSA (C2 intacto)
+        ├─ 2. objectoCandidato ∈ {MCP, EPC, MDL}? senão RECUSA
+        ├─ 3. Acto pede maturidade ≠ CONCEBIDO ou promoção? RECUSA (CA-085-31/40)
+        ├─ 4. Matriz negativa de conteúdo proibido (§7.6) — C1 + regras C3
+        │      senão RECUSA; nenhum objecto; nenhum MEV de sucesso
+        ├─ 5. Dúvida de pertença (P2 / RN-01.1)? RECUSA
+        │
         ▼
-[Acto explícito de proposta desidentificada]
-        │  campos permitidos: tipo de lacuna de produto;
-        │  capacidade/épico/módulo candidato;
-        │  enunciado sem identidade de cliente;
-        │  evidência não privada
+[Passagem a C2]
+        │  criarObjecto({
+        │    tipo: objectoCandidato,
+        │    titulo: enunciadoDesidentificado,
+        │    papel,
+        │    evidencia: { tipo, referência: evidenciaNaoPrivada },
+        │    payload: {
+        │      tipoLacunaProduto,
+        │      enunciadoDesidentificado,
+        │      origemCanal: "C3"
+        │    }
+        │  })
+        │  C2 aplica C1 de novo (já homologado) e emite MCP-nnn|EPC-nnn|MDL-nnn
+        │  + um MEV de criação CONCEBIDO / hipótese
+        │
         ▼
-[Objecto MEP em CONCEBIDO = hipótese]
-        │  NÃO é facto; NÃO é HOMOLOGADO; NÃO é BASELINE
+[Persistência física IMP-073]
+        │  ponto de integração: o mesmo caminho que qualquer criarObjecto
+        │  C3 NÃO chama o adapter nem altera o store
         ▼
-[C2 — só evolui depois pelas regras RF-05 / RF-06 / RF-07]
+[Objecto vigente em CONCEBIDO / hipótese, origemCanal = C3]
 ```
 
-**Invariantes de C3**
+Se `criarObjecto` recusar, C3 propaga a recusa; **não** tenta outro tipo, **não** promove, **não** grava à margem.
 
-1. Não há job, webhook, estágio MRE ou ingestão EIC que escreva C2 a partir do eixo organização.  
-2. Saída máxima = proposta `CONCEBIDO`.  
-3. Evolução autónoma de organizações permanece **fora** (RNF-03).
+**Garantia de maturidade:** C3 **nunca** passa `maturidade` a C2. A criação C2 já nasce em `CONCEBIDO` (IMP-072). C3 **não** chama `promoverMaturidade` nem `proporMaturidade`.
+
+### 7.4 Contrato de dados (fechado)
+
+Campos do **acto** (proponente): só a tabela §7.2.
+
+Metadados **escritos por C3**, não pelo proponente:
+
+| Campo | Onde | Valor |
+|-------|------|--------|
+| `origemCanal` | `payload` do objecto C2 | literal `"C3"` |
+| `id` | objecto C2 | `MCP-nnn` / `EPC-nnn` / `MDL-nnn` emitido por C2 |
+| `MEV-nnn` | evento C2 da criação | o evento **já exigido** por RF-07; C3 **não** inventa tipo de evento |
+| `maturidade` | objecto C2 | sempre `CONCEBIDO` nesta passagem |
+| `classificacao` | objecto C2 | `hipotese` (já derivada em C2) |
+
+Não há quinto campo de proposta. Não há tipo MEP novo. `DCP`, `EVD`, `PND`, `BSL`, `RMP` **não** são produzidos por C3 neste ciclo.
+
+### 7.5 Relação C3 → C2 → persistência
+
+* C3 **não** duplica catálogo, IDs, transições nem append-only.  
+* C3 **não** cria transição de maturidade: só o salto `— → CONCEBIDO` que C2 já realiza em `criarObjecto`.  
+* Persistência: **reutilizar** IMP-073. Integração = «C2.criarObjecto já persiste quando a persistência está activa». Sem novo envelope, sem segundo store, sem `docs/` como store, sem `localStorage`.
+
+### 7.6 Isolamento e recusas (matriz)
+
+C3 recusa (fail-closed) se o acto ou o payload a persistir incluir, como conteúdo ou campo inferível:
+
+| Proibido | Exemplos de detecção lógica |
+|----------|-----------------------------|
+| Identidade de cliente | nome de organização/cliente como sujeito do enunciado; IDs de COA/cliente |
+| Transcript / conversa | mensagens, `conversaId`, texto de chat |
+| Decisão privada | decisão Art. 8º; `DCP` de cliente; campos de decisão organizacional |
+| Facto operacional | estado de operação da organização; métricas de cliente |
+| Conteúdo `KNW` | corpo de item de Acervo; não apenas referência opaca **proibida neste ciclo** se vier com conteúdo |
+| Memória Organizacional | cópia de CAP-05; `memoriaOrganizacional` |
+| Dados de cliente | qualquer um dos cinco tipos de RF-01 |
+
+Mais: ingestão automática (listener de conversa, job MRE, EIC, fila → C2) **não existe** nesta arquitectura. Promoção indevida: C3 não expõe nem chama promoção.
+
+C1 continua a aplicar-se **dentro** de `criarObjecto` (já homologado). C3 faz a matriz **antes** da chamada, para não enviar lixo a C2.
+
+### 7.7 UI — Centro de Situação (só leitura)
+
+| Decisão | Valor |
+|---------|--------|
+| Superfície | **Centro de Situação**, rota `dashboard` já existente (`montarCentroSituacao`) |
+| Não | Conversa; rota nova; formulário; botões de promover/criar |
+| Localização | Um `section`/`article` **novo**, no fluxo do posto de comando, **depois** da fiada `cs-cmd-top` (missão / progresso / estado executivo) e **antes** de `cs-cmd-mid` (Centro de Decisões). Não entra no compositor de comando rápido. |
+| Identidade de acessibilidade | `aria-label` = «Propostas de evolução do produto» |
+| Consulta | `listarObjectos` (C2) filtrado: `maturidade === CONCEBIDO` **e** `payload.origemCanal === "C3"` |
+| Dados exibidos (mínimo, CA-085-41) | identificador; tipo (`MCP`/`EPC`/`MDL`); `enunciadoDesidentificado`; maturidade `CONCEBIDO` |
+| Origem | indicação visível de que é proposta C3 / hipótese — **não** como facto nem baseline |
+| Proibido na UI (CA-085-42) | transcript; identidade de cliente; conteúdo CAP-04/05; payload bruto com chaves privadas |
+| Vazio | Mensagem única: não há propostas de produto em `CONCEBIDO` via C3. Sem dados inventados; sem esconder o bloco. |
+
+A UI **não** invoca `proporEvolucaoDesidentificada`. Percepção = leitura do que C2 já tem.
+
+### 7.8 Não-integrações (explícito)
+
+C3 e a UI C3 **não** dependem nem escrevem em: Motor de Execução; MRE; EIC; CAP-04; CAP-05; Gate G2; MTE; F1 / F2 / F3; classificador de intenção; conversação natural como canal de ingestão.
 
 ---
 
-## 8. O que permanece fora desta ARQ (pendências **antes de IMP**, não desta homologação)
+## 8. O que permanece fora desta ARQ
 
-Resolvido nesta v1.0: CAP-13; espaços `MCP`…`MEV`; tabela de transições; ANL-018.
+Resolvido na v1.0: CAP-13; espaços `MCP`…`MEV`; tabela de transições; ANL-018.  
+Resolvido na v1.1: módulo C3; acto e quatro campos; fail-closed; passagem C2; `origemCanal`; UI no Centro; não-integrações.
 
-Ainda **não** decidido (não bloqueia esta homologação de fronteira; bloqueia ou condiciona IMP futura):
+Ainda **não** decidido (não bloqueia homologar esta v1.1; condiciona IMP **além** do recorte):
 
 1. Se `RMP` passa a ser *projectado* a partir do tipo documental ROADMAP, ou apenas o referencia.  
-2. Relação fina com BCO / CAP-06 (sem dependência real — ANL-018).  
+2. Relação fina com BCO / CAP-06.  
 3. Relação fina com o kernel `sistema-ceo` (acoplamento **proibido** até ADR própria).  
-4. Qualquer IMP, VAL, código, UI, C3.
+4. API pública, formulário de captura, ingestão conversacional, jobs.  
+5. IMP e VAL deste recorte (**próximos actos**, não esta ARQ).
 
 ---
 
@@ -243,38 +348,40 @@ Ainda **não** decidido (não bloqueia esta homologação de fronteira; bloqueia
 
 | REQ | Como a fronteira satisfaz |
 |-----|---------------------------|
-| RF-01 | P1–P3; C1; §2; §6.1 |
-| RF-02 | §4 (nove espaços `MCP`…`MEV`) |
-| RF-03 | §5.1 + REQ-085 RN-03 |
+| RF-01 | P1–P3; C1; §2; §6.1; §7.6 |
+| RF-02 | §4 (nove espaços `MCP`…`MEV`); C3 só usa `MCP`/`EPC`/`MDL` |
+| RF-03 | §5.1 + REQ-085 RN-03; C3 só `CONCEBIDO` |
 | RF-04 | §5.2 |
 | RF-05 | P4, P6; §6.2 |
-| RF-06 | P3; objecto Evidência; campos do evento |
-| RF-07 | P5; Histórico de evolução |
-| RF-08 | P7; C3 §7 — não implementado |
-| RNF-01…07 | P8, P9; dois contexts; sem UI; C3 não implementado; §11 |
+| RF-06 | P3; evidência do acto → evidência C2 |
+| RF-07 | P5; um `MEV` de criação via C2 |
+| RF-08 | P7; §7 — C3 arquitectado; IMP não neste acto |
+| RNF-02 | §7.7 Centro de Situação só-leitura |
+| RNF-01, 03…07 | P8, P9; §7.8; CA-085-36/37 |
 
 ---
 
 ## 10. Fora de âmbito (confirmação)
 
-* Código, pacotes `@ceo/*`, `src/`, UI.  
+* Código, IMP, VAL, API pública, formulário **neste acto**.  
+* Alteração de C1, C2, IMP-073.  
 * Correcção de defeitos existentes do CEO.  
-* Memória de clientes.  
-* Evolução autónoma de organizações.  
-* Emenda a documentos homologados de outras frentes (CAP-04, CAP-05, Motor, MRE, EIC, Gate G2, MTE).
+* Memória de clientes; evolução autónoma de organizações.  
+* Emenda a CAP-04, CAP-05, Motor, MRE, EIC, Gate G2, MTE, F1/F2/F3.
 
 ---
 
-## 11. Estado da implementação (congelado nesta homologação)
+## 11. Estado da implementação (v1.1)
 
 | Item | Estado |
 |------|--------|
-| C3 | **NÃO** implementado |
-| IMP | **NÃO** aberto |
-| Código MEP-CEO | **Não existe** |
-| UI | **Não existe** |
+| C1 / C2 | Homologados (IMP-072); **não** alterados por esta ARQ |
+| Persistência física | Homologada (IMP-073 / VAL-074); **não** alterada; ponto de integração = `criarObjecto` |
+| C3 | **Arquitectado**; **NÃO** implementado |
+| UI Centro (bloco C3) | **Arquitectada**; **NÃO** implementada |
+| IMP C3/UI | **NÃO** aberta |
 | Evolução autónoma | **Não existe** |
-| Integração Motor / MRE / EIC / Gate G2 / MTE | **Não existe** |
+| Integração Motor / MRE / EIC / Gate G2 / MTE / F1–F3 | **Não existe** |
 
 Isolamento Produto ↔ Organização: **intacto** (P1–P3; C1; REQ-085 RF-01).
 
@@ -287,3 +394,4 @@ Isolamento Produto ↔ Organização: **intacto** (P1–P3; C1; REQ-085 RF-01).
 | 0.1 | 14/08/2026 | Engenheiro (Cursor) | Fronteira C1–C3; dois eixos; objectos e estados | Contrato CTO — ARQ só até a fronteira; sem código | Rascunho |
 | 0.1 (anotação) | 14/08/2026 | Engenheiro (Cursor) | CAP-13 (ADR-020) | Formalização da CAP | Rascunho técnico aprovado |
 | 1.0 | 14/08/2026 | CTO despachou; Engenheiro incorporou IDs, transições, §11 | Homologação da fronteira | Despacho CTO — homologar especificação MEP-CEO | **Homologada** |
+| 1.1 | 16/08/2026 | Engenheiro (Cursor) formalizou; CTO + Usuário homologaram | C3: acto, quatro campos, fail-closed, passagem C2, origemCanal; UI só-leitura no Centro (`cs-cmd-top` → bloco → `cs-cmd-mid`) | Homologação VIS-009/REQ-085 v1.1; despacho ARQ C3/UI | **Homologada** |

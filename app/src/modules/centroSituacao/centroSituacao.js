@@ -24,6 +24,7 @@ import {
   htmlPainelOrquestracao,
   ligarPainelOrquestracao
 } from "../../orquestracao/ui.js";
+import { htmlBlocoMepC3 } from "./blocoMepC3.js";
 
 function htmlDeliberacaoNatural(dados) {
   if (!dados || !Array.isArray(dados.destaques) || !dados.destaques.length) {
@@ -160,6 +161,8 @@ export function montarCentroSituacao() {
           ${htmlFaixaDoDia(painelDia)}
 
           ${htmlDeliberacaoNatural(lerDestaquesDeliberacao())}
+
+          ${htmlBlocoMepC3()}
 
           <section class="cs-chat" aria-label="Conversa com o Executivo Digital">
             <div class="cs-chat-head">

@@ -76,7 +76,8 @@
     "test:continuidade-gate:e7": "node --test src/continuidadeGate/e7.test.js",
     "test:continuidade-gate": "node --test src/continuidadeGate/dominio.test.js src/continuidadeGate/reconhecerDecisao.test.js src/continuidadeGate/contexto.test.js src/continuidadeGate/integracaoConversa.test.js src/continuidadeGate/e5.test.js src/continuidadeGate/fronteiras.test.js src/continuidadeGate/e7.test.js",
     "test:mep-ceo": "node --test src/mepCeo/mepCeo.test.js",
-    "test:mep-ceo-persistencia": "node --test src/mepCeo/mepCeo.persistencia.test.js"
+    "test:mep-ceo-persistencia": "node --test src/mepCeo/mepCeo.persistencia.test.js",
+    "test:mep-ceo-c3": "node --test src/mepCeo/c3.test.js"
   },
   "devDependencies": {
     "vite": "^6.0.0"
