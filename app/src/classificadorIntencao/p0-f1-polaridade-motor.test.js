@@ -75,8 +75,31 @@ test("F1: análise + não execute → C2, 0 Jobs", async () => {
   assert.notEqual(out.modo, "motor_execucao");
 });
 
-test("F1: comando explícito continua C3", () => {
+test("F1: incidente «não quero que você execute nada» → C2, 0 Jobs", async () => {
+  const msg = "Não quero que você execute nada.";
+  const t = normalizarTexto(msg);
+  assert.equal(ehProibicaoExecucaoExplicita(t), true);
+  assert.equal(ehIntencaoExecutivaE21(t), false);
+  const s = classificar(msg);
+  assert.notEqual(s.classe, "trabalho_executivo");
+  assert.equal(s.permiteJob, false);
+  assert.equal(classificarEEncaminhar(msg).destino, "nucleo_mre");
+  const fila = criarPublicadorFilaMemoria();
+  const out = await executiveEngine.executar(msg, {
+    publicarJob: fila.publicarJob.bind(fila)
+  });
+  assert.equal(fila.jobs.length, 0);
+  assert.notEqual(out.modo, "motor_execucao");
+});
+
+test("F1: comando explícito continua C3", async () => {
   const s = classificar("Implemente o botão agora.");
   assert.equal(s.classe, "trabalho_executivo");
   assert.equal(s.destino, "motor_execucao");
+  const fila = criarPublicadorFilaMemoria();
+  const out = await executiveEngine.executar("Implemente o botão agora.", {
+    publicarJob: fila.publicarJob.bind(fila)
+  });
+  assert.equal(out.modo, "motor_execucao");
+  assert.equal(s.permiteJob, true);
 });

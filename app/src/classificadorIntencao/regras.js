@@ -67,6 +67,9 @@ export function ehProibicaoExecucaoExplicita(t) {
     );
   }
   return (
+    /\bnao\s+(quero|desejo|permito|autorizo)(\s+que)?(\s+(voce|tu|vc))?\s+(execute|executa|executar|implemente|implementa|implementar|crie|cria|criar)\b/.test(
+      t
+    ) ||
     /\bnao\s+(execute|executa|executar)(\s+nada)?\b/.test(t) ||
     /\bnao\s+(implemente|implementa|implementar)\b/.test(t) ||
     /\bnao\s+(crie|cria|criar)\s+(um\s+)?jobs?\b/.test(t) ||
