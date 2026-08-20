@@ -11,6 +11,7 @@ import {
   marcarFalhaExecucao,
   avaliarAusenciaResultado
 } from "../../../app/src/motorExecucao/cicloVidaJob.js";
+import { optsVerificacaoEvidenciaFisica } from "../../../app/src/motorExecucao/evidenciaFisicaNode.js";
 
 function lerJobJson(queueDir, jobId) {
   const p = path.join(queueDir, `${jobId}.json`);
@@ -24,6 +25,28 @@ function escreverJobJson(queueDir, job) {
   const p = path.join(queueDir, `${job.id}.json`);
   fs.writeFileSync(p, JSON.stringify(job, null, 2) + "\n", "utf8");
   return job;
+}
+
+/**
+ * Roots + I/O Node para verificação física (Etapa 9-B).
+ * @param {string} queueDir
+ * @param {object|null|undefined} job
+ * @param {object} [opts]
+ */
+function optsComEvidenciaFisica(queueDir, job, opts = {}) {
+  if (opts.fsIo || opts.io || Array.isArray(opts.rootsPermitidos)) {
+    return opts;
+  }
+  const repoRoot =
+    opts.repoRoot ||
+    path.resolve(queueDir, "..", "..");
+  return {
+    ...opts,
+    ...optsVerificacaoEvidenciaFisica({
+      repoRoot,
+      projetoId: job && job.projeto
+    })
+  };
 }
 
 /**
@@ -97,7 +120,7 @@ export function reconciliarAposAgent(queueDir, jobId, opts = {}) {
       concluidoEm: null
     };
     const v = verificarResultadoJob(snap, {
-      ...opts,
+      ...optsComEvidenciaFisica(queueDir, snap, opts),
       actor: opts.actor || "ceo_verificacao"
     });
     if (v.ok) {
@@ -112,7 +135,7 @@ export function reconciliarAposAgent(queueDir, jobId, opts = {}) {
 
   if (job.estado === "result") {
     const v = verificarResultadoJob(job, {
-      ...opts,
+      ...optsComEvidenciaFisica(queueDir, job, opts),
       actor: opts.actor || "ceo_verificacao"
     });
     if (v.ok) {

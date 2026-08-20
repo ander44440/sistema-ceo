@@ -19,12 +19,27 @@ import {
   marcarFalhaExecucao,
   processarResultadoComVerificacao
 } from "../src/motorExecucao/cicloVidaJob.js";
+import { exigirObjetivoCanonico } from "../src/motorExecucao/objetivoJob.js";
+import { optsVerificacaoEvidenciaFisica } from "../src/motorExecucao/evidenciaFisicaNode.js";
 
 /**
  * @param {string} rootDir — raiz do repo CEO (pai de executive/)
  */
 export function criarFilaExecucao(rootDir) {
   const queueDir = path.join(rootDir, "executive", "queue");
+
+  function optsVerify(job, opts = {}) {
+    if (opts.fsIo || opts.io || Array.isArray(opts.rootsPermitidos)) {
+      return opts;
+    }
+    return {
+      ...opts,
+      ...optsVerificacaoEvidenciaFisica({
+        repoRoot: rootDir,
+        projetoId: job && job.projeto
+      })
+    };
+  }
 
   function garantirDir() {
     fs.mkdirSync(queueDir, { recursive: true });
@@ -121,6 +136,10 @@ export function criarFilaExecucao(rootDir) {
   }
 
   function publicar(entrada) {
+    const gate = exigirObjetivoCanonico(entrada);
+    if (!gate.ok) {
+      throw new Error(gate.mensagem);
+    }
     const id = proximoId();
     const agora = new Date().toISOString();
     const job = {
@@ -133,6 +152,7 @@ export function criarFilaExecucao(rootDir) {
       tipo: entrada.tipo || "execucao_tecnica",
       titulo: String(entrada.titulo || "").trim() || "Job sem título",
       descricao: String(entrada.descricao || "").trim() || "",
+      objetivo: gate.objetivo,
       prioridade: entrada.prioridade || "normal",
       estado: "pending",
       criadoEm: agora,
@@ -150,6 +170,9 @@ export function criarFilaExecucao(rootDir) {
         }
       ],
       ...(entrada.parecerId ? { parecerId: String(entrada.parecerId) } : {}),
+      ...(entrada.parentJobId
+        ? { parentJobId: String(entrada.parentJobId) }
+        : {}),
       ...(entrada.criterioConclusao
         ? { criterioConclusao: String(entrada.criterioConclusao) }
         : {})
@@ -173,11 +196,11 @@ export function criarFilaExecucao(rootDir) {
     // P0-2: completed só com verificação prévia ou flag explícita pós-verify
     if (estado === "completed" && extra.verificado !== true) {
       if (job.estado === "result") {
-        const v = verificarResultadoJob(job, {
+        const v = verificarResultadoJob(job, optsVerify(job, {
           objetivo: extra.objetivo,
           criterioFn: extra.criterioFn,
           actor: extra.actor || "ceo_verificacao"
-        });
+        }));
         if (!v.ok) throw new Error(v.mensagem || "Verificação falhou.");
         escreverJob(v.job);
         atualizarProximoMd(listarPorEstado("pending"));
@@ -215,11 +238,11 @@ export function criarFilaExecucao(rootDir) {
     // P0-2 integração: chegada a RESULT dispara verificação formal do CEO
     if (estado === "result" && !extra.adiarVerificacao) {
       const actual = lerJob(id);
-      const v = verificarResultadoJob(actual, {
+      const v = verificarResultadoJob(actual, optsVerify(actual, {
         objetivo: extra.objetivo,
         criterioFn: extra.criterioFn,
         actor: extra.actor || "ceo_verificacao"
-      });
+      }));
       if (v.ok) {
         escreverJob(v.job);
         atualizarProximoMd(listarPorEstado("pending"));
@@ -252,12 +275,12 @@ export function criarFilaExecucao(rootDir) {
       atualizarProximoMd(listarPorEstado("pending"));
       return reg.job;
     }
-    const v = verificarResultadoJob(reg.job, {
+    const v = verificarResultadoJob(reg.job, optsVerify(reg.job, {
       objetivo: opts.objetivo,
       criterioFn: opts.criterioFn,
       actor: opts.actorVerificacao || "ceo_verificacao",
       forcarFailed: opts.forcarFailed
-    });
+    }));
     if (!v.ok) throw new Error(v.mensagem || "Verificação falhou.");
     escreverJob(v.job);
     atualizarProximoMd(listarPorEstado("pending"));
@@ -278,11 +301,15 @@ export function criarFilaExecucao(rootDir) {
       aplicarEPersistir(marcarRunning(lerJob(id), opts)),
     registarResultado,
     verificar: (id, opts) =>
-      aplicarEPersistir(verificarResultadoJob(lerJob(id), opts || {})),
-    processarResultado: (id, resultado, opts) =>
       aplicarEPersistir(
-        processarResultadoComVerificacao(lerJob(id), resultado, opts || {})
+        verificarResultadoJob(lerJob(id), optsVerify(lerJob(id), opts || {}))
       ),
+    processarResultado: (id, resultado, opts) => {
+      const job = lerJob(id);
+      return aplicarEPersistir(
+        processarResultadoComVerificacao(job, resultado, optsVerify(job, opts || {}))
+      );
+    },
     marcarFalha: (id, falha, opts) =>
       aplicarEPersistir(marcarFalhaExecucao(lerJob(id), falha, opts)),
     atualizarProximoMd: () => atualizarProximoMd(listarPorEstado("pending"))

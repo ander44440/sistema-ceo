@@ -23,24 +23,32 @@ function criarFilaTemp() {
 }
 
 test("INT-1: Agent produz result → integração verifica → completed", () => {
-  const { fila, queueDir } = criarFilaTemp();
+  const { root, fila, queueDir } = criarFilaTemp();
+  const nome = "p0-2-homologacao.txt";
+  fs.writeFileSync(path.join(root, nome), "P0-2 HOMOLOGADO", "utf8");
   const job = fila.publicar({
     titulo: "Criar p0-2-homologacao.txt com linha P0-2 HOMOLOGADO",
     descricao:
-      "Objectivo: criar arquivo p0-2-homologacao.txt contendo exactamente P0-2 HOMOLOGADO",
+      "Criar p0-2-homologacao.txt com linha P0-2 HOMOLOGADO",
+    objetivo: "Criar p0-2-homologacao.txt com linha P0-2 HOMOLOGADO",
     prioridade: "alta"
   });
 
   fila.marcarDespachado(job.id, { actor: "dispatcher" });
   fila.marcarRunning(job.id, { actor: "agent" });
 
-  // Simula Agent a gravar result sem verificação (adiar)
+  // Simula Agent a gravar result sem verificação (adiar) + evidência verificável
   const emResult = fila.registarResultado(
     job.id,
     {
       status: "sucesso",
       resumo: "Criado p0-2-homologacao.txt com linha P0-2 HOMOLOGADO",
-      evidencia: "conteúdo verificado: P0-2 HOMOLOGADO"
+      evidencia: nome,
+      evidenciaVerificavel: {
+        tipo: "arquivo",
+        alvo: nome,
+        conteudoExacto: "P0-2 HOMOLOGADO"
+      }
     },
     { adiarVerificacao: true, actor: "agent" }
   );
@@ -48,11 +56,11 @@ test("INT-1: Agent produz result → integração verifica → completed", () =>
   assert.equal(listarAguardandoVerificacao(queueDir).length, 1);
 
   // Integração (dispatcher pós-Agent) dispara verificação formal
-  const rec = reconciliarAposAgent(queueDir, job.id);
+  const rec = reconciliarAposAgent(queueDir, job.id, { repoRoot: root });
   assert.equal(rec.acao, "completed");
   assert.equal(rec.job.estado, "completed");
   assert.equal(rec.job.verificacao?.ok, true);
-  assert.ok(rec.job.verificacao?.motivo);
+  assert.equal(rec.job.verificacao?.motivo, "evidencia_verificada");
   assert.ok(
     rec.job.historicoCiclo.some(
       (h) => h.de === "result" && h.para === "completed"
@@ -114,10 +122,13 @@ test("INT-3: result com falha do executor → failed", () => {
 });
 
 test("INT-4: registarResultado sem adiar → verificação automática na fila", () => {
-  const { fila } = criarFilaTemp();
+  const { root, fila } = criarFilaTemp();
+  const nome = "p0-2-homologacao-auto.txt";
+  fs.writeFileSync(path.join(root, nome), "P0-2 HOMOLOGADO", "utf8");
   const job = fila.publicar({
     titulo: "Criar p0-2-homologacao.txt com P0-2 HOMOLOGADO",
-    descricao: "Homologação automática result→verify",
+    descricao: "Criar p0-2-homologacao.txt com P0-2 HOMOLOGADO",
+    objetivo: "Criar p0-2-homologacao.txt com P0-2 HOMOLOGADO",
     prioridade: "alta"
   });
   fila.marcarDespachado(job.id);
@@ -125,17 +136,26 @@ test("INT-4: registarResultado sem adiar → verificação automática na fila",
   const final = fila.registarResultado(job.id, {
     status: "sucesso",
     resumo: "Criado p0-2-homologacao.txt com P0-2 HOMOLOGADO",
-    evidencia: "linha exacta P0-2 HOMOLOGADO"
+    evidencia: nome,
+    evidenciaVerificavel: {
+      tipo: "arquivo",
+      alvo: nome,
+      conteudoExacto: "P0-2 HOMOLOGADO"
+    }
   });
   assert.equal(final.estado, "completed");
   assert.equal(final.verificacao?.ok, true);
+  assert.equal(final.verificacao?.motivo, "evidencia_verificada");
 });
 
 test("INT-5: ciclo dispatcher verifica Jobs em result sem pending", async () => {
   const { fila, queueDir, root } = criarFilaTemp();
+  const objetivo =
+    "Homologação ciclo idle verify concluída com evidência suficiente no resumo";
   const job = fila.publicar({
     titulo: "Homologação ciclo idle verify",
-    descricao: "Job em result deve ser verificado mesmo sem pending",
+    descricao: objetivo,
+    objetivo,
     prioridade: "alta"
   });
   fila.marcarDespachado(job.id);
@@ -144,7 +164,7 @@ test("INT-5: ciclo dispatcher verifica Jobs em result sem pending", async () => 
     job.id,
     {
       status: "sucesso",
-      resumo: "Homologação ciclo idle verify concluída com evidência",
+      resumo: objetivo,
       evidencia: "ok"
     },
     { adiarVerificacao: true }

@@ -9,6 +9,11 @@ import {
   ehEstadoJobTerminal,
   validarTransicaoJob
 } from "./dominio.js";
+import { MOTIVO_OBJETIVO_AUSENTE } from "./objetivoJob.js";
+import {
+  extrairEvidenciaVerificavel,
+  verificarEvidenciaArquivo
+} from "./evidenciaFisica.js";
 
 /** Timeout default para ausência de resultado após dispatched/running (ms). */
 export const TIMEOUT_RESULTADO_MS = 2 * 60 * 60 * 1000; // 2h
@@ -170,9 +175,20 @@ export function textoDoResultado(resultado) {
  */
 export function avaliarCriterioConclusao(job, opts = {}) {
   const objetivo = String(
-    opts.objetivo || job.criterioConclusao || job.titulo || job.descricao || ""
+    opts.objetivo ||
+      (job && job.criterioConclusao) ||
+      (job && job.objetivo) ||
+      ""
   ).trim();
-  const texto = textoDoResultado(job.resultado);
+  const texto = textoDoResultado(job && job.resultado);
+
+  if (!objetivo) {
+    return {
+      ok: false,
+      motivo: MOTIVO_OBJETIVO_AUSENTE,
+      detalhes: { objetivo: "", texto }
+    };
+  }
   const statusExecutor =
     job.resultado &&
     typeof job.resultado === "object" &&
@@ -180,7 +196,9 @@ export function avaliarCriterioConclusao(job, opts = {}) {
       ? String(/** @type {Record<string, unknown>} */ (job.resultado).status)
       : null;
 
-  if (!texto) {
+  const specEvCedo = extrairEvidenciaVerificavel(job && job.resultado);
+
+  if (!texto && !specEvCedo) {
     return {
       ok: false,
       motivo: "resultado_ausente",
@@ -189,6 +207,7 @@ export function avaliarCriterioConclusao(job, opts = {}) {
   }
 
   if (
+    !specEvCedo &&
     /\b(handoff|despacho iniciado|execu[cç][aã]o iniciada|monitorando|vig[ií]lia|em andamento)\b/i.test(
       texto
     ) &&
@@ -230,6 +249,49 @@ export function avaliarCriterioConclusao(job, opts = {}) {
       ok: r === true,
       motivo: r === true ? "criterio_ok" : "criterio_falhou",
       detalhes: { objetivo, texto }
+    };
+  }
+
+  // Etapa 9-B: evidência verificável (arquivo) — observação injectável; sem I/O aqui.
+  if (specEvCedo) {
+    const statusOk =
+      statusExecutor === "sucesso" || statusExecutor === "ok";
+    if (!statusOk) {
+      return {
+        ok: false,
+        motivo: "evidencia_verificavel_sem_sucesso",
+        detalhes: { objetivo, texto, statusExecutor, spec: specEvCedo }
+      };
+    }
+    const io = opts.fsIo || opts.io || null;
+    const roots = Array.isArray(opts.rootsPermitidos)
+      ? opts.rootsPermitidos
+      : [];
+    const pathApi = opts.pathApi || null;
+    if (!io || !roots.length || !pathApi) {
+      return {
+        ok: false,
+        motivo: "observacao_fisica_indisponivel",
+        detalhes: {
+          objetivo,
+          texto,
+          spec: specEvCedo,
+          roots: roots.length,
+          io: Boolean(io),
+          pathApi: Boolean(pathApi)
+        }
+      };
+    }
+    const fisico = verificarEvidenciaArquivo(specEvCedo, {
+      rootsPermitidos: roots,
+      io,
+      pathApi,
+      maxBytes: opts.maxBytesLeitura
+    });
+    return {
+      ok: fisico.ok === true,
+      motivo: fisico.motivo,
+      detalhes: { objetivo, texto, ...(fisico.detalhes || {}) }
     };
   }
 
@@ -344,6 +406,7 @@ export function verificarResultadoJob(job, opts = {}) {
   const falhaDura =
     avaliacao.motivo === "resultado_ausente" ||
     avaliacao.motivo === "executor_reportou_falha" ||
+    avaliacao.motivo === MOTIVO_OBJETIVO_AUSENTE ||
     opts.forcarFailed === true;
 
   if (falhaDura) {
