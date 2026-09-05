@@ -5,6 +5,7 @@
 
 import { listarPendentes } from "./listPending.js";
 import { adquirirLock, libertarLock, lerLock } from "./lock.js";
+import { montarPromptDespacho } from "./contratoDespacho.js";
 import {
   prepararDespacho,
   reconciliarAposAgent,
@@ -80,6 +81,12 @@ export async function ciclo(ctx) {
   }
 
   try {
+    const contrato = montarPromptDespacho(job);
+    if (!contrato.ok) {
+      log(`[dispatcher] ${contrato.mensagem} (${job.id})`);
+      return "error";
+    }
+
     const prep = prepararDespacho(ctx.queueDir, job.id);
     if (prep) {
       log(`[dispatcher] Job ${job.id} → ${prep.estado} (handoff ≠ conclusão)`);
@@ -92,6 +99,10 @@ export async function ciclo(ctx) {
       apiKey: ctx.apiKey,
       model: ctx.model,
       jobId: job.id,
+      objetivo: job.objetivo,
+      criterioConclusao: job.criterioConclusao,
+      projeto: job.projeto,
+      projetoNome: job.projetoNome,
       titulo: job.titulo || ""
     });
 

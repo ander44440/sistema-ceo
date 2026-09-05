@@ -3,24 +3,52 @@
  */
 
 import { Agent, CursorAgentError } from "@cursor/sdk";
+import { montarPromptDespacho } from "./contratoDespacho.js";
 
 /**
- * @param {{ repoRoot: string, apiKey: string, model: string, jobId: string, titulo: string }} opts
+ * @param {{
+ *   repoRoot: string,
+ *   apiKey: string,
+ *   model: string,
+ *   jobId: string,
+ *   objetivo?: string,
+ *   criterioConclusao?: string,
+ *   projeto?: string,
+ *   projetoNome?: string,
+ *   titulo?: string
+ * }} opts
  */
 export async function despacharAgent(opts) {
-  const { repoRoot, apiKey, model, jobId, titulo } = opts;
+  const {
+    repoRoot,
+    apiKey,
+    model,
+    jobId,
+    objetivo,
+    criterioConclusao,
+    projeto,
+    projetoNome,
+    titulo
+  } = opts;
 
-  const prompt = [
-    "Consuma a Fila de Execução do CEO (REQ-045).",
-    "Siga o skill consumir-fila-execucao e a regra fila-execucao.",
-    `Há pelo menos o Job pending ${jobId}` +
-      (titulo ? ` («${titulo}»).` : "."),
-    "Protocolo P0-2: pending→dispatched→running→result (com evidência) ou failed.",
-    "NUNCA marque completed — a verificação é do CEO/dispatcher após result.",
-    "Não peça ao utilizador para colar o Job.",
-    "Não invente Jobs. Não altere Constituição/Governança.",
-    "Ao terminar, responda com um resumo curto do resultado."
-  ].join(" ");
+  const contrato = montarPromptDespacho({
+    id: jobId,
+    objetivo,
+    criterioConclusao,
+    projeto,
+    projetoNome,
+    titulo
+  });
+  if (!contrato.ok) {
+    return {
+      ok: false,
+      status: "objetivo_ausente",
+      result: contrato.mensagem,
+      error: contrato.mensagem
+    };
+  }
+
+  const prompt = contrato.prompt;
 
   try {
     const result = await Agent.prompt(prompt, {

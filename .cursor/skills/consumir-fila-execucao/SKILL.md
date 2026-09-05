@@ -28,12 +28,23 @@ Se o workspace atual for outro (ex.: MG2), use o caminho absoluto do repo CEO:
 
 Handoff ≠ conclusão. O Agent regista `result` (ou `failed`); o CEO verifica antes de `completed`.
 
+## Objetivo operacional
+
+O Dispatcher entrega: Job ID, `objetivo`, `criterioConclusao` (se existir), `projeto` / `projetoNome` (se existirem) e `titulo` só como identificação.
+
+- `job.objetivo` é a fonte canónica da tarefa. Execute exactamente esse objetivo. Não expandir escopo.
+- `job.titulo` é só identificação/apresentação e pode estar truncado. Nunca use o título para reconstruir ou substituir o objetivo.
+- `job.descricao` não é fonte alternativa de objetivo em Jobs novos.
+- `criterioConclusao`, quando presente, é o critério de aceite. Complementa o objetivo; não substitui a tarefa.
+- Não reconstrua o objetivo a partir de título, descrição, preview, resumo ou texto truncado.
+- Se `objetivo` estiver ausente ou vazio: não invente, não infira pelo título e não execute. Registe `"failed"` com motivo `objetivo_ausente` (protocolo de erro já existente). Não use título como fallback.
+
 ## Protocolo obrigatório
 
 1. Ler `PROXIMO.md` e/ou listar `JOB-*.json` com `"estado": "pending"` (mais antigo primeiro).
 2. Se não houver pending: informar e parar.
 3. Antes de executar: atualizar o JSON do Job para `"estado": "running"` e `iniciadoEm` (ISO) (se ainda `pending`/`dispatched`, pode marcar `dispatched` primeiro).
-4. Executar **apenas** o que `titulo` + `descricao` pedem; não expandir escopo.
+4. Executar **apenas** o `objetivo` recebido; se houver `criterioConclusao`, use-o como critério de aceite. Não expandir escopo.
 5. Ao terminar: `"estado": "result"` com `resultado` (evidência). **Não** marcar `completed` — a verificação é do CEO. Em erro de execução: `"failed"` com motivo.
 6. Após gravar `result`, a verificação formal (`verificarResultadoJob`) é disparada pelo Dispatcher (reconciliação pós-Agent / pass de Jobs em `result`) ou pela API da fila (`registarResultado` / PATCH `result`). O Agent **não** completa o Job.
 7. Não inventar Jobs; não marcar `completed` directamente.
