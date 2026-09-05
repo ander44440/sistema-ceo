@@ -11,8 +11,10 @@ import {
 } from "./index.js";
 import {
   executarPorDestino,
-  CAPACIDADES_C4
+  CAPACIDADES_C4,
+  EXCLUSOES_C4
 } from "./destinos.js";
+import { CAPACIDADES_CANONICAS } from "../executiveEngine/registrar.js";
 import { criarPublicadorFilaMemoria } from "../motorExecucao/ponteParecerJob.js";
 import { resetStoreContinuidadePadrao } from "../continuidadeGate/integracaoConversa.js";
 import { resetEstadoTopicosSessao } from "./topicosSessao.js";
@@ -45,6 +47,42 @@ test("E5: mapa CAPACIDADES_C4 não inclui motor nem ia deliberativa", () => {
   assert.ok(CAPACIDADES_C4.includes("empresas"));
   assert.equal(CAPACIDADES_C4.includes("motor_execucao"), false);
   assert.equal(CAPACIDADES_C4.includes("ia"), false);
+});
+
+test("P2: todo slug C4 pertence às capacidades runtime canónicas", () => {
+  for (const slug of CAPACIDADES_C4) {
+    assert.ok(
+      CAPACIDADES_CANONICAS.includes(slug),
+      `C4 «${slug}» não está em CAPACIDADES_CANONICAS`
+    );
+  }
+});
+
+test("P2: toda capacidade canónica excepto ia pertence ao C4", () => {
+  for (const slug of CAPACIDADES_CANONICAS) {
+    if (slug === "ia") continue;
+    assert.ok(CAPACIDADES_C4.includes(slug), `canónica «${slug}» ausente de C4`);
+  }
+  const esperados = [
+    "memoria",
+    "fila",
+    "dashboard",
+    "projetos",
+    "empresas",
+    "conhecimento",
+    "navegacao",
+    "ferramentas",
+    "consultar_cto"
+  ];
+  assert.deepEqual([...CAPACIDADES_C4].sort(), [...esperados].sort());
+});
+
+test("P2: ia está explicitamente excluída do C4", () => {
+  assert.ok(EXCLUSOES_C4.includes("ia"));
+  assert.equal(CAPACIDADES_C4.includes("ia"), false);
+  assert.ok(CAPACIDADES_CANONICAS.includes("ia"));
+  assert.equal(CAPACIDADES_C4.includes("motor_execucao"), false);
+  assert.equal(CAPACIDADES_CANONICAS.includes("motor_execucao"), false);
 });
 
 test("P0-D: C4 «ativar a empresa X» → empresas, não allowlist inválida", async () => {

@@ -26,19 +26,19 @@ import {
   normalizarTexto
 } from "./regras.js";
 import { executarConsultaFactualCatalogo } from "../catalogoProjetos/consultaFactual.js";
+import { CAPACIDADES_CANONICAS } from "../executiveEngine/registrar.js";
 
-/** Capacidades operacionais válidas para C4 (nunca Motor/MRE). */
-export const CAPACIDADES_C4 = Object.freeze([
-  "memoria",
-  "fila",
-  "dashboard",
-  "projetos",
-  "empresas",
-  "conhecimento",
-  "navegacao",
-  "ferramentas",
-  "consultar_cto"
-]);
+/**
+ * Slugs canónicos excluídos do destino C4.
+ * `ia` é deliberativa (C1/C2). `motor_execucao` não entra: não é slug registado.
+ * @type {readonly string[]}
+ */
+export const EXCLUSOES_C4 = Object.freeze(["ia"]);
+
+/** Capacidades operacionais válidas para C4 — derivadas de CAPACIDADES_CANONICAS. */
+export const CAPACIDADES_C4 = Object.freeze(
+  CAPACIDADES_CANONICAS.filter((id) => !EXCLUSOES_C4.includes(id))
+);
 
 const LOCAIS_C1 = new Set([
   "saudacao",

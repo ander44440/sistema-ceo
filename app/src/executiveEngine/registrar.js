@@ -44,7 +44,8 @@ export function limparRegistro() {
 }
 
 /**
- * IDs canônicos previstos para integração futura.
+ * Fonte runtime dos slugs de capacidade do Executive Engine.
+ * C4 deriva desta lista com exclusões explícitas (`EXCLUSOES_C4`).
  * @type {readonly CapacidadeId[]}
  */
 export const CAPACIDADES_CANONICAS = Object.freeze([
