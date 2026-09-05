@@ -851,6 +851,7 @@ export function ehIntencaoExecutivaE21(t) {
     /\b(execut[ae]|executar)\b.*\b(miss[aã]o|tarefa|trabalho|an[aá]lise|isto|isso|diagn[oó]stico)\b/,
     /\b(ger[ae]|gerar)\b.*\b(relat[oó]rio|parecer|diagn[oó]stico)\b/,
     /\b(cria(r)?|crie|cria)\s+(um\s+)?jobs?\b/,
+    /\b(publicar|enviar)\s+(um\s+|o\s+|novo\s+)?jobs?\b/,
     /\b(investigue|investigar)\b.*\b(erro|bug|falha|problema|isto|isso|este|esta)\b/,
     /\b(despacha(r)?|despache)\b/
   ];
@@ -904,7 +905,15 @@ export function desambiguarJobs(t) {
     return "c4";
   }
   if (/\bjobs?\s+pendentes?\b/.test(t)) return "c4";
-  if (/\b(cria(r)?|cria|crie|despacha)\s+(um\s+)?jobs?\b/.test(t)) return "c3";
+  if (
+    /\b(cria(r)?|cria|crie|despacha|despachar|publicar|enviar)\s+(um\s+|o\s+|novo\s+)?jobs?\b/.test(
+      t
+    )
+  ) {
+    return "c3";
+  }
+  if (/^job\s*:/.test(t)) return "c3";
+  if (/\b(publicar|despachar|enviar).*\bpara\s+a\s+fila\b/.test(t)) return "c3";
   if (/\bjobs?\s+(para|de)\s+\w+/.test(t) && temVerboExecucao(t)) return "c3";
   return null;
 }

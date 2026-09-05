@@ -14,7 +14,8 @@ import {
   temVerboExecucao,
   desambiguarJobs,
   calcularConfianca,
-  resolverEmpates
+  resolverEmpates,
+  ehIntencaoExecutivaE21
 } from "./regras.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -52,6 +53,28 @@ test("E2-CA2: fixtures C4 (status/jobs listar) → comando_operacional, não C3"
   }
   assert.equal(desambiguarJobs("lista os jobs pendentes"), "c4");
   assert.equal(desambiguarJobs("cria um job para outdoor"), "c3");
+});
+
+test("P1: publicar/enviar job → C3; listar jobs permanece C4", () => {
+  assert.equal(desambiguarJobs("listar jobs"), "c4");
+  assert.equal(desambiguarJobs("publicar job teste"), "c3");
+  assert.equal(desambiguarJobs("enviar job para a fila"), "c3");
+  assert.equal(ehIntencaoExecutivaE21("publicar job teste"), true);
+  assert.equal(ehIntencaoExecutivaE21("enviar job para a fila"), true);
+  assert.equal(ehIntencaoExecutivaE21("listar jobs"), false);
+
+  const listar = classificar("listar jobs");
+  assert.equal(listar.classe, "comando_operacional");
+  assert.equal(listar.destino, "capacidade_operacional");
+  assert.equal(listar.permiteJob, false);
+
+  for (const texto of ["publicar job teste", "enviar job para a fila"]) {
+    const s = classificar(texto);
+    assert.equal(s.classe, "trabalho_executivo", texto);
+    assert.equal(s.destino, "motor_execucao", texto);
+    assert.equal(s.permiteJob, true, texto);
+    assert.notEqual(s.classe, "comando_operacional", texto);
+  }
 });
 
 test("E2-CA3: empate C2/C3 sem verbo de execução → C2", () => {
