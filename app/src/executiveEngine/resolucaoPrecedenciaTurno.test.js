@@ -2,7 +2,7 @@
  * Resolução de Precedência por Turno — V1 (testes unitários).
  */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test, beforeEach } from "node:test";
 import {
   AUTORIDADE,
   TIPO_TURNO_PREC,
@@ -10,6 +10,19 @@ import {
   cnPodeAlterarDestino,
   anexarPrecedenciaNaResposta
 } from "./resolucaoPrecedenciaTurno.js";
+import { executiveEngine } from "./index.js";
+import { criarPublicadorFilaMemoria } from "../motorExecucao/ponteParecerJob.js";
+import { resetStoreContinuidadePadrao } from "../continuidadeGate/integracaoConversa.js";
+import { resetEstadoTopicosSessao } from "../classificadorIntencao/topicosSessao.js";
+import { resetEstadoObjectivoSessao } from "../classificadorIntencao/objectivoSessao.js";
+import { reiniciarAutoridadeDelegadaParaTestes } from "../autoridadeDelegada/autoridadeDelegada.js";
+
+beforeEach(() => {
+  resetStoreContinuidadePadrao();
+  resetEstadoTopicosSessao();
+  resetEstadoObjectivoSessao();
+  reiniciarAutoridadeDelegadaParaTestes();
+});
 
 test("V1: Gate vence tudo", () => {
   const r = resolverPrecedenciaTurno({
@@ -46,6 +59,63 @@ test("V1: situacional → C2 consulta (não C4 panorama)", () => {
   assert.equal(r.forcarC4Panorama, false);
   assert.equal(r.tipoTurno, TIPO_TURNO_PREC.CONSULTA);
   assert.equal(r.permiteAdExecucao, false);
+});
+
+test("P1: situacional + destino C4 → não forcarC2", () => {
+  const r = resolverPrecedenciaTurno({
+    pedidoSituacionalTrabalho: true,
+    destinoClassificador: "capacidade_operacional",
+    fase: "pos_classificador"
+  });
+  assert.equal(r.forcarC2, false);
+  assert.equal(r.acao, "seguir_classificador");
+  assert.equal(r.destinoPermitido, "capacidade_operacional");
+});
+
+test("P1: situacional sem destino C4 → forcarC2", () => {
+  const semDestino = resolverPrecedenciaTurno({
+    pedidoSituacionalTrabalho: true
+  });
+  assert.equal(semDestino.forcarC2, true);
+  const c2 = resolverPrecedenciaTurno({
+    pedidoSituacionalTrabalho: true,
+    destinoClassificador: "nucleo_mre"
+  });
+  assert.equal(c2.forcarC2, true);
+});
+
+test('P1 EE: «qual deve ser o próximo passo» permanece C4', async () => {
+  const fila = criarPublicadorFilaMemoria();
+  let motorChamado = false;
+  const out = await executiveEngine.executar(
+    { texto: "qual deve ser o próximo passo", historico: [] },
+    {
+      publicarJob: fila.publicarJob.bind(fila),
+      listarPorEstado: async () => [],
+      conduzirMotor: async () => {
+        motorChamado = true;
+        return { publicado: true, job: { id: "JOB-PROBE", estado: "pending" } };
+      }
+    }
+  );
+  assert.equal(out.dados?.classificacao?.classe, "comando_operacional");
+  assert.equal(out.dados?.encaminhamento?.destino, "capacidade_operacional");
+  assert.notEqual(out.dados?.mreInvocado, true);
+  assert.notEqual(out.dados?.motorAcionado, true);
+  assert.equal(motorChamado, false);
+});
+
+test('P1 EE: «explique o estado da fila» continua C2', async () => {
+  const fila = criarPublicadorFilaMemoria();
+  const out = await executiveEngine.executar(
+    { texto: "explique o estado da fila", historico: [] },
+    {
+      publicarJob: fila.publicarJob.bind(fila),
+      listarPorEstado: async () => []
+    }
+  );
+  assert.equal(out.dados?.classificacao?.classe, "conversa_projeto");
+  assert.equal(out.dados?.encaminhamento?.destino, "nucleo_mre");
 });
 
 test("V1: panorama geral → C4", () => {

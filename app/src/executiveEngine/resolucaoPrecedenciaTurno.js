@@ -189,6 +189,26 @@ export function resolverPrecedenciaTurno(sinais = {}) {
 
   // CONSULTA (situacional ou panorama) — nunca vira ação/delegação automática
   if (s.pedidoSituacionalTrabalho) {
+    // C4 já decidida pelo classificador (E4 / FASE 3) — não reescrever para C2.
+    if (s.destinoClassificador === "capacidade_operacional") {
+      return Object.freeze({
+        autoridade: AUTORIDADE.CLASSIFICADOR,
+        acao: "seguir_classificador",
+        destinoPermitido: "capacidade_operacional",
+        destinoFixo: true,
+        tipoTurno: TIPO_TURNO_PREC.CONSULTA,
+        bloqueados: Object.freeze([...bloqueados, AUTORIDADE.AD_CTO003]),
+        permiteAdAck: false,
+        permiteAdExecucao: false,
+        permiteCto003: false,
+        forcarC2: false,
+        forcarC4Panorama: false,
+        razao:
+          "V1: C4 já classificada — situacional não reescreve destino",
+        fase,
+        versao: "v1"
+      });
+    }
     return Object.freeze({
       autoridade: AUTORIDADE.CLASSIFICADOR,
       acao: "forcar_analise_situacional_c2",
