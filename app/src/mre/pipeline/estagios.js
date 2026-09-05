@@ -22,11 +22,19 @@ import {
   comContextoNcs,
   schemaHintEstagio6ComNcs
 } from "../ncs/politicas.js";
-import { hintEstagio6AnaliseDeliberativa } from "../politicaAnaliseDeliberativa.js";
+import {
+  hintEstagio6AnaliseDeliberativa,
+  hintEstagio6ConsultaResposta,
+  obterAutoanaliseActiva
+} from "../politicaAnaliseDeliberativa.js";
 import {
   hintEstagio6DecisaoSobConflito,
   temFatoBloqueanteNomeado
 } from "../politicaDecisaoSobConflito.js";
+import {
+  comporAnaliseConsultaDesdeSnapshot,
+  diagnosticoConsultaSituacional
+} from "../snapshotSituacionalConsulta.js";
 
 function trimStr(v, fallback = "") {
   const s = typeof v === "string" ? v.trim() : "";
@@ -116,6 +124,11 @@ export function assegurarJustificativaV5(justificativa, parcial = {}) {
  * Estágio 0 — Diagnóstico (LLM + saneamento DET)
  */
 export async function estagio0Diagnostico(entrada, deps) {
+  // CONSULTA situacional: nunca transformar em «problema de negócio» inventado
+  if (deps.pedidoConsultaResposta === true) {
+    return diagnosticoConsultaSituacional(entrada);
+  }
+
   const bruto = await chamarComRetry(deps.chamarLlm, {
     estagio: "0_diagnostico",
     schemaHint: "{ objetivoReal, problemaNegocio, natureza }",
@@ -142,7 +155,8 @@ export async function estagio0Diagnostico(entrada, deps) {
 export async function estagio1Enquadramento(entrada, diagnostico, deps) {
   const intencaoId = String(entrada.intencao?.id || "");
   let tipoPedido = "decisao";
-  if (/info|pergunta|consulta/i.test(intencaoId)) tipoPedido = "informacao";
+  if (deps.pedidoConsultaResposta === true) tipoPedido = "informacao";
+  else if (/info|pergunta|consulta/i.test(intencaoId)) tipoPedido = "informacao";
   if (/exec|fila|despach/i.test(intencaoId)) tipoPedido = "execucao";
   if (/ambigu/i.test(intencaoId) || !entrada.mensagem?.trim()) tipoPedido = "ambiguo";
 
@@ -304,9 +318,27 @@ export async function estagio3Principios(diagnostico, enquadramento, deps, lacun
  * Estágio 4 — Análise (LLM)
  */
 export async function estagio4Analise(parcial, deps) {
+  // CONSULTA: análise só a partir do snapshot (sem inventar via LLM)
+  if (deps.pedidoConsultaResposta === true) {
+    const snap = parcial?.snapshotSituacional || null;
+    return trimStr(
+      comporAnaliseConsultaDesdeSnapshot(snap),
+      "Consulta situacional sem lastro — lacunas não inventadas."
+    );
+  }
+
+  let schemaHint = "{ analise: string }";
+  if (obterAutoanaliseActiva()) {
+    schemaHint +=
+      " AUTOANÁLISE — OBJETO ÚNICO E OBRIGATÓRIO: contexto.ultimaRespostaCeo." +
+      " O campo 'analise' deve avaliar exclusivamente essa resposta: (1) o que acertou; (2) onde errou; (3) lacunas; (4) inconsistências; (5) como a resposta poderia ser melhorada." +
+      " contexto.diagnostico.objetivoReal e contexto.diagnostico.problemaNegocio são SOMENTE contexto de referência — É PROIBIDO tratá-los como o objeto da nova análise ou reanalisar o dilema/problema original neles." +
+      " É PROIBIDO no campo 'analise': 'Recomendação:', 'Decisão:', escolher opções como A/B, aprovar/rejeitar/adiar como novo veredicto, definir próximo passo prescritivo ou produzir novo julgamento do problema original." +
+      " A resposta deve ser uma crítica de contexto.ultimaRespostaCeo, e não uma nova solução para o problema.";
+  }
   const bruto = await chamarComRetry(deps.chamarLlm, {
     estagio: "4_analise",
-    schemaHint: "{ analise: string }",
+    schemaHint,
     contexto: comContextoNcs(parcial, deps.pacoteNcs)
   });
   return trimStr(bruto.analise, "Análise bloqueada — informação insuficiente.");
@@ -368,7 +400,9 @@ export async function estagio6Decisao(parcial, deps) {
     "justificativa DEVE mencionar riscos, princípios ou oportunidades (ou declarar ausência).";
 
   let schemaHint = schemaHintEstagio6ComNcs(schemaBase, deps.pacoteNcs);
-  if (deps.pedidoAnaliseDeliberativa === true) {
+  if (deps.pedidoConsultaResposta === true) {
+    schemaHint += hintEstagio6ConsultaResposta();
+  } else if (deps.pedidoAnaliseDeliberativa === true) {
     schemaHint += hintEstagio6AnaliseDeliberativa();
   }
   if (deps.pedidoDecisaoExplicita === true) {

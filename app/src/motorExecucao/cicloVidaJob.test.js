@@ -4,6 +4,10 @@
  */
 
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import {
   marcarDespachado,
@@ -14,8 +18,10 @@ import {
   avaliarAusenciaResultado,
   retomarCorrecao,
   processarResultadoComVerificacao,
-  resumirCicloVidaJob
+  resumirCicloVidaJob,
+  avaliarCriterioConclusao
 } from "./cicloVidaJob.js";
+import { MOTIVO_OBJETIVO_AUSENTE } from "./objetivoJob.js";
 import { validarTransicaoJob } from "./dominio.js";
 import { criarPublicadorFilaMemoria } from "./ponteParecerJob.js";
 import { iniciarFluxoAposJob } from "./integracaoOrquestrador.js";
@@ -29,6 +35,7 @@ function jobBase(overrides = {}) {
     id: "JOB-TEST-P0-2",
     titulo: "Alterar configuracao do outdoor",
     descricao: "Alterar X no modulo outdoor conforme spec",
+    objetivo: "Alterar X no modulo outdoor conforme spec",
     estado: "pending",
     criadoEm: agora,
     iniciadoEm: null,
@@ -122,7 +129,8 @@ test("T5 — Verificação positiva: COMPLETED", () => {
 test("T6 — Verificação negativa: NEEDS_CORRECTION (não COMPLETED)", () => {
   let job = jobBase({
     titulo: "Alterar sistema de pagamento Stripe",
-    descricao: "Integrar Stripe checkout completo"
+    descricao: "Integrar Stripe checkout completo",
+    objetivo: "Integrar Stripe checkout completo"
   });
   job = marcarDespachado(job).job;
   job = marcarRunning(job).job;
@@ -189,7 +197,8 @@ test("T8 — Resultado ausente: FAILED explícito, nunca COMPLETED", () => {
 test("T9 — Recuperação: NEEDS_CORRECTION → RUNNING", () => {
   let job = jobBase({
     titulo: "Implementar botao pausar",
-    descricao: "Implementar botao pausar no CEO"
+    descricao: "Implementar botao pausar no CEO",
+    objetivo: "Implementar botao pausar no CEO"
   });
   job = processarResultadoComVerificacao(job, {
     status: "sucesso",
@@ -253,4 +262,194 @@ test("P0-2: running→completed directo é ilegal", () => {
   assert.equal(validarTransicaoJob("running", "completed").ok, false);
   assert.equal(validarTransicaoJob("dispatched", "completed").ok, false);
   assert.equal(validarTransicaoJob("pending", "completed").ok, false);
+});
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const JOB_077 = join(__dirname, "../../../executive/queue/JOB-000077.json");
+
+test("Etapa 3 T1: objetivo longo / título truncado — verifica contra objetivo", () => {
+  const objetivo =
+    "Despache o JOB-000075 para execução e acompanhe a operação sem usar jobs do MG2. " +
+    "Crie o ficheiro projeto-teste-alfa.txt com as linhas PROJETO TESTE ALFA e EXECUÇÃO INICIAL CONCLUÍDA.";
+  const titulo = `${objetivo.slice(0, 71)}…`;
+  const av = avaliarCriterioConclusao({
+    titulo,
+    descricao: "meta irrelevante para verificação",
+    objetivo,
+    resultado: {
+      status: "sucesso",
+      resumo: objetivo,
+      evidencia: "projeto-teste-alfa.txt JOB-000075 EXECUÇÃO INICIAL CONCLUÍDA"
+    }
+  });
+  assert.equal(av.ok, true);
+  assert.equal(av.detalhes.objetivo, objetivo);
+  assert.equal(av.detalhes.objetivo.includes("…"), false);
+  assert.ok(av.detalhes.objetivo.length > titulo.length);
+});
+
+test("Etapa 3 T2: objetivo ≠ título — resultado determinado pelo objetivo", () => {
+  const objetivo =
+    "Executar tarefa X: criar o ficheiro alfa.txt com exactamente a linha ALFA.";
+  const avPassa = avaliarCriterioConclusao({
+    titulo: "Título curto",
+    descricao: "Título curto",
+    objetivo,
+    resultado: {
+      status: "sucesso",
+      resumo: "Criado ficheiro alfa.txt com a linha ALFA.",
+      evidencia: "alfa.txt"
+    }
+  });
+  assert.equal(avPassa.ok, true);
+  assert.equal(avPassa.detalhes.objetivo, objetivo);
+
+  const avTituloNaoBasta = avaliarCriterioConclusao({
+    titulo: "Título curto outdoor pagamento stripe",
+    descricao: "Título curto outdoor pagamento stripe",
+    objetivo,
+    resultado: {
+      status: "sucesso",
+      resumo: "Título curto outdoor pagamento stripe actualizado.",
+      evidencia: "ui"
+    }
+  });
+  assert.equal(avTituloNaoBasta.ok, false);
+  assert.equal(avTituloNaoBasta.detalhes.objetivo, objetivo);
+  assert.equal(avTituloNaoBasta.motivo, "objetivo_nao_atendido");
+});
+
+test("Etapa 3 T3: criterioConclusao é o critério de aceite quando existe", () => {
+  const objetivo =
+    "Implementar o botão Pausar no Centro de Situação com persistência de voz e sem alterar o Motor.";
+  const criterio = "ficheiro homologacao.txt existe com linha HOMOLOGADO";
+  const av = avaliarCriterioConclusao({
+    titulo: "Implementar botão Pausar…",
+    objetivo,
+    criterioConclusao: criterio,
+    resultado: {
+      status: "sucesso",
+      resumo: "ficheiro homologacao.txt existe com linha HOMOLOGADO",
+      evidencia: "homologacao.txt"
+    }
+  });
+  assert.equal(av.ok, true);
+  assert.equal(av.detalhes.objetivo, criterio);
+  assert.notEqual(av.detalhes.objetivo, objetivo);
+});
+
+test("Etapa 3 T4: sem objetivo — não usa título/descrição; objetivo_ausente", () => {
+  const av = avaliarCriterioConclusao({
+    titulo: "Continuar a operação do JOB-000077 com evidência completa",
+    descricao:
+      "Despache o JOB-000075 para execução e acompanhe a operação sem usar jobs do MG2.",
+    resultado: {
+      status: "sucesso",
+      resumo:
+        "Continuar a operação do JOB-000077 com evidência completa. Despache o JOB-000075.",
+      evidencia: "ok"
+    }
+  });
+  assert.equal(av.ok, false);
+  assert.equal(av.motivo, MOTIVO_OBJETIVO_AUSENTE);
+  assert.equal(av.detalhes.objetivo, "");
+
+  let job = jobBase({
+    titulo: "Continuar",
+    descricao: "texto legado que não deve ser usado",
+    objetivo: ""
+  });
+  job = marcarDespachado(job).job;
+  job = marcarRunning(job).job;
+  job = registrarResultadoBruto(job, {
+    status: "sucesso",
+    resumo: "Continuar texto legado que não deve ser usado",
+    evidencia: "ok"
+  }).job;
+  const v = verificarResultadoJob(job);
+  assert.equal(v.ok, true);
+  assert.equal(v.job.estado, "failed");
+  assert.equal(v.job.verificacao.motivo, MOTIVO_OBJETIVO_AUSENTE);
+  assert.notEqual(v.job.estado, "completed");
+});
+
+test("Etapa 3 T5: descrição divergente — ignora descrição e título", () => {
+  const objetivo = "Gravar a marca ZULU42 no artefacto-alfa";
+  const av = avaliarCriterioConclusao({
+    objetivo,
+    descricao: "Gravar a marca YANKEE99 no artefacto-beta",
+    titulo: "Gravar a marca WHISKEY7 no artefacto-gama",
+    resultado: {
+      status: "sucesso",
+      resumo: "Gravada a marca ZULU42 no artefacto-alfa",
+      evidencia: "artefacto-alfa"
+    }
+  });
+  assert.equal(av.ok, true);
+  assert.equal(av.detalhes.objetivo, objetivo);
+
+  const ignoraB = avaliarCriterioConclusao({
+    objetivo,
+    descricao: "Gravar a marca YANKEE99 no artefacto-beta",
+    titulo: "Gravar a marca WHISKEY7 no artefacto-gama",
+    resultado: {
+      status: "sucesso",
+      resumo: "Gravado YANKEE99 no artefacto-beta e WHISKEY7 no artefacto-gama",
+      evidencia: "artefacto-beta"
+    }
+  });
+  assert.equal(ignoraB.ok, false);
+  assert.equal(ignoraB.motivo, "objetivo_nao_atendido");
+});
+
+test("Etapa 3 T6: parecer divergente — usa job.objetivo, não objetivoReal", () => {
+  const objetivo = "Gravar a marca ZULU42 no artefacto-alfa";
+  const parecerB = {
+    diagnostico: {
+      objetivoReal: "Gravar a marca YANKEE99 no artefacto-beta"
+    }
+  };
+  const av = avaliarCriterioConclusao(
+    {
+      objetivo,
+      descricao: "meta B",
+      titulo: "meta C",
+      parecer: parecerB,
+      resultado: {
+        status: "sucesso",
+        resumo: "Gravada a marca ZULU42 no artefacto-alfa",
+        evidencia: "artefacto-alfa"
+      }
+    },
+    { parecer: parecerB }
+  );
+  assert.equal(av.ok, true);
+  assert.equal(av.detalhes.objetivo, objetivo);
+
+  const naoUsaParecer = avaliarCriterioConclusao(
+    {
+      objetivo,
+      resultado: {
+        status: "sucesso",
+        resumo: "Gravado YANKEE99 no artefacto-beta",
+        evidencia: "artefacto-beta"
+      }
+    },
+    { parecer: parecerB }
+  );
+  assert.equal(naoUsaParecer.ok, false);
+});
+
+test("Etapa 3 replay JOB-000077: legado sem objetivo — não migrar; objetivo_ausente", () => {
+  const raw = readFileSync(JOB_077);
+  const hashAntes = createHash("sha256").update(raw).digest("hex");
+  const job = JSON.parse(raw.toString("utf8").replace(/^\uFEFF/, ""));
+  assert.equal(Object.prototype.hasOwnProperty.call(job, "objetivo"), false);
+  const av = avaliarCriterioConclusao(job);
+  assert.equal(av.ok, false);
+  assert.equal(av.motivo, MOTIVO_OBJETIVO_AUSENTE);
+  const hashDepois = createHash("sha256")
+    .update(readFileSync(JOB_077))
+    .digest("hex");
+  assert.equal(hashDepois, hashAntes);
 });

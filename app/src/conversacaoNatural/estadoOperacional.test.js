@@ -61,9 +61,24 @@ test("Agent/dispatcher erro → RECUPERAR", () => {
 test("comandos REGRA 3 reconhecidos", () => {
   assert.equal(ehComandoSobreJobActivo("REENVIAR AO CURSOR"), true);
   assert.equal(ehComandoSobreJobActivo("tentar novamente"), true);
+  assert.equal(ehComandoSobreJobActivo("reenviar"), true);
   assert.equal(ehComandoSobreJobActivo("HA JOBS NA FILA?"), true);
   assert.equal(ehComandoSobreJobActivo("estado"), true);
   assert.equal(ehComandoSobreJobActivo("o que achas das vias?"), false);
+});
+
+test("REGRA 3: repetir decisão deliberativa ≠ comando operacional", () => {
+  assert.equal(
+    ehComandoSobreJobActivo(
+      "Repetir uma decisão enquanto 093/095 estiverem em needs_correction."
+    ),
+    false
+  );
+  assert.equal(ehComandoSobreJobActivo("REPITA"), true);
+  assert.equal(ehComandoSobreJobActivo("repetir o Job"), true);
+  assert.equal(ehComandoSobreJobActivo("repetir a execução"), true);
+  assert.equal(ehComandoSobreJobActivo("reenviar"), true);
+  assert.equal(ehComandoSobreJobActivo("tentar novamente"), true);
 });
 
 test("perguntas proibidas com operação (REGRA 4)", () => {
@@ -77,7 +92,14 @@ test("perguntas proibidas com operação (REGRA 4)", () => {
 
 test("ESPELHO com Job activo não pergunta prioridade", () => {
   const estadoOperacional = extrairEstadoOperacional({
-    jobs: [{ id: "JOB-000038", titulo: "reenviar", estado: "pending" }]
+    jobs: [
+      {
+        id: "JOB-000038",
+        titulo: "reenviar",
+        estado: "pending",
+        objetivo: "Reenviar o despacho pendente até concluir a entrega."
+      }
+    ]
   });
   const out = comporPorTipo(TIPO_TURNO.ESPELHO, {
     parecer: null,

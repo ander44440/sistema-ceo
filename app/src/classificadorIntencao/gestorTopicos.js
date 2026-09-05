@@ -67,6 +67,23 @@ const RE_SHIFT =
 const RE_RETOMAR =
   /\b(voltando\s+(a|ao|à|para)|retomando|retomar|voltar\s+(a|ao|à|para)|regressando\s+(a|ao|à))\b/i;
 
+/**
+ * Encerramento explícito e inequívoco de tópico/assunto/contexto.
+ * Não cobre «novo contexto», «mudando de assunto» nem shift simples.
+ * @param {string} [texto]
+ */
+export function ehEncerramentoExplicitoContexto(texto) {
+  const t = String(texto || "");
+  return (
+    /\b(encerr[ae]|fech[ae]|abandon[ae])\s+(completamente\s+)?(o\s+|este\s+|esse\s+)?(t[oó]pico|assunto|contexto)(\s+anterior)?\b/i.test(
+      t
+    ) ||
+    /\bn[aã]o\s+considere\s+mais\s+(este|esse|o)\s+(t[oó]pico|assunto|contexto)\b/i.test(
+      t
+    )
+  );
+}
+
 /** Famílias genéricas — não geram ambiguidade face a âncora específica (alinhado IMP-062). */
 const FAMILIAS_GENERICAS = new Set(["mg2", "coa"]);
 

@@ -10,7 +10,7 @@ import {
   jobFilaParaResumoConsciencia,
   listarJobsPorEstado
 } from "../executiveEngine/filaCliente.js";
-import { filtrarJobsPorMissaoActiva } from "../motorExecucao/acompanhamentoJob.js";
+import { filtrarJobsPorMissaoActiva, ehOperacaoAtivaCorrente } from "../motorExecucao/acompanhamentoJob.js";
 
 /**
  * @typedef {import("./agregarEstado.js").LeitoresFontes} LeitoresFontes
@@ -57,6 +57,11 @@ export function criarLeitoresConscienciaPadrao(deps = {}) {
       ? obterStoreContinuidadePadrao()
       : null);
 
+  const ctxActivo = () => ({
+    missaoActiva: missaoDosDeps(deps),
+    idsAdotadosSessao: deps.idsAdotadosSessao || null
+  });
+
   return {
     F1: async () => {
       if (typeof deps.jobsPendentes === "function") {
@@ -66,6 +71,7 @@ export function criarLeitoresConscienciaPadrao(deps = {}) {
         const missao = missaoDosDeps(deps);
         const jobs = await listarJobsPorEstado("pending");
         return filtrarJobsPorMissaoActiva(jobs, missao)
+          .filter((j) => ehOperacaoAtivaCorrente(j, ctxActivo()))
           .map((j) => jobFilaParaResumoConsciencia(j, "pending"))
           .filter(Boolean);
       } catch {
@@ -83,6 +89,7 @@ export function criarLeitoresConscienciaPadrao(deps = {}) {
         );
         const jobs = await listarJobsEmAcompanhamento();
         return filtrarJobsPorMissaoActiva(jobs, missao)
+          .filter((j) => ehOperacaoAtivaCorrente(j, ctxActivo()))
           .map((j) => jobFilaParaResumoConsciencia(j))
           .filter(Boolean);
       } catch {
@@ -90,6 +97,7 @@ export function criarLeitoresConscienciaPadrao(deps = {}) {
           const missao = missaoDosDeps(deps);
           const jobs = await listarJobsPorEstado("running");
           return filtrarJobsPorMissaoActiva(jobs, missao)
+            .filter((j) => ehOperacaoAtivaCorrente(j, ctxActivo()))
             .map((j) => jobFilaParaResumoConsciencia(j, "running"))
             .filter(Boolean);
         } catch {

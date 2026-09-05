@@ -402,6 +402,12 @@ export async function executarDestinoClarificacao(ctx) {
       rota: {
         ...(ctx.rota && typeof ctx.rota === "object" ? ctx.rota : {}),
         destino: "motor_execucao"
+      },
+      deps: {
+        ...(ctx.deps && typeof ctx.deps === "object" ? ctx.deps : {}),
+        estadoOperacional: estadoOp,
+        jobActivo: estadoOp.jobActivo,
+        jobs: Array.isArray(ctx.deps?.jobs) ? ctx.deps.jobs : []
       }
     };
     const resposta = await executarDestinoC3(ctxRec);

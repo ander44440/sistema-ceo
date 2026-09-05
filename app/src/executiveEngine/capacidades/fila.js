@@ -25,12 +25,14 @@ function extrairTituloDescricao(texto) {
   if (partes.length >= 2) {
     return {
       titulo: partes[0].trim().slice(0, 160),
-      descricao: partes.slice(1).join(": ").trim()
+      descricao: partes.slice(1).join(": ").trim(),
+      objetivo: corpo
     };
   }
   return {
     titulo: corpo.slice(0, 160) || "Job de execução técnica",
-    descricao: corpo
+    descricao: corpo,
+    objetivo: corpo
   };
 }
 
@@ -68,7 +70,7 @@ export const capacidadeFila = Object.freeze({
         };
       }
 
-      const { titulo, descricao } = extrairTituloDescricao(texto);
+      const { titulo, descricao, objetivo } = extrairTituloDescricao(texto);
       const job = await publicarJobFila({
         origem: "ceo",
         projeto: coa
@@ -77,6 +79,7 @@ export const capacidadeFila = Object.freeze({
         tipo: "execucao_tecnica",
         titulo,
         descricao,
+        objetivo,
         prioridade: "normal"
       });
 

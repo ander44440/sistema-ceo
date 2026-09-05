@@ -70,25 +70,35 @@ test("missao: adotar não readopta Jobs históricos de outra missão", async () 
     missaoActiva: MISSAO_ALFA
   });
   assert.equal(adocao.ok, true);
-  assert.equal(adocao.adotados.length, 1);
-  assert.equal(adocao.adotados[0].jobId, "JOB-000173");
+  assert.equal(adocao.adotados.length, 0);
   assert.ok(
     adocao.ignorados.some(
       (i) => i.jobId === "JOB-000070" && i.motivo === "fora_da_missao_activa"
     )
   );
+  assert.ok(
+    adocao.ignorados.some(
+      (i) =>
+        i.jobId === "JOB-000173" && i.motivo === "needs_correction_historico"
+    )
+  );
   assert.equal(store.obter("JOB-000070"), null);
-  assert.equal(store.obter("JOB-000173")?.activo, true);
+  assert.equal(store.obter("JOB-000173"), null);
 });
 
 test("missao: promoção e lastro usam Job da missão, não o menor ID global", async () => {
   const store = criarStoreAcompanhamento();
+  const alfaResult = {
+    ...JOB_ALFA,
+    estado: "result",
+    objetivo: "Conduzir a missão ALFA até ao artefacto combinado."
+  };
   await adotarJobsDaFilaParaAcompanhamento(store, {
-    listarJobs: async () => [JOB_070, JOB_ALFA],
+    listarJobs: async () => [JOB_070, alfaResult],
     missaoActiva: MISSAO_ALFA
   });
   const obs = await observarAcompanhamentosActivos(store, {
-    obterJob: async (id) => (id === JOB_ALFA.id ? JOB_ALFA : JOB_070),
+    obterJob: async (id) => (id === JOB_ALFA.id ? alfaResult : JOB_070),
     missaoActiva: MISSAO_ALFA
   });
   const promocoes = extrairPromocoesResultadoMissao(obs);
@@ -111,17 +121,31 @@ test("missao: operacaoAberta fantasma não vem de needs_correction alheio", () =
     jobs: [JOB_070, JOB_ALFA],
     missaoActiva: MISSAO_ALFA
   });
-  assert.equal(e.operacaoAberta, true);
-  assert.equal(e.jobActivo?.id, "JOB-000173");
-  assert.ok(!String(e.jobActivo?.id || "").includes("070"));
+  assert.equal(e.operacaoAberta, false);
+  assert.equal(e.jobActivo, null);
+
+  const eActiva = extrairEstadoOperacional({
+    jobs: [
+      JOB_070,
+      {
+        ...JOB_ALFA,
+        estado: "running",
+        objetivo: "Conduzir a missão ALFA até ao artefacto combinado."
+      }
+    ],
+    missaoActiva: MISSAO_ALFA
+  });
+  assert.equal(eActiva.operacaoAberta, true);
+  assert.equal(eActiva.jobActivo?.id, "JOB-000173");
+  assert.ok(!String(eActiva.jobActivo?.id || "").includes("070"));
 });
 
-test("missao: sem missaoActiva mantém comportamento Teste 3 (adopta todos)", async () => {
+test("missao: sem missaoActiva não auto-adopta needs_correction histórico", async () => {
   const store = criarStoreAcompanhamento();
   const adocao = await adotarJobsDaFilaParaAcompanhamento(store, {
     listarJobs: async () => [JOB_070, JOB_ALFA]
   });
-  assert.equal(adocao.adotados.length, 2);
+  assert.equal(adocao.adotados.length, 0);
 });
 
 test("missao: ordenarPromocoesPorRecencia prefere o mais recente", () => {

@@ -33,25 +33,37 @@ import {
   primeiroPassoClassificar
 } from "../classificadorIntencao/integracaoNucleo.js";
 import { detectarPedidoDecisaoExplicita } from "../classificadorIntencao/pedidoDecisaoExplicita.js";
+import { normalizarTexto } from "../classificadorIntencao/lexicon.js";
+import { ehPedidoSituacionalTrabalho } from "../classificadorIntencao/regras.js";
 import { seleccionarHistoricoRecente } from "../classificadorIntencao/historicoRecente.js";
 import { resolverReferencias } from "../classificadorIntencao/resolverReferencias.js";
-import { gestorTopicos } from "../classificadorIntencao/gestorTopicos.js";
+import {
+  gestorTopicos,
+  ehEncerramentoExplicitoContexto
+} from "../classificadorIntencao/gestorTopicos.js";
 import {
   GESTOR_TOPICOS_ATIVO,
   obterEstadoTopicosSessao,
-  aplicarResultadoGestaoTopicos
+  aplicarResultadoGestaoTopicos,
+  resetEstadoTopicosSessao
 } from "../classificadorIntencao/topicosSessao.js";
 import { gestorObjectivo } from "../classificadorIntencao/gestorObjectivo.js";
 import {
   GESTOR_OBJECTIVO_ATIVO,
   obterEstadoObjectivoSessao,
-  aplicarResultadoGestaoObjectivo
+  aplicarResultadoGestaoObjectivo,
+  resetEstadoObjectivoSessao
 } from "../classificadorIntencao/objectivoSessao.js";
 import {
   validarContextoAtivo,
   VCA_ATIVO
 } from "../classificadorIntencao/validadorContextoAtivo.js";
 import { executarPorDestino } from "../classificadorIntencao/destinos.js";
+import {
+  resolverPrecedenciaTurno,
+  anexarPrecedenciaNaResposta,
+  cnPodeAlterarDestino
+} from "./resolucaoPrecedenciaTurno.js";
 import {
   obterStoreContinuidadePadrao,
   decidirInterceptacaoContinuidade,
@@ -67,7 +79,10 @@ import {
   criarStoreAcompanhamento,
   ehEstadoAdotavelDaFila,
   extrairPromocoesResultadoMissao,
+  ehJobRuidoDeliberativo,
   filtrarMensagensAcompanhamentoDeliberativo,
+  filtrarLastroRuidoDeliberativoSobPedidoDecisao,
+  idsAdotadosDoStoreSessao,
   observarAcompanhamentosActivos,
   registarAcompanhamentoAposHandoff
 } from "../motorExecucao/acompanhamentoJob.js";
@@ -159,7 +174,10 @@ function contextoCapacidade({
   validacaoContexto = null,
   storeContinuidade = null,
   obterJob = undefined,
-  listarJobs = undefined
+  listarJobs = undefined,
+  precedenciaTurno = null,
+  tipoTurno = null,
+  consultaNaoEAcao = false
 }) {
   /** @type {Record<string, unknown>} */
   const ctx = {
@@ -189,6 +207,16 @@ function contextoCapacidade({
   }
   if (typeof listarJobs === "function") {
     ctx.listarJobs = listarJobs;
+  }
+  // V1 precedência: CONSULTA disponível no C2/MRE
+  if (precedenciaTurno) {
+    ctx.precedenciaTurno = precedenciaTurno;
+  }
+  if (tipoTurno) {
+    ctx.tipoTurno = tipoTurno;
+  }
+  if (consultaNaoEAcao === true) {
+    ctx.consultaNaoEAcao = true;
   }
   return ctx;
 }
@@ -321,6 +349,24 @@ export const executiveEngine = {
               return null;
             }
           })();
+
+    // P0 — contexto vazio: sem projeto/missão activa, a fila global NÃO
+    // vira acompanhamento do turno (contrato CONTEXTO ATIVO = vazio).
+    // Não altera a fila, nem filtrarJobsPorMissaoActiva, nem Teste 3
+    // quando há missão (adopção filtrada permanece abaixo).
+    if (
+      !missaoActiva ||
+      (missaoActiva.id == null && missaoActiva.nome == null)
+    ) {
+      return {
+        ok: true,
+        resultados: [],
+        mensagens: [],
+        aindaActivos: 0,
+        fonte: "fila_persistida",
+        motivo: "sem_missao_activa_sem_acompanhamento_global"
+      };
+    }
 
     const listarJobs =
       typeof deps.listarJobsEmAcompanhamento === "function"
@@ -569,6 +615,7 @@ export const executiveEngine = {
     }
 
     // IMP-071: Autoridade Delegada — activação/encerramento + execução sob mandato.
+    // V1: precedência central — PD/consulta situacional bloqueiam AD ação/ack indevido.
     const adJaActiva = autoridadeDelegadaActiva();
     const resultadoAd = processarMensagemAutoridadeDelegada({
       texto,
@@ -579,14 +626,31 @@ export const executiveEngine = {
     });
     const acabouDeActivar =
       resultadoAd.activado === true && adJaActiva === false;
+    const textoNormPrec = normalizarTexto(texto);
+    const pedidoDecisaoPrec = detectarPedidoDecisaoExplicita(texto);
+    const situacionalPrec = ehPedidoSituacionalTrabalho(textoNormPrec);
+    const panoramaPrec =
+      !situacionalPrec &&
+      (/\bestado\s+atual\b/.test(textoNormPrec) ||
+        /\b(resumo\s+executivo|memoria\s+executiva)\b/.test(textoNormPrec));
+    const ordemAdPrec = ehOrdemExecucaoOperacional(texto);
+    const precAd = resolverPrecedenciaTurno({
+      pedidoDecisaoExplicita: pedidoDecisaoPrec,
+      pedidoSituacionalTrabalho: situacionalPrec,
+      panoramaEstadoGeral: panoramaPrec,
+      adActivacaoAck: acabouDeActivar && !ordemAdPrec,
+      adOrdemExecucao: autoridadeDelegadaActiva() && ordemAdPrec,
+      // Ordem explícita sob AD = objeto do mandato (compatível com testes AD)
+      objetoOperacionalReal: ordemAdPrec,
+      fase: "pre_classificador"
+    });
 
     // Primeira activação (sem ordem de execução neste turno): confirma mandato.
-    // Pedido explícito de decisão → não short-circuit; segue classificador/MRE.
-    // Sem naturalizar deliberativo — evita «O que mudaria esta decisão…».
+    // Pedido explícito de decisão / consulta situacional → não short-circuit.
     if (
       acabouDeActivar &&
-      !ehOrdemExecucaoOperacional(texto) &&
-      !detectarPedidoDecisaoExplicita(texto)
+      !ordemAdPrec &&
+      precAd.permiteAdAck
     ) {
       const estadoAd = obterEstadoAutoridadeDelegada();
       const fecho = exercerFechoDelegado({
@@ -632,15 +696,15 @@ export const executiveEngine = {
         ...metaAd(),
         memoria: memoriaAd
       };
-      return respostaAd;
+      return anexarPrecedenciaNaResposta(respostaAd, precAd);
     }
 
     // AD activa + ordem de execução → Motor (C3), não novo ack nem MRE deliberativo.
-    // Precedência: pedido explícito de decisão > latch operacional AD (sem Job/C3).
+    // V1: só se precedência autorizar (PD/situacional bloqueiam).
     if (
       autoridadeDelegadaActiva() &&
-      ehOrdemExecucaoOperacional(texto) &&
-      !detectarPedidoDecisaoExplicita(texto)
+      ordemAdPrec &&
+      precAd.permiteAdExecucao
     ) {
       const estadoAd = obterEstadoAutoridadeDelegada();
       const coaActivo = (() => {
@@ -760,24 +824,32 @@ export const executiveEngine = {
         ...metaAd(),
         memoria: memoriaExec
       };
-      return anexarMensagensAcompanhamento(
-        respostaExec,
-        obsAcompanhamento,
-        texto
+      return anexarPrecedenciaNaResposta(
+        anexarMensagensAcompanhamento(
+          respostaExec,
+          obsAcompanhamento,
+          texto
+        ),
+        precAd
       );
     }
 
     // CTO-003: Interceptação Operacional — ANTES de VCA / CSC / Classificador.
-    // Critério: comando operacional com operação aberta não chega ao classificador.
-    // Teste 3: continuidade de missão (resultado) NÃO é interceptada como C3.
+    // V1: só se precedência autorizar (objeto operacional + não PD/consulta).
     let estadoOpPre = null;
     {
+      const idsAdotadosSessao = [
+        ...idsAdotadosDoStoreSessao(this._acompanhamentoStore)
+      ];
       const lido = await lerEstadoOperacionalPreClassificador({
         storeContinuidade: store,
         leitoresConsciencia: deps.leitoresConsciencia,
         agoraConsciencia: deps.agoraConsciencia,
         historico,
-        listarPorEstado: deps.listarPorEstado
+        listarPorEstado: deps.listarPorEstado,
+        missaoActiva: missaoTurno,
+        idsAdotadosSessao,
+        obterCoaAtivo: deps.obterCoaAtivo
       });
       estadoOpPre = lido.estadoOperacional;
       const missaoActiva =
@@ -791,15 +863,28 @@ export const executiveEngine = {
           }
         })();
 
-      if (
-        deveInterceptarOperacional({
-          texto,
-          historico,
-          estadoOperacional: estadoOpPre,
-          missaoActiva,
-          jobs: lido.jobsMissao
-        })
-      ) {
+      const objetoOpReal =
+        Boolean(estadoOpPre?.operacaoAberta) ||
+        Boolean(estadoOpPre?.jobActivo) ||
+        (obsAcompanhamento?.aindaActivos > 0);
+      const cto003Candidato = deveInterceptarOperacional({
+        texto,
+        historico,
+        estadoOperacional: estadoOpPre,
+        missaoActiva,
+        jobs: lido.jobsMissao,
+        idsAdotadosSessao
+      });
+      const precCto = resolverPrecedenciaTurno({
+        pedidoDecisaoExplicita: pedidoDecisaoPrec,
+        pedidoSituacionalTrabalho: situacionalPrec,
+        panoramaEstadoGeral: panoramaPrec,
+        cto003Candidato,
+        objetoOperacionalReal: objetoOpReal,
+        fase: "pre_classificador"
+      });
+
+      if (precCto.permiteCto003 && cto003Candidato) {
         let publicarJobOp = deps.publicarJob;
         if (typeof publicarJobOp !== "function") {
           try {
@@ -824,6 +909,7 @@ export const executiveEngine = {
         const respostaOp = await executarInterceptacaoOperacional({
           texto,
           estadoOperacional: estadoOpPre,
+          jobs: lido.jobsMissao,
           deps: {
             ...deps,
             obterJob: obterJobOp,
@@ -832,6 +918,9 @@ export const executiveEngine = {
             coaId: coaOp?.id || null,
             projeto: coaOp?.id || coaOp?.nome || null,
             projetoNome: coaOp?.nome || null,
+            idsAdotadosSessao,
+            missaoActiva,
+            jobs: lido.jobsMissao,
             registarAcompanhamento: (job, optsAc) =>
               this.registarAcompanhamentoJob(job, optsAc),
             conduzirMotor:
@@ -862,23 +951,26 @@ export const executiveEngine = {
           dados: respostaOp.dados
         });
         respostaOp.dados = { ...respostaOp.dados, memoria: memoriaOp };
-        return anexarMensagensAcompanhamento(
-          naturalizarRespostaNucleo(respostaOp, {
-          instrucao: texto,
-          historico,
-          canalSpeaker: "chat",
-          lastroConsciencia: {
-            temContextoRelevante: true,
-            estadoOperacional: estadoOpPre,
-            contagens: {
-              jobsPendentes: estadoOpPre.sinais.pending,
-              jobsEmExecucao: estadoOpPre.sinais.running,
-              gatesPendentes: estadoOpPre.sinais.gatePendente
-            }
-          }
-        }),
-          obsAcompanhamento,
-          texto
+        return anexarPrecedenciaNaResposta(
+          anexarMensagensAcompanhamento(
+            naturalizarRespostaNucleo(respostaOp, {
+              instrucao: texto,
+              historico,
+              canalSpeaker: "chat",
+              lastroConsciencia: {
+                temContextoRelevante: true,
+                estadoOperacional: estadoOpPre,
+                contagens: {
+                  jobsPendentes: estadoOpPre.sinais.pending,
+                  jobsEmExecucao: estadoOpPre.sinais.running,
+                  gatesPendentes: estadoOpPre.sinais.gatePendente
+                }
+              }
+            }),
+            obsAcompanhamento,
+            texto
+          ),
+          precCto
         );
       }
     }
@@ -1037,6 +1129,11 @@ export const executiveEngine = {
       }
     }
     // Isolamento: stores preservados (não mutados); sem lastro CSC neste turno.
+    // Encerramento explícito: limpa tópico/pausas/objectivos (não COA/histórico/memória).
+    if (ehEncerramentoExplicitoContexto(texto)) {
+      resetEstadoTopicosSessao();
+      resetEstadoObjectivoSessao();
+    }
 
     const objetivoParaContexto = autorizaLastroCsc
       ? resultadoObj?.objetivoActivo || estadoObjPre.objetivoActivo || null
@@ -1059,12 +1156,21 @@ export const executiveEngine = {
         (obsAcompanhamento?.aindaActivos > 0)
     };
     const rotaBruta = primeiroPassoClassificar(texto, contextoClassificacao);
-    // Precedência EE: pedido explícito de decisão > C3/Job
-    // (cobre falso positivo E2.1 quando alternativas usam «aplica/implementa»).
+    // V1: precedência central — PD / situacional forçam C2; panorama C4 já no classificador.
+    const precPos = resolverPrecedenciaTurno({
+      pedidoDecisaoExplicita: pedidoDecisaoPrec,
+      pedidoSituacionalTrabalho: situacionalPrec,
+      panoramaEstadoGeral: panoramaPrec,
+      destinoClassificador: rotaBruta.destino,
+      objetoOperacionalReal:
+        Boolean(estadoOpPre?.operacaoAberta) ||
+        (obsAcompanhamento?.aindaActivos > 0),
+      fase: "pos_classificador"
+    });
     let rota = rotaBruta;
     if (
-      detectarPedidoDecisaoExplicita(texto) &&
-      rotaBruta.destino === "motor_execucao"
+      precPos.forcarC2 &&
+      rotaBruta.destino !== "nucleo_mre"
     ) {
       const classificacaoDeliberativa = {
         ...rotaBruta.classificacao,
@@ -1072,8 +1178,7 @@ export const executiveEngine = {
         destino: "nucleo_mre",
         permiteJob: false,
         usaFrenteActiva: true,
-        razaoCurta:
-          "EE: pedidoDecisao explícito → C2/MRE (precedência sobre C3/execução)"
+        razaoCurta: precPos.razao
       };
       rota = {
         ...rotaBruta,
@@ -1305,12 +1410,66 @@ export const executiveEngine = {
       ? consultaConsciencia.lastroParaNucleo
       : null;
 
-    // Teste 3: promover resultado reconciliado (F2 result|needs_correction) ao lastro/missão
-    const promocoesResultado = extrairPromocoesResultadoMissao(obsAcompanhamento);
+    // Teste 3: promover resultado reconciliado (F2 result|needs_correction) ao lastro/missão.
+    // Em pedido de decisão: não promover Jobs deliberativos (ruído) — evita prosa
+    // «Já incorporei o resultado reconciliado…» sem alterar extrair/aplicar.
+    const promocoesBrutas = extrairPromocoesResultadoMissao(obsAcompanhamento);
+    let promocoesResultado = promocoesBrutas;
+    if (detectarPedidoDecisaoExplicita(texto) && promocoesBrutas.length) {
+      /** @type {Map<string, object>} */
+      const jobsPorId = new Map();
+      for (const r of obsAcompanhamento?.resultados || []) {
+        if (r?.job?.id) jobsPorId.set(String(r.job.id), r.job);
+      }
+      promocoesResultado = promocoesBrutas.filter((p) => {
+        const job = jobsPorId.get(String(p.jobId));
+        return !ehJobRuidoDeliberativo(job);
+      });
+    }
     if (autorizaLastroCsc && promocoesResultado.length) {
       lastroConsciencia = aplicarPromocaoResultadoAoLastro(
         lastroConsciencia,
         promocoesResultado
+      );
+    }
+
+    // Pedido de decisão: F2 ruído deliberativo não atravessa factosOficiais
+    // (fecha porta pré-LLM: factos → bloco → schemaHint → stage 6).
+    if (
+      autorizaLastroCsc &&
+      lastroConsciencia &&
+      detectarPedidoDecisaoExplicita(texto)
+    ) {
+      /** @type {object[]} */
+      const jobsLastro = [];
+      /** @type {Set<string>} */
+      const vistos = new Set();
+      for (const r of obsAcompanhamento?.resultados || []) {
+        const j = r?.job;
+        if (!j?.id || vistos.has(String(j.id))) continue;
+        vistos.add(String(j.id));
+        jobsLastro.push(j);
+      }
+      // Resumos F2 da consulta (quando o Job completo não veio no obs)
+      for (const r of consultaConsciencia.consulta?.estado?.jobsEmExecucao ||
+        []) {
+        const id = r && typeof r.id === "string" ? r.id : "";
+        if (!id || vistos.has(id)) continue;
+        vistos.add(id);
+        jobsLastro.push({
+          id,
+          titulo: r.titulo || "",
+          descricao: "",
+          estado: r.status || "",
+          resultado: {
+            resumo: r.sinteseResultado || "",
+            evidencia: r.evidencia || ""
+          }
+        });
+      }
+      lastroConsciencia = filtrarLastroRuidoDeliberativoSobPedidoDecisao(
+        lastroConsciencia,
+        jobsLastro
       );
     }
 
@@ -1575,7 +1734,14 @@ export const executiveEngine = {
         validacaoContexto: metaVca.validacaoContexto,
         storeContinuidade: store,
         obterJob: deps.obterJob,
-        listarJobs: deps.listarJobs || deps.listarPorEstado
+        listarJobs: deps.listarJobs || deps.listarPorEstado,
+        precedenciaTurno: {
+          tipoTurno: precPos.tipoTurno,
+          autoridadeVencedora: precPos.autoridadeVencedora,
+          destinoPermitido: rota.destino
+        },
+        tipoTurno: precPos.tipoTurno,
+        consultaNaoEAcao: precPos.tipoTurno === "consulta"
       });
 
     const conduzirMotorPadrao = envolverConduzirMotorComContinuidade(
@@ -1596,8 +1762,10 @@ export const executiveEngine = {
         contextoCapacidade: contextoCapacidadeComLastro,
         deps: depsDestino,
         conduzirMotorPadrao,
-        naturalizar: (r) =>
-          naturalizarRespostaNucleo(r, {
+        naturalizar: (r) => {
+          const destinoAntes =
+            r?.dados?.encaminhamento?.destino || rota.destino || null;
+          const naturalizada = naturalizarRespostaNucleo(r, {
             instrucao: texto,
             historico: autorizaLastroCsc ? historico : [],
             intencao: r.intencao || intencao,
@@ -1610,7 +1778,27 @@ export const executiveEngine = {
             refinoEic: memoriaTrabalhoPre
               ? metadadoRefinoEicParaDados(memoriaTrabalhoPre).refinoEic
               : null
-          })
+          });
+          // V1: Consciência/CN nunca altera destino já decidido
+          const destinoDepois =
+            naturalizada?.dados?.encaminhamento?.destino || null;
+          if (
+            !cnPodeAlterarDestino(precPos, destinoAntes, destinoDepois) &&
+            destinoAntes &&
+            naturalizada?.dados?.encaminhamento
+          ) {
+            naturalizada.dados.encaminhamento = {
+              ...naturalizada.dados.encaminhamento,
+              destino: destinoAntes
+            };
+          }
+          return anexarPrecedenciaNaResposta(naturalizada, {
+            ...precPos,
+            destinoPermitido: destinoAntes || precPos.destinoPermitido,
+            destinoFixo: true,
+            fase: "pos_destino"
+          });
+        }
       });
     } catch (err) {
       // Falha inesperada — classificação ainda anexada; sem reroute silencioso
@@ -1634,6 +1822,26 @@ export const executiveEngine = {
     }
 
     let resposta = anexarClassificacao(respostaBruta);
+    if (!resposta.dados?.precedenciaTurno) {
+      resposta = anexarPrecedenciaNaResposta(resposta, {
+        ...precPos,
+        destinoPermitido: rota.destino,
+        destinoFixo: true,
+        fase: "pos_destino"
+      });
+    }
+    // V1: consulta não promove a ação — C2/C4 consulta mantêm publicarJob proibido
+    if (
+      precPos.tipoTurno === "consulta" &&
+      resposta.dados &&
+      typeof resposta.dados === "object"
+    ) {
+      resposta.dados = {
+        ...resposta.dados,
+        publicarJobProibido: true,
+        consultaNaoEAcao: true
+      };
+    }
     const conducaoMotor =
       resposta.dados && resposta.dados.motor && typeof resposta.dados.motor === "object"
         ? resposta.dados.motor

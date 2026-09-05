@@ -24,6 +24,7 @@ import {
   processarResultadoComVerificacao,
   marcarFalhaExecucao
 } from "./cicloVidaJob.js";
+import { exigirObjetivoCanonico } from "./objetivoJob.js";
 
 /** Campos que nunca entram no payload publicado (REQ-045 / RES4). */
 export const CAMPOS_PROIBIDOS_JOB = Object.freeze([
@@ -82,10 +83,16 @@ export function extrairJobSpec(parecer) {
   }
   /** @type {Record<string, unknown>} */
   const out = { titulo, descricao };
+  const objetivo = String(job.objetivo || "").trim();
+  if (objetivo) out.objetivo = objetivo;
   if (job.prioridade !== undefined) out.prioridade = job.prioridade;
   if (job.efeitoExterno === true) out.efeitoExterno = true;
   if (job.alteraCodigo === true) out.alteraCodigo = true;
   if (job.alteraDocsProduto === true) out.alteraDocsProduto = true;
+  const parentJobId = String(job.parentJobId || job.jobAlvoId || "").trim();
+  if (parentJobId) out.parentJobId = parentJobId;
+  const criterio = String(job.criterioConclusao || "").trim();
+  if (criterio) out.criterioConclusao = criterio;
   return { ok: true, job: /** @type {*} */ (out) };
 }
 
@@ -193,6 +200,13 @@ export function montarPayloadJobDoParecer(parecer, opts = {}) {
     descricao: spec.job.descricao,
     prioridade: spec.job.prioridade || "normal"
   };
+  if (Object.prototype.hasOwnProperty.call(spec.job, "objetivo")) {
+    bruto.objetivo = String(spec.job.objetivo ?? "").trim();
+  }
+  if (spec.job.parentJobId) bruto.parentJobId = spec.job.parentJobId;
+  if (spec.job.criterioConclusao) {
+    bruto.criterioConclusao = spec.job.criterioConclusao;
+  }
   if (projetoNome) bruto.projetoNome = projetoNome;
   if (parecerId) bruto.parecerId = parecerId;
 
@@ -221,12 +235,15 @@ export function criarPublicadorFilaMemoria() {
   return {
     jobs,
     async publicarJob(pedido) {
+      const gate = exigirObjetivoCanonico(pedido);
+      if (!gate.ok) throw new Error(gate.mensagem);
       n += 1;
       const id = `JOB-TEST-${String(n).padStart(6, "0")}`;
       const agora = new Date().toISOString();
       const job = {
         id,
         ...pedido,
+        objetivo: gate.objetivo,
         estado: "pending",
         criadoEm: agora,
         iniciadoEm: null,

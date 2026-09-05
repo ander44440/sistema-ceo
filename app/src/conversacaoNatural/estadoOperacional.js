@@ -8,6 +8,7 @@
  */
 
 import {
+  ehOperacaoAtivaCorrente,
   filtrarJobsPorMissaoActiva,
   jobPertenceAMissaoActiva
 } from "../motorExecucao/acompanhamentoJob.js";
@@ -70,6 +71,7 @@ const COMANDO_SOBRE_JOB =
  * @param {object} [opts.consultaEstado] — EstadoExecutivoAtual parcial
  * @param {ReadonlyArray<object>} [opts.jobs] — jobs brutos opcionais
  * @param {{ id?: string|null, nome?: string|null }|null} [opts.missaoActiva]
+ * @param {Iterable<string>|null} [opts.idsAdotadosSessao] — store RAM desta sessão
  * @returns {EstadoOperacional}
  */
 export function extrairEstadoOperacional(opts = {}) {
@@ -80,10 +82,17 @@ export function extrairEstadoOperacional(opts = {}) {
   const lastro = opts.lastroConsciencia || {};
   const contagens = lastro.contagens || {};
   const consulta = opts.consultaEstado || lastro.estadoExecutivo || null;
+  const ctxActivo = {
+    missaoActiva: opts.missaoActiva || null,
+    idsAdotadosSessao: opts.idsAdotadosSessao || null,
+    idsPermitidos: []
+  };
   let jobs = Array.isArray(opts.jobs) ? opts.jobs : [];
   if (opts.missaoActiva) {
     jobs = filtrarJobsPorMissaoActiva(jobs, opts.missaoActiva);
   }
+  const jobsBrutos = Array.isArray(opts.jobs) ? opts.jobs : [];
+  const jobsActivos = jobs.filter((j) => ehOperacaoAtivaCorrente(j, ctxActivo));
 
   let pending = Number(contagens.jobsPendentes) || 0;
   let running = Number(contagens.jobsEmExecucao) || 0;
@@ -95,17 +104,47 @@ export function extrairEstadoOperacional(opts = {}) {
   /** @type {{ id: string, titulo: string, estado: string }|null} */
   let jobActivo = null;
 
+  function resumoConsultaActivo(item, fallbackEstado) {
+    if (!item) return null;
+    const id = String(item.id || "").toUpperCase();
+    const full = jobsBrutos.find(
+      (j) => j && String(j.id || "").toUpperCase() === id
+    );
+    if (full && !ehOperacaoAtivaCorrente(full, ctxActivo)) return null;
+    const st = String(item.status || item.estado || fallbackEstado || "").toLowerCase();
+    if (st === "needs_correction") {
+      const ids = ctxActivo.idsAdotadosSessao;
+      const set = new Set(
+        ids ? [...ids].map((x) => String(x || "").trim().toUpperCase()).filter(Boolean) : []
+      );
+      if (!set.has(id)) return null;
+    }
+    return resumoJob(item, fallbackEstado);
+  }
+
   if (consulta && typeof consulta === "object") {
+    const pendConsulta = Array.isArray(consulta.jobsPendentes)
+      ? consulta.jobsPendentes.filter((item) => resumoConsultaActivo(item, "pending"))
+      : [];
+    const execConsulta = Array.isArray(consulta.jobsEmExecucao)
+      ? consulta.jobsEmExecucao.filter((item) => {
+          const st = String(item?.status || item?.estado || "running").toLowerCase();
+          return resumoConsultaActivo(item, st || "running");
+        })
+      : [];
     if (Array.isArray(consulta.jobsPendentes)) {
-      pending = Math.max(pending, consulta.jobsPendentes.length);
-      if (!jobActivo && consulta.jobsPendentes[0]) {
-        jobActivo = resumoJob(consulta.jobsPendentes[0], "pending");
+      pending = Math.max(pending, pendConsulta.length);
+      if (!jobActivo && pendConsulta[0]) {
+        jobActivo = resumoJob(pendConsulta[0], "pending");
       }
     }
     if (Array.isArray(consulta.jobsEmExecucao)) {
-      running = Math.max(running, consulta.jobsEmExecucao.length);
-      if (!jobActivo && consulta.jobsEmExecucao[0]) {
-        jobActivo = resumoJob(consulta.jobsEmExecucao[0], "running");
+      running = Math.max(running, execConsulta.length);
+      if (!jobActivo && execConsulta[0]) {
+        const st = String(
+          execConsulta[0].status || execConsulta[0].estado || "running"
+        ).toLowerCase();
+        jobActivo = resumoJob(execConsulta[0], st || "running");
       }
     }
     if (consulta.dispatcher) {
@@ -121,7 +160,7 @@ export function extrairEstadoOperacional(opts = {}) {
     }
   }
 
-  for (const j of jobs) {
+  for (const j of jobsActivos) {
     const est = String(j?.estado || j?.status || "").toLowerCase();
     if (est === "pending" || est === "queued") {
       pending += 1;
@@ -135,7 +174,11 @@ export function extrairEstadoOperacional(opts = {}) {
       running += 1;
       if (est === "dispatched") handoff = true;
       if (!jobActivo) jobActivo = resumoJob(j, est);
-    } else if (est === "failed" || est === "retry") {
+    }
+  }
+  for (const j of jobs) {
+    const est = String(j?.estado || j?.status || "").toLowerCase();
+    if (est === "failed" || est === "retry") {
       failed += 1;
       if (!jobActivo) jobActivo = resumoJob(j, est);
     }
@@ -154,7 +197,11 @@ export function extrairEstadoOperacional(opts = {}) {
     running = 1;
   }
   if (/Job em correção|needs_correction/i.test(factos) && running === 0) {
-    running = 1;
+    const temNcActivo = jobsActivos.some(
+      (j) =>
+        String(j?.estado || j?.status || "").toLowerCase() === "needs_correction"
+    );
+    if (temNcActivo) running = 1;
   }
   if (/\b(handoff|Dispatcher)\b/i.test(factos)) handoff = true;
   if (/\bAgent\s+(ocupado|erro|falh)/i.test(factos)) {
@@ -167,6 +214,17 @@ export function extrairEstadoOperacional(opts = {}) {
   const doHistorico = sinaisDoHistorico(opts.historico);
   /** @type {typeof doHistorico} */
   let hist = { ...doHistorico };
+  if (hist.jobActivo) {
+    const encontrado = jobsBrutos.find(
+      (j) =>
+        j &&
+        String(j.id || "").toUpperCase() ===
+          String(hist.jobActivo.id || "").toUpperCase()
+    );
+    if (encontrado && !ehOperacaoAtivaCorrente(encontrado, ctxActivo)) {
+      hist = { ...hist, jobActivo: null };
+    }
+  }
   if (opts.missaoActiva && hist.jobActivo) {
     const listaBruta = Array.isArray(opts.jobs) ? opts.jobs : [];
     const naMissao = listaBruta.find(
@@ -210,12 +268,21 @@ export function extrairEstadoOperacional(opts = {}) {
         );
         if (
           j &&
-          jobPertenceAMissaoActiva(j, opts.missaoActiva, { idsPermitidos: [] })
+          jobPertenceAMissaoActiva(j, opts.missaoActiva, { idsPermitidos: [] }) &&
+          ehOperacaoAtivaCorrente(j, ctxActivo)
         ) {
           jobActivo = emb.jobActivo;
         }
       } else {
-        jobActivo = emb.jobActivo;
+        const j = jobsBrutos.find(
+          (x) =>
+            x &&
+            String(x.id || "").toUpperCase() ===
+              String(emb.jobActivo.id || "").toUpperCase()
+        );
+        if (!j || ehOperacaoAtivaCorrente(j, ctxActivo)) {
+          jobActivo = emb.jobActivo;
+        }
       }
     }
     if (emb.sinais) {
@@ -390,12 +457,29 @@ function sinaisDoHistorico(historico) {
 }
 
 /**
+ * «Repetir uma decisão/escolha/alternativa» é deliberativo — não retry de Job.
+ * Preserva «REPITA», «repetir o Job», «repetir a execução».
+ * @param {string} t
+ */
+function ehRepeticaoDeliberativaNaoOperacional(t) {
+  if (!/\b(repita|repetir)\b/i.test(t)) return false;
+  if (!/\b(decis[aã]o|escolha|alternativa)\b/i.test(t)) return false;
+  if (
+    /\b(jobs?|execu[cç][aã]o|envio|handoff|despacho)\b/i.test(t)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * REGRA 3 — ordem sobre o Job activo.
  * @param {string} [instrucao]
  */
 export function ehComandoSobreJobActivo(instrucao) {
   const t = String(instrucao || "").trim();
   if (!t) return false;
+  if (ehRepeticaoDeliberativaNaoOperacional(t)) return false;
   if (COMANDO_SOBRE_JOB.test(t)) return true;
   if (/^(estado|status)\??\.?$/i.test(t)) return true;
   return false;

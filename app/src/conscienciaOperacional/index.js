@@ -53,7 +53,9 @@ export {
   comporProsaLastro,
   schemaHintConsciencia,
   garantirReflexoEstadoExecutivo,
-  blocoContextoEntradaMre
+  blocoContextoEntradaMre,
+  ehPedidoDecisaoForaDoGate,
+  AVISO_GATE_INFORMATIVO
 } from "./influenciaDeliberacao.js";
 
 export { criarLeitoresConscienciaPadrao } from "./leitoresPadrao.js";

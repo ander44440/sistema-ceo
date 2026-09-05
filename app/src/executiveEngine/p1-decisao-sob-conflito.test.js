@@ -273,3 +273,54 @@ test("integração: solicitar_dados sem facto bloqueante sob pedido decisão →
   assert.notEqual(out.dados?.parecer?.decisaoExecutiva?.estado, "delegar");
   assert.doesNotMatch(out.mensagem, /Delego a execução|precisamos analisar mais/i);
 });
+
+const MENU_ALTS = [
+  "Aceitar",
+  "Não aceitar",
+  "Negociar condição diferente",
+  "Adiar"
+];
+
+test("T7 — menu + «não priorizar» → alinha a Não aceitar (não preserva P1-2)", () => {
+  const out = aplicarPoliticaDecisaoSobConflito(
+    {
+      estado: "delegar",
+      recomendacao: "não priorizar a proposta",
+      alternativas: MENU_ALTS,
+      justificativa: "Caixa apertado."
+    },
+    { pedidoDecisao: true, lacunas: [] }
+  );
+  assert.equal(out.estado, "rejeitar");
+  assert.match(String(out.recomendacao), /N[aã]o\s+aceitar/i);
+  assert.doesNotMatch(String(out.recomendacao), /n[aã]o\s+priorizar/i);
+});
+
+test("T8 — menu + monitorar + «não priorizar» (sem handoff) → ainda alinha", () => {
+  const out = aplicarPoliticaDecisaoSobConflito(
+    {
+      estado: "monitorar",
+      recomendacao: "não priorizar a proposta",
+      alternativas: MENU_ALTS,
+      justificativa: "Liquidez."
+    },
+    { pedidoDecisao: true }
+  );
+  assert.equal(out.estado, "rejeitar");
+  assert.match(String(out.recomendacao), /N[aã]o\s+aceitar/i);
+  assert.doesNotMatch(String(out.recomendacao), /n[aã]o\s+priorizar/i);
+});
+
+test("T9 — P1-2 sem menu: política não reescreve «modificar» sem pedidoDecisao", () => {
+  const out = aplicarPoliticaDecisaoSobConflito(
+    {
+      estado: "monitorar",
+      recomendacao: "modificar",
+      alternativas: [],
+      justificativa: "Análise"
+    },
+    { pedidoDecisao: false }
+  );
+  assert.equal(out.recomendacao, "modificar");
+  assert.equal(out.estado, "monitorar");
+});

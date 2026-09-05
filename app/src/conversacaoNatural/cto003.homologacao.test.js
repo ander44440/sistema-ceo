@@ -96,7 +96,12 @@ test("HOM-CTO-003.1: Job running → «reenviar»", () => {
   const estadoOp = extrairEstadoOperacional({
     lastroConsciencia: lastro,
     jobs: [
-      { id: "JOB-000040", titulo: "nomear vias MG2", estado: "running" }
+      {
+        id: "JOB-000040",
+        titulo: "nomear vias MG2",
+        estado: "running",
+        objetivo: "Nomear todas as vias do MG2."
+      }
     ]
   });
   lastro.estadoOperacional = estadoOp;
@@ -372,7 +377,12 @@ test("HOM-CTO-003.5: reinício do backend com operação aberta", () => {
 });
 
 test("HOM-CTO-003.6: sequência extensa de comandos operacionais", async () => {
-  const job = { id: "JOB-000045", titulo: "missão MG2", estado: "pending" };
+  const job = {
+    id: "JOB-000045",
+    titulo: "missão MG2",
+    estado: "pending",
+    objetivo: "Concluir a missão MG2 pendente na fila."
+  };
   /** @type {Array<{papel:string,texto:string}>} */
   const historico = [
     {

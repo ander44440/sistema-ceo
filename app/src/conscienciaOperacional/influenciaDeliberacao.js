@@ -4,9 +4,29 @@
  * Autonomia deliberativa do MRE preservada — lastro é camada de contexto.
  */
 
+import { detectarPedidoDecisaoExplicita } from "../classificadorIntencao/pedidoDecisaoExplicita.js";
+import { reconhecerDecisao } from "../continuidadeGate/reconhecerDecisao.js";
+
 /**
  * @typedef {import("./consultarAntesDeResponder.js").LastroConscienciaNucleo} LastroConscienciaNucleo
  */
+
+/** Aviso informativo — Gate bloqueia despacho, não substitui deliberação (política híbrida). */
+export const AVISO_GATE_INFORMATIVO =
+  "Nota operacional: existe um Gate de execução pendente. " +
+  "Esta deliberação não o aprova nem o substitui. " +
+  "Qualquer despacho ou execução dependente desse Gate permanece bloqueado " +
+  "até aprovação explícita (ex.: «Aprovado.» / «Pode prosseguir.»).";
+
+/**
+ * Pedido deliberativo cujo objecto não é o próprio Gate (ARQ-019 léxico intacto).
+ * Reutiliza `reconhecerDecisao` — sem detector paralelo.
+ * @param {string} [instrucao]
+ */
+export function ehPedidoDecisaoForaDoGate(instrucao) {
+  if (!detectarPedidoDecisaoExplicita(instrucao)) return false;
+  return reconhecerDecisao(instrucao).reconhecida !== true;
+}
 
 /**
  * Detecta se a prosa já reflecte lastro de Job em execução.
@@ -209,39 +229,45 @@ export function comporProsaLastro(lastro, instrucao = "") {
   const prioridade = lastro.fontePrioritaria?.id;
   const gates = lastro.contagens?.gatesPendentes || 0;
   const running = lastro.contagens?.jobsEmExecucao || 0;
+  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao);
 
-  // P1 absoluto — Gate pendente (demo E5)
-  if (prioridade === "F3" || gates > 0) {
+  // P1 — Gate pendente (demo E5): absoluto só quando o objecto não é fecho deliberativo
+  // independente do Gate. Com pedidoDecisao ≠ Gate: não substituir (aviso no reflexo).
+  if ((prioridade === "F3" || gates > 0) && !deliberacaoForaDoGate) {
     return (
       "Existe um Gate aguardando sua decisão.\n\n" +
       "Minha recomendação é concluir essa aprovação antes de iniciar novas frentes."
     );
   }
 
-  // Teste 3 — resultado já reconciliado no lastro: continuidade, não “execução em andamento”
-  const resultadoMissao = extrairResultadoReconciliadoDoLastro(lastro);
-  if (resultadoMissao && (prioridade === "F2" || running > 0)) {
-    return comporProsaResultadoMissao(resultadoMissao);
+  // Teste 3 + P2: continuidade / «execução em andamento» — só fora de pedido de decisão.
+  // Pedido explícito de decisão: não sobrepor deliberação com prosa operacional F2.
+  if (!detectarPedidoDecisaoExplicita(instrucao)) {
+    const resultadoMissao = extrairResultadoReconciliadoDoLastro(lastro);
+    if (resultadoMissao && (prioridade === "F2" || running > 0)) {
+      return comporProsaResultadoMissao(resultadoMissao);
+    }
+
+    // P2 — Job em execução (demo E5 / ARQ-020 §3.3) — dispatched|running sem resultado
+    if (prioridade === "F2" || running > 0) {
+      const titulo = tituloJobEmExecucao(lastro);
+      return (
+        `Neste momento existe uma execução em andamento para ${titulo}.\n\n` +
+        `Minha recomendação é concluir essa execução antes de redefinir${sufixoPrioridades(instrucao)}.`
+      );
+    }
+
+    // Outras fontes — lastro mínimo, sem dump da fila (RNF1)
+    const facto = (lastro.factosOficiais || [])[0];
+    if (facto) {
+      const limpo = facto.replace(/^Estado Executivo —\s*/i, "");
+      return (
+        `${limpo}.\n\n` +
+        "Tenha isto em conta antes de avançar com novas prioridades."
+      );
+    }
   }
 
-  // P2 — Job em execução (demo E5 / ARQ-020 §3.3) — dispatched|running sem resultado
-  if (prioridade === "F2" || running > 0) {
-    const titulo = tituloJobEmExecucao(lastro);
-    return (
-      `Neste momento existe uma execução em andamento para ${titulo}.\n\n` +
-      `Minha recomendação é concluir essa execução antes de redefinir${sufixoPrioridades(instrucao)}.`
-    );
-  }
-
-  // Outras fontes — lastro mínimo, sem dump da fila (RNF1)
-  const facto = (lastro.factosOficiais || [])[0];
-  if (facto) {
-    const limpo = facto.replace(/^Estado Executivo —\s*/i, "");
-    return (
-      `${limpo}.\n\n` +
-      "Tenha isto em conta antes de avançar com novas prioridades."
-    );
-  }
   return null;
 }
 
@@ -254,15 +280,19 @@ export function schemaHintConsciencia(lastro, instrucao = "") {
   const prosa = comporProsaLastro(lastro, instrucao) || "";
   const gates = lastro.contagens?.gatesPendentes || 0;
   const resultadoMissao = extrairResultadoReconciliadoDoLastro(lastro);
+  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao);
+  const temGate = gates > 0 || lastro.fontePrioritaria?.id === "F3";
   const prioridade =
-    gates > 0 || lastro.fontePrioritaria?.id === "F3"
-      ? "Gate pendente tem PRIORIDADE ABSOLUTA — mencionar e recomendar concluir a aprovação antes de novas frentes."
-      : resultadoMissao
-        ? "Resultado reconciliado do Job já está no lastro — incorporar à continuidade da missão; result/needs_correction ≠ completed; não pedir o contexto de novo."
-        : lastro.fontePrioritaria?.id === "F2" ||
-            (lastro.contagens?.jobsEmExecucao || 0) > 0
-          ? "Job em execução deve influenciar a recomendação — concluir antes de redefinir prioridades."
-          : "Usar o Estado Executivo nos factosOficiais.";
+    temGate && deliberacaoForaDoGate
+      ? "Gate de execução pendente: INFORMAR que o despacho depende da aprovação do Gate — NÃO substituir nem redireccionar a deliberação pedida para o Gate."
+      : temGate
+        ? "Gate pendente tem PRIORIDADE ABSOLUTA — mencionar e recomendar concluir a aprovação antes de novas frentes."
+        : resultadoMissao
+          ? "Resultado reconciliado do Job já está no lastro — incorporar à continuidade da missão; result/needs_correction ≠ completed; não pedir o contexto de novo."
+          : lastro.fontePrioritaria?.id === "F2" ||
+              (lastro.contagens?.jobsEmExecucao || 0) > 0
+            ? "Job em execução deve influenciar a recomendação — concluir antes de redefinir prioridades."
+            : "Usar o Estado Executivo nos factosOficiais.";
 
   return (
     "CONSCIÊNCIA OPERACIONAL (Estado Executivo Atual nos factosOficiais): " +
@@ -301,11 +331,45 @@ export function garantirReflexoEstadoExecutivo(
 
   const gates = lastro.contagens?.gatesPendentes || 0;
   const running = lastro.contagens?.jobsEmExecucao || 0;
-  const prioridadeGate =
+  const pedidoDecisao = detectarPedidoDecisaoExplicita(instrucao);
+  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao);
+  const prioridadeGateBruta =
     lastro.fontePrioritaria?.id === "F3" || gates > 0;
-  const prioridadeJob = !prioridadeGate && running > 0;
+  // Política híbrida: Gate não substitui deliberação cujo objecto ≠ Gate.
+  const prioridadeGate = prioridadeGateBruta && !deliberacaoForaDoGate;
+  // Pedido de decisão: não tratar F2 como prioridade que substitui a deliberação (P2/E5).
+  const prioridadeJob = !prioridadeGateBruta && running > 0 && !pedidoDecisao;
 
   const prosa = comporProsaLastro(lastro, instrucao);
+
+  // Deliberação preservada + aviso informativo do Gate (não é nova decisão).
+  if (deliberacaoForaDoGate && prioridadeGateBruta) {
+    const base = deduplicarFactoTopicoActivo(original).trim();
+    if (
+      /Gate de execução pendente|despacho ou execução dependente desse Gate/i.test(
+        base
+      )
+    ) {
+      return {
+        mensagem: base,
+        aplicada: false,
+        motivo: "ja_tem_aviso_gate"
+      };
+    }
+    if (!base) {
+      return {
+        mensagem: AVISO_GATE_INFORMATIVO,
+        aplicada: true,
+        motivo: "aviso_gate_sem_deliberacao"
+      };
+    }
+    return {
+      mensagem: `${base}\n\n${AVISO_GATE_INFORMATIVO}`,
+      aplicada: true,
+      motivo: "aviso_gate_informativo"
+    };
+  }
+
   if (!prosa) {
     return {
       mensagem: deduplicarFactoTopicoActivo(original),
@@ -388,9 +452,13 @@ export function garantirReflexoEstadoExecutivo(
 export function blocoContextoEntradaMre(lastro, instrucao = "") {
   const prosa = comporProsaLastro(lastro, instrucao);
   const factos = (lastro.factosOficiais || []).slice(0, 6).join(" | ");
+  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao);
+  const notaGate = deliberacaoForaDoGate
+    ? "Gate pendente: informar bloqueio de despacho — não substituir a deliberação pedida. "
+    : "Gate pendente tem prioridade absoluta. ";
   return (
     "[Estado Executivo Atual — Consciência Operacional: contextualize a resposta de forma natural. " +
-    "Gate pendente tem prioridade absoluta. " +
+    notaGate +
     "Job em execução deve ser mencionado antes de redefinir prioridades. " +
     `Factos: ${factos}.` +
     (prosa ? `\nOrientação de prosa:\n${prosa}` : "") +

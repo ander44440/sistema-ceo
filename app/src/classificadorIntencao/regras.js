@@ -76,8 +76,33 @@ export function ehReferenciaExplicitaJobId(t) {
 }
 
 /**
+ * Verbo de criação/publicação de Job sob polaridade negativa na mesma cláusula
+ * (ex.: «não crie Job», «não quero que … crie Jobs»).
+ * @param {string} t
+ * @param {number} idx — início do match do verbo
+ */
+function criacaoJobNegadaNoContexto(t, idx) {
+  const before = t.slice(0, idx);
+  const sentStart =
+    Math.max(
+      before.lastIndexOf("."),
+      before.lastIndexOf("!"),
+      before.lastIndexOf("?"),
+      before.lastIndexOf("\n")
+    ) + 1;
+  const clause = before.slice(sentStart);
+  if (/\bnao\s+$/i.test(clause)) return true;
+  if (/\bnunca\s+$/i.test(clause)) return true;
+  if (/\bsem\s+$/i.test(clause)) return true;
+  // «Não quero / desejo / permito / autorizo … crie Jobs» (lista negada)
+  if (/\bnao\s+(quero|desejo|permito|autorizo)\b/i.test(clause)) return true;
+  return false;
+}
+
+/**
  * Autorização explícita para criar/publicar Job (texto normalizado ou bruto).
  * Precedência: menção a JOB-NNNNNN concreto ≠ criar Job wrapper/novo.
+ * Polaridade: «crie Jobs» dentro de proibição («não quero…, crie Jobs…») ≠ autorizar.
  * @param {string} t
  */
 export function ehAutorizacaoExplicitaCriarJob(t) {
@@ -85,14 +110,24 @@ export function ehAutorizacaoExplicitaCriarJob(t) {
   const s = String(t);
   // «Despache o JOB-000075» / «Acompanhe o JOB-…» — operar no existente
   if (ehReferenciaExplicitaJobId(s)) return false;
-  return (
-    /\b(crie|cria|criar|publique|publicar|despache|despachar)\s+(o\s+|um\s+|novo\s+)?jobs?\b/.test(
-      s
-    ) ||
-    /\b(publicar|criar|despachar|enviar)\s+job\b/.test(s) ||
-    /\bcrie\s+o\s+job\s+necessario\b/.test(s) ||
-    /\b(criar|crie|cria)\s+o\s+job\b/.test(s)
-  );
+
+  const padroes = [
+    /\b(crie|cria|criar|publique|publicar|despache|despachar)\s+(o\s+|um\s+|novo\s+)?jobs?\b/gi,
+    /\b(publicar|criar|despachar|enviar)\s+job\b/gi,
+    /\bcrie\s+o\s+job\s+necessario\b/gi,
+    /\b(criar|crie|cria)\s+o\s+job\b/gi
+  ];
+
+  for (const re of padroes) {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(s)) !== null) {
+      if (!criacaoJobNegadaNoContexto(s, m.index)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -243,13 +278,35 @@ export function ehPedidoRelatoEncerramento(t) {
 }
 
 /**
+ * Pedido situacional sobre o trabalho em curso (etapa / concluído / agora / próximo passo).
+ * Não é panorama curto «Qual é o estado atual?» — deve ir a C2/deliberação, não a estado_geral.
+ * @param {string} t — texto normalizado
+ */
+export function ehPedidoSituacionalTrabalho(t) {
+  if (!t) return false;
+  return (
+    /\betapa\b/.test(t) ||
+    /\b(acabamos|acabou)\s+de\s+concluir\b/.test(t) ||
+    /\b(o\s+que\s+)?(estamos|estou)\s+fazendo\s+agora\b/.test(t) ||
+    /\bpr[oó]ximo\s+passo\b/.test(t) ||
+    /\btrabalho\s+(que\s+estamos|em\s+curso)\b/.test(t) ||
+    /\bestado\s+(atual\s+)?(do\s+)?trabalho\b/.test(t) ||
+    /\bsitua[cç][aã]o\s+(do\s+)?trabalho\b/.test(t) ||
+    /\bexplique\b.*\b(estado|trabalho|situa[cç][aã]o)\b/.test(t) ||
+    /\bo\s+que\s+voc[eê]\s+sabe\s+sobre\s+o\s+estado\b/.test(t)
+  );
+}
+
+/**
  * C4 só para consulta factual isolada.
  * Com operação aberta + continuidade de missão, não força C4.
+ * Pedido situacional de trabalho (mesmo com «estado atual») → não C4.
  * @param {string} t — texto normalizado
  * @param {ContextoClassificacao} [ctx]
  */
 export function ehConsultaEstadoParaC4(t, ctx = {}) {
   if (!ehConsultaEstadoOperacional(t)) return false;
+  if (ehPedidoSituacionalTrabalho(t)) return false;
   if (ehPedidoAnaliseOuRecomendacao(t)) return false;
   if (ehPedidoRelatoEncerramento(t)) return false;
   if (ctx.operacaoAberta && ehPedidoContinuidadeMissao(t)) return false;
@@ -919,6 +976,12 @@ export function resolverEmpates(scores, t, ctx = {}) {
       razao: "P0: consulta de estado operacional → C4"
     };
   }
+  if (ehPedidoSituacionalTrabalho(t)) {
+    return {
+      classe: "conversa_projeto",
+      razao: "Pedido situacional de trabalho em curso → C2"
+    };
+  }
   if (ehPedidoAnaliseOuRecomendacao(t)) {
     return {
       classe: "conversa_projeto",
@@ -1187,6 +1250,14 @@ export function classificar(texto, contexto = {}) {
       "comando_operacional",
       0.96,
       "P0: consulta de estado operacional → C4 (sem Job)"
+    );
+  }
+
+  if (ehPedidoSituacionalTrabalho(t)) {
+    return montarSaida(
+      "conversa_projeto",
+      0.93,
+      "Pedido situacional de trabalho em curso → C2 (não panorama estado_geral)"
     );
   }
 

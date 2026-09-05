@@ -8,6 +8,7 @@ import {
   inicializarCatalogo,
   obterEmpresaAtiva as catObterEmpresaAtiva,
   obterProjetoAtivo,
+  limparProjetoAtivo,
   selecionarEmpresaPorRef,
   selecionarProjetoPorRef
 } from "../catalogoProjetos/index.js";
@@ -59,7 +60,7 @@ export function definirCoaAtivo(projeto) {
 }
 
 export function limparCoaAtivo() {
-  /* No-op: a sessão não limpa o catálogo; relê o estado actual (pode ser null). */
+  limparProjetoAtivo();
   return obterCoaAtivo();
 }
 

@@ -60,9 +60,23 @@ import {
 } from "./prioridadeIntencao.js";
 import {
   detectarPedidoAnaliseDeliberativa,
-  montarProsaAnaliseDeliberativa
+  detectarPedidoConsultaResposta,
+  ehAnaliseSomente,
+  montarProsaAnaliseDeliberativa,
+  montarProsaConsultaResposta
 } from "../mre/politicaAnaliseDeliberativa.js";
 import { detectarPedidoDecisaoExplicita } from "../classificadorIntencao/pedidoDecisaoExplicita.js";
+import { ehPedidoDecisaoForaDoGate } from "../conscienciaOperacional/influenciaDeliberacao.js";
+
+/**
+ * PD > ESPELHO ACK: pedido de decisão cujo objecto ≠ Gate/continuidade
+ * não pode ser substituído por ACK operacional/recuperação.
+ * Reutiliza ehPedidoDecisaoForaDoGate (PD ∧ ¬reconhecerDecisao) — sem detector novo.
+ * @param {string} [instrucao]
+ */
+function pedidoDecisaoVenceAckEspelho(instrucao) {
+  return ehPedidoDecisaoForaDoGate(instrucao);
+}
 
 const PROSA_DECISAO = Object.freeze({
   aprovar: (r) => `${r}`,
@@ -210,6 +224,16 @@ export function montarProsaDecisaoExecutiva(
   alternativas = [],
   opts = {}
 ) {
+  // P3: ANÁLISE SOMENTE — não impor Decisão/Critério/alternativa executiva
+  if (opts.analiseSomente === true) {
+    const corpo = String(analise || "").trim();
+    if (corpo) return corpo.endsWith(".") ? corpo : `${corpo}.`;
+    const limpo = String(recomendacao || "")
+      .trim()
+      .replace(/^(Decisão(\s+sob\s+conflito)?\s*:\s*)/i, "");
+    return limpo || "Análise em curso — sem decisão neste turno.";
+  }
+
   const rec = String(recomendacao || "").trim() || "Sem recomendação clara.";
   const criterio = extrairCriterioCurto(justificativa || analise);
   const alt = Array.isArray(alternativas)
@@ -325,6 +349,7 @@ export function comporDeliberacao(parecer, ctxImediato, opts = {}) {
   const pediuDetalhe = Boolean(opts.pediuDetalhe);
   const limiarPorque = opts.limiarPorque ?? 0.55;
   const instrucao = String(opts.instrucao || "").trim();
+  const analiseSomente = ehAnaliseSomente(instrucao);
   const modoExecutivo = detectarModoExecutivo({
     instrucao,
     parecer,
@@ -362,11 +387,42 @@ export function comporDeliberacao(parecer, ctxImediato, opts = {}) {
     recomendacao
   );
 
-  // P1-2: pedido de análise → prosa liderada pela análise, sem «Delego a execução»
-  // Pedido explícito de decisão com escolha válida prevalece (não suavizar o fecho)
-  if (!fechoDecisorio && detectarPedidoAnaliseDeliberativa(instrucao)) {
-    const prosa = montarProsaAnaliseDeliberativa(parecer, {
+  const pedidoConsulta = detectarPedidoConsultaResposta(instrucao, {
+    consultaNaoEAcao: opts.consultaNaoEAcao === true,
+    tipoTurno: opts.tipoTurno || ctxImediato?.tipoTurno,
+    precedenciaTurno: opts.precedenciaTurno || ctxImediato?.precedenciaTurno
+  });
+
+  // CONSULTA → RESPONDER: prosa factual, sem «Delego» / «Plano:»
+  if (pedidoConsulta) {
+    const prosa = montarProsaConsultaResposta(parecer, {
       maxAnalise: canal === "voz" ? 400 : 900
+    });
+    if (prosa) {
+      return {
+        texto: prosa,
+        guiãoVoz: prosa,
+        camadasUsadas: ["consulta_resposta"],
+        perguntas:
+          estado === "solicitar_dados"
+            ? lacunas.map((l) => (/\?$/.test(l) ? l : `${l}?`))
+            : [],
+        modoExecutivo
+      };
+    }
+  }
+
+  // P1-2: pedido de análise → prosa liderada pela análise, sem «Delego a execução»
+  // P3: ANÁLISE SOMENTE prevalece sobre fecho decisório (não suavizar com Decisão:)
+  // Pedido explícito de decisão com escolha válida prevalece (não suavizar o fecho)
+  if (
+    (!fechoDecisorio || analiseSomente) &&
+    detectarPedidoAnaliseDeliberativa(instrucao)
+  ) {
+    const prosa = montarProsaAnaliseDeliberativa(parecer, {
+      maxAnalise: canal === "voz" ? 400 : 900,
+      analiseSomente,
+      instrucao
     });
     if (prosa) {
       return {
@@ -384,9 +440,18 @@ export function comporDeliberacao(parecer, ctxImediato, opts = {}) {
 
   // DESP-004: plano antes da decisão quando o problema é multi-etapa
   // Fecho decisório explícito: não envolver em «Plano» que reabre a deliberação
+  // CONSULTA: nunca «Plano:»
   if (
     !fechoDecisorio &&
-    problemaExigePlanoExecutivo({ parecer, instrucao, canal })
+    !pedidoConsulta &&
+    problemaExigePlanoExecutivo({
+      parecer,
+      instrucao,
+      canal,
+      pedidoConsulta,
+      consultaNaoEAcao: opts.consultaNaoEAcao,
+      tipoTurno: opts.tipoTurno
+    })
   ) {
     camadas.P = montarPlanoExecutivo(parecer, { canal });
   }
@@ -397,22 +462,23 @@ export function comporDeliberacao(parecer, ctxImediato, opts = {}) {
     justificativa,
     analise,
     alternativas,
-    { fechoDecisorio, instrucao }
+    { fechoDecisorio, instrucao, analiseSomente }
   );
 
-  if (confianca < 0.5 || lacunas.length > 0) {
+  if (!analiseSomente && (confianca < 0.5 || lacunas.length > 0)) {
     camadas.A = `${camadas.A} Com a informação disponível, avanço com cautela.`;
   }
 
   // Com plano explícito, o gesto B não precisa repetir a acção completa
-  if (acaoDesc && !camadas.P) {
+  // P3: ANÁLISE SOMENTE — sem Próximo passo / gesto prescritivo
+  if (acaoDesc && !camadas.P && !analiseSomente) {
     camadas.B =
       fechoDecisorio
         ? `Próximo passo: ${acaoDesc.replace(/\.$/, "")}.`
         : estado === "monitorar"
           ? `Vigília: ${acaoDesc.replace(/\.$/, "")}.`
           : `Sugiro ${acaoDesc.replace(/\.$/, "")}.`;
-  } else if (acaoDesc && camadas.P && estado === "monitorar") {
+  } else if (acaoDesc && camadas.P && estado === "monitorar" && !analiseSomente) {
     camadas.B = `Vigília: ${acaoDesc.replace(/\.$/, "")}.`;
   }
 
@@ -742,6 +808,16 @@ export function comporPorTipo(tipo, args = {}) {
   }
 
   if (tipo === TIPO_TURNO.ESPELHO && parecer) {
+    // PD ∧ objecto ≠ Gate → deliberação (não ACK operacional), mesmo se curto/sem «?».
+    if (pedidoDecisaoVenceAckEspelho(instrucao)) {
+      return comporDeliberacao(parecer, ctxImediato, {
+        canal,
+        pediuDetalhe,
+        instrucao,
+        intencaoId,
+        modo
+      });
+    }
     const modoEx = detectarModoExecutivo({
       instrucao,
       parecer,
@@ -789,6 +865,17 @@ export function comporPorTipo(tipo, args = {}) {
 
   // ESPELHO sem parecer (pedido ambíguo) — conduzir com objectivo se existir
   if (tipo === TIPO_TURNO.ESPELHO) {
+    // PD ∧ objecto ≠ Gate → preservar núcleo (não ACK de recuperação/operação).
+    if (pedidoDecisaoVenceAckEspelho(instrucao)) {
+      const limpa = sanitizarProsaUsuario(mensagemOriginal);
+      return {
+        texto: limpa,
+        guiãoVoz: limpa,
+        camadasUsadas: { prosa: limpa },
+        perguntas: [],
+        modoExecutivo: "deliberar"
+      };
+    }
     const modoEx = detectarModoExecutivo({
       instrucao,
       missaoActiva: Boolean(ctxImediato?.missaoActiva),

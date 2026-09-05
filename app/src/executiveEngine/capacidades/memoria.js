@@ -190,10 +190,12 @@ export async function gerarContinuidadeDeEstadoOperacional(ctx = {}) {
   let abertosMissao = abertos;
   if (missao) {
     try {
-      const { filtrarJobsPorMissaoActiva } = await import(
+      const { filtrarJobsPorMissaoActiva, ehOperacaoAtivaCorrente } = await import(
         "../../motorExecucao/acompanhamentoJob.js"
       );
-      abertosMissao = filtrarJobsPorMissaoActiva(abertos, missao);
+      abertosMissao = filtrarJobsPorMissaoActiva(abertos, missao).filter((j) =>
+        ehOperacaoAtivaCorrente(j, { missaoActiva: missao })
+      );
     } catch {
       abertosMissao = abertos;
     }

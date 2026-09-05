@@ -36,6 +36,7 @@ export {
   ehPedidoContinuidadeMissao,
   ehPedidoRelatoEncerramento,
   ehConsultaEstadoParaC4,
+  ehPedidoSituacionalTrabalho,
   ehPedidoAnaliseOuRecomendacao,
   ehComandoExecucaoExplicito,
   ehConhecimentoGeralE22,
@@ -91,6 +92,7 @@ export {
   montarPerguntaCurtaTopico,
   montarClarificacaoGateShift,
   familiaDeAncora,
+  ehEncerramentoExplicitoContexto,
   LIMIAR_SHIFT,
   MARGEM_TOPICO,
   MAX_PAUSAS

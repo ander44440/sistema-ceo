@@ -15,6 +15,12 @@ export function problemaExigePlanoExecutivo(opts = {}) {
   const canal = opts.canal || "chat";
   if (canal === "centro_situacao") return false;
 
+  // CONSULTA → RESPONDER: nunca envolver em «Plano:»
+  if (opts.pedidoConsulta === true || opts.consultaNaoEAcao === true) {
+    return false;
+  }
+  if (opts.tipoTurno === "consulta") return false;
+
   const parecer = opts.parecer;
   if (!parecer || typeof parecer !== "object") return false;
 

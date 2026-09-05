@@ -27,8 +27,12 @@ import {
 } from "../../conscienciaOperacional/influenciaDeliberacao.js";
 import { avaliarComplexidadeDecisao } from "../complexidadeDecisao.js";
 import {
-  detectarPedidoAnaliseDeliberativa
+  detectarPedidoAnaliseDeliberativa,
+  detectarPedidoConsultaResposta,
+  ehAnaliseSomente,
+  ehAutoanaliseRespostaAnterior
 } from "../../mre/politicaAnaliseDeliberativa.js";
+import { detectarPedidoDecisaoExplicita } from "../../classificadorIntencao/pedidoDecisaoExplicita.js";
 
 function formatarDataAgora() {
   const agora = new Date();
@@ -150,10 +154,31 @@ async function executarBruto(ctx) {
 
   if (ehRotaDeliberativa(intencao) && flagMre.ativo) {
     const lastro = ctx.lastroConsciencia || null;
-    const pedidoAnalise = detectarPedidoAnaliseDeliberativa(texto);
+    // Opção A: fecho decisório prevalece sobre hint/prosa P1-2
+    const pedidoConsulta = detectarPedidoConsultaResposta(texto, {
+      consultaNaoEAcao: ctx.consultaNaoEAcao === true,
+      tipoTurno: ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno,
+      precedenciaTurno: ctx.precedenciaTurno
+    });
+    const pedidoAnalise =
+      !detectarPedidoDecisaoExplicita(texto) &&
+      !pedidoConsulta &&
+      detectarPedidoAnaliseDeliberativa(texto);
 
-    // REQ-066: só decisões «completa» pagam o pipeline MRE 0–7
-    if (complexidade.permiteMreCompleto) {
+    // CONSULTA situacional: nunca desviar para LLM rápido sem snapshot
+    // (complexidade «moderado/follow-up» não anula o caminho com SNAPSHOT)
+    const forcarMreConsulta = pedidoConsulta === true;
+    const usarMreCompleto =
+      complexidade.permiteMreCompleto === true || forcarMreConsulta;
+
+    const semReflexoContaminante = (mensagem, motivo) => ({
+      mensagem,
+      aplicada: false,
+      motivo
+    });
+
+    // REQ-066: decisões «completa» pagam MRE 0–7; CONSULTA situacional também
+    if (usarMreCompleto) {
       const status = await obterStatusLlm();
       if (!status || !status.configurado) {
         // P1-2: pedido de análise sem LLM → incapacidade explícita (não prosa de lastro nem delegação fictícia)
@@ -175,6 +200,40 @@ async function executarBruto(ctx) {
               llm: status,
               rota: "analise-sem-llm",
               complexidadeDecisao: complexidade
+            }
+          };
+        }
+        // CONSULTA: sem LLM → snapshot local (não prosa de Atenção/continuidade)
+        if (pedidoConsulta) {
+          const { montarSnapshotSituacionalConsulta, comporAnaliseConsultaDesdeSnapshot } =
+            await import("../../mre/snapshotSituacionalConsulta.js");
+          const snap = montarSnapshotSituacionalConsulta({
+            lastro,
+            historico: ctx.historico || [],
+            factosOficiais: Array.isArray(lastro?.factosOficiais)
+              ? lastro.factosOficiais
+              : []
+          });
+          const mensagem = comporAnaliseConsultaDesdeSnapshot(snap);
+          return {
+            ok: true,
+            capacidade: "ia",
+            mensagem,
+            modo: "consulta-snapshot-sem-llm",
+            dados: {
+              instrucao: texto,
+              intencao,
+              memoria: mem,
+              coa,
+              llm: status,
+              snapshotSituacional: snap,
+              rota: "consulta_situacional_snapshot",
+              complexidadeDecisao: {
+                ...complexidade,
+                forcarMreConsulta: true,
+                caminho: "snapshot_sem_llm"
+              },
+              ...(lastro ? { lastroConsciencia: lastro } : {})
             }
           };
         }
@@ -220,20 +279,32 @@ async function executarBruto(ctx) {
           {
             ...ctx,
             coaAtivo: coa,
+            consultaNaoEAcao: pedidoConsulta || ctx.consultaNaoEAcao,
+            tipoTurno: pedidoConsulta
+              ? "consulta"
+              : ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno,
             ...(lastro ? { lastroConsciencia: lastro } : {})
           },
           {
             canal: ctx.canalSpeaker || "chat",
             // E5-CA1 / P1-2: C2/análise nunca despacha via fallback de fila
             skipFila:
-              pedidoAnalise || ctx.skipFilaConsciencia === true
+              pedidoAnalise ||
+              pedidoConsulta ||
+              ctx.skipFilaConsciencia === true
                 ? true
                 : undefined
           }
         );
-        const reflexo = pedidoAnalise
-          ? { mensagem: mreOut.mensagem, aplicada: false, motivo: "analise_p12" }
-          : garantirReflexoEstadoExecutivo(mreOut.mensagem, lastro, texto);
+        const reflexo =
+          pedidoAnalise || pedidoConsulta
+            ? semReflexoContaminante(
+                mreOut.mensagem,
+                pedidoConsulta
+                  ? "consulta_snapshot_sem_reflexo"
+                  : "analise_p12"
+              )
+            : garantirReflexoEstadoExecutivo(mreOut.mensagem, lastro, texto);
         return {
           ...mreOut,
           mensagem: reflexo.mensagem,
@@ -246,8 +317,25 @@ async function executarBruto(ctx) {
             coa,
             llm: status,
             conscienciaInfluencia: reflexo,
-            complexidadeDecisao: complexidade,
-            ...(lastro ? { lastroConsciencia: lastro } : {})
+            complexidadeDecisao: {
+              ...complexidade,
+              ...(forcarMreConsulta
+                ? {
+                    forcarMreConsulta: true,
+                    caminho: "mre_consulta_situacional"
+                  }
+                : {})
+            },
+            ...(lastro ? { lastroConsciencia: lastro } : {}),
+            ...(mreOut.dados?.parecer?.dossier
+              ? {
+                  snapshotActivado: Boolean(
+                    (mreOut.dados.parecer.dossier.factosUsados || []).some(
+                      (f) => /SNAPSHOT SITUACIONAL/.test(String(f))
+                    )
+                  )
+                }
+              : {})
           }
         };
       } catch (err) {
@@ -256,9 +344,15 @@ async function executarBruto(ctx) {
           err && err.message ? err.message : "falha no MRE",
           { pedidoAnalise }
         );
-        const reflexo = pedidoAnalise
-          ? { mensagem: fallback, aplicada: false, motivo: "analise_p12" }
-          : garantirReflexoEstadoExecutivo(fallback, lastro, texto);
+        const reflexo =
+          pedidoAnalise || pedidoConsulta
+            ? semReflexoContaminante(
+                fallback,
+                pedidoConsulta
+                  ? "consulta_snapshot_sem_reflexo"
+                  : "analise_p12"
+              )
+            : garantirReflexoEstadoExecutivo(fallback, lastro, texto);
         return {
           ok: true,
           capacidade: "ia",
@@ -347,14 +441,26 @@ async function executarBruto(ctx) {
       };
       const messages = montarMensagensLlm(paramsMsg);
       if (pedidoAnalise) {
+        const hintAuto = ehAutoanaliseRespostaAnterior(texto);
+        const hintSomente = !hintAuto && ehAnaliseSomente(texto);
         messages.splice(messages.length - 1, 0, {
           role: "system",
-          content:
-            "P1-2: o utilizador pediu ANÁLISE e RECOMENDAÇÃO executiva. " +
-            "Responda com análise fundamentada no contexto disponível e recomendação explícita " +
-            "(aprovar / modificar / não priorizar). " +
-            "Proibido responder só com «delegar a uma equipe especializada». " +
-            "Proibido criar/assumir Jobs. Não invente factos do Manifesto ou do projecto ausentes do contexto."
+          content: hintAuto
+            ? "P4 AUTOANÁLISE: o utilizador pediu exame crítico da SUA resposta anterior. " +
+              "Use o histórico/fio recente já fornecido. Aponte acertos, erros, lacunas, " +
+              "inconsistências e o que poderia ter sido melhor. " +
+              "Proibido: Decisão, Recomendação, escolha de opção, aprovar/modificar/não priorizar, " +
+              "próximo passo prescritivo ou instrução de execução. Não invente turnos ausentes do histórico."
+            : hintSomente
+              ? "P3 ANÁLISE SOMENTE: o utilizador pediu apenas análise/avaliação. " +
+                "Responda com análise, riscos, cenários, comparação e lacunas. " +
+                "Proibido: Decisão, Recomendação, escolha de opção, aprovar/modificar/não priorizar, " +
+                "próximo passo prescritivo ou instrução de execução. Não invente factos ausentes do contexto."
+              : "P1-2: o utilizador pediu ANÁLISE e RECOMENDAÇÃO executiva. " +
+                "Responda com análise fundamentada no contexto disponível e recomendação explícita " +
+                "(aprovar / modificar / não priorizar). " +
+                "Proibido responder só com «delegar a uma equipe especializada». " +
+                "Proibido criar/assumir Jobs. Não invente factos do Manifesto ou do projecto ausentes do contexto."
         });
       }
       const dicMeta = metadadoDicInjecao(paramsMsg);
@@ -363,9 +469,14 @@ async function executarBruto(ctx) {
         temperature: 0.4,
         max_tokens: complexidade.maxTokens
       });
-      const reflexo = pedidoAnalise
-        ? { mensagem: saida.texto, aplicada: false, motivo: "analise_p12" }
-        : garantirReflexoEstadoExecutivo(saida.texto, lastro, texto);
+      // CONSULTA não deve chegar aqui (forcarMreConsulta); se chegar, não contaminar
+      const reflexo =
+        pedidoAnalise || pedidoConsulta
+          ? semReflexoContaminante(
+              saida.texto,
+              pedidoConsulta ? "consulta_snapshot_sem_reflexo" : "analise_p12"
+            )
+          : garantirReflexoEstadoExecutivo(saida.texto, lastro, texto);
       return {
         ok: true,
         capacidade: "ia",
@@ -394,9 +505,13 @@ async function executarBruto(ctx) {
         err && err.message ? err.message : "falha na chamada rápida",
         { pedidoAnalise }
       );
-      const reflexo = pedidoAnalise
-        ? { mensagem: fallback, aplicada: false, motivo: "analise_p12" }
-        : garantirReflexoEstadoExecutivo(fallback, lastro, texto);
+      const reflexo =
+        pedidoAnalise || pedidoConsulta
+          ? semReflexoContaminante(
+              fallback,
+              pedidoConsulta ? "consulta_snapshot_sem_reflexo" : "analise_p12"
+            )
+          : garantirReflexoEstadoExecutivo(fallback, lastro, texto);
       return {
         ok: true,
         capacidade: "ia",
@@ -416,7 +531,9 @@ async function executarBruto(ctx) {
     }
   }
 
-  const pedidoAnaliseLegado = detectarPedidoAnaliseDeliberativa(texto);
+  const pedidoAnaliseLegado =
+    !detectarPedidoDecisaoExplicita(texto) &&
+    detectarPedidoAnaliseDeliberativa(texto);
   const status = await obterStatusLlm();
   if (!status || !status.configurado) {
     return {

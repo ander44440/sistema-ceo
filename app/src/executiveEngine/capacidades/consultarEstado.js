@@ -5,6 +5,7 @@
  */
 
 import { normalizarTexto } from "../../classificadorIntencao/lexicon.js";
+import { ehPedidoSituacionalTrabalho } from "../../classificadorIntencao/regras.js";
 import { lerMemoria, resumirEstado } from "../../executiveMemory/index.js";
 import { obterStoreContinuidadePadrao } from "../../continuidadeGate/integracaoConversa.js";
 import { listarJobsPorEstado, obterJobFila } from "../filaCliente.js";
@@ -72,9 +73,11 @@ export function identificarConsultaEstado(texto) {
     return { tipo: "pendencias", jobId: null };
   }
 
+  // Panorama curto apenas — pedidos situacionais de trabalho não são estado_geral
   if (
-    /\bestado\s+atual\b/.test(t) ||
-    /\b(status|resumo\s+executivo|memoria\s+executiva)\b/.test(t)
+    !ehPedidoSituacionalTrabalho(t) &&
+    (/\bestado\s+atual\b/.test(t) ||
+      /\b(status|resumo\s+executivo|memoria\s+executiva)\b/.test(t))
   ) {
     return { tipo: "estado_geral", jobId: null };
   }

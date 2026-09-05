@@ -15,6 +15,53 @@ test("REPITA é comando operacional", () => {
   assert.equal(ehComandoSobreJobActivo("REENVIAR"), true);
 });
 
+test("repetir decisão deliberativa não intercepta (CTO-003)", () => {
+  const estadoAberto = {
+    operacaoAberta: true,
+    requerRecuperacao: false,
+    modoOperacional: "recuperar",
+    jobActivo: { id: "JOB-1", titulo: "t", estado: "needs_correction" },
+    sinais: {
+      pending: 0,
+      running: 0,
+      failed: 0,
+      dispatcher: false,
+      handoff: false,
+      agentErro: false,
+      gatePendente: 0
+    }
+  };
+  assert.equal(
+    deveInterceptarOperacional({
+      texto:
+        "Repetir uma decisão enquanto 093/095 estiverem em needs_correction.",
+      estadoOperacional: estadoAberto
+    }),
+    false
+  );
+  assert.equal(
+    deveInterceptarOperacional({
+      texto: "REPITA",
+      estadoOperacional: estadoAberto
+    }),
+    true
+  );
+  assert.equal(
+    deveInterceptarOperacional({
+      texto: "repetir o Job",
+      estadoOperacional: estadoAberto
+    }),
+    true
+  );
+  assert.equal(
+    deveInterceptarOperacional({
+      texto: "repetir a execução",
+      estadoOperacional: estadoAberto
+    }),
+    true
+  );
+});
+
 test("deve interceptar com operação aberta + comando", () => {
   assert.equal(
     deveInterceptarOperacional({

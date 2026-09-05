@@ -4,6 +4,7 @@
  */
 
 import { validarParecerExecutivo } from "../parecer/validarParecerExecutivo.js";
+import { obterAutoanaliseActiva } from "../politicaAnaliseDeliberativa.js";
 
 const CANAIS = new Set(["chat", "voz", "centro_situacao"]);
 
@@ -59,9 +60,29 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
       : "";
 
   // Redação PX-001 E2 / PX-011 — mesmos campos deliberativos; só a prosa muda.
+  // CONSULTA → RESPONDER (sem «Delego…» / «Plano:»).
   // P1-2: pedido de análise → liderar com parecer.analise + recomendação (não «Delego…»).
+  // P4: AUTOANÁLISE → sem linha «Recomendação:».
   let textoChat;
-  if (preferencias.pedidoAnalise === true) {
+  if (preferencias.pedidoConsulta === true) {
+    const analiseTxt = encurtar(
+      parecer.analise || "",
+      preferencias.brevidade ? 400 : 900
+    );
+    const corpo =
+      analiseTxt ||
+      (recomendacao ? encurtar(recomendacao, preferencias.brevidade ? 400 : 900) : "");
+    textoChat = [
+      corpo
+        ? corpo.endsWith(".")
+          ? corpo
+          : `${corpo}.`
+        : `Sobre o trabalho em curso: ${objetivo}.`,
+      lacunas.length ? `Lacunas: ${lacunas.slice(0, 3).join("; ")}.` : null
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  } else if (preferencias.pedidoAnalise === true) {
     const analiseTxt = encurtar(
       parecer.analise || "",
       preferencias.brevidade ? 400 : 900
@@ -69,16 +90,19 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
     const principios = Array.isArray(parecer.principiosAplicados)
       ? parecer.principiosAplicados.filter(Boolean).slice(0, 4)
       : [];
+    const autoanalise = obterAutoanaliseActiva();
     textoChat = [
       analiseTxt
         ? analiseTxt.endsWith(".")
           ? analiseTxt
           : `${analiseTxt}.`
         : `Sobre: ${objetivo}.`,
-      `Recomendação: ${recomendacao}.`,
+      autoanalise ? null : `Recomendação: ${recomendacao}.`,
       principios.length
         ? `Princípios que influenciam esta posição: ${principios.join("; ")}.`
-        : `Porquê: ${encurtar(justificativa, preferencias.brevidade ? 180 : 320)}`,
+        : autoanalise
+          ? null
+          : `Porquê: ${encurtar(justificativa, preferencias.brevidade ? 180 : 320)}`,
       lacunas.length ? `Lacunas: ${lacunas.slice(0, 3).join("; ")}.` : null
     ]
       .filter(Boolean)
@@ -123,7 +147,18 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
   let guião = null;
   let destaquesOut = undefined;
 
-  if (canal === "voz") {
+  if (preferencias.pedidoConsulta === true) {
+    // CONSULTA: mesmo texto factual em todos os canais (sem rótulo Delego/Aprovo)
+    if (canal === "voz") {
+      texto = textoChat.replace(/\n\n/g, " ");
+      guião = texto;
+    } else if (canal === "centro_situacao") {
+      texto = textoChat.replace(/\n\n/g, " ");
+      destaquesOut = [`Consulta: estado do trabalho`];
+    } else {
+      guião = null;
+    }
+  } else if (canal === "voz") {
     texto = guiãoVoz;
     guião = guiãoVoz;
   } else if (canal === "centro_situacao") {

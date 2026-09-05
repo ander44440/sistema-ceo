@@ -97,6 +97,7 @@ test("C7-1: GAMA needs_correction NÃO anexa em turno de nova missão ALFA", asy
     id: "JOB-000089",
     titulo: "missão ALFA 6",
     estado: "dispatched",
+    objetivo: "Criar o arquivo projeto-teste-alfa-6.txt com o conteúdo combinado.",
     projeto: alfa.id
   };
 
@@ -133,7 +134,8 @@ test("C7-2: ALFA com Job aberto — acompanhamento ALFA aparece", async () => {
   const jobAlfa = {
     id: "JOB-ALFA-OPEN",
     titulo: "missão ALFA em curso",
-    estado: "needs_correction",
+    estado: "result",
+    objetivo: "Conduzir a missão ALFA até ao artefacto combinado.",
     projeto: alfa.id,
     resultado: {
       status: "sucesso",
@@ -167,6 +169,7 @@ test("C7-3: mesma mensagem no mesmo projecto — acompanhamento continua", async
     id: "JOB-ALFA-SAME",
     titulo: "missão ALFA",
     estado: "running",
+    objetivo: "Continuar a missão ALFA em curso até ao critério combinado.",
     projeto: alfa.id
   };
 

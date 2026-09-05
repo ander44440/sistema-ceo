@@ -17,6 +17,7 @@ import {
   garantirDiaNoProjeto,
   obterUltimaContinuidadeDoProjeto
 } from "./diaExecutivo.js";
+import { definirContextoConversacional } from "../modules/conversa/store.js";
 import { resetMemoriaTrabalhoExecutiva } from "../executiveEngine/refinoEicSessao.js";
 
 const MAX_DECISOES = 50;
@@ -296,10 +297,19 @@ function marcarAtividade(projeto) {
 }
 
 /**
+ * Alinha o store de conversa ao projecto activo (REQ-037/038/039).
+ */
+function sincronizarContextoConversacional() {
+  garantirDoc();
+  definirContextoConversacional(doc.projetoAtivoId || null);
+}
+
+/**
  * Hidrata o catálogo a partir do armazenamento local.
  */
 export function inicializarCatalogo() {
   garantirDoc();
+  sincronizarContextoConversacional();
   return obterProjetoAtivo();
 }
 
@@ -410,6 +420,7 @@ function aplicarSelecaoEmpresa(id) {
     if (p) marcarAtividade(p);
   }
   persistir();
+  sincronizarContextoConversacional();
   return obterEmpresaAtiva();
 }
 
@@ -495,13 +506,13 @@ export function selecionarProjeto(id, opts = {}) {
   }
   marcarAtividade(p);
   persistir();
+  sincronizarContextoConversacional();
   return obterProjetoAtivo();
 }
 
 /**
  * Remove o contexto activo sem apagar o projecto do catálogo.
  * Histórico, decisões, Jobs e continuidade do dia permanecem.
- * Fecha também a MTE residual do COA (Opção C).
  * @returns {null}
  */
 export function limparProjetoAtivo() {
@@ -513,6 +524,7 @@ export function limparProjetoAtivo() {
   }
   doc.projetoAtivoId = null;
   persistir();
+  sincronizarContextoConversacional();
   return null;
 }
 
@@ -580,6 +592,7 @@ export function criarProjeto(dados) {
     doc.empresaAtivaId = empresaAnterior;
     throw err;
   }
+  sincronizarContextoConversacional();
   return obterProjetoAtivo();
 }
 

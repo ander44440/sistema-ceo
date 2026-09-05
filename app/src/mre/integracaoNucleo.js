@@ -26,9 +26,12 @@ import {
 } from "../conscienciaOperacional/influenciaDeliberacao.js";
 import {
   detectarPedidoAnaliseDeliberativa,
+  detectarPedidoConsultaResposta,
   ehPedidoDelegacaoExplicita,
   hintEstagio6AnaliseDeliberativa,
-  montarProsaAnaliseDeliberativa
+  hintEstagio6ConsultaResposta,
+  montarProsaAnaliseDeliberativa,
+  obterAutoanaliseActiva
 } from "./politicaAnaliseDeliberativa.js";
 import {
   detectarPedidoDecisaoExplicita,
@@ -171,6 +174,8 @@ export function montarEntradaMre(ctx) {
           }
         : null,
     intencao: ctx.intencao || null,
+    historico: Array.isArray(ctx.historico) ? ctx.historico : [],
+    lastroConsciencia: ctx.lastroConsciencia || null,
     snapshotPainel,
     factosOficiais: factos,
     projecaoSubordinada: projecaoBriefing,
@@ -192,6 +197,25 @@ export function montarEntradaMre(ctx) {
         }
       : {})
   };
+}
+
+/**
+ * P4 — última resposta completa do CEO no histórico (sem truncar).
+ * @param {ReadonlyArray<{ papel?: string, texto?: string }>|null|undefined} historico
+ * @returns {string|null}
+ */
+export function extrairUltimaRespostaCeo(historico) {
+  if (!Array.isArray(historico) || historico.length === 0) return null;
+  for (let i = historico.length - 1; i >= 0; i -= 1) {
+    const t = historico[i];
+    if (!t) continue;
+    const papel = String(t.papel || "").toLowerCase();
+    if (papel !== "ceo" && papel !== "assistente") continue;
+    const texto = String(t.texto ?? "");
+    if (!texto.trim()) continue;
+    return texto;
+  }
+  return null;
 }
 
 /**
@@ -379,6 +403,9 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
   }
 
   const entrada = montarEntradaMre(ctxComManifesto);
+  if (ctx.consultaNaoEAcao === true) entrada.consultaNaoEAcao = true;
+  if (ctx.tipoTurno) entrada.tipoTurno = ctx.tipoTurno;
+  if (ctx.precedenciaTurno) entrada.precedenciaTurno = ctx.precedenciaTurno;
   const chamarLlmBase = deps.chamarLlm || criarChamarLlmCeo();
   const lastro = ctx.lastroConsciencia || null;
   const temLastroConsciencia = Boolean(
@@ -401,11 +428,29 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     ? false
     : mensagemEhExploratoria(msgUser);
   const diagnosticoFactos = mensagemPedeDiagnosticoFactos(msgUser);
+  const pedidoConsulta =
+    !pedidoDecisao &&
+    detectarPedidoConsultaResposta(msgUser, {
+      consultaNaoEAcao: ctx.consultaNaoEAcao === true,
+      tipoTurno: ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno,
+      precedenciaTurno: ctx.precedenciaTurno
+    });
   // Opção A: fecho prevalece — não activar hint/prosa P1-2 em paralelo
+  // CONSULTA situacional ≠ análise de proposta (P1-2)
   const pedidoAnalise =
-    !pedidoDecisao && detectarPedidoAnaliseDeliberativa(msgUser);
+    !pedidoDecisao &&
+    !pedidoConsulta &&
+    detectarPedidoAnaliseDeliberativa(msgUser);
   const pedidoDelegacaoExplicita = ehPedidoDelegacaoExplicita(msgUser);
   const temManifesto = Boolean(entrada.manifestoMg2?.ok);
+
+  // P4 — objecto da autoanálise: última resposta CEO completa → Estágio 4
+  if (obterAutoanaliseActiva()) {
+    const ultima = extrairUltimaRespostaCeo(ctx.historico);
+    if (ultima != null) {
+      entrada.ultimaRespostaCeo = ultima;
+    }
+  }
 
   /**
    * IMP-070 B1 + IMP-059 E4 — reforço no adaptador do Núcleo (não altera o motor MRE).
@@ -419,6 +464,7 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     temLastroConsciencia ||
     temLacunaFonteOficial ||
     pedidoAnalise ||
+    pedidoConsulta ||
     pedidoDecisao ||
     temManifesto
       ? async (pedido) => {
@@ -427,7 +473,9 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
             hint += hintManifestoComoDiretriz();
           }
           if (pedido?.estagio === "6_decisao") {
-            if (pedidoAnalise) {
+            if (pedidoConsulta) {
+              hint += hintEstagio6ConsultaResposta();
+            } else if (pedidoAnalise) {
               hint += hintEstagio6AnaliseDeliberativa();
             }
             if (pedidoDecisao) {
@@ -448,19 +496,20 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
                 hint +=
                   " Diagnóstico: declare a lacuna da Fonte Oficial; " +
                   "pode mencionar a projecção como orientação não canónica.";
-              } else if (exploratoria) {
+              } else if (exploratoria && !pedidoConsulta) {
                 hint +=
                   " Mensagem exploratória: NÃO forçar aprovar. Preferir solicitar_dados " +
                   "com critério nomeado que falta, ou monitorar com critério de vigília explícito.";
               } else if (pedidoDecisao) {
                 // Hint de fecho já injectado acima — não enfraquecer com «pode aprovar».
-              } else if (!pedidoAnalise) {
+              } else if (!pedidoAnalise && !pedidoConsulta) {
                 hint +=
                   " Se for decisão com critérios já nos factos oficiais, pode aprovar; " +
                   "declare o critério na recomendação.";
               }
-              // DESP-004: problemas multi-etapa → reflectir plano na acção/recomendação
+              // DESP-004: só quando NÃO é consulta (consulta ≠ plano)
               if (
+                !pedidoConsulta &&
                 /\b(plano|etapas?|passo\s+a\s+passo|como\s+(organizar|implementar|estruturar)|roadmap|depend[eê]ncias?)\b/i.test(
                   msgUser
                 )
@@ -498,10 +547,17 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     chamarLlm,
     preferirSolicitarDados,
     pedidoAnaliseDeliberativa: pedidoAnalise,
+    pedidoConsultaResposta: pedidoConsulta,
     pedidoDecisaoExplicita: pedidoDecisao,
     pedidoDelegacaoExplicita,
+    consultaNaoEAcao: ctx.consultaNaoEAcao === true || pedidoConsulta,
+    tipoTurno: ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno || null,
+    precedenciaTurno: ctx.precedenciaTurno || null,
+    lastroConsciencia: lastro,
+    historico: ctx.historico || [],
     proibirDespacho:
-      (pedidoAnalise || pedidoDecisao) && !pedidoDelegacaoExplicita,
+      (pedidoAnalise || pedidoConsulta || pedidoDecisao) &&
+      !pedidoDelegacaoExplicita,
     metadados: {
       origem: "nucleo",
       intencaoId: ctx.intencao?.id,
@@ -535,7 +591,8 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
   }
 
   const falado = gerarComunicadoExecutivo(resultado.parecer, canal, {
-    pedidoAnalise
+    pedidoAnalise,
+    pedidoConsulta
   });
   if (!falado.ok) {
     return {
@@ -559,21 +616,28 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
       comunicado.texto = prosaAnalise;
     }
   }
-  const reflexo = garantirReflexoEstadoExecutivo(
-    comunicado.texto,
-    lastro,
-    ctx.instrucao || ""
-  );
-  if (reflexo.aplicada && !pedidoAnalise) {
-    // P1-2: análise deliberativa não é substituída por prosa canónica de Gate/Job
-    comunicado.texto = reflexo.mensagem;
-  } else if (reflexo.aplicada && pedidoAnalise) {
-    // Mantém análise; só anexa lastro operacional se for Gate/Job crítico e ainda não mencionado
-    if (
-      lastro?.contagens?.gatesPendentes > 0 &&
-      !/gate\s+pendente/i.test(comunicado.texto)
-    ) {
-      comunicado.texto = `${comunicado.texto}\n\nNota operacional: existe Gate pendente — não inicia execução desta análise.`;
+  // CONSULTA situacional: snapshot factual não é substituído por prosa de Gate/Job/continuidade
+  /** @type {{ mensagem: string, aplicada: boolean, motivo: string }} */
+  let reflexo = {
+    mensagem: comunicado.texto,
+    aplicada: false,
+    motivo: pedidoConsulta ? "consulta_snapshot_sem_reflexo" : "pendente"
+  };
+  if (!pedidoConsulta) {
+    reflexo = garantirReflexoEstadoExecutivo(
+      comunicado.texto,
+      lastro,
+      ctx.instrucao || ""
+    );
+    if (reflexo.aplicada && !pedidoAnalise) {
+      comunicado.texto = reflexo.mensagem;
+    } else if (reflexo.aplicada && pedidoAnalise) {
+      if (
+        lastro?.contagens?.gatesPendentes > 0 &&
+        !/gate\s+pendente/i.test(comunicado.texto)
+      ) {
+        comunicado.texto = `${comunicado.texto}\n\nNota operacional: existe Gate pendente — não inicia execução desta análise.`;
+      }
     }
   }
 

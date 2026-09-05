@@ -30,29 +30,45 @@ function jobBase(estado, extra = {}) {
   return {
     id: "JOB-000101",
     titulo: "missão acompanhamento",
+    objetivo: "missão acompanhamento completa sem truncar",
     estado,
     criadoEm: "2026-08-09T12:00:00.000Z",
     ...extra
   };
 }
 
-test("1–4: dispatched/running/result/needs_correction mantêm operação aberta", () => {
-  for (const est of [
-    "dispatched",
-    "running",
-    "result",
-    "needs_correction"
-  ]) {
+test("1–4: dispatched/running/result mantêm operação aberta; needs_correction só com sessão", () => {
+  for (const est of ["dispatched", "running", "result", "needs_correction"]) {
     assert.equal(ehEstadoAcompanhamentoAberto(est), true, est);
     assert.equal(ehEstadoOperacaoAbertaJob(est), true, est);
     assert.ok(ESTADOS_ACOMPANHAMENTO_OPERACIONAL.includes(est));
-
+  }
+  for (const est of ["dispatched", "running", "result"]) {
     const e = extrairEstadoOperacional({
-      jobs: [jobBase(est)]
+      jobs: [
+        jobBase(est, { objetivo: "missão acompanhamento completa sem truncar" })
+      ]
     });
     assert.equal(e.operacaoAberta, true, `operacaoAberta ${est}`);
     assert.equal(e.jobActivo?.estado, est);
   }
+
+  const ncHistorico = extrairEstadoOperacional({
+    jobs: [jobBase("needs_correction", { objetivo: undefined })]
+  });
+  assert.equal(ncHistorico.operacaoAberta, false);
+  assert.equal(ncHistorico.jobActivo, null);
+
+  const ncSessao = extrairEstadoOperacional({
+    jobs: [
+      jobBase("needs_correction", {
+        objetivo: "missão acompanhamento completa sem truncar"
+      })
+    ],
+    idsAdotadosSessao: ["JOB-000101"]
+  });
+  assert.equal(ncSessao.operacaoAberta, true);
+  assert.equal(ncSessao.jobActivo?.id, "JOB-000101");
 });
 
 test("5–7: completed/failed/cancelled encerram acompanhamento", async () => {
@@ -398,7 +414,7 @@ test("T3-E: completed histórico fora do store NÃO é auto-adotado", async () =
   assert.equal(store.listarActivos().length, 0);
 });
 
-test("T3-F: adoptar/observar não muta resultado nem verificacao", async () => {
+test("T3-F: needs_correction na fila não é auto-adoptado nem mutado", async () => {
   const store = criarStoreAcompanhamento();
   const job = jobBase("needs_correction", {
     id: "JOB-000206",
@@ -411,12 +427,17 @@ test("T3-F: adoptar/observar não muta resultado nem verificacao", async () => {
   });
   const r0 = structuredClone(job.resultado);
   const v0 = structuredClone(job.verificacao);
-  await adotarJobsDaFilaParaAcompanhamento(store, {
+  const adocao = await adotarJobsDaFilaParaAcompanhamento(store, {
     listarJobs: async () => [job]
   });
-  await observarUmAcompanhamento(store, "JOB-000206", {
-    obterJob: async () => job
-  });
+  assert.equal(adocao.adotados.length, 0);
+  assert.ok(
+    adocao.ignorados.some(
+      (i) =>
+        i.jobId === "JOB-000206" && i.motivo === "needs_correction_historico"
+    )
+  );
+  assert.equal(store.obter("JOB-000206"), null);
   assert.deepEqual(job.resultado, r0);
   assert.deepEqual(job.verificacao, v0);
 });

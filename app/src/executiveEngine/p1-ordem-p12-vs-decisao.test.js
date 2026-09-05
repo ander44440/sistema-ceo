@@ -256,3 +256,67 @@ test('T5 — "Recomenda prioridade" sem decisão explícita → E4/C4', () => {
   assert.equal(s.classe, "comando_operacional");
   assert.equal(s.destino, "capacidade_operacional");
 });
+
+const MSG_MENU_DECISAO =
+  "Avalie a proposta comercial com prazo de 60 dias. " +
+  "Termine com posição clara, podendo: aceitar; não aceitar; negociar condição diferente; adiar.";
+
+test("T6 — Menu aceitar/não aceitar/negociar/adiar → fecho; sem prosa P1-2", async () => {
+  assert.equal(detectarPedidoDecisaoExplicita(MSG_MENU_DECISAO), true);
+  const coa = coaAlfa();
+  const pub = criarPublicadorFilaMemoria();
+  const out = await executarRotaDeliberativa(
+    {
+      instrucao: MSG_MENU_DECISAO,
+      intencao: {
+        id: "deliberar_objetivo",
+        capacidade: "ia",
+        classe: "conversa_projeto"
+      },
+      coaAtivo: coa,
+      memoria: () => ({ projetoAtivo: { id: coa.id, nome: coa.nome } })
+    },
+    {
+      chamarLlm: criarChamarLlmMock(
+        mapaLlmFluxoFeliz({
+          "4_analise": {
+            analise: "Prazo 60 dias tensiona caixa; vendas potenciais."
+          },
+          "6_decisao": {
+            estado: "delegar",
+            recomendacao: "não priorizar a proposta",
+            alternativas: [
+              "Aceitar",
+              "Não aceitar",
+              "Negociar condição diferente",
+              "Adiar"
+            ],
+            justificativa: "Conflito entre receita e liquidez."
+          }
+        })
+      ),
+      publicarJob: pub.publicarJob.bind(pub)
+    }
+  );
+  assert.equal(out.ok, true);
+  const de = out.dados?.parecer?.decisaoExecutiva;
+  assert.notEqual(de.estado, "delegar");
+  assert.ok(["aprovar", "rejeitar", "monitorar"].includes(de.estado));
+  assert.doesNotMatch(
+    String(out.mensagem || ""),
+    /Recomendação:\s*(modificar|não priorizar|nao priorizar)/i
+  );
+  assert.doesNotMatch(
+    String(de.recomendacao || ""),
+    /n[aã]o\s+priorizar|modificar/i
+  );
+  assert.match(
+    String(de.recomendacao || ""),
+    /N[aã]o\s+aceitar|Aceitar|Negociar|Adiar/i
+  );
+  assert.doesNotMatch(
+    String(de.recomendacao || ""),
+    /posição executiva está na análise acima|Não transfero esta deliberação/i
+  );
+  assert.equal(pub.jobs.length, 0);
+});

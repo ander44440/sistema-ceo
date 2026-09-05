@@ -7,6 +7,7 @@
 import { normalizarTexto } from "../classificadorIntencao/lexicon.js";
 import {
   ehPedidoAnaliseOuRecomendacao,
+  ehPedidoSituacionalTrabalho,
   ehProibicaoExecucaoExplicita
 } from "../classificadorIntencao/regras.js";
 import {
@@ -14,6 +15,60 @@ import {
   ehRecomendacaoOperacional,
   temObjetoPropostaDeliberativa
 } from "../classificadorIntencao/recomendacaoOperacional.js";
+
+/** Flag de sessão curta: último `detectarPedidoAnaliseDeliberativa` viu análise-somente. */
+let analiseSomenteActiva = false;
+/** Flag de sessão curta: autoanálise da resposta anterior (P4). */
+let autoanaliseActiva = false;
+
+/**
+ * Proibição explícita de decisão/recomendação — modo ANÁLISE SOMENTE.
+ * @param {string} [texto]
+ */
+export function ehAnaliseSomente(texto) {
+  const t = normalizarTexto(texto);
+  if (!t) return false;
+  return (
+    /\b(apenas|somente)\s+(analis[ae]|analisar|avali[ae]|avaliar)\b/.test(t) ||
+    /\bvamos\s+apenas\s+(avaliar|analisar|analise)\b/.test(t) ||
+    /\bnao\s+quero\s+recomend/.test(t) ||
+    /\bnao\s+fa[cz]a\s+recomend/.test(t) ||
+    /\bnao\s+tome\s+(nenhuma\s+)?decis/.test(t)
+  );
+}
+
+/**
+ * Pedido explícito de autoanálise da própria resposta anterior (P4).
+ * @param {string} [texto]
+ */
+export function ehAutoanaliseRespostaAnterior(texto) {
+  const t = normalizarTexto(texto);
+  if (!t) return false;
+  return (
+    /\b(analis[ae]|analisar|avali[ae]|avaliar).{0,60}(sua|a)\s+resposta\s+anterior\b/.test(
+      t
+    ) ||
+    /\bresposta\s+anterior\b.{0,60}\b(acert|err|melhor|criticamente)\b/.test(t) ||
+    /\b(acert|err|melhor).{0,40}resposta\s+anterior\b/.test(t) ||
+    /\bonde\s+(voce|eu)\s+errou\b/.test(t) ||
+    /\bo\s+que\s+(voce|eu)\s+(acertou|errou)\b/.test(t) ||
+    /\bo\s+que\s+(voce|eu)\s+poderia\s+ter\s+feito\s+melhor\b/.test(t)
+  );
+}
+
+/**
+ * @returns {boolean}
+ */
+export function obterAnaliseSomenteActiva() {
+  return analiseSomenteActiva === true;
+}
+
+/**
+ * @returns {boolean}
+ */
+export function obterAutoanaliseActiva() {
+  return autoanaliseActiva === true;
+}
 
 /**
  * Pedido explícito de análise / avaliação / recomendação deliberativa (P1-2).
@@ -24,9 +79,23 @@ import {
  */
 export function detectarPedidoAnaliseDeliberativa(texto) {
   const t = normalizarTexto(texto);
-  if (!t) return false;
+  if (!t) {
+    analiseSomenteActiva = false;
+    autoanaliseActiva = false;
+    return false;
+  }
+  autoanaliseActiva = ehAutoanaliseRespostaAnterior(texto);
+  analiseSomenteActiva = ehAnaliseSomente(texto);
   // E4: juízo operacional sobre prioridade/sprint/job ≠ deliberação de proposta
-  if (ehRecomendacaoOperacional(t)) return false;
+  if (ehRecomendacaoOperacional(t)) {
+    analiseSomenteActiva = false;
+    autoanaliseActiva = false;
+    return false;
+  }
+  // P4: autoanálise da resposta anterior → path P1-2 sem recomendação/decisão
+  if (autoanaliseActiva) return true;
+  // Análise somente explícita → path P1-2 (prosa/hint sem recomendação)
+  if (analiseSomenteActiva) return true;
   // Classificador: se nem lá é análise, não forçar prosa P1-2
   if (!ehPedidoAnaliseOuRecomendacao(t)) return false;
 
@@ -101,9 +170,141 @@ export function ehDelegacaoFicticiaAnalise(estado, recomendacao) {
 }
 
 /**
+ * CONSULTA situacional / precedência tipoTurno=consulta → RESPONDER (não executar).
+ * @param {string} [texto]
+ * @param {{ consultaNaoEAcao?: boolean, tipoTurno?: string, precedenciaTurno?: { tipoTurno?: string } }} [ctx]
+ */
+export function detectarPedidoConsultaResposta(texto, ctx = {}) {
+  if (ctx.consultaNaoEAcao === true) return true;
+  const tipo =
+    ctx.tipoTurno ||
+    ctx.precedenciaTurno?.tipoTurno ||
+    null;
+  if (tipo === "consulta") return true;
+  return ehPedidoSituacionalTrabalho(normalizarTexto(texto));
+}
+
+/**
+ * Hint estágio 6: consulta de estado do trabalho ≠ plano/delegação/execução.
+ */
+export function hintEstagio6ConsultaResposta() {
+  return (
+    " CONSULTA DE ESTADO DO TRABALHO (responder, não executar): " +
+    "Usar APENAS o SNAPSHOT SITUACIONAL / factosOficiais do turno. " +
+    "O utilizador pede informação sobre o estado actual do trabalho — " +
+    "NÃO é pedido de plano, relatório, delegação nem execução. " +
+    "Proibido estado=delegar. Preferir monitorar ou solicitar_dados. " +
+    "Proibido inventar problema, relatório, etapa ou progresso. " +
+    "Se houver LACUNA / LASTRO INSUFICIENTE no snapshot, declare as lacunas. " +
+    "Campo recomendacao = resposta factual alinhada ao snapshot. " +
+    "A resposta substantiva está no campo analise (estágio 4)."
+  );
+}
+
+/**
+ * Remapeia decisão pós-estágio 6: consulta não vira delegação/plano/execução.
+ * @param {object} decisao
+ * @param {{ pedidoConsulta?: boolean, pedidoDelegacaoExplicita?: boolean }} [opts]
+ */
+export function aplicarPoliticaConsultaResposta(decisao, opts = {}) {
+  if (!decisao || typeof decisao !== "object") return decisao;
+  if (!opts.pedidoConsulta || opts.pedidoDelegacaoExplicita) return decisao;
+
+  let estado = decisao.estado;
+  let recomendacao = String(decisao.recomendacao || "").trim();
+  let justificativa = String(decisao.justificativa || "").trim();
+
+  const prosaAccao =
+    /delegar|elabora(r|ção)\s+(de\s+)?(um\s+)?relat|\bplano\s*:|equipe\s+especializ/i.test(
+      recomendacao
+    );
+  const estadoAccao =
+    estado === "delegar" || estado === "aprovar" || estado === "rejeitar";
+
+  if (!estadoAccao && !prosaAccao) return decisao;
+
+  const faltaDados =
+    /solicitar|falt|lacuna|dados|informa/i.test(recomendacao) ||
+    estado === "solicitar_dados";
+
+  estado = faltaDados ? "solicitar_dados" : "monitorar";
+
+  if (prosaAccao || estadoAccao) {
+    if (prosaAccao || !recomendacao) {
+      recomendacao =
+        "Resposta informativa ao estado do trabalho (ver análise) — sem delegação nem plano de execução.";
+    }
+    justificativa = (
+      justificativa +
+      " CONSULTA: turno informativo; delegação/plano/execução removidos da resposta."
+    ).trim();
+  }
+
+  return {
+    ...decisao,
+    estado,
+    recomendacao,
+    justificativa
+  };
+}
+
+/**
+ * Prosa ao utilizador: resposta factual (não «Delego» / «Plano:»).
+ * @param {object} parecer
+ * @param {{ maxAnalise?: number }} [opts]
+ * @returns {string|null}
+ */
+export function montarProsaConsultaResposta(parecer, opts = {}) {
+  if (!parecer || typeof parecer !== "object") return null;
+  const analise = String(parecer.analise || "").trim();
+  const recomendacao = String(
+    parecer.decisaoExecutiva?.recomendacao || ""
+  ).trim();
+  const lacunas = Array.isArray(parecer.lacunas)
+    ? parecer.lacunas.map((l) => String(l || "").trim()).filter(Boolean)
+    : [];
+  const max = opts.maxAnalise ?? 900;
+  const corpo = analise || recomendacao;
+  if (!corpo && lacunas.length === 0) return null;
+  const texto = corpo
+    ? corpo.length <= max
+      ? corpo.endsWith(".")
+        ? corpo
+        : `${corpo}.`
+      : `${corpo.slice(0, max - 1)}…`
+    : null;
+  const partes = [];
+  if (texto) partes.push(texto);
+  if (lacunas.length) {
+    partes.push(`Lacunas: ${lacunas.slice(0, 3).join("; ")}.`);
+  }
+  return partes.length ? partes.join(" ") : null;
+}
+
+/**
  * Hint para o estágio 6 quando o utilizador pediu análise/recomendação.
  */
 export function hintEstagio6AnaliseDeliberativa() {
+  if (autoanaliseActiva) {
+    return (
+      " AUTOANÁLISE DA RESPOSTA ANTERIOR (não execução, não decisão): " +
+      "Use o fio recente da conversa para examinar criticamente a ÚLTIMA resposta do CEO. " +
+      "No campo analise, aponte: acertos, erros, lacunas, inconsistências e o que poderia ser melhorado. " +
+      "Proibido Decisão, Recomendação, escolha de opção, aprovar/modificar/não priorizar, " +
+      "próximo passo prescritivo ou instrução de execução. " +
+      "Preferir estado=monitorar. Campo recomendacao: vazio."
+    );
+  }
+  if (analiseSomenteActiva) {
+    return (
+      " ANÁLISE SOMENTE (não execução, não decisão): " +
+      "Proibido Decisão, Recomendação, escolha de opção, aprovar/modificar/não priorizar, " +
+      "próximo passo prescritivo ou instrução de execução. " +
+      "Permitido: análise, avaliação, comparação, riscos, cenários, lacunas e incertezas. " +
+      "Preferir estado=monitorar ou solicitar_dados. Campo recomendacao: vazio ou só lacunas — sem escolha. " +
+      "A análise substantiva está no campo analise (estágio 4)."
+    );
+  }
   return (
     " P1-2 PEDIDO DE ANÁLISE/RECOMENDAÇÃO (não execução): " +
     "Proibido usar estado=delegar como substituto de análise. " +
@@ -137,13 +338,23 @@ export function aplicarPoliticaAnaliseDeliberativa(decisao, opts = {}) {
   estado = faltaDados ? "solicitar_dados" : "monitorar";
 
   if (ficticia || /delegar|equipe\s+especializ|especialistas/i.test(recomendacao)) {
-    recomendacao =
-      "A posição executiva está na análise acima (aprovar, modificar ou não priorizar). " +
-      "Não transfero esta deliberação a agentes externos inexistentes neste sistema.";
-    justificativa = (
-      justificativa +
-      " P1-2: pedido era análise/recomendação; delegação fictícia convertida em posição sem despacho."
-    ).trim();
+    if (analiseSomenteActiva || autoanaliseActiva) {
+      recomendacao = "";
+      justificativa = (
+        justificativa +
+        (autoanaliseActiva
+          ? " P4: autoanálise — sem decisão/recomendação; delegação fictícia removida."
+          : " P3: análise somente — sem decisão/recomendação; delegação fictícia removida.")
+      ).trim();
+    } else {
+      recomendacao =
+        "A posição executiva está na análise acima (aprovar, modificar ou não priorizar). " +
+        "Não transfero esta deliberação a agentes externos inexistentes neste sistema.";
+      justificativa = (
+        justificativa +
+        " P1-2: pedido era análise/recomendação; delegação fictícia convertida em posição sem despacho."
+      ).trim();
+    }
   }
 
   return {
@@ -156,12 +367,20 @@ export function aplicarPoliticaAnaliseDeliberativa(decisao, opts = {}) {
 
 /**
  * Prosa ao utilizador: análise + recomendação (não «Delego a execução»).
+ * Em modo ANÁLISE SOMENTE / AUTOANÁLISE: só análise (+ princípios/lacunas), sem Recomendação/Decisão.
  * @param {object} parecer
- * @param {{ maxAnalise?: number }} [opts]
+ * @param {{ maxAnalise?: number, analiseSomente?: boolean, instrucao?: string }} [opts]
  * @returns {string|null}
  */
 export function montarProsaAnaliseDeliberativa(parecer, opts = {}) {
   if (!parecer || typeof parecer !== "object") return null;
+  const soAnalise =
+    opts.analiseSomente === true ||
+    (opts.instrucao != null &&
+      (ehAnaliseSomente(opts.instrucao) ||
+        ehAutoanaliseRespostaAnterior(opts.instrucao))) ||
+    analiseSomenteActiva === true ||
+    autoanaliseActiva === true;
   const analise = String(parecer.analise || "").trim();
   const recomendacao = String(
     parecer.decisaoExecutiva?.recomendacao || ""
@@ -187,15 +406,16 @@ export function montarProsaAnaliseDeliberativa(parecer, opts = {}) {
   if (corpoAnalise) {
     partes.push(corpoAnalise.endsWith(".") ? corpoAnalise : `${corpoAnalise}.`);
   }
-  if (recomendacao) {
+  if (recomendacao && !soAnalise) {
     partes.push(`Recomendação: ${recomendacao.replace(/\.$/, "")}.`);
   }
-  if (principios.length) {
+  if (principios.length && !autoanaliseActiva) {
     const rotulo = principios.some((p) => /^§\d+/.test(p))
       ? "Princípios do Manifesto MG2 que influenciam esta posição"
       : "Princípios que influenciam esta posição";
     partes.push(`${rotulo}: ${principios.slice(0, 4).join("; ")}.`);
   } else if (
+    !soAnalise &&
     justificativa &&
     /princ[ií]pio|manifes|vis[aã]o|ADR-\d+/i.test(justificativa)
   ) {

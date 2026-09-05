@@ -170,6 +170,104 @@ export function filtrarJobsPorMissaoActiva(jobs, missao, opts = {}) {
 }
 
 /**
+ * Etapa 5A — Job persistido ≠ operação activa da sessão.
+ * `objetivo` canónico: campo próprio, não título/descrição.
+ * @param {object|null|undefined} job
+ * @returns {boolean}
+ */
+export function jobTemObjetivoCanonico(job) {
+  if (!job || typeof job !== "object") return false;
+  return String(job.objetivo ?? "").trim().length > 0;
+}
+
+/**
+ * Origem explícita de homologação/teste (campo `origem` já persistido).
+ * @param {object|null|undefined} job
+ * @returns {boolean}
+ */
+export function ehOrigemHomologacaoOuTeste(job) {
+  const o = String(job?.origem || "").trim().toLowerCase();
+  if (!o) return false;
+  return /homologa[cç][aã]o|\bteste\b|\btest\b/.test(o);
+}
+
+/**
+ * @param {Iterable<string>|null|undefined} ids
+ * @returns {Set<string>}
+ */
+export function conjuntoIdsAdotadosSessao(ids) {
+  const out = new Set();
+  if (!ids) return out;
+  for (const x of ids) {
+    const id = String(x || "").trim().toUpperCase();
+    if (id) out.add(id);
+  }
+  return out;
+}
+
+/**
+ * IDs adoptados no store em memória desta sessão/processo (não persistido).
+ * @param {{ listarActivos?: () => { jobId?: string }[] }|null|undefined} store
+ * @returns {Set<string>}
+ */
+export function idsAdotadosDoStoreSessao(store) {
+  if (!store || typeof store.listarActivos !== "function") {
+    return new Set();
+  }
+  return conjuntoIdsAdotadosSessao(
+    store.listarActivos().map((r) => r && r.jobId)
+  );
+}
+
+/**
+ * Operação corrente da sessão — não lastro histórico na fila.
+ * Não altera estado do Job. `needs_correction` só conta com adopção nesta sessão.
+ *
+ * @param {object|null|undefined} job
+ * @param {{
+ *   missaoActiva?: { id?: string|null, nome?: string|null }|null,
+ *   idsAdotadosSessao?: Iterable<string>|null,
+ *   idsPermitidos?: Iterable<string>|null
+ * }} [opts]
+ * @returns {boolean}
+ */
+export function ehOperacaoAtivaCorrente(job, opts = {}) {
+  if (!job || typeof job !== "object") return false;
+  const estado = String(job.estado || job.status || "").toLowerCase();
+  if (!ehEstadoAcompanhamentoAberto(estado)) return false;
+  if (!jobTemObjetivoCanonico(job)) return false;
+  if (ehOrigemHomologacaoOuTeste(job)) return false;
+  if (
+    opts.missaoActiva &&
+    !jobPertenceAMissaoActiva(job, opts.missaoActiva, {
+      idsPermitidos: opts.idsPermitidos || []
+    })
+  ) {
+    return false;
+  }
+  if (estado === "needs_correction") {
+    const ids = conjuntoIdsAdotadosSessao(opts.idsAdotadosSessao);
+    const id = String(job.id || "").trim().toUpperCase();
+    if (!id || !ids.has(id)) return false;
+  }
+  return true;
+}
+
+/**
+ * @param {object[]} jobs
+ * @param {{
+ *   missaoActiva?: { id?: string|null, nome?: string|null }|null,
+ *   idsAdotadosSessao?: Iterable<string>|null,
+ *   idsPermitidos?: Iterable<string>|null
+ * }} [opts]
+ * @returns {object[]}
+ */
+export function filtrarJobsOperacaoAtiva(jobs, opts = {}) {
+  const lista = Array.isArray(jobs) ? jobs : [];
+  return lista.filter((j) => ehOperacaoAtivaCorrente(j, opts));
+}
+
+/**
  * Ordena promoções: mais recente primeiro (criadoEm/resultadoEm), depois id.
  * Evita `promocoes[0]` = menor ID global da fila.
  * @param {ReadonlyArray<object>} promocoes
@@ -311,7 +409,11 @@ export function aplicarPromocaoResultadoAoLastro(lastro, promocoes) {
     estadoConversa: estadoConv,
     pendencias,
     proximaAcao,
-    objectivoAtivo: mtePrev.objectivoAtivo || linhaMissao
+    objectivoAtivo: mtePrev.objectivoAtivo || linhaMissao,
+    // Frente 3: result/needs_correction = lastro operacional, não decisão de produto
+    decisoesTomadas: Array.isArray(mtePrev.decisoesTomadas)
+      ? [...mtePrev.decisoesTomadas]
+      : []
   };
   base.resultadoMissaoActivo = Object.freeze({ ...p0 });
   return base;
@@ -569,6 +671,92 @@ export function filtrarMensagensAcompanhamentoDeliberativo(obs) {
   return { ...obs, mensagens };
 }
 
+const ESTADOS_F2_LASTRO = new Set([
+  "dispatched",
+  "running",
+  "result",
+  "needs_correction"
+]);
+
+/**
+ * Sob pedido de decisão: remove do lastro factual os Jobs deliberativos (ruído)
+ * para não enviesar factos → bloco → schemaHint → stage 6.
+ * Reutiliza `ehJobRuidoDeliberativo` — não inventa predicado paralelo.
+ * Caller só invoca quando `pedidoDecisao === true`.
+ * @param {object|null|undefined} lastro
+ * @param {ReadonlyArray<object|null|undefined>} [jobs]
+ * @returns {object|null|undefined}
+ */
+export function filtrarLastroRuidoDeliberativoSobPedidoDecisao(lastro, jobs) {
+  if (!lastro || typeof lastro !== "object") return lastro;
+  const lista = Array.isArray(jobs) ? jobs.filter((j) => j && j.id) : [];
+  /** @type {Set<string>} */
+  const ruidoIds = new Set();
+  let removidosEmExecucao = 0;
+  for (const j of lista) {
+    if (!ehJobRuidoDeliberativo(j)) continue;
+    const id = String(j.id);
+    ruidoIds.add(id);
+    const st = String(j.estado || j.status || "");
+    if (ESTADOS_F2_LASTRO.has(st)) removidosEmExecucao += 1;
+  }
+  if (!ruidoIds.size) return lastro;
+
+  const factosPrev = Array.isArray(lastro.factosOficiais)
+    ? lastro.factosOficiais
+    : [];
+  const factos = factosPrev.filter((f) => {
+    const s = String(f || "");
+    for (const id of ruidoIds) {
+      if (s.includes(id)) return false;
+    }
+    return true;
+  });
+
+  const contagensPrev =
+    lastro.contagens && typeof lastro.contagens === "object"
+      ? lastro.contagens
+      : {};
+  const jobsEmExecucao = Math.max(
+    0,
+    (Number(contagensPrev.jobsEmExecucao) || 0) - removidosEmExecucao
+  );
+  const contagens = {
+    jobsPendentes: Number(contagensPrev.jobsPendentes) || 0,
+    jobsEmExecucao,
+    gatesPendentes: Number(contagensPrev.gatesPendentes) || 0
+  };
+
+  let fontePrioritaria = lastro.fontePrioritaria;
+  if (fontePrioritaria?.id === "F2" && jobsEmExecucao === 0) {
+    fontePrioritaria = null;
+  }
+
+  const prioridadeActiva = Array.isArray(lastro.prioridadeActiva)
+    ? lastro.prioridadeActiva.filter(
+        (p) => !(p && p.id === "F2" && jobsEmExecucao === 0)
+      )
+    : lastro.prioridadeActiva;
+
+  let resultadoMissaoActivo = lastro.resultadoMissaoActivo;
+  if (
+    resultadoMissaoActivo &&
+    typeof resultadoMissaoActivo === "object" &&
+    ruidoIds.has(String(resultadoMissaoActivo.jobId || ""))
+  ) {
+    resultadoMissaoActivo = null;
+  }
+
+  return {
+    ...lastro,
+    factosOficiais: factos,
+    contagens,
+    fontePrioritaria,
+    prioridadeActiva,
+    resultadoMissaoActivo
+  };
+}
+
 export function montarMensagemProgresso(job) {
   if (!job || typeof job !== "object" || typeof job.id !== "string") {
     return { ok: false, mensagem: "Job inválido." };
@@ -698,6 +886,32 @@ export async function adotarJobsDaFilaParaAcompanhamento(store, opts = {}) {
         jobId: job.id,
         estado,
         motivo: "fora_da_missao_activa"
+      });
+      continue;
+    }
+
+    // Etapa 5A — existência na fila ≠ adopção automática da sessão
+    if (ehOrigemHomologacaoOuTeste(job)) {
+      ignorados.push({
+        jobId: job.id,
+        estado,
+        motivo: "origem_homologacao_teste"
+      });
+      continue;
+    }
+    if (String(estado).toLowerCase() === "needs_correction") {
+      ignorados.push({
+        jobId: job.id,
+        estado,
+        motivo: "needs_correction_historico"
+      });
+      continue;
+    }
+    if (!jobTemObjetivoCanonico(job)) {
+      ignorados.push({
+        jobId: job.id,
+        estado,
+        motivo: "sem_objetivo"
       });
       continue;
     }

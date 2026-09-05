@@ -118,6 +118,7 @@ export function ehDeliberacaoDeProposta(texto) {
 export function ehRecomendacaoOperacional(texto) {
   const n = normalizarTexto(texto);
   if (!n) return false;
+  if (/^\s*qual\s+(?:[eé]\s+(?:a\s+)?|a\s+)?prioridade\s*\??\s*$/.test(n)) return false;
   // Decisão sob conflito: «decida / escolha entre / tome a decisão» → C2/MRE
   if (detectarPedidoDecisaoExplicita(texto)) return false;
   if (ehDeliberacaoDeProposta(n)) return false;

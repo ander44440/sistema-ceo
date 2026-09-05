@@ -24,13 +24,20 @@ import {
 import { obterPacoteNcs } from "../ncs/portador.js";
 import {
   aplicarPoliticaAnaliseDeliberativa,
+  aplicarPoliticaConsultaResposta,
   detectarPedidoAnaliseDeliberativa,
-  ehPedidoDelegacaoExplicita
+  detectarPedidoConsultaResposta,
+  ehPedidoDelegacaoExplicita,
+  obterAutoanaliseActiva
 } from "../politicaAnaliseDeliberativa.js";
 import {
   aplicarPoliticaDecisaoSobConflito,
   detectarPedidoDecisaoExplicita
 } from "../politicaDecisaoSobConflito.js";
+import {
+  comporAnaliseConsultaDesdeSnapshot,
+  injectarSnapshotSituacionalNaEntrada
+} from "../snapshotSituacionalConsulta.js";
 
 /**
  * @typedef {object} EntradaMre
@@ -131,18 +138,51 @@ export async function executarPipeline07(entrada, deps) {
     const msgUsuario = String(entrada.mensagem || "")
       .split("[DIRETRIZ CANÓNICA — Manifesto")[0]
       .trim();
-    const pedidoAnalise =
-      deps.pedidoAnaliseDeliberativa === true ||
-      detectarPedidoAnaliseDeliberativa(msgUsuario);
     const pedidoDecisao =
       deps.pedidoDecisaoExplicita === true ||
       detectarPedidoDecisaoExplicita(msgUsuario);
+    // CONSULTA → RESPONDER (precedência V1 / situacional); não compete com PD
+    const pedidoConsulta =
+      !pedidoDecisao &&
+      (deps.pedidoConsultaResposta === true ||
+        detectarPedidoConsultaResposta(msgUsuario, {
+          consultaNaoEAcao:
+            deps.consultaNaoEAcao === true ||
+            entrada.consultaNaoEAcao === true,
+          tipoTurno: entrada.tipoTurno || deps.tipoTurno,
+          precedenciaTurno: entrada.precedenciaTurno || deps.precedenciaTurno
+        }));
+    // Opção A: pedido de decisão → P1-2 off; consulta ≠ análise de proposta
+    const pedidoAnalise =
+      !pedidoDecisao &&
+      !pedidoConsulta &&
+      (deps.pedidoAnaliseDeliberativa === true ||
+        detectarPedidoAnaliseDeliberativa(msgUsuario));
     const pedidoDelegacaoExplicita =
       deps.pedidoDelegacaoExplicita === true ||
       ehPedidoDelegacaoExplicita(msgUsuario);
+    if (pedidoConsulta) {
+      deps.pedidoConsultaResposta = true;
+      if (deps.proibirDespacho !== false) deps.proibirDespacho = true;
+      // Lastro factual ANTES do estágio 0/2 — só CONSULTA
+      injectarSnapshotSituacionalNaEntrada(entrada, {
+        lastro: deps.lastroConsciencia || entrada.lastroConsciencia || null,
+        historico: entrada.historico || deps.historico || null
+      });
+      const snap = entrada.snapshotSituacional;
+      if (snap && !snap.temLastroSuficiente && Array.isArray(snap.lacunas)) {
+        for (const l of snap.lacunas) {
+          lacunasAcc.push(`consulta_situacional: ${l}`);
+        }
+      }
+    } else {
+      deps.pedidoConsultaResposta = false;
+    }
     if (pedidoAnalise) {
       deps.pedidoAnaliseDeliberativa = true;
       if (deps.proibirDespacho !== false) deps.proibirDespacho = true;
+    } else {
+      deps.pedidoAnaliseDeliberativa = false;
     }
     if (pedidoDecisao) {
       deps.pedidoDecisaoExplicita = true;
@@ -202,13 +242,23 @@ export async function executarPipeline07(entrada, deps) {
       dossier,
       principiosAplicados,
       lacunas: lacunasAcc.slice(),
-      shortCircuit
+      shortCircuit,
+      ...(entrada.snapshotSituacional
+        ? { snapshotSituacional: entrada.snapshotSituacional }
+        : {}),
+      ...(obterAutoanaliseActiva() &&
+      entrada.ultimaRespostaCeo != null &&
+      String(entrada.ultimaRespostaCeo).trim()
+        ? { ultimaRespostaCeo: String(entrada.ultimaRespostaCeo) }
+        : {})
     };
 
     registrar("4");
     const analise = shortCircuit
       ? "Bloqueio por lacuna: deliberação incompleta até obter dados essenciais."
-      : await estagio4Analise(baseParcial, deps);
+      : deps.pedidoConsultaResposta === true
+        ? comporAnaliseConsultaDesdeSnapshot(entrada.snapshotSituacional)
+        : await estagio4Analise(baseParcial, deps);
 
     const parcialPos4 = { ...baseParcial, analise };
 
@@ -232,7 +282,17 @@ export async function executarPipeline07(entrada, deps) {
 
     registrar("6");
     let decisaoExecutiva;
-    if (shortCircuit) {
+    if (pedidoConsulta) {
+      const snap = entrada.snapshotSituacional;
+      decisaoExecutiva = {
+        estado: snap?.temLastroSuficiente ? "monitorar" : "solicitar_dados",
+        recomendacao: comporAnaliseConsultaDesdeSnapshot(snap),
+        alternativas: [],
+        justificativa:
+          "Consulta situacional — resposta com base no snapshot factual. " +
+          "Sem riscos materiais inventados; sem problema de negócio a deliberar."
+      };
+    } else if (shortCircuit) {
       decisaoExecutiva = {
         estado: "solicitar_dados",
         recomendacao: "Solicitar os dados em falta antes de decidir",
@@ -263,11 +323,45 @@ export async function executarPipeline07(entrada, deps) {
     // (evita prosa genérica que impede fecho com alternativas).
     // Sem pedido de decisão → P1-2 intacto («analisa e recomenda»).
     if (!pedidoDecisao) {
-      decisaoExecutiva = aplicarPoliticaAnaliseDeliberativa(decisaoExecutiva, {
-        pedidoAnalise,
-        pedidoDelegacaoExplicita,
-        analise
-      });
+      if (pedidoConsulta) {
+        decisaoExecutiva = aplicarPoliticaConsultaResposta(decisaoExecutiva, {
+          pedidoConsulta: true,
+          pedidoDelegacaoExplicita
+        });
+        const snap = entrada.snapshotSituacional;
+        if (snap && !snap.temLastroSuficiente) {
+          decisaoExecutiva = {
+            ...decisaoExecutiva,
+            estado: "solicitar_dados",
+            recomendacao:
+              snap.lacunas?.length
+                ? `Lastro insuficiente. Informação ausente: ${snap.lacunas.join("; ")}.`
+                : "Lastro situacional insuficiente — não invento progresso."
+          };
+        } else if (snap?.temLastroSuficiente) {
+          decisaoExecutiva = {
+            ...decisaoExecutiva,
+            estado:
+              decisaoExecutiva.estado === "delegar" ||
+              decisaoExecutiva.estado === "aprovar"
+                ? "monitorar"
+                : decisaoExecutiva.estado,
+            recomendacao:
+              decisaoExecutiva.recomendacao &&
+              !/delegar|elabora(r|ção)\s+(de\s+)?(um\s+)?relat/i.test(
+                decisaoExecutiva.recomendacao
+              )
+                ? decisaoExecutiva.recomendacao
+                : comporAnaliseConsultaDesdeSnapshot(snap)
+          };
+        }
+      } else {
+        decisaoExecutiva = aplicarPoliticaAnaliseDeliberativa(decisaoExecutiva, {
+          pedidoAnalise,
+          pedidoDelegacaoExplicita,
+          analise
+        });
+      }
     }
     decisaoExecutiva = aplicarPoliticaDecisaoSobConflito(decisaoExecutiva, {
       pedidoDecisao,

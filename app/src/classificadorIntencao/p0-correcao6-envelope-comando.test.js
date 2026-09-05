@@ -100,7 +100,7 @@ test("6c: Correção 4 — âncora de projecto usa texto bruto (não depende do 
   );
 });
 
-test("7: verificador lexical usa título limpo → cobertura adequada", () => {
+test("7: verificador lexical usa objetivo canónico (tarefa real) → cobertura adequada", () => {
   const p = montarParecerTrabalhoExecutivo(MSG_GAMA_CAIXA, {
     classe: "trabalho_executivo",
     confianca: 0.95
@@ -109,6 +109,7 @@ test("7: verificador lexical usa título limpo → cobertura adequada", () => {
     estado: "result",
     titulo: p.acao.job.titulo,
     descricao: p.acao.job.descricao,
+    objetivo: p.acao.job.objetivo,
     resultado: {
       status: "sucesso",
       resumo:

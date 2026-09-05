@@ -18,6 +18,11 @@ import {
   ehReferenciaExplicitaJobId
 } from "./regras.js";
 import { executarConsultaEstado } from "../executiveEngine/capacidades/consultarEstado.js";
+import {
+  ehComandoRecuperacaoOperacional,
+  resolverRecuperacaoOperacional,
+  respostaRecuperacaoNaoExecutavel
+} from "../conversacaoNatural/recuperacaoJob.js";
 
 /**
  * @typedef {object} DepsE4
@@ -301,6 +306,7 @@ export function montarParecerTrabalhoExecutivo(texto, classificacao, opts = {}) 
       job: {
         titulo,
         descricao: objectivo || "Trabalho executivo classificado como C3",
+        objetivo: objectivo,
         prioridade: "alta",
         ...(alteraCodigo ? { alteraCodigo: true } : {})
       }
@@ -392,13 +398,47 @@ export function mensagemInicioExecucao(conducao, textoInstrucao = "") {
  * @param {DepsE4} deps
  */
 export async function conduzirTrabalhoExecutivoC3(texto, classificacao, deps = {}) {
-  // Continuidade por JOB-ID — precedência sobre criação C3 / wrapper
-  const continuidadeId = await responderContinuidadeJobIdExplicito(
-    texto,
-    classificacao,
-    deps
-  );
-  if (continuidadeId) return continuidadeId;
+  if (ehComandoRecuperacaoOperacional(texto)) {
+    let rec;
+    if (String(deps.objetivoRecuperacao || "").trim()) {
+      rec = {
+        ok: true,
+        objetivo: String(deps.objetivoRecuperacao).trim(),
+        jobAlvo: { id: deps.parentJobId || deps.jobAlvoId || null },
+        criterioConclusao: deps.criterioConclusaoRecuperacao || null
+      };
+    } else {
+      rec = await resolverRecuperacaoOperacional({
+        texto,
+        jobs: deps.jobs,
+        jobActivo: deps.jobActivo,
+        estadoOperacional: deps.estadoOperacional,
+        obterJob: deps.obterJob,
+        missaoActiva: deps.missaoActiva,
+        idsAdotadosSessao: deps.idsAdotadosSessao
+      });
+    }
+    if (!rec.ok) {
+      return respostaRecuperacaoNaoExecutavel(rec, classificacao);
+    }
+    deps = {
+      ...deps,
+      objetivoRecuperacao: rec.objetivo,
+      parentJobId:
+        rec.jobAlvo && rec.jobAlvo.id ? rec.jobAlvo.id : deps.parentJobId,
+      jobAlvoId:
+        rec.jobAlvo && rec.jobAlvo.id ? rec.jobAlvo.id : deps.jobAlvoId,
+      criterioConclusaoRecuperacao: rec.criterioConclusao
+    };
+  } else {
+    // Continuidade por JOB-ID — precedência sobre criação C3 / wrapper
+    const continuidadeId = await responderContinuidadeJobIdExplicito(
+      texto,
+      classificacao,
+      deps
+    );
+    if (continuidadeId) return continuidadeId;
+  }
 
   // P0 — defesa em profundidade: nunca criar Job se a mensagem proíbe execução
   // ou é só consulta/análise (mesmo que tenha sido mal classificada como C3).
@@ -571,11 +611,26 @@ export async function conduzirTrabalhoExecutivoC3(texto, classificacao, deps = {
       : null) ||
     null;
 
-  const parecer = montarParecerTrabalhoExecutivo(texto, classificacao, {
+  const textoParecer = String(deps.objetivoRecuperacao || "").trim() || texto;
+  const parecer = montarParecerTrabalhoExecutivo(textoParecer, classificacao, {
     coaId,
     projeto: projetoCoa,
     projetoNome: projetoNome || null
   });
+  const parentJobId = String(deps.parentJobId || deps.jobAlvoId || "").trim();
+  if (parentJobId && parecer.acao && parecer.acao.job) {
+    parecer.acao.job.parentJobId = parentJobId;
+    parecer.acao.job.jobAlvoId = parentJobId;
+  }
+  if (
+    deps.criterioConclusaoRecuperacao &&
+    parecer.acao &&
+    parecer.acao.job
+  ) {
+    parecer.acao.job.criterioConclusao = String(
+      deps.criterioConclusaoRecuperacao
+    ).trim();
+  }
   const conduzir =
     typeof deps.conduzirMotor === "function"
       ? deps.conduzirMotor

@@ -27,8 +27,8 @@ import {
 import { detectarPedidoDecisaoExplicita } from "../classificadorIntencao/pedidoDecisaoExplicita.js";
 import { reconhecerDecisao } from "../continuidadeGate/reconhecerDecisao.js";
 import {
-  filtrarJobsPorMissaoActiva,
-  ehEstadoAcompanhamentoAberto
+  ehOperacaoAtivaCorrente,
+  filtrarJobsPorMissaoActiva
 } from "../motorExecucao/acompanhamentoJob.js";
 import { obterCoaAtivo } from "../executiveEngine/coaSessao.js";
 
@@ -92,7 +92,10 @@ export function deveInterceptarOperacional(opts = {}) {
     const candidatos = Array.isArray(opts.jobs) ? opts.jobs : [];
     const daMissao = filtrarJobsPorMissaoActiva(candidatos, missaoActiva);
     const temJobMissao = daMissao.some((j) =>
-      ehEstadoAcompanhamentoAberto(j?.estado || j?.status)
+      ehOperacaoAtivaCorrente(j, {
+        missaoActiva,
+        idsAdotadosSessao: opts.idsAdotadosSessao
+      })
     );
     if (!temJobMissao) return false;
   }
@@ -103,7 +106,8 @@ export function deveInterceptarOperacional(opts = {}) {
     estadoOperacional: opts.estadoOperacional,
     jobs: opts.jobs,
     consultaEstado: opts.consultaEstado,
-    missaoActiva
+    missaoActiva,
+    idsAdotadosSessao: opts.idsAdotadosSessao
   });
   return Boolean(estado.operacaoAberta);
 }
@@ -116,7 +120,12 @@ export async function lerEstadoOperacionalPreClassificador(deps = {}) {
   const store = deps.storeContinuidade || null;
   const leitores =
     deps.leitoresConsciencia ||
-    criarLeitoresConscienciaPadrao({ storeContinuidade: store });
+    criarLeitoresConscienciaPadrao({
+      storeContinuidade: store,
+      missaoActiva: deps.missaoActiva,
+      idsAdotadosSessao: deps.idsAdotadosSessao,
+      obterCoaAtivo: deps.obterCoaAtivo
+    });
   const consulta = await agregarEstadoExecutivo({
     leitores,
     agora: deps.agoraConsciencia
@@ -184,6 +193,13 @@ export async function lerEstadoOperacionalPreClassificador(deps = {}) {
   }
 
   const jobsMissao = filtrarJobsPorMissaoActiva(jobs, missaoActiva);
+  const ctxActivo = {
+    missaoActiva,
+    idsAdotadosSessao: deps.idsAdotadosSessao || null
+  };
+  const jobsActivos = jobsMissao.filter((j) =>
+    ehOperacaoAtivaCorrente(j, ctxActivo)
+  );
   const completedMissao = filtrarJobsPorMissaoActiva(
     jobsCompleted,
     missaoActiva
@@ -197,6 +213,7 @@ export async function lerEstadoOperacionalPreClassificador(deps = {}) {
     jobsCompleted: completedMissao,
     jobsFailed: failedMissao,
     missaoActiva,
+    idsAdotadosSessao: deps.idsAdotadosSessao || null,
     lastroConsciencia: {
       contagens: {
         jobsPendentes: consulta.estado.jobsPendentes.length,
@@ -207,7 +224,7 @@ export async function lerEstadoOperacionalPreClassificador(deps = {}) {
       factosOficiais: []
     }
   });
-  return { consulta, estadoOperacional, jobsMissao, missaoActiva };
+  return { consulta, estadoOperacional, jobsMissao: jobsActivos, missaoActiva };
 }
 
 /**
@@ -240,7 +257,12 @@ export async function executarInterceptacaoOperacional(opts = {}) {
       const resultado = await conduzirTrabalhoExecutivoC3(
         texto,
         classificacaoForcada,
-        deps
+        {
+          ...deps,
+          jobs: opts.jobs || deps.jobs || [],
+          estadoOperacional: estadoOp,
+          jobActivo: estadoOp && estadoOp.jobActivo
+        }
       );
       mensagem = resultado.mensagem || mensagem;
       dadosMotor = resultado.dados || null;
