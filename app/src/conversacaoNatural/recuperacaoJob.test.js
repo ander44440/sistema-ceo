@@ -268,6 +268,20 @@ test("Etapa 4: comando curto de recuperação reconhecido", () => {
   assert.equal(ehComandoRecuperacaoOperacional("Despache o JOB-000075"), false);
 });
 
+test("E5-CA2: nova tarefa explícita vence verbo isolado de recuperação", () => {
+  assert.equal(
+    ehComandoRecuperacaoOperacional("Implementa o outdoor e despacha"),
+    false
+  );
+  assert.equal(ehComandoRecuperacaoOperacional("Continue o Job anterior."), true);
+  assert.equal(ehComandoRecuperacaoOperacional("Despacha esse Job."), true);
+  assert.equal(ehComandoRecuperacaoOperacional("Retoma o JOB-000118."), true);
+  assert.equal(
+    ehComandoRecuperacaoOperacional("Prossiga com o que estava em andamento."),
+    true
+  );
+});
+
 test("Etapa 4 resolver: alvo único com objetivo", async () => {
   const rec = await resolverRecuperacaoOperacional({
     texto: "continuar",

@@ -2,6 +2,10 @@
  * Etapa 4 — recovery / comando «continuar».
  * Um comando de recuperação é instrução SOBRE um Job existente.
  * Nunca vira objetivo operacional de um Job novo.
+ *
+ * Nova tarefa explícita tem precedência sobre um verbo isolado de
+ * recuperação (despacha/envie/prossiga/continue/repita). Recuperação
+ * exige verbo isolado, deixis de continuidade, ou Job/alvo inequívoco.
  */
 
 import { ehOperacaoAtivaCorrente } from "../motorExecucao/acompanhamentoJob.js";
@@ -12,13 +16,34 @@ export const MOTIVO_JOB_ALVO_AUSENTE = "job_alvo_ausente";
 export const MOTIVO_JOB_ALVO_AMBIGUO = "job_alvo_ambiguo";
 
 const RE_VERBO_RECUPERACAO =
-  /\b(continuar|continua|continue|prossiga|prosseguir|repita|repetir|envie|enviar|reenviar|reenvir|despache|despacha(?:r)?|tente\s+de\s+novo|tentar\s+novamente|tenta\s+de\s+novo|force?|for[cç]a(?:r)?)\b/i;
+  /\b(continuar|continua|continue|prossiga|prosseguir|repita|repetir|envie|enviar|reenviar|reenvir|despache|despacha(?:r)?|retoma(?:r)?|tente\s+de\s+novo|tentar\s+novamente|tenta\s+de\s+novo|force?|for[cç]a(?:r)?)\b/i;
 
 const RE_NAO_RECUPERACAO_SO =
   /\b(estado|status|cancelar|pausar|ha\s+jobs|h[aá]\s+jobs)\b/i;
 
-/** Comando curto de retoma — não uma tarefa nova. */
-const LIMIAR_COMANDO_CURTO = 48;
+const RE_PREENCHIMENTO = /\b(por\s+favor|pf|ent[aã]o|agora)\b/gi;
+
+/** Resto após o verbo: só deixis de Job / continuidade, não tarefa nova. */
+const RE_RESTO_CONTINUIDADE =
+  /^(?:(?:esse|este|aquele|o)\s+jobs?|(?:o\s+)?jobs?\s+anterior|(?:com\s+)?o\s+que\s+estava(?:\s+em\s+andamento)?|em\s+andamento|(?:o\s+)?trabalho\s+anterior|isso|isto|o)$/i;
+
+/** Com JOB-ID: o que resta tem de ser o verbo de retoma (não uma tarefa nova). */
+const RE_RESTO_COM_JOB_ID =
+  /^(continuar|continua|continue|prossiga|prosseguir|repita|repetir|envie|reenviar|reenvir|retoma(?:r)?|tente\s+de\s+novo|tentar\s+novamente)(\s+o)?$/i;
+
+/**
+ * @param {string} t
+ * @returns {string}
+ */
+function restoAposVerboRecuperacao(t) {
+  return String(t || "")
+    .replace(/[?.!,;:]+/g, " ")
+    .replace(RE_VERBO_RECUPERACAO, " ")
+    .replace(RE_PREENCHIMENTO, " ")
+    .replace(/\be\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 /**
  * @param {string} [texto]
@@ -32,13 +57,17 @@ export function ehComandoRecuperacaoOperacional(texto) {
   }
   if (!RE_VERBO_RECUPERACAO.test(t)) return false;
   const ids = extrairIdsJobMencionados(t);
-  const semIds = t.replace(/\bJOB-\d+\b/gi, " ").replace(/\s+/g, " ").trim();
+  const semIds = t
+    .replace(/\bJOB-\d+\b/gi, " ")
+    .replace(/[?.!,;:]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   if (ids.length > 0) {
-    return /^(continuar|continua|continue|prossiga|prosseguir|repita|repetir|envie|reenviar|reenvir|tente\s+de\s+novo|tentar\s+novamente)(\s+o)?$/i.test(
-      semIds
-    );
+    return RE_RESTO_COM_JOB_ID.test(semIds);
   }
-  return semIds.length <= LIMIAR_COMANDO_CURTO;
+  const resto = restoAposVerboRecuperacao(t);
+  if (!resto) return true;
+  return RE_RESTO_CONTINUIDADE.test(resto);
 }
 
 /**
