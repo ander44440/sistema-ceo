@@ -10,6 +10,7 @@ import {
   extrairEstadoOperacional,
   montarAckRecuperacao
 } from "./estadoOperacional.js";
+import { ehComandoRecuperacaoOperacional } from "./recuperacaoJob.js";
 import { agregarEstadoExecutivo } from "../conscienciaOperacional/agregarEstado.js";
 import { criarLeitoresConscienciaPadrao } from "../conscienciaOperacional/leitoresPadrao.js";
 import { conduzirTrabalhoExecutivoC3 } from "../classificadorIntencao/integracaoNucleo.js";
@@ -42,7 +43,14 @@ import { obterCoaAtivo } from "../executiveEngine/coaSessao.js";
  */
 export function deveInterceptarOperacional(opts = {}) {
   const texto = String(opts.texto || "").trim();
-  if (!texto || !ehComandoSobreJobActivo(texto)) return false;
+  // Correcção B: recovery C3 (continue/retoma/prossiga/…) também entra no early return
+  // CTO-003; COMANDO_SOBRE_JOB e léxicos de recovery permanecem intactos.
+  if (
+    !texto ||
+    (!ehComandoSobreJobActivo(texto) && !ehComandoRecuperacaoOperacional(texto))
+  ) {
+    return false;
+  }
   const t = normalizarTexto(texto);
 
   // C4 qualificada: «estado da fila» / «estado da fila de execução» ≠ comando sobre Job.
