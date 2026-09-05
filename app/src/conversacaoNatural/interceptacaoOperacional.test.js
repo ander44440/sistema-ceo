@@ -198,3 +198,118 @@ test("EE: REENVIAR com Job pending não passa pelo classificador", async () => {
   assert.notEqual(out.modo, "clarificacao_referente");
   assert.ok(motorChamado || out.modo === "interceptacao_operacional");
 });
+
+const ESTADO_JOB_ABERTO = {
+  operacaoAberta: true,
+  requerRecuperacao: false,
+  modoOperacional: "executar",
+  jobActivo: { id: "JOB-000200", titulo: "missão operacional", estado: "pending" },
+  sinais: {
+    pending: 1,
+    running: 0,
+    failed: 0,
+    dispatcher: true,
+    handoff: true,
+    agentErro: false,
+    gatePendente: 0
+  }
+};
+
+test("C4 «estado da fila» com Job aberto não intercepta (CTO-003)", () => {
+  assert.equal(
+    deveInterceptarOperacional({
+      texto: "estado da fila",
+      estadoOperacional: ESTADO_JOB_ABERTO
+    }),
+    false
+  );
+});
+
+test("C4 «estado da fila de execução» com Job aberto não intercepta (CTO-003)", () => {
+  assert.equal(
+    deveInterceptarOperacional({
+      texto: "estado da fila de execução",
+      estadoOperacional: ESTADO_JOB_ABERTO
+    }),
+    false
+  );
+});
+
+test("«estado» / «ESTADO» com Job aberto continuam CTO-003", () => {
+  assert.equal(
+    deveInterceptarOperacional({
+      texto: "estado",
+      estadoOperacional: ESTADO_JOB_ABERTO
+    }),
+    true
+  );
+  assert.equal(
+    deveInterceptarOperacional({
+      texto: "ESTADO",
+      estadoOperacional: ESTADO_JOB_ABERTO
+    }),
+    true
+  );
+});
+
+test("EE: Job aberto + «estado da fila» segue C4 sem classificacaoEvitada", async () => {
+  const historico = [
+    {
+      papel: "ceo",
+      texto:
+        "Execução iniciada. Job JOB-000200 criado em pending. Handoff ao Dispatcher iniciado."
+    }
+  ];
+  let motorChamado = false;
+  const out = await executiveEngine.executar(
+    { texto: "estado da fila", historico },
+    {
+      listarPorEstado: async (e) => {
+        if (e === "pending") {
+          return [
+            {
+              id: "JOB-000200",
+              titulo: "missão operacional",
+              estado: "pending",
+              objetivo: "Implementar o outdoor lateral no MG2.",
+              projeto: "prj-mg2",
+              criadoEm: "2026-08-07T01:00:00.000Z"
+            }
+          ];
+        }
+        return [];
+      },
+      leitoresConsciencia: {
+        F1: async () => [
+          { id: "JOB-000200", titulo: "missão operacional", status: "pending" }
+        ],
+        F2: async () => [],
+        F3: async () => [],
+        F4: async () => ({ estado: "activo" }),
+        F5: async () => ({ estado: "ocioso", emCurso: false }),
+        F6: async () => ({ estado: "ocioso", ocupado: false }),
+        F7: async () => ({ disponivel: false, alertas: 0 }),
+        F8: async () => ({ id: null, nome: null })
+      },
+      publicarJob: async (p) => ({
+        id: "JOB-000201",
+        estado: "pending",
+        ...p
+      }),
+      conduzirMotor: async () => {
+        motorChamado = true;
+        return {
+          publicado: true,
+          job: { id: "JOB-000201", estado: "pending" },
+          fluxoIniciado: true
+        };
+      }
+    }
+  );
+
+  assert.notEqual(out.dados?.interceptacaoOperacional, "CTO-003");
+  assert.notEqual(out.dados?.classificacaoEvitada, true);
+  assert.equal(out.dados?.classificacao?.classe, "comando_operacional");
+  assert.equal(out.dados?.encaminhamento?.destino, "capacidade_operacional");
+  assert.equal(motorChamado, false);
+});

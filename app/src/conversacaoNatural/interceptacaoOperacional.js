@@ -45,6 +45,9 @@ export function deveInterceptarOperacional(opts = {}) {
   if (!texto || !ehComandoSobreJobActivo(texto)) return false;
   const t = normalizarTexto(texto);
 
+  // C4 qualificada: «estado da fila» / «estado da fila de execução» ≠ comando sobre Job.
+  if (/\bestado\s+da\s+fila\b/.test(t)) return false;
+
   // Polaridade P0 ANTES de forçar Motor: proibição / análise-sem-autorização
   // não entram em motor_execucao por CTO-003 (detectores existentes).
   const autorizaCriarJob = ehAutorizacaoExplicitaCriarJob(t);
