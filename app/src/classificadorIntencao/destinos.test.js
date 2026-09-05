@@ -17,6 +17,14 @@ import { criarPublicadorFilaMemoria } from "../motorExecucao/ponteParecerJob.js"
 import { resetStoreContinuidadePadrao } from "../continuidadeGate/integracaoConversa.js";
 import { resetEstadoTopicosSessao } from "./topicosSessao.js";
 import { resetEstadoObjectivoSessao } from "./objectivoSessao.js";
+import {
+  ID_EMPRESA_PATROCINADOR,
+  criarEmpresa,
+  inicializarCatalogo,
+  obterEmpresaAtivaId,
+  recarregarCatalogo,
+  selecionarProjeto
+} from "../catalogoProjetos/index.js";
 
 const FIX = {
   C1: "Bom dia",
@@ -34,8 +42,41 @@ beforeEach(() => {
 test("E5: mapa CAPACIDADES_C4 não inclui motor nem ia deliberativa", () => {
   assert.ok(CAPACIDADES_C4.includes("fila"));
   assert.ok(CAPACIDADES_C4.includes("memoria"));
+  assert.ok(CAPACIDADES_C4.includes("empresas"));
   assert.equal(CAPACIDADES_C4.includes("motor_execucao"), false);
   assert.equal(CAPACIDADES_C4.includes("ia"), false);
+});
+
+test("P0-D: C4 «ativar a empresa X» → empresas, não allowlist inválida", async () => {
+  const store = new Map();
+  globalThis.localStorage = {
+    getItem(k) {
+      return store.has(String(k)) ? store.get(String(k)) : null;
+    },
+    setItem(k, v) {
+      store.set(String(k), String(v));
+    },
+    removeItem(k) {
+      store.delete(String(k));
+    }
+  };
+  recarregarCatalogo();
+  inicializarCatalogo();
+  executiveEngine.inicializar();
+
+  const emp = criarEmpresa({ nome: "AlfaTech" });
+  selecionarProjeto("prj-mg2");
+  assert.equal(obterEmpresaAtivaId(), ID_EMPRESA_PATROCINADOR);
+
+  const texto = "ativar a empresa AlfaTech";
+  const out = await executiveEngine.executar(texto);
+
+  assert.equal(out.dados?.classificacao?.classe, "comando_operacional");
+  assert.equal(out.dados?.encaminhamento?.destino, "capacidade_operacional");
+  assert.equal(out.capacidade, "empresas");
+  assert.notEqual(out.modo, "capacidade_operacional_invalida");
+  assert.equal(out.ok, true);
+  assert.equal(obterEmpresaAtivaId(), emp.id);
 });
 
 test("E5-CA1: C2 com mock publicarJob → zero chamadas", async () => {

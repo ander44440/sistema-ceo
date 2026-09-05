@@ -33,6 +33,7 @@ export const CAPACIDADES_C4 = Object.freeze([
   "fila",
   "dashboard",
   "projetos",
+  "empresas",
   "conhecimento",
   "navegacao",
   "ferramentas",
