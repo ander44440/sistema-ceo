@@ -284,6 +284,7 @@ export function ehPedidoRelatoEncerramento(t) {
  */
 export function ehPedidoSituacionalTrabalho(t) {
   if (!t) return false;
+  if (ehComandoExecucaoExplicito(t)) return false;
   return (
     /\betapa\b/.test(t) ||
     /\b(acabamos|acabou)\s+de\s+concluir\b/.test(t) ||

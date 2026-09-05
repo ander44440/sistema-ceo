@@ -15,7 +15,9 @@ import {
   desambiguarJobs,
   calcularConfianca,
   resolverEmpates,
-  ehIntencaoExecutivaE21
+  ehIntencaoExecutivaE21,
+  ehPedidoSituacionalTrabalho,
+  normalizarTexto
 } from "./regras.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -148,4 +150,38 @@ test("CU2/CU5 e RF9: frente activa + projecto", () => {
 
   const fazAi = classificar("faz aí");
   assert.equal(fazAi.permiteJob, false);
+});
+
+/** Correção A — comando explícito vs consulta situacional (próximo passo / etapa). */
+test("Correção A: execução+situacional → C3; pergunta situacional pura → C2", () => {
+  const casos = [
+    {
+      texto: "implemente o próximo passo agora",
+      situacional: false,
+      destino: "motor_execucao"
+    },
+    {
+      texto: "execute a próxima etapa agora",
+      situacional: false,
+      destino: "motor_execucao"
+    },
+    {
+      texto: "qual é o próximo passo?",
+      situacional: true,
+      destino: "nucleo_mre"
+    },
+    {
+      texto: "em que etapa estamos?",
+      situacional: true,
+      destino: "nucleo_mre"
+    }
+  ];
+  for (const c of casos) {
+    assert.equal(
+      ehPedidoSituacionalTrabalho(normalizarTexto(c.texto)),
+      c.situacional,
+      c.texto
+    );
+    assert.equal(classificar(c.texto).destino, c.destino, c.texto);
+  }
 });
