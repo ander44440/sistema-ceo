@@ -14,6 +14,7 @@ import { LEXICO_C4, normalizarTexto } from "./lexicon.js";
 import {
   ehAutoexplicacaoInstitucionalE23,
   ehConhecimentoGeralE22,
+  ehDeliberacaoProjetoE22,
   ehIntencaoExecutivaE21,
   temVerboExecucao,
   desambiguarJobs,
@@ -194,7 +195,6 @@ function montarPerguntaAmbiguo(topicoActivo, objetivoActivo) {
   return `Isto continua «${ancora}» ou é um assunto novo?`;
 }
 
-
 /**
  * Interrogativa sem âncora de projecto (A1) — não é catálogo E2.2.
  * @param {string} t — texto normalizado
@@ -371,13 +371,28 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
       activasEspecificas.length > 0 &&
       mensagem.split(/\s+/).length <= 6
     ) {
-      return resultado(
-        "ambiguo_contexto",
-        "âncora distinta do activo sem marcador claro de pertença",
-        {
-          perguntaCurta: montarPerguntaAmbiguo(topicoActivo, objetivoActivo)
-        }
-      );
+      // P6 mínimo: não bloquear C1/C2 já determináveis (E2.2) — Classificador decide.
+      // «pagamento?» e âncoras sem marcador E2.2 continuam ambiguo_contexto.
+      if (ehConhecimentoGeralE22(t)) {
+        /* cair para P3 — conhecimento_geral / C1 */
+      } else if (
+        ehDeliberacaoProjetoE22(t, {
+          frenteActiva: entrada.frenteActiva === true
+        })
+      ) {
+        return resultado(
+          "independente",
+          "E2.2: deliberação de projecto determinável → Classificador C2; sem ambiguo VCA"
+        );
+      } else {
+        return resultado(
+          "ambiguo_contexto",
+          "âncora distinta do activo sem marcador claro de pertença",
+          {
+            perguntaCurta: montarPerguntaAmbiguo(topicoActivo, objetivoActivo)
+          }
+        );
+      }
     }
     // Activo só genérico (COA/MG2) + âncora de projecto na mensagem → pertence ao fio
     if (activasEspecificas.length === 0) {

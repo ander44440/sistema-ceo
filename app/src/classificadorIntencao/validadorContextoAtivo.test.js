@@ -104,7 +104,6 @@ test("CT-V02: independente — pergunta autónoma sem âncora do fio", async () 
   );
 });
 
-
 test("A1: café com COA/frente sem tópico → independente (não default pertence)", () => {
   const r = validarContextoAtivo({
     mensagem: "Quanto custa um café em Lisboa?",
@@ -237,6 +236,93 @@ test("CT-V06: ambiguo_contexto → pergunta curta; 0 Jobs", async () => {
   assert.equal(out.dados?.motorAcionado, false);
   assert.equal(out.dados?.classificacao, null);
   assert.match(out.mensagem, /\?/);
+});
+
+test("CT-V06b: P6 não bloqueia C1 determinável («O que é um job?»)", async () => {
+  const activo = criarTopico("outdoor", "usuario", ISO);
+  const r = validarContextoAtivo({
+    mensagem: "O que é um job?",
+    topicoActivo: activo,
+    frenteActiva: true
+  });
+  assert.notEqual(r.veredicto, "ambiguo_contexto");
+  assert.equal(r.veredicto, "conhecimento_geral");
+  assert.equal(r.autorizaLastroCsc, false);
+  assert.equal(r.perguntaCurta, undefined);
+
+  definirEstadoTopicosSessao({ topicoActivo: activo, pausas: [] });
+  const out = await executiveEngine.executar({ texto: "O que é um job?" }, {});
+  assert.notEqual(out.modo, "clarificacao_contexto");
+  assert.equal(out.dados?.validacaoContexto?.veredicto, "conhecimento_geral");
+  assert.equal(out.dados?.classificacao?.classe, "conhecimento_geral");
+  assert.equal(out.dados?.encaminhamento?.destino, "resposta_leve");
+  assert.ok(out.dados?.classificacao, "Classificador correu (sem early-return VCA)");
+});
+
+test("CT-V06c: P6 não bloqueia C2 determinável («priorizar os bugs»)", async () => {
+  const activo = criarTopico("outdoor", "usuario", ISO);
+  const r = validarContextoAtivo({
+    mensagem: "Como devemos priorizar os bugs?",
+    topicoActivo: activo,
+    frenteActiva: true
+  });
+  assert.notEqual(r.veredicto, "ambiguo_contexto");
+  assert.equal(r.veredicto, "independente");
+  assert.equal(r.autorizaLastroCsc, false);
+  assert.equal(r.perguntaCurta, undefined);
+
+  definirEstadoTopicosSessao({ topicoActivo: activo, pausas: [] });
+  const pub = criarPublicadorFilaMemoria();
+  const out = await executiveEngine.executar(
+    { texto: "Como devemos priorizar os bugs?" },
+    { publicarJob: pub.publicarJob.bind(pub) }
+  );
+  assert.notEqual(out.modo, "clarificacao_contexto");
+  assert.equal(out.dados?.validacaoContexto?.veredicto, "independente");
+  assert.equal(out.dados?.classificacao?.classe, "conversa_projeto");
+  assert.equal(out.dados?.encaminhamento?.destino, "nucleo_mre");
+  assert.equal(pub.jobs.length, 0);
+});
+
+test("CT-V06d: regressão ADR / fila / C3 após guard P6", async () => {
+  const activo = criarTopico("outdoor", "usuario", ISO);
+
+  const adr = validarContextoAtivo({
+    mensagem: "O que é um ADR?",
+    topicoActivo: activo
+  });
+  assert.equal(adr.veredicto, "conhecimento_geral");
+
+  definirEstadoTopicosSessao({ topicoActivo: activo, pausas: [] });
+  const outAdr = await executiveEngine.executar({ texto: "O que é um ADR?" }, {});
+  assert.equal(outAdr.dados?.classificacao?.classe, "conhecimento_geral");
+  assert.equal(outAdr.dados?.encaminhamento?.destino, "resposta_leve");
+
+  const fila = validarContextoAtivo({
+    mensagem: "Qual é o estado da fila?",
+    topicoActivo: activo
+  });
+  assert.equal(fila.veredicto, "independente");
+  assert.match(fila.razaoContexto, /P0|consulta/i);
+
+  definirEstadoTopicosSessao({ topicoActivo: activo, pausas: [] });
+  const outFila = await executiveEngine.executar(
+    { texto: "Qual é o estado da fila?" },
+    {}
+  );
+  assert.equal(outFila.dados?.classificacao?.classe, "comando_operacional");
+  assert.equal(outFila.dados?.encaminhamento?.destino, "capacidade_operacional");
+  assert.notEqual(outFila.modo, "clarificacao_contexto");
+
+  definirEstadoTopicosSessao({ topicoActivo: activo, pausas: [] });
+  const pub = criarPublicadorFilaMemoria();
+  const outC3 = await executiveEngine.executar(
+    { texto: "Implemente isso." },
+    { publicarJob: pub.publicarJob.bind(pub) }
+  );
+  assert.equal(outC3.dados?.classificacao?.classe, "trabalho_executivo");
+  assert.equal(outC3.dados?.encaminhamento?.destino, "motor_execucao");
+  assert.notEqual(outC3.modo, "clarificacao_contexto");
 });
 
 test("CT-V07: anti-C3 — veredictos VCA não forçam C3 / permiteJob", () => {
