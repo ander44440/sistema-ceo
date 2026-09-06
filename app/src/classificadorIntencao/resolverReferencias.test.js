@@ -178,6 +178,73 @@ test("CT-R07: C3 na mensagem actual preservado", () => {
   assert.equal(r.estado, "nenhum");
 });
 
+test("A3: E o pagamento? com hist outdoor+pagamento → resolvido pagamento (≠ ambiguo)", async () => {
+  const histMsgs = [
+    { papel: "usuario", texto: "Vamos priorizar outdoor laterais no MG2." },
+    { papel: "ceo", texto: "Combinado — foco no outdoor laterais." },
+    {
+      papel: "usuario",
+      texto: "Agora quero falar de pagamento dos fornecedores."
+    },
+    { papel: "ceo", texto: "Ok — pagamento dos fornecedores em vista." }
+  ];
+  const msg = "E o pagamento?";
+  const hist = seleccionarHistoricoRecente(histMsgs, msg);
+  const r = resolverReferencias({
+    mensagem: msg,
+    historicoRecente: hist,
+    frenteActiva: true
+  });
+  assert.equal(r.estado, "resolvido");
+  assert.match(r.referente.ancora, /pagamento/i);
+
+  const out = await executiveEngine.executar(
+    { texto: msg, historico: histMsgs },
+    {}
+  );
+  assert.notEqual(out.modo, "clarificacao_referente");
+  assert.notEqual(out.dados?.resolucaoReferencia?.estado, "ambiguo");
+  assert.match(out.dados?.resolucaoReferencia?.referente?.ancora || "", /pagamento/i);
+});
+
+test("A3: E o outdoor? com hist outdoor+pagamento → resolvido outdoor", () => {
+  const histMsgs = [
+    { papel: "usuario", texto: "Vamos priorizar outdoor laterais no MG2." },
+    { papel: "ceo", texto: "Combinado — foco no outdoor laterais." },
+    {
+      papel: "usuario",
+      texto: "Agora quero falar de pagamento dos fornecedores."
+    },
+    { papel: "ceo", texto: "Ok — pagamento dos fornecedores em vista." }
+  ];
+  const msg = "E o outdoor?";
+  const r = resolverReferencias({
+    mensagem: msg,
+    historicoRecente: seleccionarHistoricoRecente(histMsgs, msg),
+    frenteActiva: true
+  });
+  assert.equal(r.estado, "resolvido");
+  assert.match(r.referente.ancora, /outdoor/i);
+});
+
+test("A3: E isso? sem âncora lexical → ambiguo preservado (deixis pura)", () => {
+  const histMsgs = [
+    { papel: "usuario", texto: "Outdoor e pagamento no MG2." },
+    {
+      papel: "ceo",
+      texto: "Outdoor atrasado; pagamento ainda em análise."
+    }
+  ];
+  const msg = "E isso?";
+  const r = resolverReferencias({
+    mensagem: msg,
+    historicoRecente: seleccionarHistoricoRecente(histMsgs, msg),
+    frenteActiva: true
+  });
+  assert.equal(r.estado, "ambiguo");
+  assert.ok(r.candidatos.length >= 2);
+});
+
 test("CT-R08: ambiguidade outdoor vs pagamento → pergunta curta; 0 Jobs", async () => {
   const hist = seleccionarHistoricoRecente(
     [

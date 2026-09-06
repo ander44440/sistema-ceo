@@ -337,6 +337,30 @@ export function resolverReferencias(entrada = {}) {
     return { estado: "nenhum" };
   }
 
+  // A3 — âncora lexical explícita na mensagem actual (ex.: «E o pagamento?»)
+  // prevalece sobre ambiguidade artificial entre candidatos do histórico.
+  // Deixis pura («E isso?») não entra aqui → lógica ambiguo intacta.
+  const ancorasMensagem = extrairTopicosDeTexto(
+    mensagem,
+    "usuario",
+    0.92,
+    "A3: âncora lexical explícita na mensagem actual"
+  ).filter((c) => !genericos.has(c.ancora));
+
+  if (ancorasMensagem.length === 1) {
+    const famMsg = familiaDe(ancorasMensagem[0].ancora);
+    const compat = unicos.find((c) => familiaDe(c.ancora) === famMsg);
+    const referente = compat
+      ? {
+          ...compat,
+          confianca: Math.max(compat.confianca, 0.9),
+          razaoReferente:
+            "A3: âncora lexical na mensagem actual prevalece sobre candidatos do histórico"
+        }
+      : ancorasMensagem[0];
+    return { estado: "resolvido", referente };
+  }
+
   const top = unicos[0];
   const segundo = unicos[1];
 
