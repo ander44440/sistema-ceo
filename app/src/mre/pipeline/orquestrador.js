@@ -167,7 +167,8 @@ export async function executarPipeline07(entrada, deps) {
       // Lastro factual ANTES do estágio 0/2 — só CONSULTA
       injectarSnapshotSituacionalNaEntrada(entrada, {
         lastro: deps.lastroConsciencia || entrada.lastroConsciencia || null,
-        historico: entrada.historico || deps.historico || null
+        historico: entrada.historico || deps.historico || null,
+        instrucao: msgUsuario
       });
       const snap = entrada.snapshotSituacional;
       if (snap && !snap.temLastroSuficiente && Array.isArray(snap.lacunas)) {

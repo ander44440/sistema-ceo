@@ -421,4 +421,56 @@ describe("P5b snapshot situacional CONSULTA", () => {
       false
     );
   });
+
+  describe("A2 — âncora explícita da instrução vs foco recente do histórico", () => {
+    const Q_OUTDOOR = "Qual o próximo passo do outdoor?";
+    const histPagamentoLast = [
+      { papel: "user", texto: "Vamos priorizar outdoor laterais no MG2." },
+      { papel: "ceo", texto: "Combinado — foco no outdoor." },
+      {
+        papel: "user",
+        texto: "Agora quero falar de pagamento dos fornecedores."
+      },
+      { papel: "ceo", texto: "Ok — pagamento dos fornecedores em vista." }
+    ];
+    const histOutdoorLast = [
+      {
+        papel: "user",
+        texto: "Agora quero falar de pagamento dos fornecedores."
+      },
+      { papel: "ceo", texto: "Ok — pagamento." },
+      { papel: "user", texto: "Vamos priorizar outdoor laterais no MG2." },
+      { papel: "ceo", texto: "Combinado — foco no outdoor laterais." }
+    ];
+
+    it("A) outdoor nomeado prevalece sobre pagamento recente no hist", () => {
+      const snap = montarSnapshotSituacionalConsulta({
+        historico: histPagamentoLast,
+        instrucao: Q_OUTDOOR
+      });
+      const blob = `${snap.etapaAtual || ""}\n${snap.emCursoAgora || ""}\n${comporAnaliseConsultaDesdeSnapshot(snap)}`;
+      assert.match(blob, /outdoor/i);
+      assert.doesNotMatch(blob, /pagamento/i);
+      assert.match(snap.etapaAtual || "", /outdoor/i);
+    });
+
+    it("B) outdoor nomeado + hist outdoor continua correcto", () => {
+      const snap = montarSnapshotSituacionalConsulta({
+        historico: histOutdoorLast,
+        instrucao: Q_OUTDOOR
+      });
+      assert.match(snap.etapaAtual || "", /outdoor/i);
+      assert.doesNotMatch(snap.etapaAtual || "", /pagamento/i);
+      assert.match(comporAnaliseConsultaDesdeSnapshot(snap), /outdoor/i);
+    });
+
+    it("C) situacional sem âncora explícita mantém foco recente do hist", () => {
+      const snap = montarSnapshotSituacionalConsulta({
+        historico: histPagamentoLast,
+        instrucao: PERGUNTA_4
+      });
+      assert.match(snap.etapaAtual || "", /pagamento/i);
+      assert.doesNotMatch(snap.etapaAtual || "", /outdoor/i);
+    });
+  });
 });

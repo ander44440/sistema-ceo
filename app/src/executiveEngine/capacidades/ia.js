@@ -212,7 +212,8 @@ async function executarBruto(ctx) {
             historico: ctx.historico || [],
             factosOficiais: Array.isArray(lastro?.factosOficiais)
               ? lastro.factosOficiais
-              : []
+              : [],
+            instrucao: texto
           });
           const mensagem = comporAnaliseConsultaDesdeSnapshot(snap);
           return {

@@ -6,7 +6,46 @@
 
 import { normalizarTexto } from "../classificadorIntencao/lexicon.js";
 import { ehPedidoSituacionalTrabalho } from "../classificadorIntencao/regras.js";
+import {
+  extrairAncorasMensagem,
+  preferirAncorasEspecificas
+} from "../classificadorIntencao/gestorTopicos.js";
 import { detectarPedidoConsultaResposta } from "./politicaAnaliseDeliberativa.js";
+
+/** Famílias genéricas de sessão — não contam como âncora explícita A2. */
+const FAMILIAS_GENERICAS_SNAPSHOT = new Set(["mg2", "coa"]);
+
+/**
+ * Âncoras específicas nomeadas na instrução actual (A2).
+ * @param {string|null|undefined} instrucao
+ * @returns {string[]}
+ */
+function familiasEspecificasDaInstrucao(instrucao) {
+  const msg = String(instrucao || "").trim();
+  if (!msg) return [];
+  const ancoras = preferirAncorasEspecificas(extrairAncorasMensagem(msg));
+  /** @type {string[]} */
+  const out = [];
+  const seen = new Set();
+  for (const a of ancoras) {
+    const fam = a?.familia;
+    if (!fam || FAMILIAS_GENERICAS_SNAPSHOT.has(fam) || seen.has(fam)) continue;
+    seen.add(fam);
+    out.push(fam);
+  }
+  return out;
+}
+
+/**
+ * @param {string} texto
+ * @param {ReadonlyArray<string>} familias
+ */
+function textoCompativelComFamilias(texto, familias) {
+  if (!familias.length) return true;
+  return extrairAncorasMensagem(texto).some(
+    (a) => a.familia && familias.includes(a.familia)
+  );
+}
 
 /**
  * @typedef {object} SnapshotSituacionalConsulta
@@ -137,13 +176,17 @@ function ehEvidenciaConclusaoTrabalho(t) {
 
 /**
  * Evidência recente do fio da conversa (sessão), sem inventar.
+ * A2: se a instrução nomeia âncora específica, o foco recente genérico
+ * do histórico não a substitui — só entra evidência compatível.
  * @param {ReadonlyArray<{ papel?: string, texto?: string }>|null|undefined} historico
+ * @param {string|null|undefined} [instrucao]
  */
-function extrairEvidenciaSessaoRecente(historico) {
+function extrairEvidenciaSessaoRecente(historico, instrucao) {
   /** @type {string[]} */
   const pedidosUtilizador = [];
   /** @type {string[]} */
   const respostasCeo = [];
+  const familiasAlvo = familiasEspecificasDaInstrucao(instrucao);
 
   if (!Array.isArray(historico) || !historico.length) {
     return {
@@ -177,15 +220,23 @@ function extrairEvidenciaSessaoRecente(historico) {
     }
   }
 
-  // Mais recente = índice 0 (percorremos de trás para a frente)
-  const atual = pedidosUtilizador[0] || null;
+  const pedidosFoco = familiasAlvo.length
+    ? pedidosUtilizador.filter((p) => textoCompativelComFamilias(p, familiasAlvo))
+    : pedidosUtilizador;
+  const respostasFoco = familiasAlvo.length
+    ? respostasCeo.filter((r) => textoCompativelComFamilias(r, familiasAlvo))
+    : respostasCeo;
+
+  // Mais recente = índice 0 (percorremos de trás para a frente).
+  // Com âncora explícita: sem evidência compatível → null (não cair no foco genérico).
+  const atual = pedidosFoco[0] || null;
 
   // Só evidência real de conclusão — sem fallback para resposta recente ou pedido anterior
-  const ceoConclusivo = respostasCeo.find((r) => ehEvidenciaConclusaoTrabalho(r));
+  const ceoConclusivo = respostasFoco.find((r) => ehEvidenciaConclusaoTrabalho(r));
   const ultimaConclusao = ceoConclusivo || null;
 
   let proximoPasso = null;
-  const pedidoProximo = pedidosUtilizador.find((p) =>
+  const pedidoProximo = pedidosFoco.find((p) =>
     /\b(pr[oó]ximo\s+passo|em\s+seguida|agora\s+vamos|seguir\s+com)\b/i.test(p)
   );
   if (pedidoProximo && pedidoProximo !== atual) {
@@ -256,7 +307,8 @@ function escolher(candidatos, fontes) {
  *   lastro?: object|null,
  *   historico?: ReadonlyArray<{ papel?: string, texto?: string }>|null,
  *   factosOficiais?: ReadonlyArray<string>|null,
- *   snapshotPainel?: object|null
+ *   snapshotPainel?: object|null,
+ *   instrucao?: string|null
  * }} [opts]
  * @returns {SnapshotSituacionalConsulta}
  */
@@ -275,7 +327,7 @@ export function montarSnapshotSituacionalConsulta(opts = {}) {
 
   /** @type {string[]} */
   const fontes = [];
-  const sessao = extrairEvidenciaSessaoRecente(opts.historico);
+  const sessao = extrairEvidenciaSessaoRecente(opts.historico, opts.instrucao);
   const ops = extrairDeFactosOps(opts.factosOficiais);
 
   // 1) Sessão recente  2) Ops específicos (Job)  3) MTE específico (não genérico)
@@ -388,7 +440,7 @@ export function montarSnapshotSituacionalConsulta(opts = {}) {
  * Injeta snapshot em `entrada` MRE (factosOficiais + bloco na mensagem).
  * Idempotente se já existir `entrada.snapshotSituacional`.
  * @param {object} entrada
- * @param {{ lastro?: object|null, historico?: ReadonlyArray<object>|null }} [ctx]
+ * @param {{ lastro?: object|null, historico?: ReadonlyArray<object>|null, instrucao?: string|null }} [ctx]
  * @returns {object} entrada
  */
 export function injectarSnapshotSituacionalNaEntrada(entrada, ctx = {}) {
@@ -401,7 +453,8 @@ export function injectarSnapshotSituacionalNaEntrada(entrada, ctx = {}) {
     lastro: ctx.lastro || null,
     historico: ctx.historico || null,
     factosOficiais: entrada.factosOficiais || [],
-    snapshotPainel: entrada.snapshotPainel || null
+    snapshotPainel: entrada.snapshotPainel || null,
+    instrucao: ctx.instrucao != null ? ctx.instrucao : null
   });
 
   entrada.snapshotSituacional = snap;
