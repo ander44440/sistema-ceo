@@ -194,6 +194,24 @@ function montarPerguntaAmbiguo(topicoActivo, objetivoActivo) {
   return `Isto continua «${ancora}» ou é um assunto novo?`;
 }
 
+
+/**
+ * Interrogativa sem âncora de projecto (A1) — não é catálogo E2.2.
+ * @param {string} t — texto normalizado
+ */
+function ehPerguntaAutonomaSemAncoraDeProjecto(t) {
+  const s = String(t || "").trim();
+  if (!s) return false;
+  const interrogativa =
+    /\?\s*$/.test(s) ||
+    /^(quanto|qual|quais|quem|onde|quando|como|por\s+qu[eê]|o\s+que)\b/.test(s);
+  if (!interrogativa) return false;
+  const ancorasProjecto = extrairAncorasMensagem(s).filter(
+    (a) => a.familia && !familiaGenerica(a.familia)
+  );
+  return ancorasProjecto.length === 0;
+}
+
 /**
  * @param {string} t — texto normalizado
  */
@@ -383,6 +401,22 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
     return resultado(
       "independente",
       "mensagem sem deixis nem overlap com activo → isolamento; stores preservados"
+    );
+  }
+
+  // A1 — interrogativa sem ligação lexical ao fio/COA.
+  // Fecha o buraco: sem tópico/objectivo activo, o default P7b fazia `pertence`
+  // só por COA/frente («Quanto custa um café…?» → missão MG2).
+  // Não alarga E2.2; exige pergunta clara + zero âncoras de projecto.
+  if (
+    !deixis &&
+    overlap.length === 0 &&
+    !mencionaContextoActivo(mensagem, topicoActivo, objetivoActivo) &&
+    ehPerguntaAutonomaSemAncoraDeProjecto(t)
+  ) {
+    return resultado(
+      "independente",
+      "A1: pergunta autónoma sem âncora ao contexto activo → isolamento"
     );
   }
 

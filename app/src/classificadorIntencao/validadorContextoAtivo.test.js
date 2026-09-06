@@ -104,6 +104,51 @@ test("CT-V02: independente — pergunta autónoma sem âncora do fio", async () 
   );
 });
 
+
+test("A1: café com COA/frente sem tópico → independente (não default pertence)", () => {
+  const r = validarContextoAtivo({
+    mensagem: "Quanto custa um café em Lisboa?",
+    frenteActiva: true,
+    coa: { id: "prj-mg2", nome: "Motoboy Game 2" }
+  });
+  assert.equal(r.veredicto, "independente");
+  assert.equal(r.autorizaLastroCsc, false);
+});
+
+test("A1: café + hist outdoor → independente; EE sem MG2/outdoor na prosa", async () => {
+  const hist = [
+    { papel: "user", texto: "Vamos priorizar outdoor laterais no MG2." },
+    { papel: "ceo", texto: "Combinado — foco no outdoor laterais." }
+  ];
+  const r = validarContextoAtivo({
+    mensagem: "Quanto custa um café em Lisboa?",
+    historicoCandidato: hist,
+    frenteActiva: true,
+    coa: { id: "prj-mg2", nome: "Motoboy Game 2" }
+  });
+  assert.equal(r.veredicto, "independente");
+  assert.equal(r.autorizaLastroCsc, false);
+
+  const out = await executiveEngine.executar(
+    { texto: "Quanto custa um café em Lisboa?", historico: hist },
+    {}
+  );
+  assert.equal(out.dados?.validacaoContexto?.autorizaLastroCsc, false);
+  assert.notEqual(out.dados?.encaminhamento?.destino, "nucleo_mre");
+  const msg = String(out.mensagem || "").toLowerCase();
+  assert.equal(/motoboy|mg2|outdoor/.test(msg), false, msg);
+});
+
+test("A1: pergunta com âncora outdoor continua pertence", () => {
+  const r = validarContextoAtivo({
+    mensagem: "Qual o próximo passo do outdoor?",
+    frenteActiva: true,
+    coa: { id: "prj-mg2", nome: "Motoboy Game 2" }
+  });
+  assert.equal(r.veredicto, "pertence");
+  assert.equal(r.autorizaLastroCsc, true);
+});
+
 test("CT-V03: conhecimento geral no meio do outdoor → isolamento; ≠ C2 por histórico", async () => {
   const activo = criarTopico("outdoor", "usuario", ISO);
   const r = validarContextoAtivo({

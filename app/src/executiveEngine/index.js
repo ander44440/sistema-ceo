@@ -1752,9 +1752,11 @@ export const executiveEngine = {
 
     let respostaBruta;
     try {
+      // Isolamento VCA: destino não herda hist de projecto (evita CTO-001
+      // promover clarificação → C2/missão quando a pergunta é independente).
       respostaBruta = await executarPorDestino({
         texto,
-        historico,
+        historico: autorizaLastroCsc ? historico : [],
         intencao,
         classificacao,
         rota,
