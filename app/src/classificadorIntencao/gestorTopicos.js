@@ -134,6 +134,18 @@ export function criarTopico(ancora, origem = "usuario", agoraIso) {
 }
 
 /**
+ * A4 — âncora sob negação local («não do outdoor») não é menção temática positiva.
+ * @param {string} texto
+ * @param {number} idx — início do match da âncora
+ */
+export function ancoraNegadaLocalmente(texto, idx) {
+  const i = Number(idx);
+  if (!Number.isFinite(i) || i < 0) return false;
+  const antes = String(texto || "").slice(0, i);
+  return /\bn[aã]o\s+(do|da|de)\s+$/i.test(antes);
+}
+
+/**
  * @param {string} texto
  * @returns {Array<{ id: string, ancora: string, familia: string, confianca: number }>}
  */
@@ -144,6 +156,8 @@ export function extrairAncorasMensagem(texto) {
   for (const top of LEXICO_TOPICOS) {
     const m = top.re.exec(t);
     if (!m) continue;
+    // A4: «não do outdoor» não entra como âncora positiva
+    if (ancoraNegadaLocalmente(t, m.index)) continue;
     hits.push({
       id: top.id,
       ancora: top.ancora,
@@ -164,6 +178,23 @@ export function extrairAncorasMensagem(texto) {
     out.push(rest);
   }
   return out;
+}
+
+/**
+ * Mensagem nega localmente a família do tópico activo (A4).
+ * @param {string} mensagem
+ * @param {TopicoConversacional|null|undefined} activo
+ */
+function mensagemNegaFamiliaDoActivo(mensagem, activo) {
+  const famAct = activo ? familiaDeAncora(activo.ancora) : "";
+  if (!famAct) return false;
+  const t = String(mensagem || "");
+  for (const top of LEXICO_TOPICOS) {
+    if (familiaDeAncora(top.ancora) !== famAct) continue;
+    const m = top.re.exec(t);
+    if (m && ancoraNegadaLocalmente(t, m.index)) return true;
+  }
+  return false;
 }
 
 /**
@@ -546,6 +577,18 @@ export function gestorTopicos(entrada = {}) {
         tNorm.length <= a.ancora.length + 12 ||
         /^(sobre|acerca\s+d[eo]|e\s+o|e\s+a)\b/i.test(tNorm);
       if (!soTopico) {
+        // A4: activo negado localmente («não do outdoor») + âncora alternativa
+        // → não «continuar» no tópico negado (anti falso-shift não se aplica).
+        if (mensagemNegaFamiliaDoActivo(mensagem, activo)) {
+          const novo = criarTopico(a.ancora, "usuario", agora);
+          const estado = aplicarShiftEstado(activo, pausas, novo);
+          return {
+            evento: "shift",
+            ...estado,
+            razaoTopico: `A4: activo negado localmente → «${novo.ancora}»`,
+            commitEstado: true
+          };
+        }
         const p = preservado();
         return {
           evento: "continuar",

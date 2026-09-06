@@ -13,6 +13,7 @@ import {
   criarTopico,
   trimPausas,
   aplicarShiftEstado,
+  extrairAncorasMensagem,
   LIMIAR_SHIFT,
   MAX_PAUSAS
 } from "./gestorTopicos.js";
@@ -365,4 +366,58 @@ test("DESP-010: «Adiar outdoor e focar pagamento» não é ambiguidade", () => 
     agoraIso: ISO
   });
   assert.equal(amb.evento, "ambiguo_topico");
+});
+
+test("A4: «não do outdoor» não conta como âncora positiva; focar pagamento faz shift", () => {
+  const activo = criarTopico("outdoor", "usuario", ISO);
+  assert.equal(
+    extrairAncorasMensagem("Focar pagamento, não do outdoor").map((a) => a.ancora).join(","),
+    "pagamento"
+  );
+  const r = gestorTopicos({
+    mensagem: "Focar pagamento, não do outdoor",
+    topicoActivo: activo,
+    pausas: [],
+    agoraIso: ISO
+  });
+  assert.notEqual(r.evento, "continuar");
+  assert.equal(r.evento, "shift");
+  assert.match(String(r.topicoActivo?.ancora || ""), /pagamento/i);
+  assert.notEqual(r.topicoActivo?.ancora, "outdoor");
+});
+
+test("A4: campanha digital + «não do outdoor» não reforça outdoor por menção negada", () => {
+  const activo = criarTopico("outdoor", "usuario", ISO);
+  assert.deepEqual(
+    extrairAncorasMensagem(
+      "Agora quero tratar da campanha digital, não do outdoor"
+    ),
+    []
+  );
+  const r = gestorTopicos({
+    mensagem: "Agora quero tratar da campanha digital, não do outdoor",
+    topicoActivo: activo,
+    pausas: [],
+    agoraIso: ISO
+  });
+  assert.notEqual(r.evento, "continuar");
+  assert.equal(/mesma família/i.test(String(r.razaoTopico || "")), false);
+});
+
+test("A4 controlo: «Outdoor laterais» continua a reconhecer outdoor", () => {
+  const activo = criarTopico("outdoor", "usuario", ISO);
+  assert.match(
+    extrairAncorasMensagem("Outdoor laterais")
+      .map((a) => a.ancora)
+      .join(","),
+    /outdoor/i
+  );
+  const r = gestorTopicos({
+    mensagem: "Outdoor laterais",
+    topicoActivo: activo,
+    pausas: [],
+    agoraIso: ISO
+  });
+  assert.equal(r.evento, "continuar");
+  assert.equal(r.topicoActivo?.ancora, "outdoor");
 });
