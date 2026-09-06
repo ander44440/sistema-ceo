@@ -150,3 +150,91 @@ test("E: criar Job legítimo sem JOB-ID continua a funcionar", async () => {
   assert.notEqual(out.dados?.continuidadeJobId, true);
   assert.ok(fila.jobs.length >= 1 || out.dados?.motor?.publicado === true);
 });
+
+test("P2: (ref JOB) não sequestrar — C3 cria Job novo", async () => {
+  const fila = criarPublicadorFilaMemoria();
+  const texto = "implemente esta funcionalidade (ref JOB-000075)";
+  assert.equal(ehReferenciaExplicitaJobId(texto), true);
+  let motor = false;
+  const out = await conduzirTrabalhoExecutivoC3(
+    texto,
+    {
+      classe: "trabalho_executivo",
+      confianca: 0.9,
+      razaoCurta: "c3",
+      destino: "motor_execucao"
+    },
+    {
+      obterJob: async (id) =>
+        String(id).toUpperCase() === "JOB-000075" ? JOB075 : null,
+      publicarJob: fila.publicarJob.bind(fila),
+      conduzirMotor: async (_p, motorDeps) => {
+        motor = true;
+        const job = await motorDeps.publicarJob({
+          titulo: "nova funcionalidade",
+          descricao: texto
+        });
+        return { publicado: true, job, fluxoIniciado: true };
+      }
+    }
+  );
+  assert.notEqual(out.dados?.continuidadeJobId, true);
+  assert.equal(motor, true);
+  assert.ok(fila.jobs.length >= 1 || out.dados?.motor?.publicado === true);
+});
+
+test("P2: JOB + e depois implemente → C3 normal, sem continuidade", async () => {
+  const fila = criarPublicadorFilaMemoria();
+  const texto =
+    "execute o JOB-000075 e depois implemente esta nova melhoria";
+  assert.equal(ehReferenciaExplicitaJobId(texto), true);
+  let motor = false;
+  const out = await conduzirTrabalhoExecutivoC3(
+    texto,
+    {
+      classe: "trabalho_executivo",
+      confianca: 0.9,
+      razaoCurta: "c3",
+      destino: "motor_execucao"
+    },
+    {
+      obterJob: async (id) =>
+        String(id).toUpperCase() === "JOB-000075" ? JOB075 : null,
+      publicarJob: fila.publicarJob.bind(fila),
+      conduzirMotor: async (_p, motorDeps) => {
+        motor = true;
+        const job = await motorDeps.publicarJob({
+          titulo: "nova melhoria",
+          descricao: texto
+        });
+        return { publicado: true, job, fluxoIniciado: true };
+      }
+    }
+  );
+  assert.notEqual(out.dados?.continuidadeJobId, true);
+  assert.equal(motor, true);
+  assert.ok(fila.jobs.length >= 1 || out.dados?.motor?.publicado === true);
+});
+
+test("P2: Job inexistente + Despache → fail-closed, sem wrapper", async () => {
+  const fila = criarPublicadorFilaMemoria();
+  const out = await conduzirTrabalhoExecutivoC3(
+    "Despache o JOB-000075",
+    {
+      classe: "trabalho_executivo",
+      confianca: 0.9,
+      razaoCurta: "c3",
+      destino: "motor_execucao"
+    },
+    {
+      obterJob: async () => null,
+      publicarJob: fila.publicarJob.bind(fila),
+      conduzirMotor: async () => {
+        assert.fail("Motor não deve publicar wrapper");
+      }
+    }
+  );
+  assert.equal(out.dados?.continuidadeJobId, true);
+  assert.equal(fila.jobs.length, 0);
+  assert.match(String(out.mensagem || ""), /sem Job correspondente|não criei Job wrapper/i);
+});

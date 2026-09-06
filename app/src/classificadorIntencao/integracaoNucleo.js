@@ -35,13 +35,72 @@ import {
  */
 
 /**
- * Continuidade por JOB-ID: nunca publicar Job wrapper quando o texto cita JOB-NNNNNN.
+ * JOB-ID é objecto operacional principal da ordem (continuidade legítima)?
+ * Bloqueia se for só referência contextual ou se houver nova ordem de
+ * implementação/criação além de operar o Job citado.
+ * Usado SOMENTE por responderContinuidadeJobIdExplicito.
+ * @param {string} texto
+ * @returns {boolean}
+ */
+function ehContinuidadeJobIdObjectoPrincipal(texto) {
+  const bruto = String(texto || "").trim();
+  if (!bruto || !ehReferenciaExplicitaJobId(bruto)) return false;
+  const n = normalizarTexto(bruto);
+
+  // 1) Referência contextual — JOB não é o objecto da ordem
+  if (/\(\s*ref\.?\s*job-\d+/i.test(bruto)) return false;
+  if (/\bref\.?\s+(ao\s+|a\s+|do\s+|da\s+)?job-\d+/i.test(bruto)) return false;
+  if (
+    /\b(referente|referencia|referindo)\b.{0,48}\bjob-\d+\b/.test(n) ||
+    /\bjob-\d+\b.{0,48}\b(referente|referencia|referindo)\b/.test(n)
+  ) {
+    return false;
+  }
+  if (/\bsobre\s+o\s+job-\d+\b/.test(n)) return false;
+
+  // 2) Nova ordem de implementação/criação além do Job citado
+  if (
+    /\be\s+depois\b.{0,96}\b(implement[ae]|implementar|cria(r)?|crie|faz|fa[cç]a|nova\s+(melhoria|tarefa|funcionalidade))\b/.test(
+      n
+    )
+  ) {
+    return false;
+  }
+  if (
+    /\be\s+(tamb[eé]m|tambem)\b.{0,96}\b(implement[ae]|implementar|cria(r)?|crie|faz|fa[cç]a)\b/.test(
+      n
+    )
+  ) {
+    return false;
+  }
+  if (
+    /\bjob-\d+\b.{0,96}\b(implement[ae]|implementar|crie|cria(r)?\s+(uma\s+|novo\s+|nova\s+)?|nova\s+(melhoria|tarefa|funcionalidade))\b/.test(
+      n
+    )
+  ) {
+    return false;
+  }
+  // «implemente X» com JOB no texto, sem ser «implemente o JOB-…»
+  if (
+    /\b(implement[ae]|implementar)\b/.test(n) &&
+    !/\b(implement[ae]|implementar)\s+(o\s+|este\s+|esse\s+)?job-\d+\b/.test(n)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Continuidade por JOB-ID: nunca publicar Job wrapper quando o JOB é o objecto
+ * operacional principal da ordem (não merência / ref contextual).
  * @param {string} texto
  * @param {import("./dominio.js").SaidaClassificador} classificacao
  * @param {DepsE4} deps
  */
 async function responderContinuidadeJobIdExplicito(texto, classificacao, deps = {}) {
   if (!ehReferenciaExplicitaJobId(texto)) return null;
+  if (!ehContinuidadeJobIdObjectoPrincipal(texto)) return null;
   const ids = extrairIdsJobMencionados(texto);
 
   let obter = typeof deps.obterJob === "function" ? deps.obterJob : null;
