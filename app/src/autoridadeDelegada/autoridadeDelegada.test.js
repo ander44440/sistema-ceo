@@ -48,7 +48,8 @@ import {
   tentarAmpliarPerimetro,
   validarActoDelegacao,
   verificarEAplicarExpiracao,
-  ehOrdemExecucaoOperacional
+  ehOrdemExecucaoOperacional,
+  ehPedidoConsultaOuRespostaComposta
 } from "./autoridadeDelegada.js";
 
 beforeEach(() => {
@@ -836,6 +837,28 @@ test("REGRESSÃO: ehOrdemExecucaoOperacional reconhece EXECUTE / implementa", ()
     ),
     false
   );
+});
+
+test("P2: ordem composta continua ehOrdem true; sinal composto separado", () => {
+  const compostas = [
+    "executa e me diga o estado da fila",
+    "execute a consulta do estado da fila",
+    "faz isso e me diga quais jobs estão abertos"
+  ];
+  for (const texto of compostas) {
+    assert.equal(ehOrdemExecucaoOperacional(texto), true, texto);
+    assert.equal(ehPedidoConsultaOuRespostaComposta(texto), true, texto);
+  }
+  assert.equal(
+    ehPedidoConsultaOuRespostaComposta("implemente esta funcionalidade"),
+    false
+  );
+  assert.equal(
+    ehPedidoConsultaOuRespostaComposta("executa a tarefa agora"),
+    false
+  );
+  assert.equal(ehOrdemExecucaoOperacional("implemente esta funcionalidade"), true);
+  assert.equal(ehOrdemExecucaoOperacional("executa a tarefa agora"), true);
 });
 
 test("P0: ehOrdemExecucaoOperacional não trata «não execute» como ordem", () => {

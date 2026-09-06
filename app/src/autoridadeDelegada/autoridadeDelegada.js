@@ -1097,6 +1097,24 @@ export function ehOrdemExecucaoOperacional(texto) {
 }
 
 /**
+ * Ordem + segundo acto informativo ou «estado da fila» — classificador decide.
+ * Não estreita ehOrdemExecucaoOperacional; não é consulta situacional.
+ * @param {string} texto
+ */
+export function ehPedidoConsultaOuRespostaComposta(texto) {
+  const n = String(texto || "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/\s+/gu, " ")
+    .trim();
+  if (!n) return false;
+  return (
+    /\be\s+(me\s+)?(diga|explique|informe|mostre|liste)\b/.test(n) ||
+    /\bestado\s+da\s+fila\b/.test(n)
+  );
+}
+
+/**
  * Bloco de sistema para o LLM quando AD está activa (modula deliberação).
  */
 export function textoGovernancaAutoridadeDelegadaActiva() {

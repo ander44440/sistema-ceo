@@ -125,6 +125,38 @@ test("V1: panorama geral → C4", () => {
   assert.equal(r.tipoTurno, TIPO_TURNO_PREC.CONSULTA);
 });
 
+test("P2: composta + AD → classificador; sem forcarC2; sem execução AD", () => {
+  const r = resolverPrecedenciaTurno({
+    adOrdemExecucao: true,
+    objetoOperacionalReal: true,
+    pedidoConsultaOuRespostaComposta: true,
+    fase: "pre_classificador"
+  });
+  assert.equal(r.acao, "seguir_classificador");
+  assert.equal(r.permiteAdExecucao, false);
+  assert.equal(r.forcarC2, false);
+  assert.equal(r.autoridade, AUTORIDADE.CLASSIFICADOR);
+});
+
+test("P2: ordem pura AD → permiteAdExecucao; composta não altera situacional", () => {
+  const pura = resolverPrecedenciaTurno({
+    adOrdemExecucao: true,
+    objetoOperacionalReal: true
+  });
+  assert.equal(pura.permiteAdExecucao, true);
+  assert.equal(pura.acao, "permitir_ad_execucao_c3");
+
+  const sit = resolverPrecedenciaTurno({
+    pedidoSituacionalTrabalho: true,
+    adOrdemExecucao: true,
+    objetoOperacionalReal: true,
+    pedidoConsultaOuRespostaComposta: true
+  });
+  assert.equal(sit.forcarC2, true);
+  assert.equal(sit.permiteAdExecucao, false);
+  assert.equal(sit.acao, "forcar_analise_situacional_c2");
+});
+
 test("V1: AD/CTO só com objeto operacional", () => {
   const sem = resolverPrecedenciaTurno({
     cto003Candidato: true,

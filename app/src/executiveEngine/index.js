@@ -89,6 +89,7 @@ import {
 import {
   autoridadeDelegadaActiva,
   ehOrdemExecucaoOperacional,
+  ehPedidoConsultaOuRespostaComposta,
   exercerFechoDelegado,
   obterEstadoAutoridadeDelegada,
   processarMensagemAutoridadeDelegada,
@@ -634,9 +635,12 @@ export const executiveEngine = {
       (/\bestado\s+atual\b/.test(textoNormPrec) ||
         /\b(resumo\s+executivo|memoria\s+executiva)\b/.test(textoNormPrec));
     const ordemAdPrec = ehOrdemExecucaoOperacional(texto);
+    const consultaOuRespostaCompostaPrec =
+      ehPedidoConsultaOuRespostaComposta(texto);
     const precAd = resolverPrecedenciaTurno({
       pedidoDecisaoExplicita: pedidoDecisaoPrec,
       pedidoSituacionalTrabalho: situacionalPrec,
+      pedidoConsultaOuRespostaComposta: consultaOuRespostaCompostaPrec,
       panoramaEstadoGeral: panoramaPrec,
       adActivacaoAck: acabouDeActivar && !ordemAdPrec,
       adOrdemExecucao: autoridadeDelegadaActiva() && ordemAdPrec,

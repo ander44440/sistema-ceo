@@ -61,6 +61,7 @@ export const DESTINOS_BLOQUEADOS_POS = Object.freeze([
  * @property {boolean} [vcaClarificacao]
  * @property {boolean} [cscClarificacao]
  * @property {boolean} [pedidoSituacionalTrabalho]
+ * @property {boolean} [pedidoConsultaOuRespostaComposta]
  * @property {boolean} [panoramaEstadoGeral]
  * @property {string|null} [destinoClassificador]
  * @property {'pre_classificador'|'pos_classificador'|'pos_destino'} [fase]
@@ -76,6 +77,7 @@ export function inferirTipoTurnoPrecedencia(s = {}) {
     (s.adOrdemExecucao || s.cto003Candidato) &&
     s.objetoOperacionalReal &&
     !s.pedidoSituacionalTrabalho &&
+    !s.pedidoConsultaOuRespostaComposta &&
     !s.panoramaEstadoGeral
   ) {
     return TIPO_TURNO_PREC.ACAO;
@@ -246,6 +248,28 @@ export function resolverPrecedenciaTurno(sinais = {}) {
       forcarC2: false,
       forcarC4Panorama: true,
       razao: "V1: Panorama geral explícito → C4 estado_geral",
+      fase,
+      versao: "v1"
+    });
+  }
+
+  // Ordem + consulta/resposta na mesma mensagem — AD não fabrica C3.
+  // Separado de pedidoSituacionalTrabalho: não força C2.
+  if (s.pedidoConsultaOuRespostaComposta) {
+    return Object.freeze({
+      autoridade: AUTORIDADE.CLASSIFICADOR,
+      acao: "seguir_classificador",
+      destinoPermitido: s.destinoClassificador || null,
+      destinoFixo: false,
+      tipoTurno,
+      bloqueados: Object.freeze([...bloqueados, AUTORIDADE.AD_CTO003]),
+      permiteAdAck: false,
+      permiteAdExecucao: false,
+      permiteCto003: false,
+      forcarC2: false,
+      forcarC4Panorama: false,
+      razao:
+        "V1: Ordem composta com consulta/resposta — classificador decide; AD não executa",
       fase,
       versao: "v1"
     });
