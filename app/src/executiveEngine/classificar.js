@@ -261,6 +261,15 @@ export function mapearCapacidadePorTexto(texto) {
     };
   }
 
+  // Catálogo de projectos (listar/mostrar/quais) — antes de navegar.
+  // «mostrar projetos» ≠ abrir o módulo UI; «abrir/ir para projetos» continua navegacao.
+  if (
+    /\b(listar|mostrar|quais)\b/.test(t) &&
+    /\bprojetos?\b/.test(t)
+  ) {
+    return { id: "atuar_em_projetos", capacidade: "projetos", confianca: 0.85 };
+  }
+
   if (
     /\b(abrir|ir para|navegar|mostrar|ir ao|ir à)\b/.test(t) &&
     /\b(dashboard|situação|situacao|conversa|capacidades|projetos|conhecimento|configura)/.test(
