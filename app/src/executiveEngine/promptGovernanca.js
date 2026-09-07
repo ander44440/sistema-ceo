@@ -59,9 +59,13 @@ export function montarMensagensLlm({
   });
 
   // IMP-070 B5 / REQ-072: lastro de Camada só via Porta (nunca directo ao Acervo)
-  const ambitoCoa = coa?.id || memoria?.projetoAtivo?.id || null;
+  // Isolamento VCA (coa === null): não reabrir projecto via memoria.projetoAtivo.
+  const isolamento = coa === null;
+  const ambitoCoa = isolamento
+    ? null
+    : coa?.id || memoria?.projetoAtivo?.id || null;
   const factosOficiais = factosViaPorta({
-    contextoTrabalho: ambitoCoa ? { id: ambitoCoa } : coa,
+    contextoTrabalho: ambitoCoa ? { id: ambitoCoa } : isolamento ? null : coa,
     necessidade:
       String(instrucao || "").trim() ||
       "lastro organizacional para composição EIC / Executive Engine"
@@ -83,7 +87,8 @@ export function montarMensagensLlm({
 
   // ARQ-028 C-COA: sem briefing COA por omissão no path meta
   // REQ-070: briefing = projecção subordinada, nunca Fonte Oficial
-  if (!injectDic) {
+  // Isolamento: sem briefing do projecto anterior.
+  if (!injectDic && !isolamento) {
     const projecao = obterProjecaoBriefing(coa);
     if (projecao?.textoRotulado) {
       messages.push({ role: "system", content: projecao.textoRotulado });

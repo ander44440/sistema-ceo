@@ -67,17 +67,25 @@ export function reiniciarStoresPosDeliberacaoParaTestes() {
  */
 export function montarEntradaMre(ctx) {
   const texto = String(ctx.instrucao || "").trim();
-  const coa = ctx.coaAtivo || null;
-  const mem = typeof ctx.memoria === "function" ? ctx.memoria() : null;
+  // null = isolamento VCA; undefined/ausente = legado (pode usar mem.projetoAtivo).
+  const isolamento = ctx.coaAtivo === null;
+  const coa = isolamento ? null : ctx.coaAtivo || null;
+  const memRaw =
+    typeof ctx.memoria === "function" ? ctx.memoria() : ctx.memoria || null;
+  const mem = isolamento ? null : memRaw;
 
   let painel = null;
-  try {
-    painel = obterPainelExecutivo();
-  } catch {
-    painel = null;
+  if (!isolamento) {
+    try {
+      painel = obterPainelExecutivo();
+    } catch {
+      painel = null;
+    }
   }
 
-  const ambitoCoa = coa?.id || mem?.projetoAtivo?.id || null;
+  const ambitoCoa = isolamento
+    ? null
+    : coa?.id || mem?.projetoAtivo?.id || null;
   const factos = [
     ...factosViaPorta({
       contextoTrabalho: ambitoCoa ? { id: ambitoCoa } : coa,
@@ -86,16 +94,20 @@ export function montarEntradaMre(ctx) {
         "lastro organizacional para deliberação MRE / EIC"
     })
   ];
-  const projecaoBriefing = obterProjecaoBriefing(coa);
-  const factosBriefing = obterFactosBriefingProjeto(coa);
+  const projecaoBriefing = isolamento ? null : obterProjecaoBriefing(coa);
+  const factosBriefing = isolamento ? [] : obterFactosBriefingProjeto(coa);
 
-  if (mem?.proximoPasso) factos.push(`Próximo passo: ${mem.proximoPasso}`);
-  if (Array.isArray(mem?.pendencias)) {
-    for (const p of mem.pendencias.slice(0, 5)) {
-      if (p?.texto) factos.push(`Pendência: ${p.texto}`);
+  if (!isolamento) {
+    if (mem?.proximoPasso) factos.push(`Próximo passo: ${mem.proximoPasso}`);
+    if (Array.isArray(mem?.pendencias)) {
+      for (const p of mem.pendencias.slice(0, 5)) {
+        if (p?.texto) factos.push(`Pendência: ${p.texto}`);
+      }
+    }
+    if (painel?.proximoPasso) {
+      factos.push(`Painel próximo passo: ${painel.proximoPasso}`);
     }
   }
-  if (painel?.proximoPasso) factos.push(`Painel próximo passo: ${painel.proximoPasso}`);
 
   // IMP-059 E3/E4 — lastro do Estado Executivo (ops; não é Acervo)
   const lastro = ctx.lastroConsciencia;
@@ -110,37 +122,39 @@ export function montarEntradaMre(ctx) {
       ? `Projecção subordinada (briefing): ${factosBriefing.slice(0, 3).join(" | ")}`
       : null;
 
-  const snapshotPainel = painel
-    ? {
-        resumo:
-          [resumoBriefing, painel.resumo]
-            .filter(Boolean)
-            .join(" — ") ||
-          [
-            painel.proximoPasso && `Próximo: ${painel.proximoPasso}`,
-            painel.estadoOperacional && `Estado: ${painel.estadoOperacional}`
-          ]
-            .filter(Boolean)
-            .join("; ") ||
-          "Painel disponível",
-        proximoPasso: painel.proximoPasso,
-        estado: painel.estadoOperacional
-      }
-    : mem || resumoBriefing
+  const snapshotPainel = isolamento
+    ? null
+    : painel
       ? {
           resumo:
+            [resumoBriefing, painel.resumo]
+              .filter(Boolean)
+              .join(" — ") ||
             [
-              resumoBriefing,
-              mem?.proximoPasso
-                ? `Memória: próximo passo ${mem.proximoPasso}`
-                : null
+              painel.proximoPasso && `Próximo: ${painel.proximoPasso}`,
+              painel.estadoOperacional && `Estado: ${painel.estadoOperacional}`
             ]
               .filter(Boolean)
-              .join(" — ") || "Contexto COA sem painel estruturado",
-          proximoPasso: mem?.proximoPasso ?? null,
-          estado: null
+              .join("; ") ||
+            "Painel disponível",
+          proximoPasso: painel.proximoPasso,
+          estado: painel.estadoOperacional
         }
-      : null;
+      : mem || resumoBriefing
+        ? {
+            resumo:
+              [
+                resumoBriefing,
+                mem?.proximoPasso
+                  ? `Memória: próximo passo ${mem.proximoPasso}`
+                  : null
+              ]
+                .filter(Boolean)
+                .join(" — ") || "Contexto COA sem painel estruturado",
+            proximoPasso: mem?.proximoPasso ?? null,
+            estado: null
+          }
+        : null;
 
   let mensagem = enriquecerMensagemComBriefing(texto, factosBriefing);
   mensagem = enriquecerMensagemComConsciencia(mensagem, lastro, (l) =>
@@ -164,15 +178,19 @@ export function montarEntradaMre(ctx) {
 
   return {
     mensagem,
-    coaId: coa?.id ?? mem?.projetoAtivo?.id ?? null,
-    coaAtivo: coa
-      ? { id: coa.id, nome: coa.nome || coa.titulo || null }
-      : mem?.projetoAtivo
-        ? {
-            id: mem.projetoAtivo.id,
-            nome: mem.projetoAtivo.nome || null
-          }
-        : null,
+    coaId: isolamento
+      ? null
+      : coa?.id ?? mem?.projetoAtivo?.id ?? null,
+    coaAtivo: isolamento
+      ? null
+      : coa
+        ? { id: coa.id, nome: coa.nome || coa.titulo || null }
+        : mem?.projetoAtivo
+          ? {
+              id: mem.projetoAtivo.id,
+              nome: mem.projetoAtivo.nome || null
+            }
+          : null,
     intencao: ctx.intencao || null,
     historico: Array.isArray(ctx.historico) ? ctx.historico : [],
     lastroConsciencia: ctx.lastroConsciencia || null,

@@ -70,12 +70,18 @@ function derivarRiscosConhecidos(estadoOperacional, pendenciasAbertas) {
  * @returns {string}
  */
 export function construirContextoSessao({ memoria, coa, intencao }) {
-  const coaAtual = coa || obterCoaAtivo();
+  // null = isolamento VCA explícito; undefined = legado (pode obterCoaAtivo).
+  const isolamento = coa === null;
+  const coaAtual = isolamento
+    ? null
+    : coa !== undefined && coa !== null
+      ? coa
+      : obterCoaAtivo();
   const empresaAtual = obterEmpresaAtiva();
   const mem = memoria || {};
-  const projeto = obterProjetoAtivo();
-  const dia = obterDiaExecutivo();
-  const continuidade = obterUltimaContinuidade();
+  const projeto = isolamento ? null : obterProjetoAtivo();
+  const dia = isolamento ? null : obterDiaExecutivo();
+  const continuidade = isolamento ? null : obterUltimaContinuidade();
 
   const empresaAtivaNome = empresaAtual
     ? `${empresaAtual.nome} (${empresaAtual.id}, ${empresaAtual.status || "ativa"})`
@@ -83,9 +89,11 @@ export function construirContextoSessao({ memoria, coa, intencao }) {
 
   const projetoAtivoNome = coaAtual
     ? `${coaAtual.nome} (${coaAtual.id}, ${coaAtual.status || "ativo"})`
-    : mem.projetoAtivo
-      ? `${mem.projetoAtivo.nome} (${mem.projetoAtivo.id})`
-      : "(nenhum)";
+    : isolamento
+      ? "(nenhum)"
+      : mem.projetoAtivo
+        ? `${mem.projetoAtivo.nome} (${mem.projetoAtivo.id})`
+        : "(nenhum)";
 
   const estadoOperacional = projeto
     ? classificarEstadoExecutivo(projeto)

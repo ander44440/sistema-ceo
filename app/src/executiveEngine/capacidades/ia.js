@@ -96,6 +96,28 @@ function fallbackSemLlm(texto, motivo, opts = {}) {
 }
 
 /**
+ * COA do turno deliberativo: `null` = isolamento VCA (não reabrir sessão).
+ * Campo ausente → legado `obterCoaAtivo()`.
+ * @param {object} ctx
+ */
+function resolverCoaDeliberativo(ctx) {
+  if (Object.prototype.hasOwnProperty.call(ctx, "coaAtivo")) {
+    return ctx.coaAtivo;
+  }
+  return obterCoaAtivo();
+}
+
+/**
+ * Sob isolamento (`coa === null`) a memória de projecto não entra no deliberativo.
+ * @param {object|null|undefined} coa
+ * @param {object} mem
+ */
+function memoriaParaDeliberacao(coa, mem) {
+  if (coa === null) return null;
+  return mem;
+}
+
+/**
  * Execução bruta (antes da Conversação Natural).
  * @param {object} ctx
  */
@@ -103,7 +125,8 @@ async function executarBruto(ctx) {
   const texto = textoInstrucao(ctx);
   const mem = snapshotMemoria(ctx);
   const intencao = ctx.intencao || {};
-  const coa = obterCoaAtivo();
+  const coa = resolverCoaDeliberativo(ctx);
+  const memDelib = memoriaParaDeliberacao(coa, mem);
 
   if (!texto) {
     return {
@@ -111,7 +134,7 @@ async function executarBruto(ctx) {
       capacidade: "ia",
       mensagem: "Não recebi instrução. Qual é o objetivo de agora?",
       modo: "local",
-      dados: { intencao, memoria: mem, coa, rota: "deterministica" }
+      dados: { intencao, memoria: memDelib, coa, rota: "deterministica" }
     };
   }
 
@@ -136,7 +159,7 @@ async function executarBruto(ctx) {
       dados: {
         instrucao: texto,
         intencao,
-        memoria: mem,
+        memoria: memDelib,
         coa,
         rota: "deterministica",
         complexidadeDecisao: cxLocal
@@ -195,7 +218,7 @@ async function executarBruto(ctx) {
             dados: {
               instrucao: texto,
               intencao,
-              memoria: mem,
+              memoria: memDelib,
               coa,
               llm: status,
               rota: "analise-sem-llm",
@@ -224,7 +247,7 @@ async function executarBruto(ctx) {
             dados: {
               instrucao: texto,
               intencao,
-              memoria: mem,
+              memoria: memDelib,
               coa,
               llm: status,
               snapshotSituacional: snap,
@@ -249,7 +272,7 @@ async function executarBruto(ctx) {
             dados: {
               instrucao: texto,
               intencao,
-              memoria: mem,
+              memoria: memDelib,
               coa,
               llm: status,
               lastroConsciencia: lastro,
@@ -266,7 +289,7 @@ async function executarBruto(ctx) {
           dados: {
             instrucao: texto,
             intencao,
-            memoria: mem,
+            memoria: memDelib,
             coa,
             llm: status,
             rota: "deliberativa-sem-llm",
@@ -276,17 +299,20 @@ async function executarBruto(ctx) {
       }
 
       try {
-        const mreOut = await executarRotaDeliberativa(
-          {
-            ...ctx,
-            coaAtivo: coa,
-            consultaNaoEAcao: pedidoConsulta || ctx.consultaNaoEAcao,
-            tipoTurno: pedidoConsulta
-              ? "consulta"
-              : ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno,
-            ...(lastro ? { lastroConsciencia: lastro } : {})
-          },
-          {
+        const mreCtx = {
+          ...ctx,
+          memoria: memDelib,
+          consultaNaoEAcao: pedidoConsulta || ctx.consultaNaoEAcao,
+          tipoTurno: pedidoConsulta
+            ? "consulta"
+            : ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno,
+          ...(lastro ? { lastroConsciencia: lastro } : {})
+        };
+        // Isolamento: preservar coaAtivo === null. Legado (campo ausente): injectar resolvido.
+        if (!Object.prototype.hasOwnProperty.call(ctx, "coaAtivo")) {
+          mreCtx.coaAtivo = coa;
+        }
+        const mreOut = await executarRotaDeliberativa(mreCtx, {
             canal: ctx.canalSpeaker || "chat",
             // E5-CA1 / P1-2: C2/análise nunca despacha via fallback de fila
             skipFila:
@@ -314,7 +340,7 @@ async function executarBruto(ctx) {
             ...(mreOut.dados || {}),
             instrucao: texto,
             intencao,
-            memoria: mem,
+            memoria: memDelib,
             coa,
             llm: status,
             conscienciaInfluencia: reflexo,
@@ -362,7 +388,7 @@ async function executarBruto(ctx) {
           dados: {
             instrucao: texto,
             intencao,
-            memoria: mem,
+            memoria: memDelib,
             coa,
             erro: err && err.message,
             rota: "deliberativa-erro",
@@ -387,7 +413,7 @@ async function executarBruto(ctx) {
           dados: {
             instrucao: texto,
             intencao,
-            memoria: mem,
+            memoria: memDelib,
             coa,
             llm: statusMod,
             rota: "analise-rapida-sem-llm",
@@ -405,7 +431,7 @@ async function executarBruto(ctx) {
           dados: {
             instrucao: texto,
             intencao,
-            memoria: mem,
+            memoria: memDelib,
             coa,
             llm: statusMod,
             lastroConsciencia: lastro,
@@ -422,7 +448,7 @@ async function executarBruto(ctx) {
         dados: {
           instrucao: texto,
           intencao,
-          memoria: mem,
+          memoria: memDelib,
           coa,
           llm: statusMod,
           rota: "deliberativa-rapida-sem-llm",
@@ -435,7 +461,7 @@ async function executarBruto(ctx) {
       const paramsMsg = {
         instrucao: texto,
         historico: ctx.historico || [],
-        memoria: mem,
+        memoria: memDelib,
         coa,
         intencao,
         validacaoContexto: ctx.validacaoContexto || null
@@ -486,7 +512,7 @@ async function executarBruto(ctx) {
         dados: {
           instrucao: texto,
           intencao,
-          memoria: mem,
+          memoria: memDelib,
           coa,
           rota: "deliberativa-rapida",
           complexidadeDecisao: complexidade,
@@ -521,7 +547,7 @@ async function executarBruto(ctx) {
         dados: {
           instrucao: texto,
           intencao,
-          memoria: mem,
+          memoria: memDelib,
           coa,
           erro: err && err.message,
           rota: "deliberativa-rapida-erro",
@@ -547,7 +573,7 @@ async function executarBruto(ctx) {
       dados: {
         instrucao: texto,
         intencao,
-        memoria: mem,
+        memoria: memDelib,
         coa,
         llm: status,
         rota: "legado",
@@ -560,7 +586,7 @@ async function executarBruto(ctx) {
     const paramsMsg = {
       instrucao: texto,
       historico: ctx.historico || [],
-      memoria: mem,
+      memoria: memDelib,
       coa,
       intencao,
       validacaoContexto: ctx.validacaoContexto || null
@@ -582,7 +608,7 @@ async function executarBruto(ctx) {
       dados: {
         instrucao: texto,
         intencao,
-        memoria: mem,
+        memoria: memDelib,
         coa,
         rota: "legado-llm",
         complexidadeDecisao: complexidade,
@@ -606,7 +632,7 @@ async function executarBruto(ctx) {
       dados: {
         instrucao: texto,
         intencao,
-        memoria: mem,
+        memoria: memDelib,
         coa,
         erro: err && err.message,
         rota: "legado-erro",
