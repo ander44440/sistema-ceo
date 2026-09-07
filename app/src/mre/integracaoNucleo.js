@@ -24,6 +24,7 @@ import {
   schemaHintConsciencia,
   garantirReflexoEstadoExecutivo
 } from "../conscienciaOperacional/influenciaDeliberacao.js";
+import { garantirDisciplinaLastroInsuficiente } from "../conscienciaOperacional/disciplinaLastroInsuficiente.js";
 import {
   detectarPedidoAnaliseDeliberativa,
   detectarPedidoConsultaResposta,
@@ -591,11 +592,22 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
   if (!resultado.ok || !resultado.parecer) {
     const falha =
       "Não foi possível concluir a deliberação executiva com parecer válido.";
-    const reflexoFalha = garantirReflexoEstadoExecutivo(
-      falha,
-      lastro,
-      ctx.instrucao || ""
-    );
+    const disciplinaFalha = garantirDisciplinaLastroInsuficiente(falha, {
+      factosOficiais: entrada.factosOficiais,
+      parecer: resultado.parecer || null,
+      pedidoConsulta
+    });
+    const reflexoFalha = disciplinaFalha.aplicada
+      ? {
+          mensagem: disciplinaFalha.mensagem,
+          aplicada: false,
+          motivo: "omitido_apos_disciplina_lastro"
+        }
+      : garantirReflexoEstadoExecutivo(
+          disciplinaFalha.mensagem,
+          lastro,
+          ctx.instrucao || ""
+        );
     return {
       ok: false,
       mensagem: reflexoFalha.mensagem,
@@ -603,6 +615,7 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
       dados: {
         mre: resultado,
         rota: "deliberativa",
+        disciplinaLastro: disciplinaFalha,
         conscienciaInfluencia: reflexoFalha
       }
     };
@@ -634,6 +647,14 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
       comunicado.texto = prosaAnalise;
     }
   }
+  // FRENTE 6: prosa → disciplina lastro insuficiente → reflexo ops (CONSULTA intacta)
+  /** @type {import("../conscienciaOperacional/disciplinaLastroInsuficiente.js").ResultadoDisciplinaLastro} */
+  let disciplinaLastro = {
+    mensagem: comunicado.texto,
+    aplicada: false,
+    motivo: pedidoConsulta ? "consulta_fora_de_escopo" : "pendente",
+    sinal: null
+  };
   // CONSULTA situacional: snapshot factual não é substituído por prosa de Gate/Job/continuidade
   /** @type {{ mensagem: string, aplicada: boolean, motivo: string }} */
   let reflexo = {
@@ -642,19 +663,34 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     motivo: pedidoConsulta ? "consulta_snapshot_sem_reflexo" : "pendente"
   };
   if (!pedidoConsulta) {
-    reflexo = garantirReflexoEstadoExecutivo(
-      comunicado.texto,
-      lastro,
-      ctx.instrucao || ""
-    );
-    if (reflexo.aplicada && !pedidoAnalise) {
-      comunicado.texto = reflexo.mensagem;
-    } else if (reflexo.aplicada && pedidoAnalise) {
-      if (
-        lastro?.contagens?.gatesPendentes > 0 &&
-        !/gate\s+pendente/i.test(comunicado.texto)
-      ) {
-        comunicado.texto = `${comunicado.texto}\n\nNota operacional: existe Gate pendente — não inicia execução desta análise.`;
+    disciplinaLastro = garantirDisciplinaLastroInsuficiente(comunicado.texto, {
+      factosOficiais: entrada.factosOficiais,
+      parecer: resultado.parecer,
+      pedidoConsulta: false
+    });
+    comunicado.texto = disciplinaLastro.mensagem;
+    // Se a disciplina substituiu a prosa, não deixar o reflexo ops sobrescrever o fail-closed.
+    if (disciplinaLastro.aplicada) {
+      reflexo = {
+        mensagem: comunicado.texto,
+        aplicada: false,
+        motivo: "omitido_apos_disciplina_lastro"
+      };
+    } else {
+      reflexo = garantirReflexoEstadoExecutivo(
+        comunicado.texto,
+        lastro,
+        ctx.instrucao || ""
+      );
+      if (reflexo.aplicada && !pedidoAnalise) {
+        comunicado.texto = reflexo.mensagem;
+      } else if (reflexo.aplicada && pedidoAnalise) {
+        if (
+          lastro?.contagens?.gatesPendentes > 0 &&
+          !/gate\s+pendente/i.test(comunicado.texto)
+        ) {
+          comunicado.texto = `${comunicado.texto}\n\nNota operacional: existe Gate pendente — não inicia execução desta análise.`;
+        }
       }
     }
   }
@@ -706,6 +742,7 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
       parecerId: resultado.parecer.id,
       referenciaDecisao: comunicado.referenciaDecisao,
       efeitosPosDeliberacao: efeitos,
+      disciplinaLastro,
       conscienciaInfluencia: reflexo,
       ...(temManifesto
         ? {

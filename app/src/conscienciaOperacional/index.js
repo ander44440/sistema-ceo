@@ -58,4 +58,13 @@ export {
   AVISO_GATE_INFORMATIVO
 } from "./influenciaDeliberacao.js";
 
+export {
+  PREFIXO_DECLARACAO_LASTRO_INSUFICIENTE,
+  listarFactosTurnoParaDisciplina,
+  detectarInsuficienciaLastroTurno,
+  comporDeclaracaoLastroInsuficiente,
+  prosaJaDeclaraLastroInsuficiente,
+  garantirDisciplinaLastroInsuficiente
+} from "./disciplinaLastroInsuficiente.js";
+
 export { criarLeitoresConscienciaPadrao } from "./leitoresPadrao.js";

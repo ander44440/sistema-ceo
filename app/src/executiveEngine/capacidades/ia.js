@@ -25,6 +25,7 @@ import {
   comporProsaLastro,
   garantirReflexoEstadoExecutivo
 } from "../../conscienciaOperacional/influenciaDeliberacao.js";
+import { garantirDisciplinaLastroInsuficiente } from "../../conscienciaOperacional/disciplinaLastroInsuficiente.js";
 import { avaliarComplexidadeDecisao } from "../complexidadeDecisao.js";
 import {
   detectarPedidoAnaliseDeliberativa,
@@ -200,6 +201,24 @@ async function executarBruto(ctx) {
       motivo
     });
 
+    /**
+     * FRENTE 6 — após disciplina fail-closed, não deixar reflexo ops sobrescrever.
+     * @param {string} mensagem
+     * @param {object|null|undefined} lastroCtx
+     * @param {string} instrucao
+     * @param {{ aplicada?: boolean }|null|undefined} disciplina
+     */
+    const reflexoAposDisciplina = (mensagem, lastroCtx, instrucao, disciplina) => {
+      if (disciplina && disciplina.aplicada === true) {
+        return {
+          mensagem,
+          aplicada: false,
+          motivo: "omitido_apos_disciplina_lastro"
+        };
+      }
+      return garantirReflexoEstadoExecutivo(mensagem, lastroCtx, instrucao);
+    };
+
     // REQ-066: decisões «completa» pagam MRE 0–7; CONSULTA situacional também
     if (usarMreCompleto) {
       const status = await obterStatusLlm();
@@ -323,6 +342,16 @@ async function executarBruto(ctx) {
                 : undefined
           }
         );
+        const disciplina =
+          mreOut.dados?.disciplinaLastro &&
+          typeof mreOut.dados.disciplinaLastro === "object"
+            ? mreOut.dados.disciplinaLastro
+            : {
+                aplicada: false,
+                motivo: "ausente_no_mre",
+                mensagem: mreOut.mensagem,
+                sinal: null
+              };
         const reflexo =
           pedidoAnalise || pedidoConsulta
             ? semReflexoContaminante(
@@ -331,7 +360,12 @@ async function executarBruto(ctx) {
                   ? "consulta_snapshot_sem_reflexo"
                   : "analise_p12"
               )
-            : garantirReflexoEstadoExecutivo(mreOut.mensagem, lastro, texto);
+            : reflexoAposDisciplina(
+                mreOut.mensagem,
+                lastro,
+                texto,
+                disciplina
+              );
         return {
           ...mreOut,
           mensagem: reflexo.mensagem,
@@ -343,6 +377,7 @@ async function executarBruto(ctx) {
             memoria: memDelib,
             coa,
             llm: status,
+            disciplinaLastro: disciplina,
             conscienciaInfluencia: reflexo,
             complexidadeDecisao: {
               ...complexidade,
@@ -371,15 +406,32 @@ async function executarBruto(ctx) {
           err && err.message ? err.message : "falha no MRE",
           { pedidoAnalise }
         );
+        const disciplinaFallback = pedidoConsulta
+          ? {
+              mensagem: fallback,
+              aplicada: false,
+              motivo: "consulta_fora_de_escopo",
+              sinal: null
+            }
+          : garantirDisciplinaLastroInsuficiente(fallback, {
+              factosOficiais: lastro?.factosOficiais,
+              parecer: null,
+              pedidoConsulta: false
+            });
         const reflexo =
           pedidoAnalise || pedidoConsulta
             ? semReflexoContaminante(
-                fallback,
+                disciplinaFallback.mensagem,
                 pedidoConsulta
                   ? "consulta_snapshot_sem_reflexo"
                   : "analise_p12"
               )
-            : garantirReflexoEstadoExecutivo(fallback, lastro, texto);
+            : reflexoAposDisciplina(
+                disciplinaFallback.mensagem,
+                lastro,
+                texto,
+                disciplinaFallback
+              );
         return {
           ok: true,
           capacidade: "ia",
@@ -392,6 +444,7 @@ async function executarBruto(ctx) {
             coa,
             erro: err && err.message,
             rota: "deliberativa-erro",
+            disciplinaLastro: disciplinaFallback,
             conscienciaInfluencia: reflexo,
             complexidadeDecisao: complexidade
           }
@@ -497,13 +550,30 @@ async function executarBruto(ctx) {
         max_tokens: complexidade.maxTokens
       });
       // CONSULTA não deve chegar aqui (forcarMreConsulta); se chegar, não contaminar
+      const disciplinaRapida = pedidoConsulta
+        ? {
+            mensagem: saida.texto,
+            aplicada: false,
+            motivo: "consulta_fora_de_escopo",
+            sinal: null
+          }
+        : garantirDisciplinaLastroInsuficiente(saida.texto, {
+            factosOficiais: lastro?.factosOficiais,
+            parecer: null,
+            pedidoConsulta: false
+          });
       const reflexo =
         pedidoAnalise || pedidoConsulta
           ? semReflexoContaminante(
-              saida.texto,
+              disciplinaRapida.mensagem,
               pedidoConsulta ? "consulta_snapshot_sem_reflexo" : "analise_p12"
             )
-          : garantirReflexoEstadoExecutivo(saida.texto, lastro, texto);
+          : reflexoAposDisciplina(
+              disciplinaRapida.mensagem,
+              lastro,
+              texto,
+              disciplinaRapida
+            );
       return {
         ok: true,
         capacidade: "ia",
@@ -517,6 +587,7 @@ async function executarBruto(ctx) {
           rota: "deliberativa-rapida",
           complexidadeDecisao: complexidade,
           dicInjecao: dicMeta,
+          disciplinaLastro: disciplinaRapida,
           conscienciaInfluencia: reflexo,
           llm: {
             modelo: saida.modelo,
@@ -532,13 +603,30 @@ async function executarBruto(ctx) {
         err && err.message ? err.message : "falha na chamada rápida",
         { pedidoAnalise }
       );
+      const disciplinaRapidaErr = pedidoConsulta
+        ? {
+            mensagem: fallback,
+            aplicada: false,
+            motivo: "consulta_fora_de_escopo",
+            sinal: null
+          }
+        : garantirDisciplinaLastroInsuficiente(fallback, {
+            factosOficiais: lastro?.factosOficiais,
+            parecer: null,
+            pedidoConsulta: false
+          });
       const reflexo =
         pedidoAnalise || pedidoConsulta
           ? semReflexoContaminante(
-              fallback,
+              disciplinaRapidaErr.mensagem,
               pedidoConsulta ? "consulta_snapshot_sem_reflexo" : "analise_p12"
             )
-          : garantirReflexoEstadoExecutivo(fallback, lastro, texto);
+          : reflexoAposDisciplina(
+              disciplinaRapidaErr.mensagem,
+              lastro,
+              texto,
+              disciplinaRapidaErr
+            );
       return {
         ok: true,
         capacidade: "ia",
@@ -552,6 +640,7 @@ async function executarBruto(ctx) {
           erro: err && err.message,
           rota: "deliberativa-rapida-erro",
           complexidadeDecisao: complexidade,
+          disciplinaLastro: disciplinaRapidaErr,
           conscienciaInfluencia: reflexo
         }
       };
