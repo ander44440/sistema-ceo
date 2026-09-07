@@ -73,3 +73,18 @@ test("frente activa não sequestrar «Listar projetos»", () => {
   assert.equal(saida.destino, "capacidade_operacional");
   assert.match(saida.razaoCurta || "", /catálogo/i);
 });
+
+test('FP: «Liste as tarefas do projeto» → NÃO catálogo', () => {
+  assert.equal(ehConsultaCatalogoProjetos("Liste as tarefas do projeto"), false);
+  const saida = classificar("Liste as tarefas do projeto");
+  assert.notEqual(
+    saida.razaoCurta || "",
+    "Consulta/listagem do catálogo de projetos → C4"
+  );
+  assert.equal(
+    /catálogo de projetos/i.test(saida.razaoCurta || ""),
+    false
+  );
+  const inten = classificarIntencao("Liste as tarefas do projeto", saida);
+  assert.notEqual(inten.id, "atuar_em_projetos");
+});

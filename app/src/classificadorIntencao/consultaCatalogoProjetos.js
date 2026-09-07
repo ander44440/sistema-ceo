@@ -20,5 +20,10 @@ export function ehConsultaCatalogoProjetos(texto) {
     return false;
   }
 
+  // Objecto explícito ≠ catálogo (ex.: «Liste as tarefas do projeto»)
+  if (/\btarefas?\b/.test(t)) {
+    return false;
+  }
+
   return /\b(listar|liste|mostrar|mostre|ver|veja|quais)\b/.test(t);
 }
