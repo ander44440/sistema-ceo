@@ -119,7 +119,7 @@ test("CT-G05: mudar explícito; anterior preenchido; ≠ C3", () => {
   assert.equal(s.permiteJob, false);
 });
 
-test("CT-G06: ambíguo → pergunta curta; 0 Jobs", async () => {
+test("CT-G06: ambíguo no gestor; PD > CSC no EE (C2/MRE)", async () => {
   const activo = criarObjectivo("priorizar outdoor", "usuario", ISO);
   const r = gestorObjectivo({
     mensagem: "priorizar outdoor ou decidir pagamento?",
@@ -135,7 +135,11 @@ test("CT-G06: ambíguo → pergunta curta; 0 Jobs", async () => {
     { texto: "priorizar outdoor ou decidir pagamento?" },
     {}
   );
-  assert.equal(out.modo, "clarificacao_objectivo");
+  // G2.5: PD vence CSC — sem early-return clarificacao_objectivo
+  assert.notEqual(out.modo, "clarificacao_objectivo");
+  assert.equal(out.dados?.precedenciaTurno?.autoridade, "pedido_decisao");
+  assert.equal(out.dados?.encaminhamento?.destino, "nucleo_mre");
+  assert.equal(out.dados?.mreInvocado, true);
   assert.equal(out.dados?.motorAcionado, false);
 });
 
@@ -274,7 +278,7 @@ test("CT-G13: regressão — Classificador recebe contexto sem mudar limiar", ()
   assert.match(idx, /objetivoConversacional/);
 });
 
-test("CT-G14: ambiguidade objectivo + deixis → uma pergunta (prioridade objectivo)", async () => {
+test("CT-G14: ambiguidade objectivo + deixis — PD > CSC (C2/MRE)", async () => {
   definirEstadoObjectivoSessao({
     objetivoActivo: criarObjectivo("priorizar outdoor", "usuario", ISO),
     objetivoAnterior: null
@@ -292,10 +296,14 @@ test("CT-G14: ambiguidade objectivo + deixis → uma pergunta (prioridade object
     },
     {}
   );
-  assert.equal(out.modo, "clarificacao_objectivo");
+  // G2.5: PD vence CSC mesmo com histórico/deixis — turno não fecha em clarificação CSC
+  assert.notEqual(out.modo, "clarificacao_objectivo");
   assert.notEqual(out.modo, "clarificacao_referente");
   assert.notEqual(out.modo, "clarificacao_topico");
-  assert.equal((out.mensagem.match(/\?/g) || []).length, 1);
+  assert.equal(out.dados?.precedenciaTurno?.autoridade, "pedido_decisao");
+  assert.equal(out.dados?.encaminhamento?.destino, "nucleo_mre");
+  assert.equal(out.dados?.mreInvocado, true);
+  assert.equal(out.dados?.motorAcionado, false);
 });
 
 test("CT-G-extra: store só com commitEstado", () => {

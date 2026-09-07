@@ -1029,41 +1029,58 @@ export const executiveEngine = {
     };
 
     // Prioridade RF: Gate > ambiguo_contexto > objectivo > tópico > referente
+    // G2.3: early-return VCA só se resolver autorizar clarificar_contexto.
     if (
       resultadoVca.veredicto === "ambiguo_contexto" &&
       resultadoVca.perguntaCurta
     ) {
-      const pergunta =
-        resultadoVca.clarificacaoGateIsolamento || resultadoVca.perguntaCurta;
-      const respostaVca = {
-        ok: true,
-        mensagem: pergunta,
-        intencao: "conversa_projeto",
-        capacidade: null,
-        dados: {
-          classificacao: null,
-          encaminhamento: {
-            destino: "clarificacao_contexto",
-            ok: true,
-            idClasse: null
-          },
-          ...metaVca,
-          motorAcionado: false,
-          mreInvocado: false
-        },
-        origem: "executiveEngine",
-        modo: "clarificacao_contexto"
-      };
-      const memoriaVca = atualizarAposInstrucao({
-        instrucao: texto,
-        intencao: respostaVca.intencao,
-        capacidade: null,
-        ok: true,
-        mensagem: respostaVca.mensagem,
-        dados: respostaVca.dados
+      const precVca = resolverPrecedenciaTurno({
+        pedidoDecisaoExplicita: pedidoDecisaoPrec,
+        pedidoSituacionalTrabalho: situacionalPrec,
+        pedidoConsultaOuRespostaComposta: consultaOuRespostaCompostaPrec,
+        panoramaEstadoGeral: panoramaPrec,
+        vcaClarificacao: true,
+        objetoOperacionalReal:
+          Boolean(estadoOpPre?.operacaoAberta) ||
+          (obsAcompanhamento?.aindaActivos > 0),
+        fase: "pre_classificador"
       });
-      respostaVca.dados = { ...respostaVca.dados, memoria: memoriaVca };
-      return respostaVca;
+      if (
+        precVca.autoridade === "vca_csc" &&
+        precVca.acao === "clarificar_contexto"
+      ) {
+        const pergunta =
+          resultadoVca.clarificacaoGateIsolamento || resultadoVca.perguntaCurta;
+        const respostaVca = {
+          ok: true,
+          mensagem: pergunta,
+          intencao: "conversa_projeto",
+          capacidade: null,
+          dados: {
+            classificacao: null,
+            encaminhamento: {
+              destino: "clarificacao_contexto",
+              ok: true,
+              idClasse: null
+            },
+            ...metaVca,
+            motorAcionado: false,
+            mreInvocado: false
+          },
+          origem: "executiveEngine",
+          modo: "clarificacao_contexto"
+        };
+        const memoriaVca = atualizarAposInstrucao({
+          instrucao: texto,
+          intencao: respostaVca.intencao,
+          capacidade: null,
+          ok: true,
+          mensagem: respostaVca.mensagem,
+          dados: respostaVca.dados
+        });
+        respostaVca.dados = { ...respostaVca.dados, memoria: memoriaVca };
+        return respostaVca;
+      }
     }
 
     const autorizaLastroCsc = resultadoVca.autorizaLastroCsc === true;
@@ -1257,38 +1274,55 @@ export const executiveEngine = {
       resultadoObj?.evento === "ambiguo_objetivo" &&
       resultadoObj.perguntaCurta
     ) {
-      const respostaObj = {
-        ok: true,
-        mensagem: resultadoObj.perguntaCurta,
-        intencao,
-        capacidade: null,
-        dados: {
-          classificacao,
-          encaminhamento: {
-            destino: "clarificacao_objectivo",
-            ok: true,
-            idClasse: rota.rota?.id || null
-          },
-          ...metaVca,
-          ...metaObjectivos,
-          ...metaTopicos,
-          resolucaoReferencia: resultadoRef,
-          motorAcionado: false,
-          mreInvocado: false
-        },
-        origem: "executiveEngine",
-        modo: "clarificacao_objectivo"
-      };
-      const memoriaObj = atualizarAposInstrucao({
-        instrucao: texto,
-        intencao: respostaObj.intencao,
-        capacidade: null,
-        ok: true,
-        mensagem: respostaObj.mensagem,
-        dados: respostaObj.dados
+      const precCscObj = resolverPrecedenciaTurno({
+        pedidoDecisaoExplicita: pedidoDecisaoPrec,
+        pedidoSituacionalTrabalho: situacionalPrec,
+        pedidoConsultaOuRespostaComposta: consultaOuRespostaCompostaPrec,
+        panoramaEstadoGeral: panoramaPrec,
+        cscClarificacao: true,
+        destinoClassificador: rota.destino,
+        objetoOperacionalReal:
+          Boolean(estadoOpPre?.operacaoAberta) ||
+          (obsAcompanhamento?.aindaActivos > 0),
+        fase: "pos_classificador"
       });
-      respostaObj.dados = { ...respostaObj.dados, memoria: memoriaObj };
-      return respostaObj;
+      if (
+        precCscObj.autoridade === "vca_csc" &&
+        precCscObj.acao === "clarificar_contexto"
+      ) {
+        const respostaObj = {
+          ok: true,
+          mensagem: resultadoObj.perguntaCurta,
+          intencao,
+          capacidade: null,
+          dados: {
+            classificacao,
+            encaminhamento: {
+              destino: "clarificacao_objectivo",
+              ok: true,
+              idClasse: rota.rota?.id || null
+            },
+            ...metaVca,
+            ...metaObjectivos,
+            ...metaTopicos,
+            resolucaoReferencia: resultadoRef,
+            motorAcionado: false,
+            mreInvocado: false
+          },
+          origem: "executiveEngine",
+          modo: "clarificacao_objectivo"
+        };
+        const memoriaObj = atualizarAposInstrucao({
+          instrucao: texto,
+          intencao: respostaObj.intencao,
+          capacidade: null,
+          ok: true,
+          mensagem: respostaObj.mensagem,
+          dados: respostaObj.dados
+        });
+        respostaObj.dados = { ...respostaObj.dados, memoria: memoriaObj };
+        return respostaObj;
+      }
     }
 
     if (resultadoTop?.clarificacaoGateShift) {
@@ -1327,74 +1361,109 @@ export const executiveEngine = {
     }
 
     if (resultadoTop?.evento === "ambiguo_topico" && resultadoTop.perguntaCurta) {
-      const respostaTop = {
-        ok: true,
-        mensagem: resultadoTop.perguntaCurta,
-        intencao,
-        capacidade: null,
-        dados: {
-          classificacao,
-          encaminhamento: {
-            destino: "clarificacao_topico",
-            ok: true,
-            idClasse: rota.rota?.id || null
-          },
-          ...metaVca,
-          ...metaObjectivos,
-          ...metaTopicos,
-          resolucaoReferencia: resultadoRef,
-          motorAcionado: false,
-          mreInvocado: false
-        },
-        origem: "executiveEngine",
-        modo: "clarificacao_topico"
-      };
-      const memoriaTop = atualizarAposInstrucao({
-        instrucao: texto,
-        intencao: respostaTop.intencao,
-        capacidade: null,
-        ok: true,
-        mensagem: respostaTop.mensagem,
-        dados: respostaTop.dados
+      const precCscTop = resolverPrecedenciaTurno({
+        pedidoDecisaoExplicita: pedidoDecisaoPrec,
+        pedidoSituacionalTrabalho: situacionalPrec,
+        pedidoConsultaOuRespostaComposta: consultaOuRespostaCompostaPrec,
+        panoramaEstadoGeral: panoramaPrec,
+        cscClarificacao: true,
+        destinoClassificador: rota.destino,
+        objetoOperacionalReal:
+          Boolean(estadoOpPre?.operacaoAberta) ||
+          (obsAcompanhamento?.aindaActivos > 0),
+        fase: "pos_classificador"
       });
-      respostaTop.dados = { ...respostaTop.dados, memoria: memoriaTop };
-      return respostaTop;
+      if (
+        precCscTop.autoridade === "vca_csc" &&
+        precCscTop.acao === "clarificar_contexto"
+      ) {
+        const respostaTop = {
+          ok: true,
+          mensagem: resultadoTop.perguntaCurta,
+          intencao,
+          capacidade: null,
+          dados: {
+            classificacao,
+            encaminhamento: {
+              destino: "clarificacao_topico",
+              ok: true,
+              idClasse: rota.rota?.id || null
+            },
+            ...metaVca,
+            ...metaObjectivos,
+            ...metaTopicos,
+            resolucaoReferencia: resultadoRef,
+            motorAcionado: false,
+            mreInvocado: false
+          },
+          origem: "executiveEngine",
+          modo: "clarificacao_topico"
+        };
+        const memoriaTop = atualizarAposInstrucao({
+          instrucao: texto,
+          intencao: respostaTop.intencao,
+          capacidade: null,
+          ok: true,
+          mensagem: respostaTop.mensagem,
+          dados: respostaTop.dados
+        });
+        respostaTop.dados = { ...respostaTop.dados, memoria: memoriaTop };
+        return respostaTop;
+      }
     }
 
     // IMP-062 RF7: ambiguidade de referente → pergunta curta (sem Job / sem C3)
+    // G2.3: early-return CSC só se resolver autorizar clarificar_contexto.
     if (resultadoRef.estado === "ambiguo") {
-      const respostaAmb = {
-        ok: true,
-        mensagem: resultadoRef.perguntaCurta,
-        intencao,
-        capacidade: null,
-        dados: {
-          classificacao,
-          encaminhamento: {
-            destino: "clarificacao_referente",
-            ok: true,
-            idClasse: rota.rota?.id || null
-          },
-          ...metaVca,
-          ...metaObjectivos,
-          ...metaTopicos,
-          resolucaoReferencia: resultadoRef,
-          motorAcionado: false,
-          mreInvocado: false
-        },
-        origem: "executiveEngine",
-        modo: "clarificacao_referente"
-      };
-      const memoriaAmb = atualizarAposInstrucao({
-        instrucao: texto,
-        intencao: respostaAmb.intencao,
-        capacidade: null,
-        ok: true,
-        mensagem: respostaAmb.mensagem,
-        dados: respostaAmb.dados
+      const precCscRef = resolverPrecedenciaTurno({
+        pedidoDecisaoExplicita: pedidoDecisaoPrec,
+        pedidoSituacionalTrabalho: situacionalPrec,
+        pedidoConsultaOuRespostaComposta: consultaOuRespostaCompostaPrec,
+        panoramaEstadoGeral: panoramaPrec,
+        cscClarificacao: true,
+        destinoClassificador: rota.destino,
+        objetoOperacionalReal:
+          Boolean(estadoOpPre?.operacaoAberta) ||
+          (obsAcompanhamento?.aindaActivos > 0),
+        fase: "pos_classificador"
       });
-      respostaAmb.dados = { ...respostaAmb.dados, memoria: memoriaAmb };
-      return respostaAmb;
+      if (
+        precCscRef.autoridade === "vca_csc" &&
+        precCscRef.acao === "clarificar_contexto"
+      ) {
+        const respostaAmb = {
+          ok: true,
+          mensagem: resultadoRef.perguntaCurta,
+          intencao,
+          capacidade: null,
+          dados: {
+            classificacao,
+            encaminhamento: {
+              destino: "clarificacao_referente",
+              ok: true,
+              idClasse: rota.rota?.id || null
+            },
+            ...metaVca,
+            ...metaObjectivos,
+            ...metaTopicos,
+            resolucaoReferencia: resultadoRef,
+            motorAcionado: false,
+            mreInvocado: false
+          },
+          origem: "executiveEngine",
+          modo: "clarificacao_referente"
+        };
+        const memoriaAmb = atualizarAposInstrucao({
+          instrucao: texto,
+          intencao: respostaAmb.intencao,
+          capacidade: null,
+          ok: true,
+          mensagem: respostaAmb.mensagem,
+          dados: respostaAmb.dados
+        });
+        respostaAmb.dados = { ...respostaAmb.dados, memoria: memoriaAmb };
+        return respostaAmb;
+      }
     }
 
     // IMP-059 E3/E4: Continuidade já foi tratada acima — consulta só no caminho deliberativo/executivo
