@@ -58,6 +58,7 @@ export {
 } from "./recomendacaoOperacional.js";
 
 export { detectarPedidoDecisaoExplicita } from "./pedidoDecisaoExplicita.js";
+export { ehConsultaCatalogoProjetos } from "./consultaCatalogoProjetos.js";
 export {
   detectarAncoraEmpresa,
   temAncoraExplicitaProjeto

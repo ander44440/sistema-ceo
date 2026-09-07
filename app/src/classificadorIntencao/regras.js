@@ -24,6 +24,7 @@ import {
   temAncoraExplicitaProjeto
 } from "./ancoraEmpresa.js";
 import { detectarPedidoDecisaoExplicita } from "./pedidoDecisaoExplicita.js";
+import { ehConsultaCatalogoProjetos } from "./consultaCatalogoProjetos.js";
 
 /**
  * @typedef {object} ContextoClassificacao
@@ -986,6 +987,13 @@ export function resolverEmpates(scores, t, ctx = {}) {
       razao: "P0: consulta de estado operacional → C4"
     };
   }
+  // Catálogo de projetos (listagem) — antes do fallback C1/C2 / frente activa
+  if (ehConsultaCatalogoProjetos(t)) {
+    return {
+      classe: "comando_operacional",
+      razao: "Consulta/listagem do catálogo de projetos → C4"
+    };
+  }
   if (ehPedidoSituacionalTrabalho(t)) {
     return {
       classe: "conversa_projeto",
@@ -1260,6 +1268,14 @@ export function classificar(texto, contexto = {}) {
       "comando_operacional",
       0.96,
       "P0: consulta de estado operacional → C4 (sem Job)"
+    );
+  }
+
+  if (ehConsultaCatalogoProjetos(t)) {
+    return montarSaida(
+      "comando_operacional",
+      0.9,
+      "Consulta/listagem do catálogo de projetos → C4"
     );
   }
 

@@ -1,50 +1,75 @@
 /**
- * Precedência mínima: listar/mostrar/quais + projeto(s) → projetos
- * (não navegacao). Abrir / ir para projetos mantém navegacao.
+ * Predicado catálogo + mapper/classificador — intenção listagem ≠ navegação.
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { classificar } from "../classificadorIntencao/regras.js";
+import { ehConsultaCatalogoProjetos } from "../classificadorIntencao/consultaCatalogoProjetos.js";
 import {
   mapearCapacidadePorTexto,
   classificarIntencao
 } from "./classificar.js";
 
-test('mapper: «Mostrar projetos» → atuar_em_projetos / projetos', () => {
-  const m = mapearCapacidadePorTexto("Mostrar projetos");
-  assert.equal(m.id, "atuar_em_projetos");
-  assert.equal(m.capacidade, "projetos");
-});
+const POSITIVOS = [
+  "Mostrar projetos",
+  "Listar projetos",
+  "Quais projetos",
+  "Quais projetos existem",
+  "Ver projetos",
+  "Me mostre os projetos"
+];
 
-test('mapper: «Listar projetos» → atuar_em_projetos / projetos', () => {
-  const m = mapearCapacidadePorTexto("Listar projetos");
-  assert.equal(m.id, "atuar_em_projetos");
-  assert.equal(m.capacidade, "projetos");
-});
+const NEGATIVOS_NAV = [
+  "Abrir projetos",
+  "Ir para projetos",
+  "Navegar para projetos"
+];
 
-test('mapper: «Quais projetos» → atuar_em_projetos / projetos', () => {
-  const m = mapearCapacidadePorTexto("Quais projetos");
-  assert.equal(m.id, "atuar_em_projetos");
-  assert.equal(m.capacidade, "projetos");
-});
+for (const texto of POSITIVOS) {
+  test(`predicado: «${texto}» → catálogo`, () => {
+    assert.equal(ehConsultaCatalogoProjetos(texto), true);
+  });
 
-test('mapper: «Abrir projetos» → navegar / navegacao', () => {
-  const m = mapearCapacidadePorTexto("Abrir projetos");
-  assert.equal(m.id, "navegar");
-  assert.equal(m.capacidade, "navegacao");
-});
+  test(`mapper: «${texto}» → projetos`, () => {
+    const m = mapearCapacidadePorTexto(texto);
+    assert.equal(m.id, "atuar_em_projetos");
+    assert.equal(m.capacidade, "projetos");
+  });
 
-test('mapper: «Ir para projetos» → navegar / navegacao', () => {
-  const m = mapearCapacidadePorTexto("Ir para projetos");
-  assert.equal(m.id, "navegar");
-  assert.equal(m.capacidade, "navegacao");
-});
+  test(`C4: «${texto}» → capacidade_operacional + projetos`, () => {
+    const saida = classificar(texto);
+    assert.equal(saida.classe, "comando_operacional");
+    assert.equal(saida.destino, "capacidade_operacional");
+    assert.equal(saida.precisaClarificacao, false);
+    const intencao = classificarIntencao(texto, saida);
+    assert.equal(intencao.capacidade, "projetos");
+    assert.equal(intencao.id, "atuar_em_projetos");
+  });
+}
 
-test('C4: «Mostrar projetos» → destino capacidade_operacional + projetos', () => {
-  const saida = classificar("Mostrar projetos");
+for (const texto of NEGATIVOS_NAV) {
+  test(`predicado: «${texto}» → não catálogo`, () => {
+    assert.equal(ehConsultaCatalogoProjetos(texto), false);
+  });
+
+  test(`mapper: «${texto}» → navegacao`, () => {
+    const m = mapearCapacidadePorTexto(texto);
+    assert.equal(m.id, "navegar");
+    assert.equal(m.capacidade, "navegacao");
+  });
+
+  test(`C4 nav: «${texto}» → capacidade_operacional + navegacao`, () => {
+    const saida = classificar(texto);
+    assert.equal(saida.classe, "comando_operacional");
+    assert.equal(saida.destino, "capacidade_operacional");
+    const intencao = classificarIntencao(texto, saida);
+    assert.equal(intencao.capacidade, "navegacao");
+  });
+}
+
+test("frente activa não sequestrar «Listar projetos»", () => {
+  const saida = classificar("Listar projetos", { frenteActiva: true });
   assert.equal(saida.classe, "comando_operacional");
   assert.equal(saida.destino, "capacidade_operacional");
-  const intencao = classificarIntencao("Mostrar projetos", saida);
-  assert.equal(intencao.capacidade, "projetos");
-  assert.equal(intencao.id, "atuar_em_projetos");
+  assert.match(saida.razaoCurta || "", /catálogo/i);
 });

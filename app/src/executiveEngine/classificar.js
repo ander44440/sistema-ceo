@@ -12,6 +12,7 @@ import {
   detectarAncoraEmpresa,
   temAncoraExplicitaProjeto
 } from "../classificadorIntencao/ancoraEmpresa.js";
+import { ehConsultaCatalogoProjetos } from "../classificadorIntencao/consultaCatalogoProjetos.js";
 
 export { normalizarTexto };
 
@@ -261,12 +262,8 @@ export function mapearCapacidadePorTexto(texto) {
     };
   }
 
-  // Catálogo de projectos (listar/mostrar/quais) — antes de navegar.
-  // «mostrar projetos» ≠ abrir o módulo UI; «abrir/ir para projetos» continua navegacao.
-  if (
-    /\b(listar|mostrar|quais)\b/.test(t) &&
-    /\bprojetos?\b/.test(t)
-  ) {
+  // Catálogo de projectos — predicado partilhado com o classificador (≠ navegação).
+  if (ehConsultaCatalogoProjetos(texto)) {
     return { id: "atuar_em_projetos", capacidade: "projetos", confianca: 0.85 };
   }
 

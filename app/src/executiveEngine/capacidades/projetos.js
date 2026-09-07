@@ -10,6 +10,7 @@ import {
 } from "../resposta.js";
 import { definirCoaAtivo, obterCoaAtivo } from "../coaSessao.js";
 import { listarProjetos } from "../../catalogoProjetos/index.js";
+import { ehConsultaCatalogoProjetos } from "../../classificadorIntencao/consultaCatalogoProjetos.js";
 
 /**
  * CTO-003.1 P1 — só extrai alvo quando há âncora explícita de abertura/troca
@@ -46,9 +47,8 @@ export const capacidadeProjetos = Object.freeze({
   async executar(ctx) {
     const texto = textoInstrucao(ctx);
     const mem = snapshotMemoria(ctx);
-    const lower = texto.toLowerCase();
 
-    if (/\b(listar|mostrar|quais)\b/.test(lower) && /\bprojetos?\b/.test(lower)) {
+    if (ehConsultaCatalogoProjetos(texto)) {
       const nomes = listarProjetos()
         .map((p) => `${p.nome}${p.ativo ? " (ativo)" : ""}`)
         .join("; ");
