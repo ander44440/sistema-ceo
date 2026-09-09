@@ -98,6 +98,7 @@ import {
   processarMensagemAutoridadeDelegada,
   snapshotAutoridadeDelegadaParaDados
 } from "../autoridadeDelegada/autoridadeDelegada.js";
+import { orquestrarConsultaRegistados } from "../consultaRegistados/index.js";
 import { conduzirTrabalhoExecutivoC3 } from "../classificadorIntencao/integracaoNucleo.js";
 import {
   consultarEstadoExecutivoAntesDeResponder,
@@ -841,6 +842,47 @@ export const executiveEngine = {
         ),
         precAd
       );
+    }
+
+    // IMP-086: Consulta de discussões e decisões registadas (read-only).
+    // Após Gate/AD; antes de CTO-003 / VCA / Classificador.
+    {
+      const coaConsulta = (() => {
+        try {
+          const c = obterCoaAtivo();
+          return c && c.id ? String(c.id) : null;
+        } catch {
+          return null;
+        }
+      })();
+      const outConsulta = orquestrarConsultaRegistados({
+        texto,
+        coaIdActivo: coaConsulta
+      });
+      if (outConsulta.consumido) {
+        const respostaConsulta = {
+          ok: outConsulta.ok !== false,
+          mensagem: outConsulta.mensagem,
+          intencao: {
+            id: "consulta_registados",
+            capacidade: "memoria"
+          },
+          capacidade: "memoria",
+          dados: {
+            ...(outConsulta.dados || {}),
+            classificacao: null,
+            encaminhamento: {
+              destino: "consulta_registados",
+              ok: true,
+              idClasse: null
+            }
+          },
+          origem: "executiveEngine",
+          modo: "consulta_registados"
+        };
+        // IMP-086 I1/CA-086-5: sem atualizarAposInstrucao / writers de workspace.
+        return respostaConsulta;
+      }
     }
 
     // CTO-003: Interceptação Operacional — ANTES de VCA / CSC / Classificador.

@@ -55,6 +55,10 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`analysis/ANL-018-analise-mep-ceo.md`](analysis/ANL-018-analise-mep-ceo.md) | **Aprovada v1.0** — Regularização MEP-CEO; CAP-13 (ADR-020) |
 | [`vision/VIS-009-memoria-evolucao-produto-ceo.md`](vision/VIS-009-memoria-evolucao-produto-ceo.md) | **Homologada v1.0** — MEP-CEO / CAP-13 |
 | [`requirements/REQ-085-requisitos-minimos-mep-ceo.md`](requirements/REQ-085-requisitos-minimos-mep-ceo.md) | **Homologado v1.0** — Pacote mínimo MEP-CEO; IDs `MCP`…`MEV`; transições ANL-018 |
+| [`requirements/REQ-086-consulta-discussoes-e-decisoes-registadas.md`](requirements/REQ-086-consulta-discussoes-e-decisoes-registadas.md) | **Homologado v1.0** — Consulta de discussões e decisões registadas; CAP-05 |
+| [`architecture/ARQ-086-consulta-discussoes-e-decisoes-registadas.md`](architecture/ARQ-086-consulta-discussoes-e-decisoes-registadas.md) | **Homologada v1.0** — Consulta de discussões e decisões registadas; CAP-05; Gate ARQ fechado |
+| [`implementation/IMP-086-consulta-discussoes-e-decisoes-registadas.md`](implementation/IMP-086-consulta-discussoes-e-decisoes-registadas.md) | **IMPLEMENTADA · HOMOLOGADA v1.0** — consulta discussões/decisões; 17/17; build OK |
+| [`implementation/evidencias/IMP-086-homologacao.md`](implementation/evidencias/IMP-086-homologacao.md) | Registo formal de homologação da entrega IMP-086 (09/09/2026) |
 | [`architecture/ARQ-033-fronteira-mep-ceo.md`](architecture/ARQ-033-fronteira-mep-ceo.md) | **Homologada v1.0** — Fronteira CAP-13; isolamento intacto; C3 **não** implementada |
 | [`implementation/IMP-072-nucleo-persistente-mep-ceo.md`](implementation/IMP-072-nucleo-persistente-mep-ceo.md) | **IMP-072 HOMOLOGADA** — núcleo C1+C2 da CAP-13 |
 | [`implementation/IMP-073-persistencia-fisica-mep-ceo.md`](implementation/IMP-073-persistencia-fisica-mep-ceo.md) | **IMP-073 IMPLEMENTADA** · **VAL-074 APROVADA** — persistência física + adapter FS |
