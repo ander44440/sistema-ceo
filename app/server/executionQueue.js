@@ -21,6 +21,7 @@ import {
 } from "../src/motorExecucao/cicloVidaJob.js";
 import { exigirObjetivoCanonico } from "../src/motorExecucao/objetivoJob.js";
 import { optsVerificacaoEvidenciaFisica } from "../src/motorExecucao/evidenciaFisicaNode.js";
+import { espelharNovasEntradasHistorico } from "../src/trilhaAuditavel/index.js";
 
 /**
  * @param {string} rootDir — raiz do repo CEO (pai de executive/)
@@ -67,8 +68,19 @@ export function criarFilaExecucao(rootDir) {
 
   function escreverJob(job) {
     garantirDir();
+    const anterior = lerJob(job.id);
     const p = caminhoJob(job.id);
     fs.writeFileSync(p, JSON.stringify(job, null, 2) + "\n", "utf8");
+    // Trilha Auditável fatia 1: espelho pós-facto; falha NÃO reverte o Job.
+    try {
+      espelharNovasEntradasHistorico({
+        rootDir,
+        jobAnterior: anterior,
+        jobNovo: job
+      });
+    } catch {
+      /* fail-soft — persistência do Job já concluída */
+    }
     return job;
   }
 

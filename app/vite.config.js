@@ -3,6 +3,7 @@ import { ceoLlmPlugin } from "./server/ceoLlmPlugin.js";
 import { executionQueuePlugin } from "./server/executionQueuePlugin.js";
 import { onboardingPlugin } from "./server/onboardingPlugin.js";
 import { orquestracaoPlugin } from "./server/orquestracaoPlugin.js";
+import { trilhaAuditavelPlugin } from "./server/trilhaAuditavelPlugin.js";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -12,6 +13,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       ceoLlmPlugin(env),
       executionQueuePlugin(),
+      trilhaAuditavelPlugin(),
       onboardingPlugin(),
       orquestracaoPlugin(env)
     ],
