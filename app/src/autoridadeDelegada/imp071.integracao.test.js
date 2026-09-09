@@ -46,6 +46,7 @@ test("B6: ciclo completo activação → fecho → MO → termo → soberania", 
   assert.equal(act.memoriaOrganizacional.tipoEvento, "activacao");
 
   const fecho = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "priorizar",
     ambito: "coa-mg2",
     descricao: "Priorizar LOD"
@@ -54,6 +55,7 @@ test("B6: ciclo completo activação → fecho → MO → termo → soberania", 
   assert.equal(fechoImportanteConformeMo(fecho.fecho).conforme, true);
 
   const fora = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "declarar_decisao",
     ambito: "estrategia_global"
   });

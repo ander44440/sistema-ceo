@@ -12,6 +12,11 @@ import {
   gravarDocumentoGate,
   limparDocumentoGate
 } from "./persistenciaGate.js";
+import {
+  appendRegistroMo,
+  ErroPersistenciaMo,
+  listarRegistosMo
+} from "../memoriaConfiavel/index.js";
 
 /** @type {ReturnType<typeof criarStoreContextoGate>|null} */
 let storePadrao = null;
@@ -78,11 +83,149 @@ export function resetStoreContinuidadePadrao() {
 }
 
 /**
- * Mensagem de Gate com postura executiva (DESP-003 / ciclo Decidir).
- * @param {object} [conducao]
- * @param {string} [gateId]
- * @param {object} [parecer]
+ * coaId explícito do parecer (opção D) — sem inferência.
+ * @param {object} parecer
+ * @returns {string|null}
  */
+function coaIdExplicitoDoParecer(parecer) {
+  if (!parecer || typeof parecer !== "object") return null;
+  const c = String(parecer.coaId || "").trim();
+  return c || null;
+}
+
+/**
+ * Grava decisão terminal de Gate no Ledger MO (origem gate).
+ * Idempotente por chave gateId+parecerId+decisao (e por hash do Ledger).
+ * @param {object} args
+ * @returns {{ ok: true, idempotente?: boolean } | { ok: false, codigo: string, mensagem: string }}
+ */
+function escreverDecisaoTerminalGateNoLedger(args) {
+  const {
+    decisao,
+    gate,
+    registo,
+    parecer,
+    conducao,
+    jobIdExistente
+  } = args;
+
+  if (decisao !== "aprovado" && decisao !== "rejeitado") {
+    return { ok: true };
+  }
+
+  const coaId = coaIdExplicitoDoParecer(parecer);
+  if (!coaId) {
+    return {
+      ok: false,
+      codigo: "coaId_ausente",
+      mensagem:
+        "Contrato Gate→Ledger: parecerSnapshot.coaId explícito obrigatório (opção D)."
+    };
+  }
+
+  const gateId = String(gate?.gateId || "").trim();
+  const parecerId = String(
+    parecer?.id || gate?.parecerId || ""
+  ).trim();
+  const resumo = String(registo?.solicitacaoResumo || "").trim();
+  const objetivo = String(
+    parecer?.diagnostico?.objetivoReal || ""
+  ).trim();
+  const quando = String(gate?.ultimaDecisaoEm || "").trim();
+  if (!gateId || !parecerId || !quando) {
+    return {
+      ok: false,
+      codigo: "schema_incompleto",
+      mensagem:
+        "Contrato Gate→Ledger: gateId, parecerId e ultimaDecisaoEm são obrigatórios."
+    };
+  }
+
+  const chave = `GATE-MO:${gateId}|${parecerId}|${decisao}`;
+  const existentes = listarRegistosMo({ coaId });
+  if (
+    existentes.some(
+      (r) => r && String(r.baseadoEm || "").includes(chave)
+    )
+  ) {
+    return { ok: true, idempotente: true };
+  }
+
+  const porque =
+    [resumo, objetivo].filter(Boolean).join(" — ") ||
+    `Decisão de Gate ${decisao}`;
+
+  let resultado;
+  if (decisao === "aprovado") {
+    const jobId =
+      (conducao && conducao.job && conducao.job.id) ||
+      jobIdExistente ||
+      null;
+    resultado = jobId
+      ? `job_publicado:${jobId}`
+      : `gate_aprovado:${conducao?.motivo || "sem_job"}`;
+  } else {
+    resultado = `gate_rejeitado:${conducao?.motivo || "gate_rejeitado"}`;
+  }
+
+  try {
+    appendRegistroMo({
+      decisao: `Gate ${gateId}: ${decisao} — ${resumo || parecerId}`,
+      quem: "usuario",
+      quando,
+      porque,
+      baseadoEm: `${chave} · REQ-058 · ARQ-019`,
+      resultado,
+      origem: "gate",
+      coaId
+    });
+    return { ok: true };
+  } catch (err) {
+    if (
+      err instanceof ErroPersistenciaMo &&
+      (err.codigo === "duplicado_hash" || err.codigo === "duplicado_id")
+    ) {
+      return { ok: true, idempotente: true };
+    }
+    return {
+      ok: false,
+      codigo:
+        err instanceof ErroPersistenciaMo && err.codigo
+          ? err.codigo
+          : "ledger_mo_falhou",
+      mensagem:
+        err && err.message
+          ? String(err.message)
+          : "Falha ao gravar Gate no Ledger MO."
+    };
+  }
+}
+
+/**
+ * Resposta fail-closed quando falta coaId (ou Ledger recusa) em decisão terminal.
+ * @param {object} loc
+ * @param {string} decisao
+ * @param {{ codigo: string, mensagem: string }} falha
+ */
+function respostaFalhaContratoGateLedger(loc, decisao, falha) {
+  return {
+    ok: false,
+    interceptado: true,
+    modo: "continuidade_gate_falha",
+    mensagem: falha.mensagem,
+    dados: {
+      continuidade: true,
+      classificadorSaltado: true,
+      decisao,
+      gateId: loc.gate?.gateId,
+      ledgerMo: {
+        ok: false,
+        codigo: falha.codigo
+      }
+    },
+    origem: "executiveEngine"
+  };
+}
 export function mensagemAguardandoGateContinuidade(conducao, gateId, parecer) {
   const gatilhos =
     conducao &&
@@ -299,6 +442,15 @@ export async function continuarAposDecisaoGate(opts) {
     };
   }
 
+  const terminal = decisao === "aprovado" || decisao === "rejeitado";
+  if (terminal && !coaIdExplicitoDoParecer(parecer)) {
+    return respostaFalhaContratoGateLedger(loc, decisao, {
+      codigo: "coaId_ausente",
+      mensagem:
+        "Contrato Gate→Ledger: parecerSnapshot.coaId explícito obrigatório (opção D)."
+    });
+  }
+
   const parecerId = String(parecer.id || "").trim();
   const registroJobs =
     registro instanceof Map
@@ -310,7 +462,26 @@ export async function continuarAposDecisaoGate(opts) {
   // Idempotência: parecer já tem Job — não republicar (RF11 / E5-CA5)
   if (decisao === "aprovado" && parecerId && registroJobs.has(parecerId)) {
     const jobIdExistente = registroJobs.get(parecerId);
-    store.consumirDecisao(texto, { agora });
+    const consumoIdem = store.consumirDecisao(texto, { agora });
+    const gateApos = consumoIdem.gate || loc.gate;
+    const registoApos = consumoIdem.registo || loc.registo;
+    if (
+      consumoIdem.ok &&
+      consumoIdem.permanecePendente !== true &&
+      (decisao === "aprovado" || decisao === "rejeitado")
+    ) {
+      const ledger = escreverDecisaoTerminalGateNoLedger({
+        decisao,
+        gate: gateApos,
+        registo: registoApos,
+        parecer,
+        conducao: null,
+        jobIdExistente
+      });
+      if (!ledger.ok) {
+        return respostaFalhaContratoGateLedger(loc, decisao, ledger);
+      }
+    }
     return {
       ok: true,
       interceptado: true,
@@ -370,6 +541,24 @@ export async function continuarAposDecisaoGate(opts) {
   }
 
   const consumo = store.consumirDecisao(texto, { agora });
+
+  if (
+    terminal &&
+    consumo.ok &&
+    consumo.permanecePendente !== true
+  ) {
+    const ledger = escreverDecisaoTerminalGateNoLedger({
+      decisao,
+      gate: consumo.gate || loc.gate,
+      registo: consumo.registo || loc.registo,
+      parecer,
+      conducao,
+      jobIdExistente: null
+    });
+    if (!ledger.ok) {
+      return respostaFalhaContratoGateLedger(loc, decisao, ledger);
+    }
+  }
 
   const mensagem = mensagemAposDecisaoGate(
     decisao,

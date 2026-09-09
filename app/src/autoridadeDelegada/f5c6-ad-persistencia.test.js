@@ -124,6 +124,7 @@ test("F5-C6: AD activa → ordem no perímetro após reinício → fecho delegad
   assert.equal(autoridadeDelegadaActiva(), true);
 
   const r = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "priorizar",
     ambito: "coa-mg2",
     descricao: "Priorizar LOD após refresh"
@@ -187,6 +188,7 @@ test("F5-C6: comportamento sem refresh permanece intacto", async () => {
   assert.equal(autoridadeDelegadaActiva(), true);
 
   const fecho = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "escolher_entre_alternativas",
     ambito: "coa-mg2",
     descricao: "Escolher A vs B"

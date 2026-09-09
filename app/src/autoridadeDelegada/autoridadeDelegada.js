@@ -2,7 +2,8 @@
  * IMP-071 — Autoridade Delegada (HOMOLOGADA / Baseline CAP-01).
  * B1–B6: REQ-075…084 — congelados. Evolução só com evidência de uso real.
  * Vedado: alterar CTO-003 / CAP-04 / ARQ-032 sem deliberação CTO.
- * F5-C6: snapshot mínimo do mandato activo em localStorage (sem ledger MO).
+ * F5-C6: snapshot mínimo do mandato activo em localStorage.
+ * Ledger MO Art. 8º: só fecho_sob_delegacao com coaId explícito → memoriaConfiavel.
  */
 
 import {
@@ -10,6 +11,11 @@ import {
   gravarSnapshotAd,
   limparSnapshotAd
 } from "./persistenciaAutoridadeDelegada.js";
+import {
+  appendRegistroMo,
+  ErroPersistenciaMo,
+  reiniciarMemoriaConfiavelParaTestes
+} from "../memoriaConfiavel/index.js";
 
 export const ESTADO_AUTORIDADE_DELEGADA_ACTIVA = "autoridade_delegada_activa";
 
@@ -92,9 +98,23 @@ export function registarMemoriaOrganizacionalDelegacao(opts = {}) {
         (ultimoEncerramento && ultimoEncerramento.perimetroNoTermo) ||
         null;
 
+  const tipoEvento = String(opts.tipoEvento || "evento").trim();
+  const coaIdLedger =
+    tipoEvento === "fecho_sob_delegacao"
+      ? String(opts.coaId || "").trim()
+      : "";
+
+  if (tipoEvento === "fecho_sob_delegacao" && !coaIdLedger) {
+    throw new ErroPersistenciaMo(
+      "Contrato AD→Ledger: coaId explícito obrigatório em fecho_sob_delegacao.",
+      undefined,
+      "coaId_ausente"
+    );
+  }
+
   const registo = Object.freeze({
     id: `mo-ad-${registosMo.length + 1}-${quando}`,
-    tipoEvento: String(opts.tipoEvento || "evento").trim(),
+    tipoEvento,
     /** CON-001 Art. 8º — seis elementos */
     quem: opts.quem != null ? String(opts.quem) : AGENTES.usuario,
     quando,
@@ -111,7 +131,48 @@ export function registarMemoriaOrganizacionalDelegacao(opts = {}) {
     termoMandato: opts.termoMandato != null ? opts.termoMandato : null
   });
 
+  // Validar payload Ledger antes de mutar RAM (fecho).
+  if (tipoEvento === "fecho_sob_delegacao") {
+    const porque = registo.porque != null ? String(registo.porque).trim() : "";
+    const resultado =
+      registo.resultado != null ? String(registo.resultado).trim() : "";
+    if (!porque || !resultado || !String(registo.oQue || "").trim()) {
+      throw new ErroPersistenciaMo(
+        "Contrato AD→Ledger: campos Art. 8º incompletos para fecho_sob_delegacao.",
+        undefined,
+        "schema_incompleto"
+      );
+    }
+  }
+
   registosMo = [...registosMo, registo];
+
+  if (tipoEvento === "fecho_sob_delegacao") {
+    try {
+      appendRegistroMo({
+        decisao: registo.oQue,
+        quem: registo.quem,
+        quando: registo.quando,
+        porque: registo.porque,
+        baseadoEm: registo.baseadoEmQue,
+        resultado: registo.resultado,
+        origem: "ad",
+        coaId: coaIdLedger
+      });
+    } catch (err) {
+      if (
+        err instanceof ErroPersistenciaMo &&
+        (err.codigo === "duplicado_hash" || err.codigo === "duplicado_id")
+      ) {
+        /* idempotência do Ledger — não duplicar */
+      } else {
+        // Compensar: remover o último registo RAM se o Ledger falhou
+        registosMo = registosMo.slice(0, -1);
+        throw err;
+      }
+    }
+  }
+
   return registo;
 }
 
@@ -468,6 +529,7 @@ export function reiniciarAutoridadeDelegadaParaTestes() {
   ultimoEncerramento = null;
   registosMo = [];
   limparSnapshotAd();
+  reiniciarMemoriaConfiavelParaTestes();
 }
 
 /**
@@ -721,6 +783,21 @@ export function exercerFechoDelegado(pedido = {}) {
     };
   }
 
+  const coaId = String(pedido.coaId || "").trim();
+  if (!coaId) {
+    return {
+      ok: false,
+      fechado: false,
+      motivosRecusa: ["coaId_ausente"],
+      fundamentacao:
+        "coaId explícito é obrigatório para fecho sob delegação (Ledger MO Art. 8º — opção D).",
+      devolvidoAoUsuario: false,
+      acao: "recusar",
+      estado: estadoAntes,
+      titularMissao: TITULAR_MISSAO
+    };
+  }
+
   const tipo = String(pedido.tipoFecho).trim();
   const ambito =
     pedido.ambito != null && String(pedido.ambito).trim() !== ""
@@ -737,23 +814,47 @@ export function exercerFechoDelegado(pedido = {}) {
     titularMissao: TITULAR_MISSAO,
     perimetro: estadoAntes.perimetro,
     competenciaFecho: "ceo",
-    quando
+    quando,
+    coaId
   });
 
-  const mo = registarMemoriaOrganizacionalDelegacao({
-    tipoEvento: "fecho_sob_delegacao",
-    quem: "ceo",
-    quando,
-    oQue: `Fecho delegado: ${tipo}${fecho.descricao ? ` — ${fecho.descricao}` : ""}`,
-    porque: "Exercício da competência de fecho no perímetro (REQ-077)",
-    baseadoEmQue: "REQ-077 · ARQ-032 A6 · mandato activo",
-    resultado: "decisao_fechada_sob_autoridade_delegada",
-    sobAutoridadeDelegada: true,
-    quemDelegou: AGENTES.usuario,
-    perimetro: estadoAntes.perimetro,
-    inicioMandato: estadoAntes.quandoActivado,
-    termoMandato: null
-  });
+  let mo;
+  try {
+    mo = registarMemoriaOrganizacionalDelegacao({
+      tipoEvento: "fecho_sob_delegacao",
+      quem: "ceo",
+      quando,
+      oQue: `Fecho delegado: ${tipo}${fecho.descricao ? ` — ${fecho.descricao}` : ""}`,
+      porque: "Exercício da competência de fecho no perímetro (REQ-077)",
+      baseadoEmQue: "REQ-077 · ARQ-032 A6 · mandato activo",
+      resultado: "decisao_fechada_sob_autoridade_delegada",
+      sobAutoridadeDelegada: true,
+      quemDelegou: AGENTES.usuario,
+      perimetro: estadoAntes.perimetro,
+      inicioMandato: estadoAntes.quandoActivado,
+      termoMandato: null,
+      coaId
+    });
+  } catch (err) {
+    return {
+      ok: false,
+      fechado: false,
+      motivosRecusa: [
+        err instanceof ErroPersistenciaMo && err.codigo
+          ? err.codigo
+          : "ledger_mo_falhou"
+      ],
+      fundamentacao:
+        err && err.message
+          ? String(err.message)
+          : "Falha ao gravar fecho no Ledger MO.",
+      devolvidoAoUsuario: false,
+      acao: "recusar",
+      estado: obterEstadoAutoridadeDelegada(),
+      titularMissao: TITULAR_MISSAO,
+      erroLedger: err instanceof ErroPersistenciaMo ? err.codigo : "ledger_mo_falhou"
+    };
+  }
 
   return {
     ok: true,

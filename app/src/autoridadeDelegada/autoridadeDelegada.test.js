@@ -191,6 +191,7 @@ function activarPadrao(perimetro) {
 test("CA-077-1: estado activo + decisão no perímetro ⇒ fecho sem novo acto", () => {
   activarPadrao(PERIMETRO_OMISSAO);
   const r = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "priorizar",
     ambito: "decisao_operacional_coa",
     descricao: "Priorizar LOD sprint 2"
@@ -206,6 +207,7 @@ test("CA-077-1: estado activo + decisão no perímetro ⇒ fecho sem novo acto",
 test("CA-077-2: fecho sob delegação não altera titular da missão", () => {
   activarPadrao("coa-mg2");
   const r = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "declarar_decisao",
     ambito: "coa-mg2",
     descricao: "Seguir opção A"
@@ -220,12 +222,14 @@ test("CA-077-3: só os quatro tipos de fecho no perímetro", () => {
   activarPadrao(PERIMETRO_OMISSAO);
   for (const tipo of TIPOS_FECHO_PERMITIDOS) {
     const r = exercerFechoDelegado({
+      coaId: "coa-test-ad",
       tipoFecho: tipo,
       ambito: "coa_activo"
     });
     assert.equal(r.ok, true, tipo);
   }
   const ilegal = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "alterar_estrategia_produto",
     ambito: "coa_activo"
   });
@@ -237,6 +241,7 @@ test("CA-077-3: só os quatro tipos de fecho no perímetro", () => {
 test("CA-077-4: sem estado activo ⇒ fecho autónomo ausente", () => {
   assert.equal(autoridadeDelegadaActiva(), false);
   const r = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "priorizar",
     ambito: "coa_activo"
   });
@@ -248,6 +253,7 @@ test("CA-077-4: sem estado activo ⇒ fecho autónomo ausente", () => {
 test("CA-078-1: fora do perímetro ⇒ recusa / devolução ao Usuário", () => {
   activarPadrao("coa-mg2");
   const r = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "escolher_entre_alternativas",
     ambito: "estrategia_corporativa_global",
     descricao: "Fora do mandato"
@@ -264,6 +270,7 @@ test("CA-078-2: reservas constitucionais ⇒ recusa", () => {
   activarPadrao(PERIMETRO_OMISSAO);
   for (const reserva of RESERVAS_CONSTITUCIONAIS) {
     const r = exercerFechoDelegado({
+      coaId: "coa-test-ad",
       tipoFecho: "declarar_decisao",
       ambito: reserva
     });
@@ -271,6 +278,7 @@ test("CA-078-2: reservas constitucionais ⇒ recusa", () => {
     assert.ok(r.motivosRecusa.includes("reserva_constitucional"), reserva);
   }
   const porFlag = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "declarar_decisao",
     ambito: "coa_activo",
     reservaConstitucional: "emendar_roadmap"
@@ -282,6 +290,7 @@ test("CA-078-2: reservas constitucionais ⇒ recusa", () => {
 test("CA-078-3: redelegação a terceiro ⇒ recusa", () => {
   activarPadrao(PERIMETRO_OMISSAO);
   const r = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "declarar_decisao",
     ambito: "coa_activo",
     redelegarPara: "engenheiro"
@@ -313,6 +322,7 @@ test("CA-078-4: CEO não amplia perímetro por iniciativa própria", () => {
 test("B2: fecho não encerra a delegação", () => {
   activarPadrao(PERIMETRO_OMISSAO);
   exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "determinar_proximo_gesto",
     ambito: "coa:mg2"
   });
@@ -389,6 +399,7 @@ test("CA-079-4: após termo ⇒ sem competência de fecho sob mandato findo", ()
   });
   assert.equal(obterEstadoAutoridadeDelegada().competenciaFecho, null);
   const fecho = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "priorizar",
     ambito: "coa_activo"
   });
@@ -419,6 +430,7 @@ test("CA-080-2: retorno integral — zero alçada residual", () => {
   assert.equal(obterEstadoAutoridadeDelegada().perimetro, null);
   assert.equal(obterUltimoEncerramento().competenciaFechoApos, null);
   const fecho = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "declarar_decisao",
     ambito: "coa-mg2"
   });
@@ -470,6 +482,7 @@ test("B3: sem estados órfãos; inventário ARQ intacto; perímetro não alterad
 test("CA-081-1: acto explícito do Usuário prevalece sobre fecho delegado", () => {
   activarPadrao(PERIMETRO_OMISSAO);
   const fechoCeo = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "priorizar",
     ambito: "coa_activo",
     descricao: "Opção A"
@@ -537,6 +550,7 @@ test("CA-081-4: CEO não se opõe nem ignora acto soberano", () => {
   // Após acto soberano contraditório: sem fecho autónomo
   assert.equal(autoridadeDelegadaActiva(), false);
   const fechoCeo = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "priorizar",
     ambito: "coa_activo"
   });
@@ -583,6 +597,7 @@ test("CA-082-3: sem AD, nenhum modo confere fecho autónomo", () => {
       modo
     );
     const fecho = exercerFechoDelegado({
+      coaId: "coa-test-ad",
       tipoFecho: "priorizar",
       ambito: "coa_activo"
     });
@@ -620,6 +635,7 @@ test("B4: soberania contínua; ciclo de vida e perímetro intactos", () => {
 test("CA-083-1: fecho sob delegação ⇒ MO com seis elementos Art. 8º", () => {
   activarPadrao(PERIMETRO_OMISSAO);
   const r = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "declarar_decisao",
     ambito: "coa_activo",
     descricao: "Fecho rastreado"
@@ -642,6 +658,7 @@ test("CA-083-1: fecho sob delegação ⇒ MO com seis elementos Art. 8º", () =>
 test("CA-083-2: registo marca fecho sob Autoridade Delegada", () => {
   activarPadrao(PERIMETRO_OMISSAO);
   const r = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "priorizar",
     ambito: "coa_activo"
   });
@@ -652,6 +669,7 @@ test("CA-083-2: registo marca fecho sob Autoridade Delegada", () => {
 test("CA-083-3: registo referencia quemDelegou + perímetro", () => {
   activarPadrao("coa-mg2");
   const r = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "escolher_entre_alternativas",
     ambito: "coa-mg2"
   });
@@ -671,6 +689,7 @@ test("CA-083-4: fecho importante sem MO ⇒ não conforme", () => {
 
   activarPadrao(PERIMETRO_OMISSAO);
   const r = exercerFechoDelegado({
+    coaId: "coa-test-ad",
     tipoFecho: "priorizar",
     ambito: "coa_activo"
   });
