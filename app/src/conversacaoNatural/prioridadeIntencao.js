@@ -115,6 +115,9 @@ export function ehInstrucaoUsavelComoObjectivo(instrucao) {
  * @param {object} [opts]
  */
 export function devePreservarRespostaNucleo(opts = {}) {
+  // F6 P0: fail-closed do Núcleo não pode ser reconstruído a partir do parecer.
+  if (opts.dados?.disciplinaLastro?.aplicada === true) return true;
+
   const intencaoId = String(opts.intencaoId || opts.dados?.intencao?.id || "");
   const modo = String(opts.modo || "");
   const instrucao = String(opts.instrucao || "").trim();
