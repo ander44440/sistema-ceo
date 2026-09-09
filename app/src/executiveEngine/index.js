@@ -43,17 +43,18 @@ import {
 } from "../classificadorIntencao/gestorTopicos.js";
 import {
   GESTOR_TOPICOS_ATIVO,
-  obterEstadoTopicosSessao,
-  aplicarResultadoGestaoTopicos,
-  resetEstadoTopicosSessao
+  obterEstadoTopicosSessao
 } from "../classificadorIntencao/topicosSessao.js";
 import { gestorObjectivo } from "../classificadorIntencao/gestorObjectivo.js";
 import {
   GESTOR_OBJECTIVO_ATIVO,
-  obterEstadoObjectivoSessao,
-  aplicarResultadoGestaoObjectivo,
-  resetEstadoObjectivoSessao
+  obterEstadoObjectivoSessao
 } from "../classificadorIntencao/objectivoSessao.js";
+import {
+  aplicarResultadoGestaoTopicosPersistente as aplicarResultadoGestaoTopicos,
+  aplicarResultadoGestaoObjectivoPersistente as aplicarResultadoGestaoObjectivo,
+  limparEnvelopeActual
+} from "../classificadorIntencao/envelopeSessaoCoa.js";
 import {
   validarContextoAtivo,
   VCA_ATIVO
@@ -66,6 +67,7 @@ import {
 } from "./resolucaoPrecedenciaTurno.js";
 import {
   obterStoreContinuidadePadrao,
+  inicializarContinuidadeGateSessao,
   decidirInterceptacaoContinuidade,
   continuarAposDecisaoGate,
   responderClarificacaoGate,
@@ -91,6 +93,7 @@ import {
   ehOrdemExecucaoOperacional,
   ehPedidoConsultaOuRespostaComposta,
   exercerFechoDelegado,
+  hidratarAutoridadeDelegadaSessao,
   obterEstadoAutoridadeDelegada,
   processarMensagemAutoridadeDelegada,
   snapshotAutoridadeDelegadaParaDados
@@ -281,6 +284,8 @@ export const executiveEngine = {
   inicializar() {
     registrarPadrao();
     inicializarCoaSessao();
+    inicializarContinuidadeGateSessao();
+    hidratarAutoridadeDelegadaSessao();
     if (!this._acompanhamentoStore) {
       this._acompanhamentoStore = criarStoreAcompanhamento();
     }
@@ -1150,10 +1155,9 @@ export const executiveEngine = {
       }
     }
     // Isolamento: stores preservados (não mutados); sem lastro CSC neste turno.
-    // Encerramento explícito: limpa tópico/pausas/objectivos (não COA/histórico/memória).
+    // Encerramento explícito: limpa tópico/pausas/objectivos + persistência F5-C4.
     if (ehEncerramentoExplicitoContexto(texto)) {
-      resetEstadoTopicosSessao();
-      resetEstadoObjectivoSessao();
+      limparEnvelopeActual();
     }
 
     const objetivoParaContexto = autorizaLastroCsc

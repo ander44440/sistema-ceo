@@ -22,6 +22,11 @@ import {
 } from "./objectivoSessao.js";
 import { executiveEngine } from "../executiveEngine/index.js";
 import { resetStoreContinuidadePadrao } from "../continuidadeGate/integracaoConversa.js";
+import { obterProjetoAtivoId } from "../catalogoProjetos/index.js";
+import {
+  activarEnvelopeParaChave,
+  persistirEnvelopeActual
+} from "./envelopeSessaoCoa.js";
 
 const ISO = "2026-01-01T12:00:00.000Z";
 
@@ -32,6 +37,8 @@ beforeEach(() => {
 });
 
 function semearContextoOutdoor() {
+  // Alinha chave do envelope ao COA activo para o sync do EE não sobrescrever o seed.
+  activarEnvelopeParaChave(obterProjetoAtivoId());
   const top = criarTopico("outdoor", "usuario", ISO);
   const pausa = criarTopico("pagamento", "usuario", ISO);
   definirEstadoTopicosSessao({ topicoActivo: top, pausas: [pausa] });
@@ -41,6 +48,7 @@ function semearContextoOutdoor() {
     objetivoActivo: obj,
     objetivoAnterior: ant
   });
+  persistirEnvelopeActual();
 }
 
 test("A: encerre completamente o tópico anterior → limpa tópico, pausas e objectivos", async () => {

@@ -20,6 +20,7 @@ import {
   limparHistorico,
   listarMensagens,
   obterContextoConversacional,
+  reiniciarStoreConversaParaTestes,
   temHistorico
 } from "./store.js";
 import { enriquecerMensagemComFioRecente } from "../../mre/integracaoNucleo.js";
@@ -54,8 +55,8 @@ function resetCatalogoVazio() {
 
 beforeEach(() => {
   resetCatalogoVazio();
+  reiniciarStoreConversaParaTestes();
   definirContextoConversacional(null);
-  limparHistorico();
 });
 
 function msg(papel, texto) {

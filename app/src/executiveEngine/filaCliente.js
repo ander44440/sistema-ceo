@@ -7,6 +7,7 @@
 
 import { ceoQueueApiUrl } from "../ceoApiBase.js";
 import { sintetizarResultadoJob } from "../motorExecucao/resultadoEncerramento.js";
+import { ehEstadoAdotavelDaFila } from "../motorExecucao/acompanhamentoJob.js";
 
 export async function publicarJobFila(pedido) {
   const resp = await fetch(ceoQueueApiUrl("/api/ceo/queue/jobs"), {
@@ -137,18 +138,13 @@ export async function listarJobsNaoTerminais() {
 }
 
 /**
- * Lista Jobs sob Monitoramento (F2) — dispatched|running|result|needs_correction.
+ * Lista Jobs sob acompanhamento operacional (F5-C2).
+ * Alinha com `ESTADOS_ADOTAVEIS_FILA` (inclui pending + F2).
  * @returns {Promise<object[]>}
  */
 export async function listarJobsEmAcompanhamento() {
   const jobs = await listarJobsPorEstado(null);
-  return jobs.filter((j) => {
-    const e = String(j?.estado || "");
-    return (
-      e === "dispatched" ||
-      e === "running" ||
-      e === "result" ||
-      e === "needs_correction"
-    );
-  });
+  return jobs.filter(
+    (j) => j && ehEstadoAdotavelDaFila(j.estado || j.status)
+  );
 }

@@ -2,7 +2,14 @@
  * IMP-071 — Autoridade Delegada (HOMOLOGADA / Baseline CAP-01).
  * B1–B6: REQ-075…084 — congelados. Evolução só com evidência de uso real.
  * Vedado: alterar CTO-003 / CAP-04 / ARQ-032 sem deliberação CTO.
+ * F5-C6: snapshot mínimo do mandato activo em localStorage (sem ledger MO).
  */
+
+import {
+  carregarSnapshotAd,
+  gravarSnapshotAd,
+  limparSnapshotAd
+} from "./persistenciaAutoridadeDelegada.js";
 
 export const ESTADO_AUTORIDADE_DELEGADA_ACTIVA = "autoridade_delegada_activa";
 
@@ -165,6 +172,15 @@ function estadoInactivo() {
     quandoActivado: null,
     expiraEm: null
   });
+}
+
+/** Persiste mandato activo ou limpa o documento se inactivo. */
+function sincronizarPersistenciaAd() {
+  if (estadoActual.activo === true) {
+    gravarSnapshotAd(estadoActual);
+  } else {
+    limparSnapshotAd();
+  }
 }
 
 function normalizarAmbito(valor) {
@@ -396,6 +412,8 @@ export function activarAutoridadeDelegada(opts = {}) {
     termoMandato: null
   });
 
+  sincronizarPersistenciaAd();
+
   return {
     ok: true,
     motivosRecusa: [],
@@ -449,6 +467,47 @@ export function reiniciarAutoridadeDelegadaParaTestes() {
   estadoActual = estadoInactivo();
   ultimoEncerramento = null;
   registosMo = [];
+  limparSnapshotAd();
+}
+
+/**
+ * F5-C6 — hidrata mandato activo do disco no boot.
+ * Se `expiraEm` já passou: não reactiva; limpa persistência (tratado como expirado).
+ * @param {{ agora?: string|Date|number }} [opts]
+ * @returns {{ hidratado: boolean, expirado: boolean, activo: boolean }}
+ */
+export function hidratarAutoridadeDelegadaSessao(opts = {}) {
+  const snap = carregarSnapshotAd();
+  if (!snap) {
+    return {
+      hidratado: false,
+      expirado: false,
+      activo: estadoActual.activo === true
+    };
+  }
+
+  if (snap.expiraEm) {
+    const agora =
+      opts.agora != null ? new Date(opts.agora).getTime() : Date.now();
+    const limite = new Date(snap.expiraEm).getTime();
+    if (Number.isFinite(limite) && agora >= limite) {
+      estadoActual = estadoInactivo();
+      limparSnapshotAd();
+      return { hidratado: true, expirado: true, activo: false };
+    }
+  }
+
+  estadoActual = Object.freeze({
+    activo: true,
+    estado: snap.estado || ESTADO_AUTORIDADE_DELEGADA_ACTIVA,
+    titularMissao: TITULAR_MISSAO,
+    competenciaFecho: snap.competenciaFecho || "ceo",
+    perimetro: snap.perimetro,
+    actoOrigem: snap.actoOrigem,
+    quandoActivado: snap.quandoActivado,
+    expiraEm: snap.expiraEm
+  });
+  return { hidratado: true, expirado: false, activo: true };
 }
 
 /**
@@ -887,6 +946,8 @@ export function encerrarAutoridadeDelegada(opts = {}) {
     inicioMandato: estadoAntes.quandoActivado,
     termoMandato: quando
   });
+
+  sincronizarPersistenciaAd();
 
   return {
     ok: true,

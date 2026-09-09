@@ -31,6 +31,8 @@ export { criarStoreContextoGate } from "./contexto.js";
 export {
   obterStoreContinuidadePadrao,
   resetStoreContinuidadePadrao,
+  descartarStoreContinuidadeEmMemoria,
+  inicializarContinuidadeGateSessao,
   decidirInterceptacaoContinuidade,
   continuarAposDecisaoGate,
   responderClarificacaoGate,

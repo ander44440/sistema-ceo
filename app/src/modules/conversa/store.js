@@ -1,7 +1,18 @@
 /**
  * Estado em memória da conversa — particionado por COA (REQ-037/038/039, ARQ-012).
- * Preparado para persistência futura.
+ * F5-C3: buckets persistidos em localStorage; hidratação no boot / troca de COA.
  */
+
+import {
+  carregarBucketChat,
+  gravarBucketChat,
+  limparDocumentoChat
+} from "./persistenciaChat.js";
+import {
+  activarEnvelopeParaChave,
+  reiniciarEnvelopeSessaoParaTestes,
+  invalidarChaveEnvelopeEmMemoria
+} from "../../classificadorIntencao/envelopeSessaoCoa.js";
 
 /** @typedef {"ceo" | "usuario" | "sistema"} PapelMensagem */
 
@@ -34,18 +45,48 @@ function chaveActiva() {
   return coaConversacionalId || SEM_COA;
 }
 
+/**
+ * Garante bucket em RAM; se ausente, hidrata do disco (pós-refresh).
+ * @param {string} k
+ * @returns {Mensagem[]}
+ */
+function garantirBucket(k) {
+  if (historicosPorCoa.has(k)) {
+    return /** @type {Mensagem[]} */ (historicosPorCoa.get(k));
+  }
+  const salvas = carregarBucketChat(k);
+  /** @type {Mensagem[]} */
+  const bucket = Array.isArray(salvas)
+    ? salvas.map((m) => ({
+        id: String(m.id || novoId()),
+        papel: /** @type {PapelMensagem} */ (m.papel || "sistema"),
+        texto: String(m.texto || ""),
+        criadoEm: String(m.criadoEm || new Date().toISOString()),
+        estado:
+          m.estado === "erro"
+            ? "erro"
+            : m.estado === "pendente"
+              ? "pronta"
+              : "pronta"
+      }))
+    : [];
+  historicosPorCoa.set(k, bucket);
+  return bucket;
+}
+
 /** @returns {Mensagem[]} */
 function bucketActivo() {
-  const k = chaveActiva();
-  if (!historicosPorCoa.has(k)) {
-    historicosPorCoa.set(k, []);
-  }
-  return /** @type {Mensagem[]} */ (historicosPorCoa.get(k));
+  return garantirBucket(chaveActiva());
+}
+
+function persistirBucketActivo() {
+  gravarBucketChat(chaveActiva(), bucketActivo());
 }
 
 /**
- * Activa o bucket conversacional do COA. Novo COA → histórico vazio.
- * Não copia histórico de outro COA.
+ * Activa o bucket conversacional do COA.
+ * Não copia histórico de outro COA. Hidrata do disco se o bucket ainda não
+ * estiver em RAM (ex.: após refresh).
  * @param {string | null | undefined} coaId
  * @returns {string | null}
  */
@@ -56,9 +97,9 @@ export function definirContextoConversacional(coaId) {
       : String(coaId).trim();
   coaConversacionalId = id;
   const k = chaveActiva();
-  if (!historicosPorCoa.has(k)) {
-    historicosPorCoa.set(k, []);
-  }
+  garantirBucket(k);
+  // F5-C4: hidrata tópico/pausas/objectivo do mesmo COA (boot / troca).
+  activarEnvelopeParaChave(k);
   return coaConversacionalId;
 }
 
@@ -88,6 +129,7 @@ export function listarMensagens() {
 /** @param {Mensagem} mensagem */
 export function acrescentarMensagem(mensagem) {
   bucketActivo().push(mensagem);
+  persistirBucketActivo();
   return mensagem;
 }
 
@@ -97,14 +139,35 @@ export function atualizarMensagem(id, patch) {
   const idx = historico.findIndex((m) => m.id === id);
   if (idx < 0) return null;
   historico[idx] = { ...historico[idx], ...patch };
+  persistirBucketActivo();
   return historico[idx];
 }
 
 /** Limpa somente o bucket do COA activo. */
 export function limparHistorico() {
   historicosPorCoa.set(chaveActiva(), []);
+  persistirBucketActivo();
 }
 
 export function temHistorico() {
   return bucketActivo().length > 0;
+}
+
+/**
+ * Descarta RAM do store (simula refresh). Persistência local permanece.
+ */
+export function descartarHistoricosEmMemoria() {
+  historicosPorCoa.clear();
+  coaConversacionalId = null;
+  invalidarChaveEnvelopeEmMemoria();
+}
+
+/**
+ * Reinicia store + documento (testes).
+ */
+export function reiniciarStoreConversaParaTestes() {
+  historicosPorCoa.clear();
+  coaConversacionalId = null;
+  limparDocumentoChat();
+  reiniciarEnvelopeSessaoParaTestes();
 }

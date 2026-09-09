@@ -21,10 +21,13 @@ export const ESTADOS_ACOMPANHAMENTO_ABERTO = Object.freeze([
 ]);
 
 /**
- * Estados adoptáveis da fila no turno EE (Teste 3).
- * Exclui pending (handoff local) e terminais históricos.
+ * Estados adoptáveis da fila no turno EE (F5-C2 / Teste 3).
+ * Inclui `pending` (sobrevive à ruptura sem store RAM) e F2;
+ * terminais históricos ficam de fora. `needs_correction` continua
+ * filtrado em `adotarJobsDaFilaParaAcompanhamento` (histórico).
  */
 export const ESTADOS_ADOTAVEIS_FILA = Object.freeze([
+  "pending",
   "dispatched",
   "running",
   "result",

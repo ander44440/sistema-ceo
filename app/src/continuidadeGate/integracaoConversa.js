@@ -2,26 +2,78 @@
  * Integração Continuidade ↔ Conversa / Núcleo — IMP-058 E4 / REQ-058 / ARQ-019.
  * Intercepta decisão de Gate antes do Classificador; regista Gate em `aguardando_gate`.
  * Sem alterar Classificador (IMP-057) nem o Motor (exceto chamada a API existente).
+ * F5-C1: store padrão persiste Gates pendentes (localStorage) e hidrata no boot.
  */
 
 import { criarStoreContextoGate } from "./contexto.js";
 import { ehAckAmbiguoDecisaoGate, reconhecerDecisao } from "./reconhecerDecisao.js";
+import {
+  carregarRegistosGatePendentes,
+  gravarDocumentoGate,
+  limparDocumentoGate
+} from "./persistenciaGate.js";
 
 /** @type {ReturnType<typeof criarStoreContextoGate>|null} */
 let storePadrao = null;
 
 /**
+ * @param {{ pendentes: object[] }} snapshot
+ */
+function persistirPendentesDoStore(snapshot) {
+  const pendentes = Array.isArray(snapshot?.pendentes) ? snapshot.pendentes : [];
+  if (pendentes.length === 0) {
+    limparDocumentoGate();
+    return;
+  }
+  gravarDocumentoGate(pendentes);
+}
+
+/**
+ * Cria store com persistência de Gates pendentes e hidrata do documento local.
+ * @returns {ReturnType<typeof criarStoreContextoGate>}
+ */
+function criarStoreContinuidadeComPersistencia() {
+  const store = criarStoreContextoGate({
+    onMudanca: persistirPendentesDoStore
+  });
+  const salvos = carregarRegistosGatePendentes();
+  for (const reg of salvos) {
+    store.restaurarRegisto(reg);
+  }
+  return store;
+}
+
+/**
  * Store de sessão (browser / processo) — injectável nos testes via deps.
+ * F5-C1: na primeira obtenção, recupera Gates pendentes persistidos.
  * @returns {ReturnType<typeof criarStoreContextoGate>}
  */
 export function obterStoreContinuidadePadrao() {
-  if (!storePadrao) storePadrao = criarStoreContextoGate();
+  if (!storePadrao) storePadrao = criarStoreContinuidadeComPersistencia();
   return storePadrao;
 }
 
-/** Reinicia o store padrão (testes). */
+/**
+ * Garante hidratação no boot (antes do primeiro turno).
+ * @returns {ReturnType<typeof criarStoreContextoGate>}
+ */
+export function inicializarContinuidadeGateSessao() {
+  return obterStoreContinuidadePadrao();
+}
+
+/**
+ * Descarta só a RAM do store (simula refresh / novo processo).
+ * O documento persistido permanece — a próxima obtenção reidrata.
+ */
+export function descartarStoreContinuidadeEmMemoria() {
+  storePadrao = null;
+}
+
+/** Reinicia o store padrão (testes) — limpa também a persistência local. */
 export function resetStoreContinuidadePadrao() {
-  storePadrao = criarStoreContextoGate();
+  limparDocumentoGate();
+  storePadrao = null;
+  storePadrao = criarStoreContinuidadeComPersistencia();
   return storePadrao;
 }
 

@@ -39,19 +39,38 @@ function clonarSnapshot(valor) {
 
 /**
  * Cria store de contexto de Gate (uma sessão lógica).
+ * F5-C1: `onMudanca` opcional — o chamador persiste só pendentes (sem I/O aqui).
+ *
+ * @param {{
+ *   onMudanca?: (snapshot: { pendentes: RegistoContextoGate[] }) => void
+ * }} [opts]
  * @returns {StoreContextoGate}
  */
-export function criarStoreContextoGate() {
+export function criarStoreContextoGate(opts = {}) {
   /** @type {Map<string, RegistoContextoGate>} */
   const registos = new Map();
   /** @type {Map<string, string>} parecerId → jobId (idempotência RF11) */
   const registroJobs = new Map();
+  const onMudanca =
+    opts && typeof opts.onMudanca === "function" ? opts.onMudanca : null;
 
   /**
    * @returns {RegistoContextoGate[]}
    */
   function listarRegistos() {
     return [...registos.values()];
+  }
+
+  /**
+   * @returns {RegistoContextoGate[]}
+   */
+  function listarPendentes() {
+    return listarRegistos().filter((r) => r.gate && r.gate.estado === "pendente");
+  }
+
+  function emitirMudanca() {
+    if (!onMudanca) return;
+    onMudanca({ pendentes: listarPendentes() });
   }
 
   /**
@@ -95,7 +114,41 @@ export function criarStoreContextoGate() {
       registadoEm
     };
     registos.set(gate.gateId, registo);
+    emitirMudanca();
     return obterRegisto(gate.gateId) || registo;
+  }
+
+  /**
+   * Restaura registo já persistido (hidratação pós-refresh) sem recriar Gate.
+   * Não emite onMudanca — o documento em disco já é a fonte.
+   *
+   * @param {RegistoContextoGate} registo
+   * @returns {RegistoContextoGate|null}
+   */
+  function restaurarRegisto(registo) {
+    if (!registo || !registo.gate || typeof registo.gate !== "object") {
+      return null;
+    }
+    const gate = registo.gate;
+    if (gate.estado !== "pendente") return null;
+    const v = validarGatePendente(gate);
+    if (!v.ok) return null;
+    /** @type {RegistoContextoGate} */
+    const normalizado = {
+      gate: v.gate,
+      parecerSnapshot: clonarSnapshot(registo.parecerSnapshot ?? null),
+      solicitacaoResumo:
+        typeof registo.solicitacaoResumo === "string" &&
+        registo.solicitacaoResumo.trim()
+          ? registo.solicitacaoResumo.trim()
+          : null,
+      registadoEm:
+        typeof registo.registadoEm === "string" && registo.registadoEm
+          ? registo.registadoEm
+          : v.gate.abertoEm
+    };
+    registos.set(v.gate.gateId, normalizado);
+    return obterRegisto(v.gate.gateId);
   }
 
   /**
@@ -135,12 +188,13 @@ export function criarStoreContextoGate() {
    * Actualiza o Gate dentro do registo existente.
    * @param {import("./dominio.js").GatePendente} gate
    */
-  function _substituirGate(gate) {
+  function _substituirGate(gate, { emitir = true } = {}) {
     const actual = registos.get(gate.gateId);
     if (!actual) {
       throw new Error(`Registo em falta para gateId=${gate.gateId}`);
     }
     registos.set(gate.gateId, { ...actual, gate });
+    if (emitir) emitirMudanca();
   }
 
   /**
@@ -305,6 +359,7 @@ export function criarStoreContextoGate() {
         n += 1;
       }
     }
+    if (n > 0) emitirMudanca();
     return n;
   }
 
@@ -312,14 +367,18 @@ export function criarStoreContextoGate() {
    * Limpa toda a sessão de contexto.
    */
   function limparTudo() {
+    const havia = registos.size > 0 || registroJobs.size > 0;
     registos.clear();
     registroJobs.clear();
+    if (havia) emitirMudanca();
   }
 
   return {
     abrirGate,
+    restaurarRegisto,
     obterRegisto,
     listarRegistos,
+    listarPendentes,
     listarGates,
     obterGatePendenteMaisRecente,
     obterContextoActivo,
