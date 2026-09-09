@@ -16,6 +16,7 @@ import {
   ErroPersistenciaMo,
   reiniciarMemoriaConfiavelParaTestes
 } from "../memoriaConfiavel/index.js";
+import { espelharAdFechoNaTrilha } from "../trilhaAuditavel/emissor.js";
 
 export const ESTADO_AUTORIDADE_DELEGADA_ACTIVA = "autoridade_delegada_activa";
 
@@ -149,7 +150,7 @@ export function registarMemoriaOrganizacionalDelegacao(opts = {}) {
 
   if (tipoEvento === "fecho_sob_delegacao") {
     try {
-      appendRegistroMo({
+      const registoMo = appendRegistroMo({
         decisao: registo.oQue,
         quem: registo.quem,
         quando: registo.quando,
@@ -159,6 +160,20 @@ export function registarMemoriaOrganizacionalDelegacao(opts = {}) {
         origem: "ad",
         coaId: coaIdLedger
       });
+      // Trilha Fatia 2: espelho pós-MO; falha NÃO reverte o Ledger nem o fecho.
+      try {
+        espelharAdFechoNaTrilha({
+          moRegistroId: registoMo && registoMo.id,
+          coaId: coaIdLedger,
+          quando: registo.quando,
+          adActoId: registo.id,
+          tipoFecho: opts.tipoFecho || null,
+          resumo: registo.oQue,
+          actor: registo.quem
+        });
+      } catch {
+        /* fail-soft */
+      }
     } catch (err) {
       if (
         err instanceof ErroPersistenciaMo &&
@@ -833,7 +848,8 @@ export function exercerFechoDelegado(pedido = {}) {
       perimetro: estadoAntes.perimetro,
       inicioMandato: estadoAntes.quandoActivado,
       termoMandato: null,
-      coaId
+      coaId,
+      tipoFecho: tipo
     });
   } catch (err) {
     return {

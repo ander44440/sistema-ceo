@@ -17,6 +17,7 @@ import {
   ErroPersistenciaMo,
   listarRegistosMo
 } from "../memoriaConfiavel/index.js";
+import { espelharGateDecisaoTerminalNaTrilha } from "../trilhaAuditavel/emissor.js";
 
 /** @type {ReturnType<typeof criarStoreContextoGate>|null} */
 let storePadrao = null;
@@ -169,7 +170,7 @@ function escreverDecisaoTerminalGateNoLedger(args) {
   }
 
   try {
-    appendRegistroMo({
+    const registoMo = appendRegistroMo({
       decisao: `Gate ${gateId}: ${decisao} — ${resumo || parecerId}`,
       quem: "usuario",
       quando,
@@ -179,7 +180,28 @@ function escreverDecisaoTerminalGateNoLedger(args) {
       origem: "gate",
       coaId
     });
-    return { ok: true };
+    // Trilha Fatia 2: espelho pós-MO; falha NÃO reverte o Ledger.
+    try {
+      const jobIdMatch =
+        typeof resultado === "string"
+          ? resultado.match(/^job_publicado:(.+)$/)
+          : null;
+      espelharGateDecisaoTerminalNaTrilha({
+        decisao,
+        gateId,
+        parecerId,
+        moRegistroId: registoMo && registoMo.id,
+        jobId: jobIdMatch ? jobIdMatch[1] : null,
+        coaId,
+        quando,
+        resumo,
+        resultadoMo: resultado,
+        actor: "usuario"
+      });
+    } catch {
+      /* fail-soft */
+    }
+    return { ok: true, moRegistroId: registoMo && registoMo.id };
   } catch (err) {
     if (
       err instanceof ErroPersistenciaMo &&
