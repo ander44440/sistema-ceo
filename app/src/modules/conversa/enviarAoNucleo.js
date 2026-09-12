@@ -1,5 +1,6 @@
 /**
- * Envio canónico Conversa → Núcleo (path texto e path voz).
+ * Porta canónica de entrada de mensagens: qualquer UI → Núcleo.
+ * (Conversa texto/voz, Centro de Situação «Comando rápido».)
  * IMP-068: Voice Controller usa a mesma fronteira; EIC intacta.
  */
 
@@ -7,8 +8,10 @@ import {
   acrescentarMensagem,
   atualizarMensagem,
   criarMensagem,
-  listarMensagens
+  listarMensagens,
+  obterContextoConversacional
 } from "./store.js";
+import { obterFioTranscriptCoa } from "../../classificadorIntencao/fioConversacional.js";
 import { executiveEngine } from "../../executiveEngine/index.js";
 import {
   prepararGestoEnvio,
@@ -57,12 +60,44 @@ export async function enviarAoNucleo(textoBruto, opts = {}) {
       );
       publicarJob = publicarJobFila;
     }
+    const coaId = obterContextoConversacional();
+    const transcript = listarMensagens()
+      .filter((m) => m.id !== placeholder.id)
+      .map((m) => ({
+        papel: m.papel,
+        texto: m.texto,
+        ...(coaId ? { coaId } : {})
+      }));
+    let fallbackHfc = [];
+    const priorStore = transcript.filter(
+      (m) => String(m.texto || "").trim() && String(m.texto).trim() !== texto
+    );
+    if (priorStore.length === 0 && coaId) {
+      try {
+        const { criarDepsConsultaProducao } = await import(
+          "../../consultaRegistados/depsProducao.js"
+        );
+        const deps = criarDepsConsultaProducao();
+        fallbackHfc = (deps.listarHfcPorCoa(coaId) || []).map((e) => ({
+          papel: e.papel,
+          texto: e.texto,
+          coaId: e.coaId || coaId
+        }));
+      } catch {
+        fallbackHfc = [];
+      }
+    }
+    const historico = obterFioTranscriptCoa({
+      transcript,
+      mensagemActual: texto,
+      coaId,
+      fallbackHfc
+    });
     const resposta = await executiveEngine.executar(
       {
         texto,
-        historico: listarMensagens()
-          .filter((m) => m.id !== placeholder.id)
-          .map((m) => ({ papel: m.papel, texto: m.texto }))
+        historico,
+        coaId
       },
       { publicarJob }
     );

@@ -98,6 +98,17 @@ function criarHandler(env) {
       }
     }
 
+    // IMP-074 / ARQ-033 — vista C3 só-leitura (fail-closed: [] sem lastro)
+    if (req.method === "GET" && path === "/api/ceo/mep/c3/propostas") {
+      try {
+        const { listarPropostasC3 } = await import("../src/mepCeo/c3.js");
+        const propostas = listarPropostasC3();
+        return enviarJson(res, 200, Array.isArray(propostas) ? propostas : []);
+      } catch {
+        return enviarJson(res, 200, []);
+      }
+    }
+
     if (req.method === "POST" && path === "/api/ceo/cto/consultar") {
       sinaisRuntimeGlobal.inicioConsultaCto();
       sinaisRuntimeGlobal.inicioCicloCeo();

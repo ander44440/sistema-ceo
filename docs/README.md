@@ -59,6 +59,23 @@ Documentos estratégicos (CON, VIS, CAP, ROADMAP) abrem respondendo às quatro p
 | [`architecture/ARQ-086-consulta-discussoes-e-decisoes-registadas.md`](architecture/ARQ-086-consulta-discussoes-e-decisoes-registadas.md) | **Homologada v1.0** — Consulta de discussões e decisões registadas; CAP-05; Gate ARQ fechado |
 | [`implementation/IMP-086-consulta-discussoes-e-decisoes-registadas.md`](implementation/IMP-086-consulta-discussoes-e-decisoes-registadas.md) | **IMPLEMENTADA · HOMOLOGADA v1.0** — consulta discussões/decisões; 17/17; build OK |
 | [`implementation/evidencias/IMP-086-homologacao.md`](implementation/evidencias/IMP-086-homologacao.md) | Registo formal de homologação da entrega IMP-086 (09/09/2026) |
+| [`requirements/REQ-087-historico-fisico-das-conversas.md`](requirements/REQ-087-historico-fisico-das-conversas.md) | **Homologado v1.0** — Histórico Físico das Conversas (1ª fatia); CAP-03 |
+| [`architecture/ARQ-087-historico-fisico-das-conversas.md`](architecture/ARQ-087-historico-fisico-das-conversas.md) | **Homologada v1.0** — HFC 1ª fatia; Gate ARQ fechado |
+| [`implementation/IMP-087-historico-fisico-das-conversas.md`](implementation/IMP-087-historico-fisico-das-conversas.md) | **IMPLEMENTADA · VALIDADA · HOMOLOGADA v1.0** — HFC append-only; VAL-087 |
+| [`validation/VAL-087-historico-fisico-das-conversas.md`](validation/VAL-087-historico-fisico-das-conversas.md) | **VAL-087 APROVADO · HOMOLOGADO** — 54/54; 1ª fatia HFC encerrada |
+| [`requirements/REQ-088-trilha-auditavel-v1.md`](requirements/REQ-088-trilha-auditavel-v1.md) | **Homologado v1.0** — Trilha Auditável V1 (3 tipos); CAP-09 |
+| [`architecture/ARQ-088-trilha-auditavel-v1.md`](architecture/ARQ-088-trilha-auditavel-v1.md) | **Homologada v1.0** — Trilha V1; Gate ARQ fechado |
+| [`implementation/IMP-088-trilha-auditavel-v1.md`](implementation/IMP-088-trilha-auditavel-v1.md) | **IMPLEMENTADA · VALIDADA · HOMOLOGADA v1.0** — formalização fatias 1–2; VAL-088 |
+| [`validation/VAL-088-trilha-auditavel-v1.md`](validation/VAL-088-trilha-auditavel-v1.md) | **VAL-088 APROVADO · HOMOLOGADO** — 51/51; Trilha V1 encerrada |
+| [`requirements/REQ-089-recuperacao-discussoes-e-decisoes-antigas.md`](requirements/REQ-089-recuperacao-discussoes-e-decisoes-antigas.md) | **Homologado v1.0** — Recuperação discussões/decisões antigas (Fatia 1); CAP-05 |
+| [`architecture/ARQ-089-recuperacao-discussoes-e-decisoes-antigas.md`](architecture/ARQ-089-recuperacao-discussoes-e-decisoes-antigas.md) | **Homologada v1.0** — evolução consulta IMP-086; Gate ARQ fechado |
+| [`implementation/IMP-089-recuperacao-discussoes-e-decisoes-antigas.md`](implementation/IMP-089-recuperacao-discussoes-e-decisoes-antigas.md) | **IMPLEMENTADA · VALIDADA · HOMOLOGADA v1.0** — Fatia 1; VAL-089 |
+| [`validation/VAL-089-recuperacao-discussoes-e-decisoes-antigas.md`](validation/VAL-089-recuperacao-discussoes-e-decisoes-antigas.md) | **VAL-089 APROVADO · HOMOLOGADO** — 92/92; Fatia 1 encerrada |
+| [`requirements/REQ-090-turno-envelope-fatia-0-contrato-e-nascimento.md`](requirements/REQ-090-turno-envelope-fatia-0-contrato-e-nascimento.md) | **Rascunho v0.2** — TurnEnvelope Fatia 0; CAP-01; VAL-090 Fatia 0 homologada tecnicamente; IMP-090 implementada |
+| [`architecture/ARQ-090-turno-envelope-fatia-0-contrato-e-nascimento.md`](architecture/ARQ-090-turno-envelope-fatia-0-contrato-e-nascimento.md) | **Rascunho v0.2** — TurnEnvelope Fatia 0; sombra; VAL-090 OK |
+| [`implementation/IMP-090-turno-envelope-fatia-0.md`](implementation/IMP-090-turno-envelope-fatia-0.md) | **IMPLEMENTADA v0.1** — Fatia 0 sombra; VAL-090 homologada |
+| [`requirements/REQ-091-turno-envelope-fatia-1-sinais-modo-objecto-intencao.md`](requirements/REQ-091-turno-envelope-fatia-1-sinais-modo-objecto-intencao.md) | **Rascunho v0.3** — TurnEnvelope Fatia 1 (catálogo fechado; consulta×situacional; Precedência=decisor); CAP-01; aguarda re-homologação; IMP-091 **não** criado |
+| [`architecture/ARQ-091-turno-envelope-fatia-1-sinais-modo-objecto-intencao.md`](architecture/ARQ-091-turno-envelope-fatia-1-sinais-modo-objecto-intencao.md) | **Rascunho v0.3** — Fatia 1; catálogo fechado; escritor só sela; Gate ARQ aberto |
 | [`architecture/ARQ-033-fronteira-mep-ceo.md`](architecture/ARQ-033-fronteira-mep-ceo.md) | **Homologada v1.0** — Fronteira CAP-13; isolamento intacto; C3 **não** implementada |
 | [`implementation/IMP-072-nucleo-persistente-mep-ceo.md`](implementation/IMP-072-nucleo-persistente-mep-ceo.md) | **IMP-072 HOMOLOGADA** — núcleo C1+C2 da CAP-13 |
 | [`implementation/IMP-073-persistencia-fisica-mep-ceo.md`](implementation/IMP-073-persistencia-fisica-mep-ceo.md) | **IMP-073 IMPLEMENTADA** · **VAL-074 APROVADA** — persistência física + adapter FS |

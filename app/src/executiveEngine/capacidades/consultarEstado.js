@@ -28,9 +28,10 @@ export function extrairIdJob(texto) {
 /**
  * Identifica o recurso / faceta da consulta (puro).
  * @param {string} texto
+ * @param {{ situacional?: boolean }} [opts] — Fatia 1: derivacoes.situacional (sem reavaliar)
  * @returns {{ tipo: TipoConsultaEstado, jobId: string|null }}
  */
-export function identificarConsultaEstado(texto) {
+export function identificarConsultaEstado(texto, opts = {}) {
   const t = normalizarTexto(texto);
   const jobId = extrairIdJob(texto);
 
@@ -73,9 +74,16 @@ export function identificarConsultaEstado(texto) {
     return { tipo: "pendencias", jobId: null };
   }
 
-  // Panorama curto apenas — pedidos situacionais de trabalho não são estado_geral
+  // Panorama curto apenas — pedidos situacionais de trabalho não são estado_geral.
+  // Fatia 1: derivacoes.situacional canónico quando presente; detector só se ausente.
+  const detectarSit =
+    typeof opts.ehPedidoSituacionalTrabalho === "function"
+      ? opts.ehPedidoSituacionalTrabalho
+      : ehPedidoSituacionalTrabalho;
+  const situacional =
+    opts.situacional != null ? opts.situacional === true : detectarSit(t);
   if (
-    !ehPedidoSituacionalTrabalho(t) &&
+    !situacional &&
     (/\bestado\s+atual\b/.test(t) ||
       /\b(status|resumo\s+executivo|memoria\s+executiva)\b/.test(t))
   ) {
@@ -208,7 +216,14 @@ function montarRespostaJob(job, tipo) {
  * @param {PortasConsultaEstado} [portas]
  */
 export async function executarConsultaEstado(texto, portas = {}) {
-  const id = identificarConsultaEstado(texto);
+  const id = identificarConsultaEstado(texto, {
+    ...(portas.situacional != null
+      ? { situacional: portas.situacional === true }
+      : {}),
+    ...(typeof portas.ehPedidoSituacionalTrabalho === "function"
+      ? { ehPedidoSituacionalTrabalho: portas.ehPedidoSituacionalTrabalho }
+      : {})
+  });
   const obterJob =
     typeof portas.obterJob === "function"
       ? portas.obterJob

@@ -73,7 +73,14 @@ export function aplicarConversacaoNatural(entrada = {}) {
     pediuDetalhe,
     instrucao,
     intencaoId: dados.intencao?.id || entrada.intencaoId || "",
-    modo: entrada.modo || ""
+    modo: entrada.modo || "",
+    pedidoInfoGathering: entrada.pedidoInfoGathering,
+    pedidoDecisaoExplicita: entrada.pedidoDecisaoExplicita,
+    pedidoConsultaResposta: entrada.pedidoConsultaResposta,
+    pedidoAnaliseDeliberativa: entrada.pedidoAnaliseDeliberativa,
+    consultaNaoEAcao: entrada.consultaNaoEAcao,
+    tipoTurno: entrada.tipoTurno,
+    precedenciaTurno: entrada.precedenciaTurno
   });
 
   const texto = sanitizarProsaUsuario(composto.texto);
@@ -152,7 +159,14 @@ export function naturalizarRespostaNucleo(resposta, ctx = {}) {
     intencaoId:
       resposta.dados?.intencao?.id ||
       resposta.intencao?.id ||
-      ctx.intencao?.id
+      ctx.intencao?.id,
+    pedidoInfoGathering: ctx.pedidoInfoGathering,
+    pedidoDecisaoExplicita: ctx.pedidoDecisaoExplicita,
+    pedidoConsultaResposta: ctx.pedidoConsultaResposta,
+    pedidoAnaliseDeliberativa: ctx.pedidoAnaliseDeliberativa,
+    consultaNaoEAcao: ctx.consultaNaoEAcao,
+    tipoTurno: ctx.tipoTurno,
+    precedenciaTurno: ctx.precedenciaTurno
   });
 
   const comunicado = resposta.dados?.comunicado

@@ -2,6 +2,7 @@
  * Fachada de integração Núcleo → MRE → Speaker → efeitos F7/F8 (Blocos 2–3).
  */
 
+import { seleccionarFioCoa } from "../classificadorIntencao/fioConversacional.js";
 import { obterPainelExecutivo } from "../catalogoProjetos/index.js";
 import { lerMemoria } from "../executiveMemory/index.js";
 import {
@@ -38,6 +39,10 @@ import {
   detectarPedidoDecisaoExplicita,
   hintEstagio6DecisaoSobConflito
 } from "./politicaDecisaoSobConflito.js";
+import {
+  detectarPedidoInfoGathering,
+  hintEstagio6InfoGathering
+} from "../classificadorIntencao/pedidoInfoGathering.js";
 import {
   blocoContextoManifestoParaMre,
   deveAnexarManifestoMg2,
@@ -157,13 +162,29 @@ export function montarEntradaMre(ctx) {
           }
         : null;
 
+  const infoGatheringEntrada =
+    ctx.pedidoInfoGathering != null
+      ? ctx.pedidoInfoGathering === true
+      : detectarPedidoInfoGathering(texto);
+  const pdEntrada =
+    ctx.pedidoDecisaoExplicita != null
+      ? ctx.pedidoDecisaoExplicita === true
+      : undefined;
+
   let mensagem = enriquecerMensagemComBriefing(texto, factosBriefing);
   mensagem = enriquecerMensagemComConsciencia(mensagem, lastro, (l) =>
-    blocoContextoEntradaMre(l, texto)
+    blocoContextoEntradaMre(l, texto, {
+      pedidoInfoGathering: infoGatheringEntrada,
+      ...(pdEntrada !== undefined
+        ? { pedidoDecisaoExplicita: pdEntrada }
+        : {})
+    })
   );
   // DEC-010 / calibração: fio recente + âncoras EIC → raciocínio com continuidade
   mensagem = enriquecerMensagemComFioRecente(mensagem, ctx.historico);
-  mensagem = enriquecerMensagemComMemoriaTrabalho(mensagem, lastro);
+  mensagem = enriquecerMensagemComMemoriaTrabalho(mensagem, lastro, {
+    omitirInstrucaoOperacional: infoGatheringEntrada
+  });
 
   // P1-3 — Manifesto canónico (diretriz; não Fonte Oficial / Acervo)
   const manifesto =
@@ -244,26 +265,23 @@ export function extrairUltimaRespostaCeo(historico) {
  */
 export function enriquecerMensagemComFioRecente(texto, historico) {
   if (!Array.isArray(historico) || historico.length === 0) return texto;
-  const recentes = historico
-    .filter((t) => t && String(t.texto || "").trim())
-    .slice(-6)
-    .map((t) => {
-      const papel =
-        t.papel === "usuario" || t.papel === "user"
-          ? "Utilizador"
-          : t.papel === "ceo" || t.papel === "assistente"
-            ? "CEO"
-            : String(t.papel || "outro");
-      const corpo = String(t.texto || "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 160);
-      return `${papel}: ${corpo}`;
-    });
-  if (!recentes.length) return texto;
+  const janela = seleccionarFioCoa(historico, texto);
+  if (!janela.length) return texto;
+  const recentes = janela.map((t) => {
+    const papel =
+      t.papel === "usuario"
+        ? "Utilizador"
+        : t.papel === "ceo"
+          ? "CEO"
+          : String(t.papel || "outro");
+    return `${papel}: ${t.texto}`;
+  });
   return (
     `${texto}\n\n` +
-    "[Fio recente da conversa — manter continuidade; não tratar o pedido actual como mensagem isolada]\n" +
+    "[Fio recente da conversa — CONTEXTO factual do mesmo COA. " +
+    "A pergunta/instrução ACTUAL governa a resposta. " +
+    "Recomendações ou decisões anteriores são contexto, NÃO mandato; " +
+    "não as repita como resposta ao pedido actual.]\n" +
     recentes.join("\n")
   );
 }
@@ -272,12 +290,14 @@ export function enriquecerMensagemComFioRecente(texto, historico) {
  * Âncoras da Memória de Trabalho Executiva (EIC-001) na entrada MRE.
  * @param {string} texto
  * @param {object|null|undefined} lastro
+ * @param {{ omitirInstrucaoOperacional?: boolean }} [opts]
  */
-export function enriquecerMensagemComMemoriaTrabalho(texto, lastro) {
+export function enriquecerMensagemComMemoriaTrabalho(texto, lastro, opts = {}) {
   const mte = lastro && lastro.memoriaTrabalhoExecutiva;
   if (!mte || typeof mte !== "object") return texto;
   const h = mte.hierarquia || {};
   const e = mte.estadoConversa || {};
+  const omitirInstrucao = opts.omitirInstrucaoOperacional === true;
   const linhas = [];
   if (h.objectivoEstrategico) {
     linhas.push(`Objectivo estratégico: ${h.objectivoEstrategico}`);
@@ -290,14 +310,18 @@ export function enriquecerMensagemComMemoriaTrabalho(texto, lastro) {
   if (h.entregaCorrente) {
     linhas.push(`Entrega corrente: ${h.entregaCorrente}`);
   }
-  if (mte.proximaAcao) {
+  // Info-gathering: não injectar próxima acção / posição como instrução do turno
+  if (!omitirInstrucao && mte.proximaAcao) {
     linhas.push(`Próxima acção: ${mte.proximaAcao}`);
   }
-  // DESP-009: decisões / pendências / estado — execução alinha à missão
-  if (Array.isArray(mte.decisoesTomadas) && mte.decisoesTomadas.length) {
+  if (
+    !omitirInstrucao &&
+    Array.isArray(mte.decisoesTomadas) &&
+    mte.decisoesTomadas.length
+  ) {
     linhas.push(`Decisão em vigor: ${mte.decisoesTomadas[0]}`);
   }
-  if (mte.posicaoCeoNaoVigente) {
+  if (!omitirInstrucao && mte.posicaoCeoNaoVigente) {
     const vigente0 = Array.isArray(mte.decisoesTomadas)
       ? String(mte.decisoesTomadas[0] || "")
       : "";
@@ -312,13 +336,13 @@ export function enriquecerMensagemComMemoriaTrabalho(texto, lastro) {
       `Pendências abertas: ${mte.pendencias.slice(0, 3).join("; ")}`
     );
   }
-  if (e.emExecucao) {
+  if (!omitirInstrucao && e.emExecucao) {
     linhas.push(`Em execução: ${e.emExecucao}`);
   }
   if (e.bloqueio) {
     linhas.push(`Bloqueio: ${e.bloqueio}`);
   }
-  if (mte.encerramento?.necessitaNovoDespacho) {
+  if (!omitirInstrucao && mte.encerramento?.necessitaNovoDespacho) {
     linhas.push("Encerramento: necessita novo despacho");
   }
   if (Array.isArray(mte.restricoesAtivas) && mte.restricoesAtivas.length) {
@@ -327,11 +351,10 @@ export function enriquecerMensagemComMemoriaTrabalho(texto, lastro) {
     );
   }
   if (!linhas.length) return texto;
-  return (
-    `${texto}\n\n` +
-    "[Estado executivo da conversa — preservar hierarquia de objectivos e conduzir a missão]\n" +
-    linhas.join("\n")
-  );
+  const cabecalho = omitirInstrucao
+    ? "[Estado executivo — só contexto factual; a pergunta actual pede informações/lacunas, não reabrir a missão com a posição anterior]\n"
+    : "[Estado executivo da conversa — preservar hierarquia de objectivos e conduzir a missão]\n";
+  return `${texto}\n\n` + cabecalho + linhas.join("\n");
 }
 
 /**
@@ -441,25 +464,40 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
   );
 
   const msgUser = String(ctx.instrucao || "");
-  const pedidoDecisao = detectarPedidoDecisaoExplicita(msgUser);
+  const pedidoInfoGathering =
+    ctx.pedidoInfoGathering != null
+      ? ctx.pedidoInfoGathering === true
+      : detectarPedidoInfoGathering(msgUser);
+  const pedidoDecisao = pedidoInfoGathering
+    ? false
+    : ctx.pedidoDecisaoExplicita != null
+      ? ctx.pedidoDecisaoExplicita === true
+      : detectarPedidoDecisaoExplicita(msgUser);
   // Pedido explícito de decisão prevalece sobre modo exploração (trade-off/alternativas).
   const exploratoria = pedidoDecisao
     ? false
     : mensagemEhExploratoria(msgUser);
   const diagnosticoFactos = mensagemPedeDiagnosticoFactos(msgUser);
-  const pedidoConsulta =
-    !pedidoDecisao &&
-    detectarPedidoConsultaResposta(msgUser, {
-      consultaNaoEAcao: ctx.consultaNaoEAcao === true,
-      tipoTurno: ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno,
-      precedenciaTurno: ctx.precedenciaTurno
-    });
+  const pedidoConsulta = pedidoDecisao
+    ? false
+    : pedidoInfoGathering
+      ? false
+      : ctx.pedidoConsultaResposta != null
+        ? ctx.pedidoConsultaResposta === true || ctx.consultaNaoEAcao === true
+        : detectarPedidoConsultaResposta(msgUser, {
+            consultaNaoEAcao: ctx.consultaNaoEAcao === true,
+            tipoTurno: ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno,
+            precedenciaTurno: ctx.precedenciaTurno
+          });
   // Opção A: fecho prevalece — não activar hint/prosa P1-2 em paralelo
   // CONSULTA situacional ≠ análise de proposta (P1-2)
   const pedidoAnalise =
     !pedidoDecisao &&
     !pedidoConsulta &&
-    detectarPedidoAnaliseDeliberativa(msgUser);
+    !pedidoInfoGathering &&
+    (ctx.pedidoAnaliseDeliberativa != null
+      ? ctx.pedidoAnaliseDeliberativa === true
+      : detectarPedidoAnaliseDeliberativa(msgUser));
   const pedidoDelegacaoExplicita = ehPedidoDelegacaoExplicita(msgUser);
   const temManifesto = Boolean(entrada.manifestoMg2?.ok);
 
@@ -485,6 +523,7 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     pedidoAnalise ||
     pedidoConsulta ||
     pedidoDecisao ||
+    pedidoInfoGathering ||
     temManifesto
       ? async (pedido) => {
           let hint = pedido.schemaHint || "";
@@ -492,7 +531,9 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
             hint += hintManifestoComoDiretriz();
           }
           if (pedido?.estagio === "6_decisao") {
-            if (pedidoConsulta) {
+            if (pedidoInfoGathering) {
+              hint += hintEstagio6InfoGathering();
+            } else if (pedidoConsulta) {
               hint += hintEstagio6ConsultaResposta();
             } else if (pedidoAnalise) {
               hint += hintEstagio6AnaliseDeliberativa();
@@ -541,7 +582,11 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
             }
             if (temLastroConsciencia) {
               hint +=
-                " " + schemaHintConsciencia(lastro, ctx.instrucao || "");
+                " " +
+                  schemaHintConsciencia(lastro, ctx.instrucao || "", {
+                    pedidoInfoGathering,
+                    pedidoDecisaoExplicita: pedidoDecisao
+                  });
             }
             return chamarLlmBase({ ...pedido, schemaHint: hint });
           }
@@ -552,11 +597,11 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
         }
       : chamarLlmBase;
 
-  // Em exploração, manter preferirSolicitarDados para não silenciar lacunas materiais.
+  // Em exploração / info-gathering, preferir solicitar_dados (lacunas).
   // Pedido explícito de decisão: não preferir solicitar_dados por conflito/exploração.
   const preferirSolicitarDados = pedidoDecisao
     ? false
-    : exploratoria
+    : pedidoInfoGathering || exploratoria
       ? true
       : temLastroBriefing || temLastroConsciencia
         ? false
@@ -568,6 +613,7 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     pedidoAnaliseDeliberativa: pedidoAnalise,
     pedidoConsultaResposta: pedidoConsulta,
     pedidoDecisaoExplicita: pedidoDecisao,
+    pedidoInfoGathering,
     pedidoDelegacaoExplicita,
     consultaNaoEAcao: ctx.consultaNaoEAcao === true || pedidoConsulta,
     tipoTurno: ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno || null,
@@ -575,7 +621,10 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     lastroConsciencia: lastro,
     historico: ctx.historico || [],
     proibirDespacho:
-      (pedidoAnalise || pedidoConsulta || pedidoDecisao) &&
+      (pedidoAnalise ||
+        pedidoConsulta ||
+        pedidoDecisao ||
+        pedidoInfoGathering) &&
       !pedidoDelegacaoExplicita,
     metadados: {
       origem: "nucleo",
@@ -595,7 +644,9 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     const disciplinaFalha = garantirDisciplinaLastroInsuficiente(falha, {
       factosOficiais: entrada.factosOficiais,
       parecer: resultado.parecer || null,
-      pedidoConsulta
+      pedidoConsulta,
+      pedidoInfoGathering,
+      instrucao: ctx.instrucao || ""
     });
     const reflexoFalha = disciplinaFalha.aplicada
       ? {
@@ -606,7 +657,8 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
       : garantirReflexoEstadoExecutivo(
           disciplinaFalha.mensagem,
           lastro,
-          ctx.instrucao || ""
+          ctx.instrucao || "",
+          { pedidoInfoGathering, pedidoDecisaoExplicita: pedidoDecisao }
         );
     return {
       ok: false,
@@ -623,7 +675,8 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
 
   const falado = gerarComunicadoExecutivo(resultado.parecer, canal, {
     pedidoAnalise,
-    pedidoConsulta
+    pedidoConsulta,
+    pedidoInfoGathering
   });
   if (!falado.ok) {
     return {
@@ -666,7 +719,9 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     disciplinaLastro = garantirDisciplinaLastroInsuficiente(comunicado.texto, {
       factosOficiais: entrada.factosOficiais,
       parecer: resultado.parecer,
-      pedidoConsulta: false
+      pedidoConsulta: false,
+      pedidoInfoGathering,
+      instrucao: ctx.instrucao || ""
     });
     comunicado.texto = disciplinaLastro.mensagem;
     // Se a disciplina substituiu a prosa, não deixar o reflexo ops sobrescrever o fail-closed.
@@ -680,7 +735,8 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
       reflexo = garantirReflexoEstadoExecutivo(
         comunicado.texto,
         lastro,
-        ctx.instrucao || ""
+        ctx.instrucao || "",
+        { pedidoInfoGathering, pedidoDecisaoExplicita: pedidoDecisao }
       );
       if (reflexo.aplicada && !pedidoAnalise) {
         comunicado.texto = reflexo.mensagem;

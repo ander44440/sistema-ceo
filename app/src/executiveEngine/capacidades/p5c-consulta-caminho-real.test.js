@@ -137,23 +137,48 @@ describe("P5c CONSULTA — caminho real capacidadeIa", () => {
     assert.equal(detectarPedidoConsultaResposta(msg), false);
   });
 
-  it("follow-up curto NÃO-situacional continua fora do snapshot forçado", async () => {
+  it("«onde paramos?» → CONSULTA situacional (snapshot; evidência de sessão)", async () => {
+    assert.equal(detectarPedidoConsultaResposta("onde paramos?"), true);
+
     const out = await capacidadeIa.executar({
       instrucao: "onde paramos?",
-      historico: [],
+      historico: [
+        {
+          papel: "usuario",
+          texto: "Fechar a rota de retoma conversacional"
+        },
+        {
+          papel: "ceo",
+          texto: "Retoma alinhada ao snapshot situacional com evidência do fio."
+        }
+      ],
       intencao: {
         id: "deliberar_objetivo",
         capacidade: "ia",
         classe: "conversa_projeto",
         destino: "nucleo_mre"
       },
+      lastroConsciencia: {
+        temContextoRelevante: true,
+        factosOficiais: ["Estado operacional: Atenção"],
+        memoriaTrabalhoExecutiva: {
+          hierarquia: { entregaCorrente: "fase de continuidade" },
+          estadoConversa: { emExecucao: "Atenção" },
+          proximaAcao: "Atenção"
+        }
+      },
       memoria: () => ({})
     });
-    assert.equal(out.dados?.complexidadeDecisao?.nivel, "moderado");
-    assert.notEqual(out.dados?.rota, "consulta_situacional_snapshot");
+
+    assert.equal(out.ok, true);
+    assert.equal(out.dados?.rota, "consulta_situacional_snapshot");
+    assert.equal(out.modo, "consulta-snapshot-sem-llm");
+    assert.ok(out.dados?.snapshotSituacional);
+    assert.doesNotMatch(out.mensagem, /fase de continuidade/);
+    assert.doesNotMatch(out.mensagem, /Estado operacional Atenção/);
     assert.match(
-      String(out.dados?.rota || ""),
-      /deliberativa-rapida|consciencia|fallback/
+      out.mensagem,
+      /Sessão|retoma|snapshot|LACUNA|evidência recente|Etapa/i
     );
   });
 });

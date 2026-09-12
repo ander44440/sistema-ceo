@@ -198,8 +198,28 @@ function montarJuizoOperacional(estado, objeto, t) {
  */
 export async function executarRecomendacaoOperacional(texto, portas = {}) {
   const t = normalizarTexto(texto);
+  /** @type {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean, infoGathering?: boolean, calcObjectoDoTurno?: Function, detectarPedidoDecisaoExplicita?: Function }} */
+  const optsSinais = {};
+  if (portas.objectoTurno != null) optsSinais.objectoTurno = portas.objectoTurno;
+  if (portas.pedidoDecisaoExplicita != null) {
+    optsSinais.pedidoDecisaoExplicita = portas.pedidoDecisaoExplicita === true;
+  }
+  if (portas.pedidoInfoGathering != null) {
+    optsSinais.infoGathering = portas.pedidoInfoGathering === true;
+  }
+  if (typeof portas.calcObjectoDoTurno === "function") {
+    optsSinais.calcObjectoDoTurno = portas.calcObjectoDoTurno;
+  }
+  if (typeof portas.detectarPedidoDecisaoExplicita === "function") {
+    optsSinais.detectarPedidoDecisaoExplicita =
+      portas.detectarPedidoDecisaoExplicita;
+  }
   const objeto = identificarObjetoRecomendacaoOperacional(texto);
-  const misto = ehPedidoMistoEstadoERecomendacaoOperacional(texto);
+  const misto = ehPedidoMistoEstadoERecomendacaoOperacional(
+    texto,
+    portas.fioCoa,
+    optsSinais
+  );
   const lerMem =
     typeof portas.lerMemoriaFn === "function" ? portas.lerMemoriaFn : lerMemoria;
   const estado = lerMem() || {};

@@ -111,7 +111,12 @@ test("E4 demo: Resolva os bugs → Gate G2 → Aprovado → Job + Dispatcher", a
 
   assert.equal(aprov.dados?.decisao, "aprovado");
   assert.ok(aprov.dados?.job?.id);
-  assert.equal(aprov.dados?.job?.estado || fila.jobs[0]?.estado, "pending");
+  // Handoff ao Dispatcher pode promover pending → dispatched no mesmo turno
+  const estadoJob = aprov.dados?.job?.estado || fila.jobs[0]?.estado;
+  assert.ok(
+    estadoJob === "pending" || estadoJob === "dispatched",
+    `estado Job inesperado: ${estadoJob}`
+  );
   assert.equal(aprov.dados?.motor?.fluxoIniciado, true);
   assert.equal(aprov.dados?.handoff?.para, "dispatcher_req053");
   assert.equal(aprov.dados?.classificadorSaltado, true);

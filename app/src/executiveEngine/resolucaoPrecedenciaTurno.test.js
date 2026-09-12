@@ -125,6 +125,99 @@ test("V1: panorama geral → C4", () => {
   assert.equal(r.tipoTurno, TIPO_TURNO_PREC.CONSULTA);
 });
 
+test("Autodiagnóstico CEO: «estado atual» não vira consulta situacional/panorama", async () => {
+  const { ehPedidoAutodiagnosticoOuAutoavaliacaoCeo } = await import(
+    "../classificadorIntencao/regras.js"
+  );
+  const { normalizarTexto } = await import("../classificadorIntencao/lexicon.js");
+  const texto =
+    "CEO, faça um autodiagnóstico do seu estado atual. Avalie suas capacidades atuais e limitações.";
+  assert.equal(
+    ehPedidoAutodiagnosticoOuAutoavaliacaoCeo(normalizarTexto(texto)),
+    true
+  );
+
+  const fila = criarPublicadorFilaMemoria();
+  const out = await executiveEngine.executar(
+    { texto, historico: [] },
+    { publicarJob: fila.publicarJob.bind(fila), listarPorEstado: async () => [] }
+  );
+  assert.equal(fila.jobs.length, 0, "não cria Job");
+  assert.notEqual(out.dados?.precedenciaTurno?.forcarC4Panorama, true);
+  assert.doesNotMatch(
+    String(out.mensagem || ""),
+    /consulta_situacional|Bloqueio por lacuna/i
+  );
+  assert.notEqual(out.dados?.encaminhamento?.destino, "motor_execucao");
+});
+
+test("Autoavaliação CEO: não capturada como panorama por «estado atual»", async () => {
+  const { ehPedidoAutodiagnosticoOuAutoavaliacaoCeo } = await import(
+    "../classificadorIntencao/regras.js"
+  );
+  const { normalizarTexto } = await import("../classificadorIntencao/lexicon.js");
+  const texto =
+    "Faça uma autoavaliação do seu estado atual como CEO — o que funciona e o que limita.";
+  assert.equal(
+    ehPedidoAutodiagnosticoOuAutoavaliacaoCeo(normalizarTexto(texto)),
+    true
+  );
+
+  const fila = criarPublicadorFilaMemoria();
+  const out = await executiveEngine.executar(
+    { texto, historico: [] },
+    { publicarJob: fila.publicarJob.bind(fila), listarPorEstado: async () => [] }
+  );
+  assert.equal(fila.jobs.length, 0);
+  assert.doesNotMatch(
+    String(out.mensagem || ""),
+    /consulta_situacional|Bloqueio por lacuna/i
+  );
+});
+
+test("Consulta situacional/panorama legítima com «estado atual» preservada", async () => {
+  const { ehPedidoAutodiagnosticoOuAutoavaliacaoCeo } = await import(
+    "../classificadorIntencao/regras.js"
+  );
+  const { normalizarTexto } = await import("../classificadorIntencao/lexicon.js");
+  assert.equal(
+    ehPedidoAutodiagnosticoOuAutoavaliacaoCeo(
+      normalizarTexto("Qual é o estado atual?")
+    ),
+    false
+  );
+
+  const fila = criarPublicadorFilaMemoria();
+  const out = await executiveEngine.executar(
+    { texto: "Qual é o estado atual?", historico: [] },
+    { publicarJob: fila.publicarJob.bind(fila), listarPorEstado: async () => [] }
+  );
+  assert.equal(fila.jobs.length, 0);
+  assert.equal(out.dados?.encaminhamento?.destino, "capacidade_operacional");
+  assert.equal(out.dados?.precedenciaTurno?.tipoTurno, TIPO_TURNO_PREC.CONSULTA);
+});
+
+test("Pedido operacional legítimo não é autodiagnóstico", async () => {
+  const { ehPedidoAutodiagnosticoOuAutoavaliacaoCeo } = await import(
+    "../classificadorIntencao/regras.js"
+  );
+  const { normalizarTexto } = await import("../classificadorIntencao/lexicon.js");
+  const texto = "Qual é o estado atual da fila de execução?";
+  assert.equal(
+    ehPedidoAutodiagnosticoOuAutoavaliacaoCeo(normalizarTexto(texto)),
+    false
+  );
+
+  const fila = criarPublicadorFilaMemoria();
+  const out = await executiveEngine.executar(
+    { texto, historico: [] },
+    { publicarJob: fila.publicarJob.bind(fila), listarPorEstado: async () => [] }
+  );
+  assert.equal(fila.jobs.length, 0);
+  assert.equal(out.dados?.classificacao?.classe, "comando_operacional");
+  assert.equal(out.dados?.encaminhamento?.destino, "capacidade_operacional");
+});
+
 test("P2: composta + AD → classificador; sem forcarC2; sem execução AD", () => {
   const r = resolverPrecedenciaTurno({
     adOrdemExecucao: true,

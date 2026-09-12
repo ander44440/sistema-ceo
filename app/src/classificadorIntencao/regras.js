@@ -18,7 +18,11 @@ import {
   historicoTemReferenciaProjeto,
   mensagemEhDeixisOuFollowUp
 } from "./historicoRecente.js";
-import { ehRecomendacaoOperacional } from "./recomendacaoOperacional.js";
+import {
+  ehRecomendacaoOperacional,
+  objectoDoTurno,
+  OBJECTO_TURNO
+} from "./recomendacaoOperacional.js";
 import {
   detectarAncoraEmpresa,
   temAncoraExplicitaProjeto
@@ -32,6 +36,10 @@ import { ehConsultaCatalogoProjetos } from "./consultaCatalogoProjetos.js";
  * @property {ReadonlyArray<{ papel: "usuario"|"ceo", texto: string }>} [historicoRecente] — IMP-061 / REQ-061 (opcional)
  * @property {object} [objetivoConversacional] — IMP-064 (contexto; não decide classe / não influencia C3)
  * @property {boolean} [operacaoAberta] — Teste 3: Job F2 aberto (continuidade ≠ C4 isolada)
+ * @property {unknown} [fioCoa] — Fatia 2: fio do mesmo COA (não é historicoRecente VCA)
+ * @property {string} [objectoTurno] — Fatia 1: objecto já produzido (sem recalcular)
+ * @property {boolean} [situacional] — Fatia 1: derivacoes.situacional (sem reavaliar)
+ * @property {boolean} [pedidoDecisaoExplicita] — Fatia 1: sinal pd (sem reavaliar)
  */
 
 /**
@@ -287,6 +295,7 @@ export function ehPedidoSituacionalTrabalho(t) {
   if (!t) return false;
   if (ehComandoExecucaoExplicito(t)) return false;
   return (
+    /\bonde\s+paramos\b/.test(t) ||
     /\betapa\b/.test(t) ||
     /\b(acabamos|acabou)\s+de\s+concluir\b/.test(t) ||
     /\b(o\s+que\s+)?(estamos|estou)\s+fazendo\s+agora\b/.test(t) ||
@@ -300,16 +309,71 @@ export function ehPedidoSituacionalTrabalho(t) {
 }
 
 /**
+ * Autodiagnóstico / autoavaliação do próprio CEO (produto), não panorama nem
+ * consulta situacional de trabalho. Texto normalizado (sem acentos).
+ * @param {string} t
+ */
+export function ehPedidoAutodiagnosticoOuAutoavaliacaoCeo(t) {
+  if (!t) return false;
+  if (/\bautodiagnostico\b/.test(t) || /\bauto\s*diagnostico\b/.test(t)) {
+    return true;
+  }
+  if (/\bautoavaliacao\b/.test(t) || /\bauto\s*avaliacao\b/.test(t)) {
+    return true;
+  }
+  // «avalie suas capacidades» / diagnóstico de si — sem capturar «avalie o outdoor»
+  if (
+    /\b(avalie|avalia|avaliar|diagnostique|diagnostico)\b/.test(t) &&
+    /\b(suas?\s+capacidades|seu\s+proprio\s+estado|voce\s+mesmo|do\s+proprio\s+ceo|como\s+(o\s+)?sistema\s+ceo)\b/.test(
+      t
+    )
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * C4 só para consulta factual isolada.
  * Com operação aberta + continuidade de missão, não força C4.
  * Pedido situacional de trabalho (mesmo com «estado atual») → não C4.
  * @param {string} t — texto normalizado
  * @param {ContextoClassificacao} [ctx]
  */
+function optsSinaisDe(ctx = {}) {
+  /** @type {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean, pedidoAnaliseDeliberativa?: boolean }} */
+  const o = {};
+  if (ctx.objectoTurno != null) o.objectoTurno = ctx.objectoTurno;
+  if (ctx.pedidoDecisaoExplicita != null) {
+    o.pedidoDecisaoExplicita = ctx.pedidoDecisaoExplicita === true;
+  }
+  if (ctx.pedidoAnaliseDeliberativa != null) {
+    o.pedidoAnaliseDeliberativa = ctx.pedidoAnaliseDeliberativa === true;
+  }
+  return o;
+}
+
+/** @param {ContextoClassificacao} ctx @param {string} t */
+function situacionalDe(ctx, t) {
+  if (ctx.situacional != null) return ctx.situacional === true;
+  return ehPedidoSituacionalTrabalho(t);
+}
+
+/** @param {ContextoClassificacao} ctx @param {string} t */
+function pedidoDecisaoDe(ctx, t) {
+  if (ctx.pedidoDecisaoExplicita != null) {
+    return ctx.pedidoDecisaoExplicita === true;
+  }
+  return detectarPedidoDecisaoExplicita(t);
+}
+
 export function ehConsultaEstadoParaC4(t, ctx = {}) {
   if (!ehConsultaEstadoOperacional(t)) return false;
-  if (ehPedidoSituacionalTrabalho(t)) return false;
-  if (ehPedidoAnaliseOuRecomendacao(t)) return false;
+  if (situacionalDe(ctx, t)) return false;
+  if (ehPedidoAutodiagnosticoOuAutoavaliacaoCeo(t)) return false;
+  if (ehPedidoAnaliseOuRecomendacao(t, ctx.fioCoa, optsSinaisDe(ctx))) {
+    return false;
+  }
   if (ehPedidoRelatoEncerramento(t)) return false;
   if (ctx.operacaoAberta && ehPedidoContinuidadeMissao(t)) return false;
   return true;
@@ -319,12 +383,23 @@ export function ehConsultaEstadoParaC4(t, ctx = {}) {
  * P0 — pedido de análise / recomendação / avaliação (não é execução).
  * «Não execute» / «não crie Job» NÃO anulam análise — só bloqueiam C3.
  * @param {string} t
+ * @param {unknown} [fioCoa]
+ * @param {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean }} [opts]
  */
-export function ehPedidoAnaliseOuRecomendacao(t) {
+export function ehPedidoAnaliseOuRecomendacao(t, fioCoa, opts = {}) {
   if (!t) return false;
   if (ehComandoExecucaoExplicito(t)) return false;
-  // E4: recomendação operacional (prioridade/sprint/job/…) ≠ deliberação C2
-  if (ehRecomendacaoOperacional(t)) return false;
+  // E4: recomendação operacional (objecto A) ≠ deliberação C2
+  if (ehRecomendacaoOperacional(t, fioCoa, opts)) return false;
+  const calcObjecto =
+    typeof opts.calcObjectoDoTurno === "function"
+      ? opts.calcObjectoDoTurno
+      : objectoDoTurno;
+  const objecto =
+    opts.objectoTurno != null ? opts.objectoTurno : calcObjecto(t, fioCoa);
+  if (objecto === OBJECTO_TURNO.B || objecto === OBJECTO_TURNO.MISTO) {
+    return true;
+  }
   return (
     /\b(analisa|analise|analisar)\b/.test(t) ||
     /\b(avalia|avalie|avaliar)\b/.test(t) ||
@@ -388,11 +463,13 @@ export function temContextoProjetoE22(t, ctx = {}) {
  * EIC, mapa divulgável, decisões, capacidades, agentes, Jobs (meta).
  * Refinamento IMP-067 do path meta/institucional.
  * @param {string} t
+ * @param {unknown} [fioCoa]
+ * @param {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean, pedidoAnaliseDeliberativa?: boolean }} [opts]
  */
-export function ehAutoexplicacaoInstitucionalE23(t) {
+export function ehAutoexplicacaoInstitucionalE23(t, fioCoa, opts = {}) {
   if (!t) return false;
   // Pedido imperativo de execução continua E2.1 — não capturar
-  if (ehIntencaoExecutivaE21(t)) return false;
+  if (ehIntencaoExecutivaE21(t, fioCoa, opts)) return false;
 
   // Meta-política de Job / resposta (não «cria um job agora»)
   if (
@@ -715,7 +792,7 @@ export function ehMetaModoConversacional(t) {
  */
 export function ehDeliberacaoProjetoE22(t, ctx = {}) {
   if (!t || !temContextoProjetoE22(t, ctx)) return false;
-  if (ehIntencaoExecutivaE21(t)) return false;
+  if (ehIntencaoExecutivaE21(t, ctx.fioCoa, optsSinaisDe(ctx))) return false;
   return (
     /\bcomo\s+devemos\b/.test(t) ||
     /\bvoc[eê]\s+concorda\b/.test(t) ||
@@ -735,10 +812,12 @@ export function ehDeliberacaoProjetoE22(t, ctx = {}) {
  * Emenda E2.2 — conhecimento geral seguro → C1 (nunca Clarificação).
  * Não captura explicações com dêixis de projecto («explique esse módulo»).
  * @param {string} t
+ * @param {unknown} [fioCoa]
+ * @param {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean, pedidoAnaliseDeliberativa?: boolean }} [opts]
  */
-export function ehConhecimentoGeralE22(t) {
+export function ehConhecimentoGeralE22(t, fioCoa, opts = {}) {
   if (!t) return false;
-  if (ehIntencaoExecutivaE21(t)) return false;
+  if (ehIntencaoExecutivaE21(t, fioCoa, opts)) return false;
 
   // Novo fio explícito para tema geral (ex.: IA) — não herdar «projetos» do «esqueça os projetos»
   if (
@@ -834,11 +913,15 @@ export function ehConhecimentoGeralE22(t) {
  * P0: análise/recomendação isolada NÃO é E2.1; proibição explícita anula.
  * @param {string} t
  */
-export function ehIntencaoExecutivaE21(t) {
+export function ehIntencaoExecutivaE21(t, fioCoa, opts = {}) {
   if (!t || ehPerguntaDeliberativa(t)) return false;
   if (ehProibicaoExecucaoExplicita(t)) return false;
   // Análise / recomendação deliberativa → C2 (hierarquia: ANÁLISE ≠ EXECUÇÃO)
-  if (ehPedidoAnaliseOuRecomendacao(t) && !ehComandoExecucaoExplicito(t)) {
+  // Sinal analise=true: consumir sem reavaliar predicado; objecto/pd via opts.
+  if (opts.pedidoAnaliseDeliberativa === true && !ehComandoExecucaoExplicito(t)) {
+    return false;
+  }
+  if (ehPedidoAnaliseOuRecomendacao(t, fioCoa, opts) && !ehComandoExecucaoExplicito(t)) {
     return false;
   }
 
@@ -879,14 +962,19 @@ export function ehIntencaoExecutivaE21(t) {
  * Detecta verbo / indício claro de execução (empate C2/C3 → C3; inclui E2.1).
  * P0: negação («não execute»), análise isolada e perguntas meta não contam.
  * @param {string} t
+ * @param {unknown} [fioCoa]
+ * @param {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean }} [opts]
  */
-export function temVerboExecucao(t) {
+export function temVerboExecucao(t, fioCoa, opts = {}) {
   if (!t || ehProibicaoExecucaoExplicita(t)) return false;
   if (ehPerguntaDeliberativa(t)) return false;
-  if (ehPedidoAnaliseOuRecomendacao(t) && !ehComandoExecucaoExplicito(t)) {
+  if (
+    ehPedidoAnaliseOuRecomendacao(t, fioCoa, opts) &&
+    !ehComandoExecucaoExplicito(t)
+  ) {
     return false;
   }
-  if (ehIntencaoExecutivaE21(t)) return true;
+  if (ehIntencaoExecutivaE21(t, fioCoa, opts)) return true;
   return (
     /\b(implementa(r)?|implemente|despacha(r)?|despache)\b/.test(t) ||
     /\b(cria(r)?|cria|crie)\s+(um\s+)?jobs?\b/.test(t) ||
@@ -900,9 +988,11 @@ export function temVerboExecucao(t) {
 /**
  * “jobs” no sentido listar/consultar (C4) vs criar trabalho (C3).
  * @param {string} t
+ * @param {unknown} [fioCoa]
+ * @param {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean }} [opts]
  * @returns {"c4"|"c3"|null}
  */
-export function desambiguarJobs(t) {
+export function desambiguarJobs(t, fioCoa, opts = {}) {
   if (/\b(lista(r)?|mostra(r)?|ver|consultar)\s+(os\s+)?jobs?\b/.test(t)) {
     return "c4";
   }
@@ -916,7 +1006,12 @@ export function desambiguarJobs(t) {
   }
   if (/^job\s*:/.test(t)) return "c3";
   if (/\b(publicar|despachar|enviar).*\bpara\s+a\s+fila\b/.test(t)) return "c3";
-  if (/\bjobs?\s+(para|de)\s+\w+/.test(t) && temVerboExecucao(t)) return "c3";
+  if (
+    /\bjobs?\s+(para|de)\s+\w+/.test(t) &&
+    temVerboExecucao(t, fioCoa, opts)
+  ) {
+    return "c3";
+  }
   return null;
 }
 
@@ -950,7 +1045,7 @@ export function calcularConfianca(scoreVencedor, scoreSegundo, vago) {
 export function resolverEmpates(scores, t, ctx = {}) {
   // FASE 3: âncoras explícitas antes de E4 (decisão trata-se fora — não é C4 de troca)
   if (
-    !detectarPedidoDecisaoExplicita(t) &&
+    !pedidoDecisaoDe(ctx, t) &&
     (temAncoraExplicitaProjeto(t) || detectarAncoraEmpresa(t))
   ) {
     return {
@@ -959,7 +1054,7 @@ export function resolverEmpates(scores, t, ctx = {}) {
     };
   }
   // E4 — recomendação operacional (prioridade/próxima decisão/sprint/job) → C4
-  if (ehRecomendacaoOperacional(t)) {
+  if (ehRecomendacaoOperacional(t, ctx.fioCoa, optsSinaisDe(ctx))) {
     return {
       classe: "comando_operacional",
       razao: "E4: recomendação operacional → C4 (não deliberação de proposta)"
@@ -994,13 +1089,13 @@ export function resolverEmpates(scores, t, ctx = {}) {
       razao: "Consulta/listagem do catálogo de projetos → C4"
     };
   }
-  if (ehPedidoSituacionalTrabalho(t)) {
+  if (situacionalDe(ctx, t)) {
     return {
       classe: "conversa_projeto",
       razao: "Pedido situacional de trabalho em curso → C2"
     };
   }
-  if (ehPedidoAnaliseOuRecomendacao(t)) {
+  if (ehPedidoAnaliseOuRecomendacao(t, ctx.fioCoa, optsSinaisDe(ctx))) {
     return {
       classe: "conversa_projeto",
       razao: "P0/P1-1: análise/recomendação → C2 (sem Job)"
@@ -1014,7 +1109,7 @@ export function resolverEmpates(scores, t, ctx = {}) {
   }
 
   // Emenda E2.1 — prioridade máxima sobre RF8/RF9 e frente activa
-  if (ehIntencaoExecutivaE21(t)) {
+  if (ehIntencaoExecutivaE21(t, ctx.fioCoa, optsSinaisDe(ctx))) {
     return {
       classe: "trabalho_executivo",
       razao: "E2.1: imperativo + acção executável → C3 (frente activa irrelevante)"
@@ -1022,7 +1117,7 @@ export function resolverEmpates(scores, t, ctx = {}) {
   }
 
   // Emenda E2.3 — autoexplicação institucional (antes de RF10/jobs e C1)
-  if (ehAutoexplicacaoInstitucionalE23(t)) {
+  if (ehAutoexplicacaoInstitucionalE23(t, ctx.fioCoa, optsSinaisDe(ctx))) {
     return {
       classe: "conversa_projeto",
       razao: "E2.3: autoexplicação institucional do CEO → C2"
@@ -1038,14 +1133,14 @@ export function resolverEmpates(scores, t, ctx = {}) {
   }
 
   // Emenda E2.2 — conhecimento geral seguro
-  if (ehConhecimentoGeralE22(t)) {
+  if (ehConhecimentoGeralE22(t, ctx.fioCoa, optsSinaisDe(ctx))) {
     return {
       classe: "conhecimento_geral",
       razao: "E2.2: conhecimento/definição/explicação → C1"
     };
   }
 
-  const jobs = desambiguarJobs(t);
+  const jobs = desambiguarJobs(t, ctx.fioCoa, optsSinaisDe(ctx));
   if (jobs === "c4") {
     return {
       classe: "comando_operacional",
@@ -1085,7 +1180,7 @@ export function resolverEmpates(scores, t, ctx = {}) {
   const c2 = scores.conversa_projeto || 0;
   const c3 = scores.trabalho_executivo || 0;
   if (c2 > 0 && c3 > 0 && Math.abs(c2 - c3) < 0.2) {
-    if (!temVerboExecucao(t)) {
+    if (!temVerboExecucao(t, ctx.fioCoa, optsSinaisDe(ctx))) {
       return {
         classe: "conversa_projeto",
         razao: "RF8: empate C2/C3 sem verbo de execução → C2"
@@ -1115,7 +1210,7 @@ export function resolverEmpates(scores, t, ctx = {}) {
   // Se top é C3 mas sem verbo e C2 compete → C2 (reforço RF8)
   if (
     topClasse === "trabalho_executivo" &&
-    !temVerboExecucao(t) &&
+    !temVerboExecucao(t, ctx.fioCoa, optsSinaisDe(ctx)) &&
     c2 >= 0.5
   ) {
     return {
@@ -1229,7 +1324,7 @@ export function classificar(texto, contexto = {}) {
   // ANÁLISE NÃO É CONSULTA DE ESTADO. «Não crie Job» ≠ âncora C4.
   // Precedência FASE 3: decisão (fluxo normal C2) > âncora projecto/empresa > E4
   if (
-    !detectarPedidoDecisaoExplicita(texto) &&
+    !pedidoDecisaoDe(contexto, texto) &&
     (temAncoraExplicitaProjeto(texto) || detectarAncoraEmpresa(texto))
   ) {
     return montarSaida(
@@ -1239,7 +1334,7 @@ export function classificar(texto, contexto = {}) {
     );
   }
 
-  if (ehRecomendacaoOperacional(t)) {
+  if (ehRecomendacaoOperacional(t, contexto.fioCoa, optsSinaisDe(contexto))) {
     return montarSaida(
       "comando_operacional",
       0.95,
@@ -1279,7 +1374,7 @@ export function classificar(texto, contexto = {}) {
     );
   }
 
-  if (ehPedidoSituacionalTrabalho(t)) {
+  if (situacionalDe(contexto, t)) {
     return montarSaida(
       "conversa_projeto",
       0.93,
@@ -1287,7 +1382,7 @@ export function classificar(texto, contexto = {}) {
     );
   }
 
-  if (ehPedidoAnaliseOuRecomendacao(t)) {
+  if (ehPedidoAnaliseOuRecomendacao(t, contexto.fioCoa, optsSinaisDe(contexto))) {
     return montarSaida(
       "conversa_projeto",
       0.94,
@@ -1305,7 +1400,7 @@ export function classificar(texto, contexto = {}) {
 
   // Emenda E2.1 — atalho obrigatório (antes de boost de frente activa)
   // Histórico NÃO entra aqui (ARQ-022 S1)
-  if (ehIntencaoExecutivaE21(t)) {
+  if (ehIntencaoExecutivaE21(t, contexto.fioCoa, optsSinaisDe(contexto))) {
     return montarSaida(
       "trabalho_executivo",
       0.94,
@@ -1314,7 +1409,7 @@ export function classificar(texto, contexto = {}) {
   }
 
   // Emenda E2.3 — autoexplicação institucional → C2 (nunca Clarificação / C3 Job)
-  if (ehAutoexplicacaoInstitucionalE23(t)) {
+  if (ehAutoexplicacaoInstitucionalE23(t, contexto.fioCoa, optsSinaisDe(contexto))) {
     return montarSaida(
       "conversa_projeto",
       0.93,
@@ -1333,7 +1428,7 @@ export function classificar(texto, contexto = {}) {
 
   // Emenda E2.2 — C1 conhecimento seguro (nunca Clarificação)
   // Histórico NÃO anula C1 seguro (ex.: «O que é um ADR?»)
-  if (ehConhecimentoGeralE22(t)) {
+  if (ehConhecimentoGeralE22(t, contexto.fioCoa, optsSinaisDe(contexto))) {
     return montarSaida(
       "conhecimento_geral",
       0.93,

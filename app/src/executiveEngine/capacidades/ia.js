@@ -150,7 +150,14 @@ async function executarBruto(ctx) {
       texto,
       intencao,
       classe: intencao.classe,
-      destino: intencao.destino
+      destino: intencao.destino,
+      ...(ctx.objectoTurno != null ? { objectoTurno: ctx.objectoTurno } : {}),
+      ...(ctx.pedidoDecisaoExplicita != null
+        ? { pedidoDecisaoExplicita: ctx.pedidoDecisaoExplicita === true }
+        : {}),
+      ...(ctx.pedidoAnaliseDeliberativa != null
+        ? { pedidoAnaliseDeliberativa: ctx.pedidoAnaliseDeliberativa === true }
+        : {})
     });
     return {
       ok: true,
@@ -173,21 +180,37 @@ async function executarBruto(ctx) {
     intencao,
     classe: intencao.classe,
     destino: intencao.destino,
-    frenteActiva: Boolean(coa)
+    frenteActiva: Boolean(coa),
+    ...(ctx.objectoTurno != null ? { objectoTurno: ctx.objectoTurno } : {}),
+    ...(ctx.pedidoDecisaoExplicita != null
+      ? { pedidoDecisaoExplicita: ctx.pedidoDecisaoExplicita === true }
+      : {}),
+    ...(ctx.pedidoAnaliseDeliberativa != null
+      ? { pedidoAnaliseDeliberativa: ctx.pedidoAnaliseDeliberativa === true }
+      : {})
   });
 
   if (ehRotaDeliberativa(intencao) && flagMre.ativo) {
     const lastro = ctx.lastroConsciencia || null;
     // Opção A: fecho decisório prevalece sobre hint/prosa P1-2
-    const pedidoConsulta = detectarPedidoConsultaResposta(texto, {
-      consultaNaoEAcao: ctx.consultaNaoEAcao === true,
-      tipoTurno: ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno,
-      precedenciaTurno: ctx.precedenciaTurno
-    });
+    const pedidoConsulta =
+      ctx.pedidoConsultaResposta != null
+        ? ctx.pedidoConsultaResposta === true || ctx.consultaNaoEAcao === true
+        : detectarPedidoConsultaResposta(texto, {
+            consultaNaoEAcao: ctx.consultaNaoEAcao === true,
+            tipoTurno: ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno,
+            precedenciaTurno: ctx.precedenciaTurno
+          });
+    const pedidoDecisao =
+      ctx.pedidoDecisaoExplicita != null
+        ? ctx.pedidoDecisaoExplicita === true
+        : detectarPedidoDecisaoExplicita(texto);
     const pedidoAnalise =
-      !detectarPedidoDecisaoExplicita(texto) &&
+      !pedidoDecisao &&
       !pedidoConsulta &&
-      detectarPedidoAnaliseDeliberativa(texto);
+      (ctx.pedidoAnaliseDeliberativa != null
+        ? ctx.pedidoAnaliseDeliberativa === true
+        : detectarPedidoAnaliseDeliberativa(texto));
 
     // CONSULTA situacional: nunca desviar para LLM rápido sem snapshot
     // (complexidade «moderado/follow-up» não anula o caminho com SNAPSHOT)
@@ -216,7 +239,10 @@ async function executarBruto(ctx) {
           motivo: "omitido_apos_disciplina_lastro"
         };
       }
-      return garantirReflexoEstadoExecutivo(mensagem, lastroCtx, instrucao);
+      return garantirReflexoEstadoExecutivo(mensagem, lastroCtx, instrucao, {
+        pedidoInfoGathering: ctx.pedidoInfoGathering,
+        pedidoDecisaoExplicita: pedidoDecisao
+      });
     };
 
     // REQ-066: decisões «completa» pagam MRE 0–7; CONSULTA situacional também
@@ -416,7 +442,9 @@ async function executarBruto(ctx) {
           : garantirDisciplinaLastroInsuficiente(fallback, {
               factosOficiais: lastro?.factosOficiais,
               parecer: null,
-              pedidoConsulta: false
+              pedidoConsulta: false,
+              pedidoInfoGathering: ctx.pedidoInfoGathering,
+              instrucao: texto
             });
         const reflexo =
           pedidoAnalise || pedidoConsulta
@@ -517,7 +545,16 @@ async function executarBruto(ctx) {
         memoria: memDelib,
         coa,
         intencao,
-        validacaoContexto: ctx.validacaoContexto || null
+        validacaoContexto: ctx.validacaoContexto || null,
+        ...(ctx.objectoTurno != null ? { objectoTurno: ctx.objectoTurno } : {}),
+        ...(ctx.pedidoDecisaoExplicita != null
+          ? { pedidoDecisaoExplicita: ctx.pedidoDecisaoExplicita === true }
+          : {}),
+        ...(ctx.pedidoAnaliseDeliberativa != null
+          ? {
+              pedidoAnaliseDeliberativa: ctx.pedidoAnaliseDeliberativa === true
+            }
+          : {})
       };
       const messages = montarMensagensLlm(paramsMsg);
       if (pedidoAnalise) {
@@ -560,7 +597,9 @@ async function executarBruto(ctx) {
         : garantirDisciplinaLastroInsuficiente(saida.texto, {
             factosOficiais: lastro?.factosOficiais,
             parecer: null,
-            pedidoConsulta: false
+            pedidoConsulta: false,
+            pedidoInfoGathering: ctx.pedidoInfoGathering,
+            instrucao: texto
           });
       const reflexo =
         pedidoAnalise || pedidoConsulta
@@ -613,7 +652,9 @@ async function executarBruto(ctx) {
         : garantirDisciplinaLastroInsuficiente(fallback, {
             factosOficiais: lastro?.factosOficiais,
             parecer: null,
-            pedidoConsulta: false
+            pedidoConsulta: false,
+            pedidoInfoGathering: ctx.pedidoInfoGathering,
+            instrucao: texto
           });
       const reflexo =
         pedidoAnalise || pedidoConsulta
@@ -648,8 +689,13 @@ async function executarBruto(ctx) {
   }
 
   const pedidoAnaliseLegado =
-    !detectarPedidoDecisaoExplicita(texto) &&
-    detectarPedidoAnaliseDeliberativa(texto);
+    ctx.pedidoDecisaoExplicita != null
+      ? ctx.pedidoDecisaoExplicita !== true &&
+        (ctx.pedidoAnaliseDeliberativa != null
+          ? ctx.pedidoAnaliseDeliberativa === true
+          : detectarPedidoAnaliseDeliberativa(texto))
+      : !detectarPedidoDecisaoExplicita(texto) &&
+        detectarPedidoAnaliseDeliberativa(texto);
   const status = await obterStatusLlm();
   if (!status || !status.configurado) {
     return {
@@ -678,7 +724,16 @@ async function executarBruto(ctx) {
       memoria: memDelib,
       coa,
       intencao,
-      validacaoContexto: ctx.validacaoContexto || null
+      validacaoContexto: ctx.validacaoContexto || null,
+      ...(ctx.objectoTurno != null ? { objectoTurno: ctx.objectoTurno } : {}),
+      ...(ctx.pedidoDecisaoExplicita != null
+        ? { pedidoDecisaoExplicita: ctx.pedidoDecisaoExplicita === true }
+        : {}),
+      ...(ctx.pedidoAnaliseDeliberativa != null
+        ? {
+            pedidoAnaliseDeliberativa: ctx.pedidoAnaliseDeliberativa === true
+          }
+        : {})
     };
     const messages = montarMensagensLlm(paramsMsg);
     const dicMeta = metadadoDicInjecao(paramsMsg);

@@ -1,16 +1,11 @@
 import { lerMemoria } from "../../executiveMemory/index.js";
-import { executiveEngine } from "../../executiveEngine/index.js";
-import {
-  prepararGestoEnvio,
-  reproduzirRespostaCeo
-} from "../../experienciaVoz/reproduzirResposta.js";
 import {
   acrescentarMensagem,
-  atualizarMensagem,
   criarMensagem,
   listarMensagens,
   temHistorico
 } from "../conversa/store.js";
+import { enviarAoNucleo } from "../conversa/enviarAoNucleo.js";
 import {
   htmlFaixaDoDia,
   ligarFaixaDoDia
@@ -24,6 +19,8 @@ import { textoBoasVindasNatural } from "../../conversacaoNatural/index.js";
 import { sanitizarProsaUsuario } from "../../conversacaoNatural/sanitizarProsa.js";
 import { tomEstadoExecutivo } from "../../catalogoProjetos/estadoExecutivo.js";
 import { navegar } from "../../router.js";
+import { carregarVistaMepC3 } from "./carregarVistaMepC3.js";
+import { htmlBlocoMepC3 } from "./blocoMepC3.js";
 
 function htmlDeliberacaoNatural(dados) {
   if (!dados || !Array.isArray(dados.destaques) || !dados.destaques.length) {
@@ -149,6 +146,8 @@ export function montarCentroSituacao() {
   let enviando = false;
   /** @type {"abrir"|"encerrar"|null} */
   let painelDia = null;
+  /** Vista C3 em runtime (GET interno); fail-closed começa vazia. */
+  let propostasMepC3 = [];
 
   function pintar() {
     const mem = lerMemoria();
@@ -274,6 +273,8 @@ export function montarCentroSituacao() {
             </div>
           </article>
         </div>
+
+        ${htmlBlocoMepC3(propostasMepC3)}
 
         <div class="cs-cmd-mid">
           <section class="cs-card cs-decisoes" aria-label="Centro de Decisões">
@@ -413,56 +414,13 @@ export function montarCentroSituacao() {
       if (!texto || enviando) return;
       enviando = true;
       syncBtn();
-      prepararGestoEnvio();
-
-      acrescentarMensagem(criarMensagem({ papel: "usuario", texto }));
       input.value = "";
-      const placeholder = acrescentarMensagem(
-        criarMensagem({ papel: "ceo", texto: "…", estado: "pendente" })
-      );
 
       try {
-        const resposta = await executiveEngine.executar({
-          texto,
-          historico: listarMensagens()
-            .filter((m) => m.id !== placeholder.id)
-            .map((m) => ({ papel: m.papel, texto: m.texto }))
-        });
-        atualizarMensagem(placeholder.id, {
-          texto: resposta.mensagem,
-          estado: resposta.ok ? "pronta" : "erro",
-          papel: resposta.ok ? "ceo" : "sistema"
-        });
-        if (resposta.ok) {
-          const textoVoz =
-            (resposta.dados && resposta.dados.textoVoz) || resposta.mensagem;
-          void reproduzirRespostaCeo(textoVoz);
-          // Relato/encerramento: abrir painel com #cs-dia-* preenchidos via continuidade
-          if (
-            resposta.modo === "relato_encerramento" ||
-            resposta.dados?.origemCampos === "estado_operacional" ||
-            resposta.dados?.continuidade
-          ) {
-            painelDia = "encerrar";
-            try {
-              window.dispatchEvent(
-                new CustomEvent("ceo:continuidade-dia", {
-                  detail: resposta.dados?.continuidade || null
-                })
-              );
-            } catch {
-              /* no-op */
-            }
-          }
-        }
-      } catch (err) {
-        atualizarMensagem(placeholder.id, {
-          papel: "sistema",
-          texto:
-            "Não foi possível processar o comando. " +
-            (err && err.message ? err.message : ""),
-          estado: "erro"
-        });
+        // Porta canónica única (enviarAoNucleo), igual à Conversa.
+        await enviarAoNucleo(texto, { reproduzirTts: true });
+        // Relato/encerramento: evento ceo:continuidade-dia (emitido pela ponte)
+        // → onContinuidadeDia define painelDia = "encerrar" e repinta.
       } finally {
         enviando = false;
         pintar();
@@ -490,6 +448,13 @@ export function montarCentroSituacao() {
   }
 
   pintar();
+  void carregarVistaMepC3().then((vista) => {
+    propostasMepC3 = vista;
+    const bloco = root.querySelector(".cs-mep-c3");
+    if (bloco) {
+      bloco.outerHTML = htmlBlocoMepC3(propostasMepC3);
+    }
+  });
   queueMicrotask(() => {
     const input = root.querySelector("#cs-input");
     if (input) input.focus();

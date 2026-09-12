@@ -26,11 +26,15 @@ export { normalizarTexto };
  * @param {string} texto
  * @returns {{ alvoContexto: AlvoContexto, acaoContexto: AcaoContexto }}
  */
-export function resolverMetadadosContexto(texto) {
+export function resolverMetadadosContexto(texto, opts = {}) {
   const t = normalizarTexto(texto);
   if (!t) return { alvoContexto: null, acaoContexto: null };
 
-  if (detectarPedidoDecisaoExplicita(texto)) {
+  const pd =
+    opts.pedidoDecisaoExplicita != null
+      ? opts.pedidoDecisaoExplicita === true
+      : detectarPedidoDecisaoExplicita(texto);
+  if (pd) {
     return { alvoContexto: null, acaoContexto: "decidir" };
   }
   if (temAncoraExplicitaProjeto(texto)) {
@@ -72,8 +76,8 @@ export function resolverMetadadosContexto(texto) {
  * @param {object} intencao
  * @param {string} texto
  */
-function comMetadadosContexto(intencao, texto) {
-  const meta = resolverMetadadosContexto(texto);
+function comMetadadosContexto(intencao, texto, opts = {}) {
+  const meta = resolverMetadadosContexto(texto, opts);
   return { ...intencao, ...meta };
 }
 
@@ -96,30 +100,29 @@ function comMetadadosContexto(intencao, texto) {
  * @param {string} texto
  * @returns {{ id: string, capacidade: string, confianca: number }}
  */
-export function mapearCapacidadePorTexto(texto) {
+export function mapearCapacidadePorTexto(texto, fioCoa, opts = {}) {
   const t = normalizarTexto(texto);
 
   if (!t) {
     return { id: "instrucao_vazia", capacidade: "ia", confianca: 1 };
   }
 
+  const pd =
+    opts.pedidoDecisaoExplicita != null
+      ? opts.pedidoDecisaoExplicita === true
+      : detectarPedidoDecisaoExplicita(texto);
+
   // Precedência: âncora projecto > âncora empresa > E4 (decisão não mapeia WRITE aqui)
-  if (
-    !detectarPedidoDecisaoExplicita(texto) &&
-    temAncoraExplicitaProjeto(texto)
-  ) {
+  if (!pd && temAncoraExplicitaProjeto(texto)) {
     return { id: "atuar_em_projetos", capacidade: "projetos", confianca: 0.8 };
   }
 
-  if (
-    !detectarPedidoDecisaoExplicita(texto) &&
-    detectarAncoraEmpresa(texto)
-  ) {
+  if (!pd && detectarAncoraEmpresa(texto)) {
     return { id: "atuar_em_empresas", capacidade: "empresas", confianca: 0.8 };
   }
 
   // E4 — recomendação operacional antes de consulta genérica / deliberação
-  if (ehRecomendacaoOperacional(t)) {
+  if (ehRecomendacaoOperacional(t, fioCoa, opts)) {
     return {
       id: "recomendar_operacional",
       capacidade: "memoria",
@@ -344,13 +347,22 @@ export function mapearCapacidadePorTexto(texto) {
  * @param {object|null} [saidaPrevia] — saída já produzida pelo Classificador canónico
  * @returns {Intencao}
  */
-export function classificarIntencao(texto, saidaPrevia = null) {
+export function classificarIntencao(texto, saidaPrevia = null, extra = {}) {
+  const fioCoa = extra && extra.fioCoa;
+  /** @type {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean }} */
+  const optsSinais = {};
+  if (extra && extra.objectoTurno != null) {
+    optsSinais.objectoTurno = extra.objectoTurno;
+  }
+  if (extra && extra.pedidoDecisaoExplicita != null) {
+    optsSinais.pedidoDecisaoExplicita = extra.pedidoDecisaoExplicita === true;
+  }
   const saida =
     saidaPrevia &&
     typeof saidaPrevia === "object" &&
     typeof saidaPrevia.classe === "string"
       ? saidaPrevia
-      : classificarCanonico(texto);
+      : classificarCanonico(texto, extra.contextoClassificacao || { fioCoa });
   const idClasse = ID_POR_CLASSE[saida.classe] || "C?";
 
   if (saida.classe === "trabalho_executivo" && !saida.precisaClarificacao) {
@@ -365,7 +377,8 @@ export function classificarIntencao(texto, saidaPrevia = null) {
         classificacao: saida,
         idClasse
       },
-      texto
+      texto,
+      optsSinais
     );
   }
 
@@ -382,11 +395,12 @@ export function classificarIntencao(texto, saidaPrevia = null) {
         idClasse,
         precisaClarificacao: true
       },
-      texto
+      texto,
+      optsSinais
     );
   }
 
-  const mapa = mapearCapacidadePorTexto(texto);
+  const mapa = mapearCapacidadePorTexto(texto, fioCoa, optsSinais);
 
   if (saida.classe === "conhecimento_geral") {
     const locais = new Set([
@@ -409,12 +423,13 @@ export function classificarIntencao(texto, saidaPrevia = null) {
         classificacao: saida,
         idClasse
       },
-      texto
+      texto,
+      optsSinais
     );
   }
 
   if (saida.classe === "comando_operacional") {
-    let mapaC4 = mapearCapacidadePorTexto(texto);
+    let mapaC4 = mapearCapacidadePorTexto(texto, fioCoa, optsSinais);
     // P0-3: C4 de consulta nunca pode cair em capacidade «ia» (destino inválido).
     if (mapaC4.capacidade === "ia" || mapaC4.capacidade === "motor_execucao") {
       mapaC4 = {
@@ -434,7 +449,8 @@ export function classificarIntencao(texto, saidaPrevia = null) {
         classificacao: saida,
         idClasse
       },
-      texto
+      texto,
+      optsSinais
     );
   }
 
@@ -450,6 +466,7 @@ export function classificarIntencao(texto, saidaPrevia = null) {
       classificacao: saida,
       idClasse
     },
-    texto
+    texto,
+    optsSinais
   );
 }

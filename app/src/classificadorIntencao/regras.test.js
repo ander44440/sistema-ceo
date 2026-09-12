@@ -171,6 +171,11 @@ test("Correção A: execução+situacional → C3; pergunta situacional pura →
       destino: "nucleo_mre"
     },
     {
+      texto: "onde paramos?",
+      situacional: true,
+      destino: "nucleo_mre"
+    },
+    {
       texto: "em que etapa estamos?",
       situacional: true,
       destino: "nucleo_mre"

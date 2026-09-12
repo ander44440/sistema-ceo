@@ -256,7 +256,7 @@ test("CT-11: EIC V1 — Núcleo um classificar + historicoRecente opcional", () 
   const src = readFileSync(join(rootSrc, "executiveEngine/index.js"), "utf8");
   assert.match(src, /seleccionarHistoricoRecente/);
   assert.match(src, /primeiroPassoClassificar\(\s*texto\s*,\s*contextoClassificacao\s*\)/);
-  assert.match(src, /classificarIntencao\(\s*texto\s*,\s*classificacao\s*\)/);
+  assert.match(src, /classificarIntencao\(\s*texto\s*,\s*classificacao/);
   assert.doesNotMatch(src, /const intencao = classificarIntencao\(\s*texto\s*\)\s*;/);
 });
 

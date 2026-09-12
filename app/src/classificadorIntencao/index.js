@@ -37,6 +37,7 @@ export {
   ehPedidoRelatoEncerramento,
   ehConsultaEstadoParaC4,
   ehPedidoSituacionalTrabalho,
+  ehPedidoAutodiagnosticoOuAutoavaliacaoCeo,
   ehPedidoAnaliseOuRecomendacao,
   ehComandoExecucaoExplicito,
   ehConhecimentoGeralE22,
@@ -54,10 +55,19 @@ export {
   identificarObjetoRecomendacaoOperacional,
   temObjetoOperacional,
   temObjetoPropostaDeliberativa,
-  temMarcadorRecomendacao
+  temMarcadorRecomendacao,
+  temLastroNegocio,
+  temPedidoJuizoExecutivoNegocio,
+  objectoDoTurno,
+  OBJECTO_TURNO
 } from "./recomendacaoOperacional.js";
 
 export { detectarPedidoDecisaoExplicita } from "./pedidoDecisaoExplicita.js";
+export {
+  detectarPedidoInfoGathering,
+  hintEstagio6InfoGathering,
+  decidirSoEmClausulaProposito
+} from "./pedidoInfoGathering.js";
 export { ehConsultaCatalogoProjetos } from "./consultaCatalogoProjetos.js";
 export {
   detectarAncoraEmpresa,
@@ -73,6 +83,19 @@ export {
   CAP_CHARS_MSG,
   CAP_CHARS_TOTAL
 } from "./historicoRecente.js";
+
+export {
+  seleccionarFioCoa,
+  filtrarFioPorCoaId,
+  obterFioTranscriptCoa,
+  historicoDeliberativoParaDestino,
+  ehDeixisContinuidadeNegocio,
+  mensagemTemFactosUtilizador,
+  definirCarregadorFallbackHfcFio,
+  resetCarregadorFallbackHfcFio,
+  JANELA_FIO_MAX_MSGS,
+  CAP_CHARS_MSG_FIO
+} from "./fioConversacional.js";
 
 export {
   resolverReferencias,

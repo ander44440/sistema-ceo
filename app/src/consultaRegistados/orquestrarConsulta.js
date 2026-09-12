@@ -1,11 +1,12 @@
 /**
  * IMP-086 / ARQ-086 C-ORQ — orquestrador de consulta (read-only).
+ * IMP-089 Fatia 1 — F-TX via HFC; F-TR via deps (soft-fail).
  */
 
 import { detectarPedidoExplicitoConsulta } from "./pedidoExplicito.js";
 import {
   lerDecisoesMo,
-  lerDiscussaoTranscript,
+  lerDiscussao,
   lerRefsTrilhaOpcional
 } from "./portasLeitura.js";
 import { montarRespostaConsulta } from "./montarResposta.js";
@@ -63,7 +64,7 @@ export function orquestrarConsultaRegistados(entrada) {
     decisoes = lerDecisoesMo({ coaId, termo }, deps);
   }
   if (ramo === "discussao" || ramo === "ambos") {
-    discussoes = lerDiscussaoTranscript({ coaId, termo }, deps);
+    discussoes = lerDiscussao({ coaId, termo }, deps);
   }
 
   const moIds =

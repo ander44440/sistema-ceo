@@ -1,10 +1,23 @@
 /**
  * E4 — Recomendação operacional ≠ deliberação de proposta.
  * Regra semântica reutilizável (sem atalhos a Sprint concreta).
+ * Fatia 1: o objecto do turno (A|B|misto|indefinido) governa E4 vs C2.
  */
 
 import { normalizarTexto } from "./lexicon.js";
 import { detectarPedidoDecisaoExplicita } from "./pedidoDecisaoExplicita.js";
+import { ehDeixisContinuidadeNegocio } from "./fioConversacional.js";
+
+/** Mundo A = artefacto/operação do CEO; B = mundo do utilizador. */
+export const OBJECTO_TURNO = Object.freeze({
+  A: "A",
+  B: "B",
+  MISTO: "misto",
+  INDEFINIDO: "indefinido"
+});
+
+const PEDIDO_PRIORIDADE_NU =
+  /^\s*qual\s+(?:[eé]\s+(?:a\s+)?|a\s+)?prioridade\s*\??\s*$/;
 
 /**
  * Marcador lexical de pedido de recomendação / juízo / sequenciamento operacional.
@@ -110,29 +123,263 @@ export function ehDeliberacaoDeProposta(texto) {
 }
 
 /**
- * Recomendação operacional sobre prioridade/decisão/estado existente.
- * «recomenda» isolado NÃO basta; exige objeto operacional e exclui proposta.
- * Pedido explícito de decisão (fecho) prevalece — não desvia para E4/C4.
+ * Análise/deliberação sobre contexto ou negócio (não juízo de fila/sprint).
+ * Texto já normalizado.
+ * @param {string} t
+ */
+function temMarcadorAnaliseContextual(t) {
+  if (!t) return false;
+  return (
+    /\b(analisa|analise|analisar)\b/.test(t) ||
+    /\b(avalia|avalie|avaliar)\b/.test(t) ||
+    /\b(deliberar|delibere|delibera|deliberacao)\b/.test(t) ||
+    /\bproblema\s+central\b/.test(t) ||
+    /\balternativas\b/.test(t)
+  );
+}
+
+/**
+ * Âncora forte de lastro operacional (fila/jobs/sprint/gates).
+ * Texto já normalizado.
+ * @param {string} t
+ */
+function temAncoraOperacionalForte(t) {
+  if (!t) return false;
+  if (/\bsprint\b/.test(t)) return true;
+  if (/\bjobs?-\d+\b/.test(t)) return true;
+  if (/\bgates?\b/.test(t)) return true;
+  if (/\bfila\b/.test(t)) return true;
+  if (/\bvalidacao\b/.test(t)) return true;
+  // Sequenciamento associado a sprint/gate/validação/job
+  return (
+    /\b(depois|apos)\s+(d[aeo]\s+)?(a\s+)?(validacao|sprint|gate|jobs?)\b/.test(
+      t
+    ) ||
+    (/\b(depois|apos)\b/.test(t) &&
+      /\b(validacao|sprint|gates?|jobs?-\d+|jobs?\b)/.test(t))
+  );
+}
+
+/**
+ * Factos / alternativas de negócio no próprio turno (≠ lastro de fila/sprint).
  * @param {string} [texto]
  */
-export function ehRecomendacaoOperacional(texto) {
+export function temLastroNegocio(texto) {
+  const t = normalizarTexto(texto);
+  if (!t) return false;
+  if (/\bfornecedor(es)?\b/.test(t)) return true;
+  if (/\b(preco|precos|reajuste|reajustes)\b/.test(t)) return true;
+  if (/\bmais\s+barato\b/.test(t)) return true;
+  if (/\bvolume\b/.test(t)) return true;
+  if (/\b(fornecer|fornecimento)\b/.test(t)) return true;
+  if (/\bmargem\b/.test(t)) return true;
+  if (/\bcliente(s)?\b/.test(t)) return true;
+  if (/\b(faturamento|facturacao)\b/.test(t)) return true;
+  if (/\bmateria-?primas?\b/.test(t)) return true;
+  if (/\b(dilema|trade-?off)\b/.test(t)) return true;
+  if (
+    /\b(dois|duas)\b/.test(t) &&
+    (/\bo\s+outro\b/.test(t) ||
+      /\bo\s+segundo\b/.test(t) ||
+      /\bum\s+[eé]\s+o\s+atual\b/.test(t))
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Pedido de juízo executivo (não fecho PD, não verbo de análise obrigatório).
+ * Texto já normalizado ou bruto.
+ * @param {string} [texto]
+ */
+export function temPedidoJuizoExecutivoNegocio(texto) {
+  const t = normalizarTexto(texto);
+  if (!t) return false;
+  return (
+    /\bqual\s+[eé]\s+a\s+melhor\s+decis/.test(t) ||
+    /\bmelhor\s+decis/.test(t) ||
+    /\bqual\s+(deve|seria|deveria)\s+(ser\s+)?(a\s+|nossa\s+)?(pr[oó]xima\s+)?prioridade\b/.test(
+      t
+    ) ||
+    /\bqual\s+prioridade\b/.test(t) ||
+    /\bqual\s+[eé]\s+a\s+(pr[oó]xima\s+)?prioridade\b/.test(t) ||
+    /\bo\s+que\s+(voce|tu)\s+acha\b/.test(t) ||
+    /\bdevemos\s+fazer\s+(primeiro|agora)\b/.test(t) ||
+    /\bo\s+que\s+(devemos|voce\s+acha\s+que\s+devemos)\s+fazer\b/.test(t)
+  );
+}
+
+/**
+ * Estrutura de alternativa / dilema no mundo do utilizador (≠ lista de substantivos).
+ * @param {string} t — texto já normalizado
+ */
+function temEstruturaAlternativaOuDilema(t) {
+  if (!t) return false;
+  if (/\b(dilema|trade-?off)\b/.test(t)) return true;
+  if (/\balternativas?\b/.test(t)) return true;
+  if (/\bqual\s+caminho\b/.test(t) && /\bou\b/.test(t)) return true;
+  if (/\brenovar\b/.test(t) && /\b(trocar|substituir)\b/.test(t)) return true;
+  if (/\b(vs\.?|versus)\b/.test(t)) return true;
+  return false;
+}
+
+/**
+ * Evidência de mundo A: artefacto/operação do próprio CEO.
+ * «prioridade» / «decisão» / «recomenda» isolados NÃO contam.
+ * @param {string} t — texto já normalizado
+ */
+function temEvidenciaMundoA(t) {
+  return temAncoraOperacionalForte(t);
+}
+
+/**
+ * Evidência de mundo B: facto, alternativa ou juízo sobre o contexto do utilizador.
+ * @param {string} t — texto já normalizado
+ */
+function temEvidenciaMundoB(t) {
+  if (temLastroNegocio(t)) return true;
+  if (temEstruturaAlternativaOuDilema(t)) return true;
+  if (/\bcontrato(s)?\b/.test(t)) return true;
+  if (temObjetoPropostaDeliberativa(t)) return true;
+  return false;
+}
+
+/**
+ * Pedido operacional nu (forma de juízo sobre o sistema), sem lastro B.
+ * Não cobre análise contextual sem âncora A.
+ * @param {string} t — texto já normalizado
+ */
+function ehPedidoOperacionalSistema(t, opts = {}) {
+  if (!t) return false;
+  if (PEDIDO_PRIORIDADE_NU.test(t)) return false;
+  const pd =
+    opts.pedidoDecisaoExplicita != null
+      ? opts.pedidoDecisaoExplicita === true
+      : detectarPedidoDecisaoExplicita(
+          t,
+          opts.infoGathering != null
+            ? { infoGathering: opts.infoGathering === true }
+            : {}
+        );
+  if (pd) return false;
+  if (!temMarcadorRecomendacao(t) || !temObjetoOperacional(t)) return false;
+  if (temMarcadorAnaliseContextual(t) && !temAncoraOperacionalForte(t)) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * @param {unknown} fioCoa
+ * @returns {string[]}
+ */
+function textosDoFioCoa(fioCoa) {
+  if (!fioCoa) return [];
+  if (typeof fioCoa === "string") {
+    const s = String(fioCoa).trim();
+    return s ? [s] : [];
+  }
+  if (!Array.isArray(fioCoa)) return [];
+  return fioCoa
+    .map((m) => (typeof m === "string" ? m : String(m && m.texto ? m.texto : "")))
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function fioTemEvidenciaMundoB(fioCoa) {
+  return textosDoFioCoa(fioCoa).some((txt) => temEvidenciaMundoB(normalizarTexto(txt)));
+}
+
+/**
+ * Predicado central: objecto semântico do turno + fio do mesmo COA (Fatia 2).
+ * Deixis herda B do fio; pedido operacional nu não herda.
+ *
+ * @param {string} [texto]
+ * @param {unknown} [fioCoa]
+ * @param {{
+ *   infoGathering?: boolean,
+ *   pedidoDecisaoExplicita?: boolean
+ * }} [opts] — Fatia 1: consumir IG/PD já produzidos (sem reavaliar no path canónico)
+ * @returns {"A"|"B"|"misto"|"indefinido"}
+ */
+export function objectoDoTurno(texto, fioCoa, opts = {}) {
+  const t = normalizarTexto(texto);
+  if (!t) return OBJECTO_TURNO.INDEFINIDO;
+
+  const a = temEvidenciaMundoA(t);
+  let b = temEvidenciaMundoB(t);
+  if (!b && fioTemEvidenciaMundoB(fioCoa) && ehDeixisContinuidadeNegocio(t)) {
+    b = true;
+  }
+  if (a && b) return OBJECTO_TURNO.MISTO;
+  if (a) return OBJECTO_TURNO.A;
+  if (b) return OBJECTO_TURNO.B;
+  if (ehPedidoOperacionalSistema(t, opts)) return OBJECTO_TURNO.A;
+  return OBJECTO_TURNO.INDEFINIDO;
+}
+
+/**
+ * Recomendação operacional sobre lastro do sistema (fila/sprint/job/gate).
+ * E4 só é verdadeiro para objecto A inequívoco.
+ * Objecto B ou misto → não E4 (B governa a deliberação).
+ * «prioridade» / «decisão» / «recomenda» isolados não determinam E4.
+ * Pedido explícito de decisão (fecho) prevalece — não desvia para E4/C4.
+ * @param {string} [texto]
+ * @param {unknown} [fioCoa]
+ * @param {{
+ *   objectoTurno?: string,
+ *   pedidoDecisaoExplicita?: boolean,
+ *   infoGathering?: boolean
+ * }} [opts] — Fatia 1: consumir objecto/pd já produzidos (sem recalcular)
+ */
+export function ehRecomendacaoOperacional(texto, fioCoa, opts = {}) {
   const n = normalizarTexto(texto);
   if (!n) return false;
-  if (/^\s*qual\s+(?:[eé]\s+(?:a\s+)?|a\s+)?prioridade\s*\??\s*$/.test(n)) return false;
-  // Decisão sob conflito: «decida / escolha entre / tome a decisão» → C2/MRE
-  if (detectarPedidoDecisaoExplicita(texto)) return false;
+  if (PEDIDO_PRIORIDADE_NU.test(n)) return false;
+  const detectarPd =
+    typeof opts.detectarPedidoDecisaoExplicita === "function"
+      ? opts.detectarPedidoDecisaoExplicita
+      : detectarPedidoDecisaoExplicita;
+  const pd =
+    opts.pedidoDecisaoExplicita != null
+      ? opts.pedidoDecisaoExplicita === true
+      : detectarPd(texto);
+  if (pd) return false;
   if (ehDeliberacaoDeProposta(n)) return false;
+  const calcObjecto =
+    typeof opts.calcObjectoDoTurno === "function"
+      ? opts.calcObjectoDoTurno
+      : objectoDoTurno;
+  const objecto =
+    opts.objectoTurno != null
+      ? opts.objectoTurno
+      : calcObjecto(texto, fioCoa, {
+          ...(opts.pedidoDecisaoExplicita != null
+            ? { pedidoDecisaoExplicita: opts.pedidoDecisaoExplicita === true }
+            : {}),
+          ...(opts.infoGathering != null
+            ? { infoGathering: opts.infoGathering === true }
+            : {})
+        });
+  if (objecto !== OBJECTO_TURNO.A) return false;
   if (!temMarcadorRecomendacao(n)) return false;
-  return temObjetoOperacional(n);
+  return temObjetoOperacional(n) || temAncoraOperacionalForte(n);
 }
 
 /**
  * Pedido misto: panorama/estado + recomendação operacional.
  * @param {string} [texto]
+ * @param {unknown} [fioCoa]
+ * @param {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean, infoGathering?: boolean }} [opts]
  */
-export function ehPedidoMistoEstadoERecomendacaoOperacional(texto) {
+export function ehPedidoMistoEstadoERecomendacaoOperacional(
+  texto,
+  fioCoa,
+  opts = {}
+) {
   const n = normalizarTexto(texto);
-  if (!ehRecomendacaoOperacional(n)) return false;
+  if (!ehRecomendacaoOperacional(n, fioCoa, opts)) return false;
   return (
     /\bonde\s+estamos\b/.test(n) ||
     /\bestado\s+atual\b/.test(n) ||

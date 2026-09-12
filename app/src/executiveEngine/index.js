@@ -21,6 +21,14 @@ import {
   resumirEstado
 } from "../executiveMemory/index.js";
 import {
+  criarTurnEnvelope,
+  anexarTurnEnvelopeNaResposta
+} from "../turnEnvelope/index.js";
+import {
+  produzirSinaisTurno,
+  lerSinalBoolean
+} from "../turnEnvelope/produzirSinais.js";
+import {
   inicializarCoaSessao,
   obterCoaAtivo,
   obterEmpresaAtiva,
@@ -33,9 +41,11 @@ import {
   primeiroPassoClassificar
 } from "../classificadorIntencao/integracaoNucleo.js";
 import { detectarPedidoDecisaoExplicita } from "../classificadorIntencao/pedidoDecisaoExplicita.js";
-import { normalizarTexto } from "../classificadorIntencao/lexicon.js";
-import { ehPedidoSituacionalTrabalho } from "../classificadorIntencao/regras.js";
 import { seleccionarHistoricoRecente } from "../classificadorIntencao/historicoRecente.js";
+import {
+  seleccionarFioCoa,
+  historicoDeliberativoParaDestino
+} from "../classificadorIntencao/fioConversacional.js";
 import { resolverReferencias } from "../classificadorIntencao/resolverReferencias.js";
 import {
   gestorTopicos,
@@ -90,15 +100,16 @@ import {
 } from "../motorExecucao/acompanhamentoJob.js";
 import {
   autoridadeDelegadaActiva,
-  ehOrdemExecucaoOperacional,
-  ehPedidoConsultaOuRespostaComposta,
   exercerFechoDelegado,
   hidratarAutoridadeDelegadaSessao,
   obterEstadoAutoridadeDelegada,
   processarMensagemAutoridadeDelegada,
   snapshotAutoridadeDelegadaParaDados
 } from "../autoridadeDelegada/autoridadeDelegada.js";
-import { orquestrarConsultaRegistados } from "../consultaRegistados/index.js";
+import {
+  orquestrarConsultaRegistados,
+  criarDepsConsultaProducao
+} from "../consultaRegistados/index.js";
 import { conduzirTrabalhoExecutivoC3 } from "../classificadorIntencao/integracaoNucleo.js";
 import {
   consultarEstadoExecutivoAntesDeResponder,
@@ -151,7 +162,7 @@ const CAPACIDADES_INICIAIS = [
 
 function normalizarInstrucao(entrada) {
   if (typeof entrada === "string") {
-    return { texto: entrada.trim(), historico: [] };
+    return { texto: entrada.trim(), historico: [], coaId: null };
   }
   const texto = String(
     (entrada && (entrada.texto || entrada.instrucao)) || ""
@@ -159,7 +170,12 @@ function normalizarInstrucao(entrada) {
   const historico = Array.isArray(entrada && entrada.historico)
     ? entrada.historico
     : [];
-  return { texto, historico };
+  const coaIdRaw = entrada && entrada.coaId;
+  const coaId =
+    coaIdRaw == null || String(coaIdRaw).trim() === ""
+      ? null
+      : String(coaIdRaw).trim();
+  return { texto, historico, coaId };
 }
 
 function registrarPadrao() {
@@ -182,7 +198,14 @@ function contextoCapacidade({
   listarJobs = undefined,
   precedenciaTurno = null,
   tipoTurno = null,
-  consultaNaoEAcao = false
+  consultaNaoEAcao = false,
+  envelope = null,
+  pedidoInfoGathering = undefined,
+  pedidoDecisaoExplicita = undefined,
+  pedidoConsultaResposta = undefined,
+  pedidoAnaliseDeliberativa = undefined,
+  pedidoSituacionalTrabalho = undefined,
+  objectoTurno = undefined
 }) {
   /** @type {Record<string, unknown>} */
   const ctx = {
@@ -195,6 +218,29 @@ function contextoCapacidade({
     /** FASE 2: institucional, passivo — nenhum consumidor decide com base nisto nesta fase. */
     empresaAtiva: obterEmpresaAtivaSessao()
   };
+  // IMP-090 Fatia 0: sombra — presente em ctx; nenhum consumidor decide com base nisto.
+  if (envelope) {
+    ctx.envelope = envelope;
+  }
+  // IMP-091 B2+: sinais canónicos projectados como bools (consumir; sem redetectar).
+  if (pedidoInfoGathering !== undefined) {
+    ctx.pedidoInfoGathering = pedidoInfoGathering === true;
+  }
+  if (pedidoDecisaoExplicita !== undefined) {
+    ctx.pedidoDecisaoExplicita = pedidoDecisaoExplicita === true;
+  }
+  if (pedidoConsultaResposta !== undefined) {
+    ctx.pedidoConsultaResposta = pedidoConsultaResposta === true;
+  }
+  if (pedidoAnaliseDeliberativa !== undefined) {
+    ctx.pedidoAnaliseDeliberativa = pedidoAnaliseDeliberativa === true;
+  }
+  if (pedidoSituacionalTrabalho !== undefined) {
+    ctx.pedidoSituacionalTrabalho = pedidoSituacionalTrabalho === true;
+  }
+  if (objectoTurno != null) {
+    ctx.objectoTurno = objectoTurno;
+  }
   // IMP-059 E3: lastro só quando há contexto operacional relevante
   if (lastroConsciencia) {
     ctx.lastroConsciencia = lastroConsciencia;
@@ -237,8 +283,17 @@ function contextoCapacidade({
  * @param {object|null|undefined} obs
  * @param {string} [textoUsuario]
  */
-function anexarMensagensAcompanhamento(resposta, obs, textoUsuario = "") {
-  const obsUso = detectarPedidoDecisaoExplicita(textoUsuario)
+function anexarMensagensAcompanhamento(
+  resposta,
+  obs,
+  textoUsuario = "",
+  opts = {}
+) {
+  const pd =
+    opts.pedidoDecisaoExplicita != null
+      ? opts.pedidoDecisaoExplicita === true
+      : detectarPedidoDecisaoExplicita(textoUsuario);
+  const obsUso = pd
     ? filtrarMensagensAcompanhamentoDeliberativo(obs)
     : obs;
   if (
@@ -424,7 +479,40 @@ export const executiveEngine = {
   async executar(entrada, deps = {}) {
     this.inicializar();
 
-    const { texto, historico } = normalizarInstrucao(entrada);
+    const { texto, historico, coaId: coaIdEntrada } = normalizarInstrucao(entrada);
+    // IMP-090 Fatia 0: nascimento canónico após normalizarInstrucao, antes de early-returns.
+    const canalIngresso =
+      (entrada && typeof entrada === "object" && entrada.canal) ||
+      deps.canal ||
+      null;
+    let turnEnvelope = criarTurnEnvelope({
+      mensagemAtual: texto,
+      coaIdEntrada,
+      canal: canalIngresso,
+      obterCoaAtivo
+    });
+    // IMP-091 B2: fio + sinais canónicos uma vez (antes de AD/classificador).
+    const coaIdFioB2 = coaIdEntrada || obterCoaAtivo()?.id || null;
+    const fioInicialB2 = seleccionarFioCoa(historico, texto, {
+      coaId: coaIdFioB2
+    });
+    turnEnvelope = produzirSinaisTurno(turnEnvelope, { fioCoa: fioInicialB2 });
+    // Sinais canónicos — ler uma vez; consumidores usam estes bools (sem redetectar).
+    const pedidoDecisaoPrec = lerSinalBoolean(turnEnvelope, "pd");
+    const situacionalPrec = turnEnvelope.derivacoes?.situacional === true;
+    const panoramaPrec = lerSinalBoolean(turnEnvelope, "panorama");
+    const ordemAdPrec = lerSinalBoolean(turnEnvelope, "execucao");
+    const consultaOuRespostaCompostaPrec = lerSinalBoolean(
+      turnEnvelope,
+      "consulta_composta"
+    );
+    const pedidoInfoGatheringPrec = lerSinalBoolean(turnEnvelope, "ig");
+    const pedidoConsultaPrec = lerSinalBoolean(turnEnvelope, "consulta");
+    const pedidoAnalisePrec = lerSinalBoolean(turnEnvelope, "analise");
+    /** @param {object} resposta */
+    const comEnvelope = (resposta) =>
+      anexarTurnEnvelopeNaResposta(resposta, turnEnvelope);
+
     const store =
       deps.storeContinuidade || obterStoreContinuidadePadrao();
 
@@ -491,7 +579,7 @@ export const executiveEngine = {
         dados: respostaCont.dados
       });
       respostaCont.dados = { ...respostaCont.dados, memoria: memoriaCont };
-      return respostaCont;
+      return comEnvelope(respostaCont);
     }
 
     if (interceptacao === "clarificacao") {
@@ -618,7 +706,7 @@ export const executiveEngine = {
         dados: respostaClar.dados
       });
       respostaClar.dados = { ...respostaClar.dados, memoria: memoriaClar };
-      return respostaClar;
+      return comEnvelope(respostaClar);
     }
 
     // IMP-071: Autoridade Delegada — activação/encerramento + execução sob mandato.
@@ -633,16 +721,7 @@ export const executiveEngine = {
     });
     const acabouDeActivar =
       resultadoAd.activado === true && adJaActiva === false;
-    const textoNormPrec = normalizarTexto(texto);
-    const pedidoDecisaoPrec = detectarPedidoDecisaoExplicita(texto);
-    const situacionalPrec = ehPedidoSituacionalTrabalho(textoNormPrec);
-    const panoramaPrec =
-      !situacionalPrec &&
-      (/\bestado\s+atual\b/.test(textoNormPrec) ||
-        /\b(resumo\s+executivo|memoria\s+executiva)\b/.test(textoNormPrec));
-    const ordemAdPrec = ehOrdemExecucaoOperacional(texto);
-    const consultaOuRespostaCompostaPrec =
-      ehPedidoConsultaOuRespostaComposta(texto);
+    // B2: sinais já lidos após produzirSinaisTurno (sem redetectar).
     const precAd = resolverPrecedenciaTurno({
       pedidoDecisaoExplicita: pedidoDecisaoPrec,
       pedidoSituacionalTrabalho: situacionalPrec,
@@ -706,7 +785,7 @@ export const executiveEngine = {
         ...metaAd(),
         memoria: memoriaAd
       };
-      return anexarPrecedenciaNaResposta(respostaAd, precAd);
+      return comEnvelope(anexarPrecedenciaNaResposta(respostaAd, precAd));
     }
 
     // AD activa + ordem de execução → Motor (C3), não novo ack nem MRE deliberativo.
@@ -834,18 +913,22 @@ export const executiveEngine = {
         ...metaAd(),
         memoria: memoriaExec
       };
-      return anexarPrecedenciaNaResposta(
-        anexarMensagensAcompanhamento(
-          respostaExec,
-          obsAcompanhamento,
-          texto
-        ),
-        precAd
+      return comEnvelope(
+        anexarPrecedenciaNaResposta(
+          anexarMensagensAcompanhamento(
+            respostaExec,
+            obsAcompanhamento,
+            texto,
+            { pedidoDecisaoExplicita: pedidoDecisaoPrec }
+          ),
+          precAd
+        )
       );
     }
 
-    // IMP-086: Consulta de discussões e decisões registadas (read-only).
+    // IMP-086 / IMP-089: Consulta registados (read-only).
     // Após Gate/AD; antes de CTO-003 / VCA / Classificador.
+    // Fatia 1: deps HFC + Trilha (soft-fail); F-MO intacto.
     {
       const coaConsulta = (() => {
         try {
@@ -857,7 +940,8 @@ export const executiveEngine = {
       })();
       const outConsulta = orquestrarConsultaRegistados({
         texto,
-        coaIdActivo: coaConsulta
+        coaIdActivo: coaConsulta,
+        deps: criarDepsConsultaProducao()
       });
       if (outConsulta.consumido) {
         const respostaConsulta = {
@@ -881,7 +965,7 @@ export const executiveEngine = {
           modo: "consulta_registados"
         };
         // IMP-086 I1/CA-086-5: sem atualizarAposInstrucao / writers de workspace.
-        return respostaConsulta;
+        return comEnvelope(respostaConsulta);
       }
     }
 
@@ -924,7 +1008,12 @@ export const executiveEngine = {
         estadoOperacional: estadoOpPre,
         missaoActiva,
         jobs: lido.jobsMissao,
-        idsAdotadosSessao
+        idsAdotadosSessao,
+        pedidoDecisaoExplicita: pedidoDecisaoPrec,
+        ...(turnEnvelope.sinais?.objecto_turno?.valor != null
+          ? { objectoTurno: turnEnvelope.sinais.objecto_turno.valor }
+          : {}),
+        ...(fioInicialB2.length ? { fioCoa: fioInicialB2 } : {})
       });
       const precCto = resolverPrecedenciaTurno({
         pedidoDecisaoExplicita: pedidoDecisaoPrec,
@@ -1002,12 +1091,19 @@ export const executiveEngine = {
           dados: respostaOp.dados
         });
         respostaOp.dados = { ...respostaOp.dados, memoria: memoriaOp };
-        return anexarPrecedenciaNaResposta(
+        return comEnvelope(
+          anexarPrecedenciaNaResposta(
           anexarMensagensAcompanhamento(
             naturalizarRespostaNucleo(respostaOp, {
               instrucao: texto,
               historico,
               canalSpeaker: "chat",
+              pedidoInfoGathering: pedidoInfoGatheringPrec,
+              pedidoDecisaoExplicita: pedidoDecisaoPrec,
+              pedidoConsultaResposta: pedidoConsultaPrec,
+              pedidoAnaliseDeliberativa: pedidoAnalisePrec,
+              consultaNaoEAcao: precCto?.tipoTurno === "consulta",
+              tipoTurno: precCto?.tipoTurno,
               lastroConsciencia: {
                 temContextoRelevante: true,
                 estadoOperacional: estadoOpPre,
@@ -1019,9 +1115,11 @@ export const executiveEngine = {
               }
             }),
             obsAcompanhamento,
-            texto
+            texto,
+            { pedidoDecisaoExplicita: pedidoDecisaoPrec }
           ),
           precCto
+        )
         );
       }
     }
@@ -1059,11 +1157,19 @@ export const executiveEngine = {
             // Teste 3: VCA precisa da operação aberta para não isolar continuidade
             operacaoAberta:
               Boolean(estadoOpPre?.operacaoAberta) ||
-              (obsAcompanhamento?.aindaActivos > 0)
+              (obsAcompanhamento?.aindaActivos > 0),
+            // IMP-091: sinais canónicos — VCA não reavalia objecto/PD/análise
+            pedidoDecisaoExplicita: pedidoDecisaoPrec,
+            pedidoAnaliseDeliberativa: pedidoAnalisePrec,
+            ...(turnEnvelope.sinais?.objecto_turno?.valor != null
+              ? { objectoTurno: turnEnvelope.sinais.objecto_turno.valor }
+              : {}),
+            ...(fioInicialB2.length ? { fioCoa: fioInicialB2 } : {})
           })
         : {
             veredicto: "pertence",
             autorizaLastroCsc: true,
+            autorizaContextoSessao: true,
             razaoContexto: "VCA desactivado → path CSC"
           };
 
@@ -1071,6 +1177,7 @@ export const executiveEngine = {
       validacaoContexto: {
         veredicto: resultadoVca.veredicto,
         autorizaLastroCsc: resultadoVca.autorizaLastroCsc,
+        autorizaContextoSessao: resultadoVca.autorizaContextoSessao === true,
         razaoContexto: resultadoVca.razaoContexto
       }
     };
@@ -1126,11 +1233,21 @@ export const executiveEngine = {
           dados: respostaVca.dados
         });
         respostaVca.dados = { ...respostaVca.dados, memoria: memoriaVca };
-        return respostaVca;
+        return comEnvelope(respostaVca);
       }
     }
 
     const autorizaLastroCsc = resultadoVca.autorizaLastroCsc === true;
+    // COA/Painel: lastro CSC OU contexto de sessão (P0 consulta/análise).
+    const autorizaContextoSessao =
+      autorizaLastroCsc || resultadoVca.autorizaContextoSessao === true;
+
+    const coaIdFio = coaIdEntrada || (coa && coa.id) || null;
+    // P2: reutilizar fio B2 quando o COA do turno não mudou (mesma semântica).
+    const historicoDeliberativo =
+      coaIdFio === coaIdFioB2
+        ? fioInicialB2
+        : seleccionarFioCoa(historico, texto, { coaId: coaIdFio });
 
     /** @type {import("../classificadorIntencao/historicoRecente.js").HistoricoRecenteItem[]} */
     let historicoRecente = [];
@@ -1210,6 +1327,17 @@ export const executiveEngine = {
       // Isolamento VCA: não injectar lastro de frente/COA no Classificador
       // (evita desambiguação C1→C2 via frenteActiva — REQ-065 / ARQ-026).
       frenteActiva: autorizaLastroCsc && Boolean(coa),
+      // Fatia 2: fio deliberativo do COA independe de autorizaLastroCsc.
+      ...(historicoDeliberativo.length > 0
+        ? { fioCoa: historicoDeliberativo }
+        : {}),
+      // IMP-091 B2: objecto/situacional/pd já produzidos — classificador não reavalia.
+      ...(turnEnvelope.sinais?.objecto_turno?.valor != null
+        ? { objectoTurno: turnEnvelope.sinais.objecto_turno.valor }
+        : {}),
+      situacional: situacionalPrec,
+      pedidoDecisaoExplicita: pedidoDecisaoPrec,
+      pedidoAnaliseDeliberativa: pedidoAnalisePrec,
       ...(autorizaLastroCsc && historicoRecente.length > 0
         ? { historicoRecente }
         : {}),
@@ -1254,7 +1382,13 @@ export const executiveEngine = {
       };
     }
     const classificacao = rota.classificacao;
-    const intencao = classificarIntencao(texto, classificacao);
+    const intencao = classificarIntencao(texto, classificacao, {
+      fioCoa: historicoDeliberativo,
+      ...(turnEnvelope.sinais?.objecto_turno?.valor != null
+        ? { objectoTurno: turnEnvelope.sinais.objecto_turno.valor }
+        : {}),
+      pedidoDecisaoExplicita: pedidoDecisaoPrec
+    });
 
     const metaTopicos = resultadoTop
       ? {
@@ -1313,7 +1447,7 @@ export const executiveEngine = {
         dados: respostaGo.dados
       });
       respostaGo.dados = { ...respostaGo.dados, memoria: memoriaGo };
-      return respostaGo;
+      return comEnvelope(respostaGo);
     }
 
     if (
@@ -1367,7 +1501,7 @@ export const executiveEngine = {
           dados: respostaObj.dados
         });
         respostaObj.dados = { ...respostaObj.dados, memoria: memoriaObj };
-        return respostaObj;
+        return comEnvelope(respostaObj);
       }
     }
 
@@ -1403,7 +1537,7 @@ export const executiveEngine = {
         dados: respostaGs.dados
       });
       respostaGs.dados = { ...respostaGs.dados, memoria: memoriaGs };
-      return respostaGs;
+      return comEnvelope(respostaGs);
     }
 
     if (resultadoTop?.evento === "ambiguo_topico" && resultadoTop.perguntaCurta) {
@@ -1454,7 +1588,7 @@ export const executiveEngine = {
           dados: respostaTop.dados
         });
         respostaTop.dados = { ...respostaTop.dados, memoria: memoriaTop };
-        return respostaTop;
+        return comEnvelope(respostaTop);
       }
     }
 
@@ -1508,7 +1642,7 @@ export const executiveEngine = {
           dados: respostaAmb.dados
         });
         respostaAmb.dados = { ...respostaAmb.dados, memoria: memoriaAmb };
-        return respostaAmb;
+        return comEnvelope(respostaAmb);
       }
     }
 
@@ -1534,7 +1668,7 @@ export const executiveEngine = {
     // «Já incorporei o resultado reconciliado…» sem alterar extrair/aplicar.
     const promocoesBrutas = extrairPromocoesResultadoMissao(obsAcompanhamento);
     let promocoesResultado = promocoesBrutas;
-    if (detectarPedidoDecisaoExplicita(texto) && promocoesBrutas.length) {
+    if (pedidoDecisaoPrec && promocoesBrutas.length) {
       /** @type {Map<string, object>} */
       const jobsPorId = new Map();
       for (const r of obsAcompanhamento?.resultados || []) {
@@ -1554,11 +1688,7 @@ export const executiveEngine = {
 
     // Pedido de decisão: F2 ruído deliberativo não atravessa factosOficiais
     // (fecha porta pré-LLM: factos → bloco → schemaHint → stage 6).
-    if (
-      autorizaLastroCsc &&
-      lastroConsciencia &&
-      detectarPedidoDecisaoExplicita(texto)
-    ) {
+    if (autorizaLastroCsc && lastroConsciencia && pedidoDecisaoPrec) {
       /** @type {object[]} */
       const jobsLastro = [];
       /** @type {Set<string>} */
@@ -1821,7 +1951,18 @@ export const executiveEngine = {
                       return null;
                     }
                   },
-            ...(lastroConsciencia ? { lastroConsciencia } : {})
+            ...(lastroConsciencia ? { lastroConsciencia } : {}),
+            pedidoDecisaoExplicita: pedidoDecisaoPrec,
+            pedidoAnaliseDeliberativa: pedidoAnalisePrec,
+            pedidoSituacionalTrabalho: situacionalPrec,
+            ...(turnEnvelope.sinais?.objecto_turno?.valor != null
+              ? { objectoTurno: turnEnvelope.sinais.objecto_turno.valor }
+              : {}),
+            ...(historicoDeliberativo.length
+              ? { fioCoa: historicoDeliberativo }
+              : fioInicialB2.length
+                ? { fioCoa: fioInicialB2 }
+                : {})
           }
         : {
             ...deps,
@@ -1840,10 +1981,21 @@ export const executiveEngine = {
                   },
             registarAcompanhamento: (job, optsAc) =>
               this.registarAcompanhamentoJob(job, optsAc),
-            ...(lastroConsciencia ? { lastroConsciencia } : {})
+            ...(lastroConsciencia ? { lastroConsciencia } : {}),
+            pedidoDecisaoExplicita: pedidoDecisaoPrec,
+            pedidoAnaliseDeliberativa: pedidoAnalisePrec,
+            pedidoSituacionalTrabalho: situacionalPrec,
+            ...(turnEnvelope.sinais?.objecto_turno?.valor != null
+              ? { objectoTurno: turnEnvelope.sinais.objecto_turno.valor }
+              : {}),
+            ...(historicoDeliberativo.length
+              ? { fioCoa: historicoDeliberativo }
+              : fioInicialB2.length
+                ? { fioCoa: fioInicialB2 }
+                : {})
           };
 
-    const coaParaDestino = autorizaLastroCsc ? obterCoaAtivo() : null;
+    const coaParaDestino = autorizaContextoSessao ? obterCoaAtivo() : null;
 
     const contextoCapacidadeComLastro = (parcial) =>
       contextoCapacidade({
@@ -1860,7 +2012,16 @@ export const executiveEngine = {
           destinoPermitido: rota.destino
         },
         tipoTurno: precPos.tipoTurno,
-        consultaNaoEAcao: precPos.tipoTurno === "consulta"
+        consultaNaoEAcao: precPos.tipoTurno === "consulta",
+        envelope: turnEnvelope,
+        pedidoInfoGathering: pedidoInfoGatheringPrec,
+        pedidoDecisaoExplicita: pedidoDecisaoPrec,
+        pedidoConsultaResposta: pedidoConsultaPrec,
+        pedidoAnaliseDeliberativa: pedidoAnalisePrec,
+        pedidoSituacionalTrabalho: situacionalPrec,
+        ...(turnEnvelope.sinais?.objecto_turno?.valor != null
+          ? { objectoTurno: turnEnvelope.sinais.objecto_turno.valor }
+          : {})
       });
 
     const conduzirMotorPadrao = envolverConduzirMotorComContinuidade(
@@ -1869,13 +2030,18 @@ export const executiveEngine = {
       texto
     );
 
+    const historicoParaDestino = historicoDeliberativoParaDestino({
+      autorizaLastroCsc,
+      historicoDeliberativo
+    });
+
     let respostaBruta;
     try {
-      // Isolamento VCA: destino não herda hist de projecto (evita CTO-001
-      // promover clarificação → C2/missão quando a pergunta é independente).
+      // Isolamento VCA: lastro CSC/Job continua cortado quando
+      // autorizaLastroCsc=false. O fio deliberativo do COA não é apagado.
       respostaBruta = await executarPorDestino({
         texto,
-        historico: autorizaLastroCsc ? historico : [],
+        historico: historicoParaDestino,
         intencao,
         classificacao,
         rota,
@@ -1883,12 +2049,23 @@ export const executiveEngine = {
         contextoCapacidade: contextoCapacidadeComLastro,
         deps: depsDestino,
         conduzirMotorPadrao,
+        pedidoDecisaoExplicita: pedidoDecisaoPrec,
+        pedidoAnaliseDeliberativa: pedidoAnalisePrec,
+        pedidoSituacionalTrabalho: situacionalPrec,
+        ...(turnEnvelope.sinais?.objecto_turno?.valor != null
+          ? { objectoTurno: turnEnvelope.sinais.objecto_turno.valor }
+          : {}),
+        ...(historicoDeliberativo.length
+          ? { fioCoa: historicoDeliberativo }
+          : fioInicialB2.length
+            ? { fioCoa: fioInicialB2 }
+            : {}),
         naturalizar: (r) => {
           const destinoAntes =
             r?.dados?.encaminhamento?.destino || rota.destino || null;
           const naturalizada = naturalizarRespostaNucleo(r, {
             instrucao: texto,
-            historico: autorizaLastroCsc ? historico : [],
+            historico: historicoParaDestino,
             intencao: r.intencao || intencao,
             // Isolamento: sem memória/COA de projecto na âncora CN («Mantemos o foco…»)
             memoria: autorizaLastroCsc ? lerMemoria : null,
@@ -1898,7 +2075,17 @@ export const executiveEngine = {
             lastroConsciencia: autorizaLastroCsc ? lastroConsciencia : null,
             refinoEic: memoriaTrabalhoPre
               ? metadadoRefinoEicParaDados(memoriaTrabalhoPre).refinoEic
-              : null
+              : null,
+            pedidoInfoGathering: pedidoInfoGatheringPrec,
+            pedidoDecisaoExplicita: pedidoDecisaoPrec,
+            pedidoConsultaResposta: pedidoConsultaPrec,
+            pedidoAnaliseDeliberativa: pedidoAnalisePrec,
+            consultaNaoEAcao: precPos.tipoTurno === "consulta",
+            tipoTurno: precPos.tipoTurno,
+            precedenciaTurno: {
+              tipoTurno: precPos.tipoTurno,
+              autoridadeVencedora: precPos.autoridadeVencedora
+            }
           });
           // V1: Consciência/CN nunca altera destino já decidido
           const destinoDepois =
@@ -2028,7 +2215,11 @@ export const executiveEngine = {
       }
     }
 
-    return anexarMensagensAcompanhamento(resposta, obsAcompanhamento, texto);
+    return comEnvelope(
+      anexarMensagensAcompanhamento(resposta, obsAcompanhamento, texto, {
+        pedidoDecisaoExplicita: pedidoDecisaoPrec
+      })
+    );
   },
 
   /** Consulta directa do estado actual da sessão. */

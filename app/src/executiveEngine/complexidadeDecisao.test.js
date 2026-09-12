@@ -76,8 +76,9 @@ test("CT-CX04: capacidadeIa moderado não chama pipeline MRE", async () => {
 
   // Spy: executarRotaDeliberativa is imported inside ia — we assert via rota metadata
   // by injecting deliberarComLlm and ensuring modo llm_rapido without MRE deps.
+  // Retoma «onde paramos?» é CONSULTA situacional (snapshot) — usar outro moderado.
   const out = await capacidadeIa.executar({
-    instrucao: "onde paramos?",
+    instrucao: "em que ponto estamos?",
     historico: [],
     intencao: {
       id: "deliberar_objetivo",

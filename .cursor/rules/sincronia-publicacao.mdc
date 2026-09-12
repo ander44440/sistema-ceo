@@ -1,0 +1,48 @@
+---
+description: Após publicar no GitHub/main, verificar e propagar para Vercel, Railway e demais ambientes oficiais de produção
+alwaysApply: true
+---
+
+# Sincronia de publicação (governança operacional permanente)
+
+GitHub/`main` **não** é publicação completa. Toda versão homologada publicada em `main` deve chegar a **todos** os ambientes oficiais de produção.
+
+```
+GitHub / main ──┬→ Vercel (frontend)
+                ├→ Railway (backend/API)
+                └→ outros ambientes oficiais, se existirem
+                         ↓
+                  verificação final
+```
+
+## Quando aplicar
+
+- O utilizador pedir publicar, merge para `main`, PR de publicação, ou despacho equivalente.
+- Após um merge/publicação em `main` feito nesta sessão (ou confirmado no remoto).
+- Sem o utilizador repetir esta instrução.
+
+## O que fazer
+
+1. Confirmar o SHA em `origin/main` (versão homologada publicada).
+2. Verificar e, se necessário, executar o **procedimento oficial já existente** de cada ambiente:
+   - **Vercel** — frontend (`sistema-ceo` / `https://sistema-ceo.vercel.app`, salvo evidência mais recente).
+   - **Railway** — backend/API.
+   - Qualquer outro ambiente oficial de produção que o repositório/docs identifiquem.
+3. Confirmar, quando o ambiente o permitir, que o commit/versão em execução **coincide** com o SHA de `main`.
+4. Se um ambiente não actualizar sozinho: identificar o motivo e usar só o procedimento oficial desse ambiente (ex. Git ligado a `main`, CLI/`vercel --prod` já adoptado, deploy Railway já documentado).
+5. Encerrar a publicação só depois da verificação de todos os ambientes oficiais necessários.
+
+## Relatório obrigatório ao final de qualquer publicação
+
+- SHA publicado no GitHub/`main`
+- versão/commit em execução na Vercel
+- versão/commit em execução no Railway
+- demais ambientes oficiais, se houver
+- resultado da verificação de sincronização (alinhado / desalinhado / não rastreável)
+
+## Parar e informar o CTO
+
+- Erro de configuração, build, deploy ou sincronização.
+- Ambiente sem ligação Git / sem rastreio de SHA, sem procedimento oficial conhecido.
+- **Não** alterar infraestrutura, `vercel.json`, Railway, ligações Git ou código para «desbloquear» publicação sem autorização explícita do CTO.
+- **Não** inventar configuração nova nem workaround fora do procedimento autorizado.

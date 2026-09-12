@@ -1,5 +1,6 @@
 /**
  * IMP-086 / ARQ-086 C-SEP — montagem da resposta (decisão ≠ discussão).
+ * IMP-089 Fatia 1 — rótulo de discussões cobre HFC (+ F5-C3 na união).
  */
 
 /**
@@ -54,7 +55,7 @@ export function montarRespostaConsulta(entrada) {
 
   if (querDisc) {
     linhas.push("");
-    linhas.push("## Discussões (transcript do COA)");
+    linhas.push("## Discussões (histórico do COA)");
     const bloco = entrada.discussoes || { status: "ausente", mensagens: [] };
     if (
       bloco.status === "encontrado" &&
@@ -76,7 +77,7 @@ export function montarRespostaConsulta(entrada) {
     } else {
       const msg =
         bloco.mensagem ||
-        "Ausência explícita: nenhuma mensagem no transcript deste COA.";
+        "Ausência explícita: nenhuma discussão registada no histórico deste COA.";
       ausencias.push(msg);
       linhas.push(msg);
     }

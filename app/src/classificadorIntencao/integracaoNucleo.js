@@ -25,6 +25,40 @@ import {
 } from "../conversacaoNatural/recuperacaoJob.js";
 
 /**
+ * Opts canónicos para polaridade P0 (IMP-091).
+ * @param {DepsE4} deps
+ */
+function optsSinaisDeps(deps = {}) {
+  /** @type {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean, pedidoAnaliseDeliberativa?: boolean, calcObjectoDoTurno?: Function, detectarPedidoDecisaoExplicita?: Function }} */
+  const o = {};
+  if (deps.objectoTurno != null) o.objectoTurno = deps.objectoTurno;
+  if (deps.pedidoDecisaoExplicita != null) {
+    o.pedidoDecisaoExplicita = deps.pedidoDecisaoExplicita === true;
+  }
+  if (deps.pedidoAnaliseDeliberativa != null) {
+    o.pedidoAnaliseDeliberativa = deps.pedidoAnaliseDeliberativa === true;
+  }
+  if (typeof deps.calcObjectoDoTurno === "function") {
+    o.calcObjectoDoTurno = deps.calcObjectoDoTurno;
+  }
+  if (typeof deps.detectarPedidoDecisaoExplicita === "function") {
+    o.detectarPedidoDecisaoExplicita = deps.detectarPedidoDecisaoExplicita;
+  }
+  return o;
+}
+
+/**
+ * Polaridade análise: sinal analise=true → true; senão predicado com objecto/pd.
+ * @param {string} t
+ * @param {unknown} [fioCoa]
+ * @param {ReturnType<typeof optsSinaisDeps>} [opts]
+ */
+function ehAnalisePolaridadeP0(t, fioCoa, opts = {}) {
+  if (opts.pedidoAnaliseDeliberativa === true) return true;
+  return ehPedidoAnaliseOuRecomendacao(t, fioCoa, opts);
+}
+
+/**
  * @typedef {object} DepsE4
  * @property {(pedido: object) => Promise<object>|object} [publicarJob]
  * @property {import("../motorExecucao/dominio.js").DecisaoAprovacao|null} [decisaoAprovacao]
@@ -32,6 +66,11 @@ import {
  * @property {(job: object, opts?: object) => unknown} [registarAcompanhamento]
  * @property {Map<string, string>} [registro]
  * @property {(id: string) => Promise<object|null>|object|null} [obterJob]
+ * @property {string} [objectoTurno] — IMP-091 sinal canónico
+ * @property {boolean} [pedidoDecisaoExplicita]
+ * @property {boolean} [pedidoAnaliseDeliberativa]
+ * @property {boolean} [pedidoSituacionalTrabalho] — derivacoes.situacional
+ * @property {unknown} [fioCoa]
  */
 
 /**
@@ -505,21 +544,29 @@ export async function conduzirTrabalhoExecutivoC3(texto, classificacao, deps = {
   const continuidadeMissao =
     Boolean(deps.operacaoAberta) && ehPedidoContinuidadeMissao(t);
   const autorizaCriarJob = ehAutorizacaoExplicitaCriarJob(t);
+  const optsSinais = optsSinaisDeps(deps);
   if (
     (!autorizaCriarJob && ehProibicaoExecucaoExplicita(t)) ||
     (!autorizaCriarJob &&
       ehConsultaEstadoOperacional(t) &&
       !continuidadeMissao) ||
-    (ehPedidoAnaliseOuRecomendacao(t) &&
+    (ehAnalisePolaridadeP0(t, deps.fioCoa, optsSinais) &&
       !ehComandoExecucaoExplicito(t) &&
       !autorizaCriarJob)
   ) {
     // P0-3: consulta de estado deve produzir resposta real (não só o bloqueio).
+    // Texto = turno actual → consumir derivacoes.situacional quando presente.
     if (ehConsultaEstadoOperacional(t) && !continuidadeMissao) {
       const consulta = await executarConsultaEstado(texto, {
         obterJob: deps.obterJob,
         listarJobs: deps.listarJobs || deps.listarPorEstado,
-        storeContinuidade: deps.storeContinuidade
+        storeContinuidade: deps.storeContinuidade,
+        ...(deps.pedidoSituacionalTrabalho != null
+          ? { situacional: deps.pedidoSituacionalTrabalho === true }
+          : {}),
+        ...(typeof deps.ehPedidoSituacionalTrabalho === "function"
+          ? { ehPedidoSituacionalTrabalho: deps.ehPedidoSituacionalTrabalho }
+          : {})
       });
       return {
         ok: true,

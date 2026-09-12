@@ -4,6 +4,7 @@ import { executionQueuePlugin } from "./server/executionQueuePlugin.js";
 import { onboardingPlugin } from "./server/onboardingPlugin.js";
 import { orquestracaoPlugin } from "./server/orquestracaoPlugin.js";
 import { trilhaAuditavelPlugin } from "./server/trilhaAuditavelPlugin.js";
+import { historicoFisicoConversasPlugin } from "./server/historicoFisicoConversasPlugin.js";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -14,6 +15,7 @@ export default defineConfig(({ mode }) => {
       ceoLlmPlugin(env),
       executionQueuePlugin(),
       trilhaAuditavelPlugin(),
+      historicoFisicoConversasPlugin(),
       onboardingPlugin(),
       orquestracaoPlugin(env)
     ],

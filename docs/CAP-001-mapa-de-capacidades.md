@@ -175,13 +175,13 @@
 * **Identificador:** CAP-13
 * **Nome:** Memória de Evolução do Produto
 * **Classificação:** **CAP-E** (ADR-017 / ADR-020)
-* **Ciclo:** ANL-018 **aprovada**. VIS-009 → REQ-085 → ARQ-033 **homologados v1.0**. IMP-072 **HOMOLOGADA** (C1+C2). VAL-072 **CONCLUÍDA** (0 FAIL). CAP-13 **HOMOLOGADA** (14/08/2026). Sede: [`cap-13/`](cap-13/README.md).
+* **Ciclo:** ANL-018 **aprovada**. VIS-009 → REQ-085 → ARQ-033 **v1.1 homologados**. IMP-072 **HOMOLOGADA** (C1+C2). IMP-073 / VAL-074 **APROVADAS**. IMP-074 / **VAL-075 HOMOLOGADA** (C3 + UI só-leitura Centro; 25/25 PASS; L1/L2 limitações). VAL-072 **CONCLUÍDA**. CAP-13 **HOMOLOGADA** (14/08/2026, contrato mínimo). Sede: [`cap-13/`](cap-13/README.md).
 * **Objetivo:** Manter a memória institucional da evolução do **produto** Sistema CEO, distinta da memória de qualquer organização ou cliente.
 * **Descrição:** Registrar, organizar, consultar e propor a evolução do produto — capacidades de produto, épicos, módulos, decisões de produto, evidências, pendências, baselines, roadmap de produto e histórico append-only — com isolamento do eixo organização / cliente, evidência obrigatória em mudanças relevantes e homologação de baseline fora da alçada unilateral do CEO-agente. A memória desta capacidade chama-se **MEP-CEO**.
-* **Fora do Escopo:** Memória organizacional e decisões Art. 8º de clientes (CAP-05); acervo / itens KNW (CAP-04); aprendizado e BCO (CAP-06); observabilidade / visibilidade de execução (CAP-09); governação normativa e Autoridade Delegada (CAP-01 — a CAP-13 **consome** alçadas, não as emite); implementação (IMP); canal C3; dados, conversas, conhecimento operacional, decisões privadas e factos de organizações.
+* **Fora do Escopo:** Memória organizacional e decisões Art. 8º de clientes (CAP-05); acervo / itens KNW (CAP-04); aprendizado e BCO (CAP-06); observabilidade / visibilidade de execução (CAP-09); governação normativa e Autoridade Delegada (CAP-01 — a CAP-13 **consome** alçadas, não as emite); API pública / formulário / ingestão conversacional de C3; dados, conversas, conhecimento operacional, decisões privadas e factos de organizações.
 * **Pilares Fortalecidos:** Conhecimento; Governança.
 * **Fontes Normativas:** CON-001 Art. 4º e Art. 5º §2º; VIS-001 §4; VIS-009; ANL-018; **ADR-020**; REQ-085; ARQ-033.
-* **Observações:** Instituída pela deliberação CTO 14/08/2026 (ADR-020). Especificação **homologada**. Capacidade **HOMOLOGADA** (14/08/2026) no contrato mínimo; implementação C1+C2. **Não** absorve CAP-04 ou CAP-05. C3/UI/persistência física/integrações **não** autorizados por essa homologação.
+* **Observações:** Instituída pela deliberação CTO 14/08/2026 (ADR-020). Especificação **homologada v1.0 e v1.1**. Capacidade **HOMOLOGADA** (14/08/2026) no contrato mínimo C1+C2; persistência IMP-073. **Não** absorve CAP-04 ou CAP-05. Recorte C3/UI mínima: IMP-074 · **VAL-075 HOMOLOGADA** (primeira superfície UI validada). L1/L2 da VAL-075 permanecem limitações.
 
 ---
 
@@ -259,3 +259,6 @@ Todos os quatro pilares estão cobertos por pelo menos duas capacidades.
 | 1.1 (anotação) | 14/08/2026 | Engenheiro | VAL-072 executada — 0 FAIL; recomenda homologar IMP-072; CAP-13 não homologada | Despacho CTO — VAL da IMP-072 | Sem nova versão de mapa |
 | 1.1 (anotação) | 14/08/2026 | CTO despachou; Engenheiro formalizou | IMP-072 **HOMOLOGADA** (C1+C2). CAP-13 **não** homologada | Despacho CTO — homologar IMP-072 | Sem nova versão de mapa |
 | 1.1 (anotação) | 14/08/2026 | CTO + Usuário; Engenheiro formalizou | CAP-13 **HOMOLOGADA** (contrato mínimo; C1+C2). C3/UI/persistência/integrações fora | Acto formal de homologação da CAP-13 | Sem nova versão de mapa |
+| 1.1 (anotação) | 16/08/2026 | Engenheiro (Cursor) | VIS-009 / REQ-085 **v1.1** formalizados (contrato C3/UI). ARQ/IMP/VAL C3 não iniciados | Despacho de formalização normativa C3/UI | Sem nova versão de mapa |
+| 1.1 (anotação) | 16/08/2026 | CTO + Usuário homologaram ARQ-033 v1.1 | ARQ-033 v1.1 **HOMOLOGADA** (C3 + UI Centro). IMP/VAL C3 não iniciados | Acto de homologação ARQ C3/UI | Sem nova versão de mapa |
+| 1.1 (anotação) | 16/08/2026 | CTO + Usuário homologaram VAL-075 | VAL-075 **HOMOLOGADA** (C3 + UI só-leitura; 25/25; L1/L2 limitações) | Acto de homologação VAL IMP-074 | Sem nova versão de mapa |

@@ -1,11 +1,11 @@
 # REQ-085 — Requisitos mínimos da Memória de Evolução do Produto CEO (MEP-CEO)
 
-> **Status: Homologado — v1.0 (CTO, 14/08/2026).** Pacote MEP-CEO VIS → REQ → ARQ **homologado como especificação**. **IMP não aberta.** Sem código.  
-> **Versão:** 1.0 — 14/08/2026  
+> **Status: Homologado — v1.1 (CTO, 16/08/2026).** v1.0 permanece o pacote mínimo C1+C2 homologado em 14/08/2026.  
+> **Versão:** 1.1 — 16/08/2026  
 > **Capacidade:** **CAP-13 — Memória de Evolução do Produto** (CAP-E; ADR-020). Proprietária da MEP-CEO. Não é CAP-04. Não é CAP-05.  
 > **Identificação:** REQ-085.  
-> **Natureza:** pacote mínimo de requisitos funcionais e não funcionais derivados da VIS-009 Homologada v1.0 e da ANL-018 aprovada.  
-> **Proibição:** não reabre CAP-04, CAP-05, Motor, MRE, EIC, Gate G2, MTE, `monitorar`. Não cria UI, C3, IMP nem código.
+> **Natureza:** pacote mínimo de requisitos funcionais e não funcionais derivados da VIS-009 Homologada v1.1 e da ANL-018 aprovada.  
+> **Proibição:** não reabre CAP-04, CAP-05, Motor, MRE, EIC, Gate G2, MTE, `monitorar`. Não altera C1/C2/IMP-073. Não abre IMP nem VAL neste acto. C3/UI **autorizados no contrato**; implementação só após ARQ-033 v1.1 homologada + IMP própria.
 
 ---
 
@@ -283,40 +283,61 @@ VIS-009 §6.
 
 ---
 
-## RF-08 — Ponte futura: proposta de evolução sem transferência de dados privados
+## RF-08 — Canal C3: proposta de evolução sem transferência de dados privados
 
 ### Enunciado
 
-Uma necessidade observada numa organização / cliente **poderá**, no futuro, originar uma **proposta** de evolução do produto na MEP-CEO **somente** como enunciado desidentificado de produto (hipótese / `CONCEBIDO`), **sem** transferir dados, conversas, conhecimento operacional, decisões privadas ou factos da organização. Este requisito **especifica a fronteira**; **não** exige implementar a transformação nesta etapa.
+O CEO deverá possuir um **canal C3**: acto **explícito** de proposta desidentificada que, a partir de uma necessidade observada no eixo organização/cliente, produz **exactamente um** objecto na MEP-CEO em maturidade **`CONCEBIDO`**, classificação **hipótese**, **sem** transferir conteúdo privado. C3 **não** promove maturidade para `DEFINIDO`, `EM_CONSTRUÇÃO`, `EM_VALIDAÇÃO`, `HOMOLOGADO` nem `BASELINE`.
 
 ### Tipo
 
-Funcional; alto nível; **não implementável agora**.
+Funcional; alto nível; **implementável neste ciclo** (contrato; sem API neste requisito).
 
 ### Justificativa
 
-VIS-009 §7. Contrato CTO item 12–13.
+VIS-009 §7 v1.1. Formalização C3/UI 16/08/2026.
 
-### Critérios de aceitação *(de fronteira — verificáveis em especificação; não em código nesta etapa)*
+### Campos mínimos da proposta *(únicos obrigatórios)*
+
+| Campo | Conteúdo |
+|-------|----------|
+| `tipoLacunaProduto` | Tipo de lacuna de produto (texto curto) |
+| `objectoCandidato` | Um de `MCP` \| `EPC` \| `MDL` |
+| `enunciadoDesidentificado` | Hipótese de produto **sem** identidade de cliente |
+| `evidenciaNaoPrivada` | Apontador não privado (ex.: ID de VAL de produto, «padrão observado») |
+
+**Objecto produzido:** exactamente um objecto do tipo `objectoCandidato`, estado inicial **`CONCEBIDO` / hipótese**, via **C2** (criação já definida em RF-02 / RF-03). C3 não inventa tipo novo nem espaço de ID novo.
+
+**Acto explícito:** só ocorre se um papel autorizado **propõe** (Usuário, CTO, CEO-agente ou Engenheiro). **Não** há ingestão automática desde conversa, COA, CAP-04, CAP-05, MRE, EIC ou fila. Propor ≠ promover (RF-05 / RN-03.4 intactos).
+
+**Fail-closed:** se qualquer campo proibido estiver presente ou for inferível no payload, C3 **recusa**; **não** cria objecto; **não** escreve evento de sucesso. Em dúvida de pertença (RN-01.1), recusa.
+
+**Conteúdo proibido *(lista fechada deste ciclo)*:** identidade de cliente; transcript / conversa; decisão privada; facto operacional da organização; conteúdo de item do Acervo (`KNW`); dados de cliente; cópia da Memória Organizacional.
+
+### Critérios de aceitação
 
 | ID | Critério | Verificação |
 |----|----------|-------------|
-| **CA-085-27** | A ponte, quando existir, produz **proposta de produto**, não facto e não baseline. | Saída lógica ∈ `CONCEBIDO` + hipótese; ∉ `HOMOLOGADO`/`BASELINE`. |
-| **CA-085-28** | Conteúdo permitido na proposta: tipo de lacuna de produto; capacidade/épico/módulo candidato; enunciado desidentificado; apontador de evidência **não privado** (ex.: «padrão observado», ID de VAL de produto). | Checklist de campos da proposta. |
-| **CA-085-29** | Conteúdo proibido na proposta: identidade de cliente; transcript; decisão privada; facto operacional da organização; conhecimento do Acervo daquela organização. | Matriz negativa = zero campos proibidos. |
-| **CA-085-30** | Não há fluxo automático Memória da Organização → MEP-CEO. Qualquer atravessamento futuro exige acto explícito de proposta (humano ou agente **propondo**, nunca promovendo). | Automação de cópia = fora da fronteira. |
-| **CA-085-31** | Nenhuma IMP desta frente implementa RF-08. | Este critério permanece N/A em código até o CTO abrir etapa própria. |
+| **CA-085-27** | A ponte produz **proposta de produto**, não facto e não baseline. | Saída lógica ∈ `CONCEBIDO` + hipótese; ∉ `HOMOLOGADO`/`BASELINE`. |
+| **CA-085-28** | Conteúdo permitido na proposta: só os quatro campos mínimos (`tipoLacunaProduto`; `objectoCandidato`; `enunciadoDesidentificado`; `evidenciaNaoPrivada`). | Checklist de campos da proposta. |
+| **CA-085-29** | Conteúdo proibido na proposta: identidade de cliente; transcript; decisão privada; facto operacional da organização; conhecimento do Acervo daquela organização; dados de cliente; cópia da Memória Organizacional. | Matriz negativa = zero campos proibidos. |
+| **CA-085-30** | Não há fluxo automático Memória da Organização → MEP-CEO. Qualquer atravessamento exige acto explícito de proposta (humano ou agente **propondo**, nunca promovendo). | Automação de cópia = fail. |
+| **CA-085-31** | C3 **não** promove maturidade. Pedido de criar já em `HOMOLOGADO`/`BASELINE` (ou qualquer maturidade ≠ `CONCEBIDO`) = recusa fail-closed. | *(v1.1: substitui o CA-085-31 v1.0 «nenhuma IMP implementa RF-08».)* |
+| **CA-085-38** | C3 só cria após acto explícito com os quatro campos; omissão de campo = recusa. | Acto incompleto = nenhum objecto novo. |
+| **CA-085-39** | Payload com qualquer item da lista proibida = recusa; C2 inalterado. | Fail-closed; store inalterada. |
+| **CA-085-40** | C3 não chama transição de maturidade além da criação em `CONCEBIDO`. | Nenhuma promoção via C3. |
 
 ### Regras de negócio
 
 * **RN-08.1** Observação em cliente **não** é facto de produto.  
-* **RN-08.2** A transformação **não está autorizada a ser construída** neste ciclo.  
+* **RN-08.2** A transformação **C3 → `CONCEBIDO` / hipótese** fica **autorizada** neste ciclo (contrato). Construção em código exige ARQ-033 v1.1 homologada + IMP futura; **não** ocorre neste acto de requisitos.  
 * **RN-08.3** RF-08 não cria evolução autónoma de organizações.
 
 ### Fora do escopo
 
-* Mecanismo, pipeline, jobs, UI da ponte.  
-* Qualquer escrita no Motor, MRE, EIC ou CAP-05 para «exportar» necessidades.
+* API; jobs; webhooks; formulário de captura; pipeline.  
+* Qualquer escrita no Motor, MRE, EIC, CAP-04 ou CAP-05 para «exportar» necessidades.  
+* Superfície de escrita C3 (a UI deste ciclo é só leitura — RNF-02).
 
 ---
 
@@ -324,9 +345,14 @@ VIS-009 §7. Contrato CTO item 12–13.
 
 A MEP-CEO deve poder ser especificada, e no futuro consultada, **sem** depender do conteúdo da Memória Organizacional de qualquer cliente. Falha de isolamento (acoplamento de schema, ingestão ou query cruzada de conteúdo privado) é não conformidade.
 
-## RNF-02 — Sem UI nesta etapa
+## RNF-02 — Primeira superfície perceptível (mínimo)
 
-Nenhum requisito deste pacote exige superfície de utilizador, painel ou conversa nova. UI da MEP-CEO é fora de escopo.
+A MEP-CEO deverá ter **uma** superfície de leitura no **Centro de Situação** (rota `dashboard` já existente): bloco que mostra objectos MEP em `CONCEBIDO` originados por C3 (no mínimo: identificador, tipo `MCP`/`EPC`/`MDL`, enunciado desidentificado, maturidade `CONCEBIDO`). Sem formulário de proposta, sem edição, sem promoção, sem rota nova, sem alterar Conversa.
+
+| ID | Critério | Verificação |
+|----|----------|-------------|
+| **CA-085-41** | Com pelo menos um objecto C3 em `CONCEBIDO`, o Centro de Situação apresenta identificador, tipo, enunciado desidentificado e maturidade `CONCEBIDO` sem o utilizador abrir ficheiros ou testes. | Inspecção da superfície (após IMP futura). |
+| **CA-085-42** | Essa superfície não mostra transcript, identidade de cliente nem conteúdo CAP-04/05. | Matriz negativa visual. |
 
 ## RNF-03 — Sem evolução autónoma de organizações
 
@@ -344,33 +370,33 @@ A especificação e a futura implementação da MEP-CEO **não** alteram: Motor 
 
 Qualquer leitura da MEP-CEO deve permitir distinguir: facto homologado; hipótese; pendência; baseline. Sem evidência, **não** tratar como facto de produto (RF-06). Silêncio que confunda hipótese com facto é não conformidade.
 
-## RNF-07 — Estado desta homologação (sem produto em runtime)
+## RNF-07 — Estado deste ciclo (restrições restantes)
 
-Fica requisito não funcional, verificável por inspecção do repositório da CAP-13:
+Fica requisito não funcional, verificável por inspecção do repositório da CAP-13. CA-085-33 e CA-085-34 descrevem o estado da **homologação v1.0** da especificação (14/08/2026); **não** são emendados neste v1.1 (já supersedidos de facto por IMP-072 / IMP-073).
 
 | ID | Critério | Verificação |
 |----|----------|-------------|
-| **CA-085-32** | C3 **não** está implementado | Nenhum módulo, job, pipeline ou IMP realiza o canal de proposta desidentificada |
-| **CA-085-33** | IMP da MEP-CEO **não** está aberto | Não existe IMP-xxx da CAP-13 |
-| **CA-085-34** | Não existe código da MEP-CEO | Nenhum runtime `MCP`/`MEV`/C2 |
-| **CA-085-35** | Não existe UI da MEP-CEO | Nenhuma superfície nova |
+| **CA-085-32** | **Supersedido (v1.1).** C3 **autorizado** a ser implementado no recorte RF-08 v1.1; conformidade passa a CA-085-27…31 e CA-085-38…40. | O CA v1.0 «C3 não está implementado» **não** é critério de conformidade do v1.1. |
+| **CA-085-33** | *(v1.0 — não emendado)* IMP da MEP-CEO **não** está aberto | Histórico da spec v1.0; IMP-072/073 existem fora deste CA |
+| **CA-085-34** | *(v1.0 — não emendado)* Não existe código da MEP-CEO | Histórico da spec v1.0; runtime C1+C2 existe fora deste CA |
+| **CA-085-35** | **Supersedido (v1.1).** UI mínima autorizada = RNF-02 v1.1 / CA-085-41/42. | O CA v1.0 «não existe UI da MEP-CEO» **não** é critério de conformidade do v1.1. |
 | **CA-085-36** | Não existe evolução autónoma de organizações | RNF-03 + RF-08 |
-| **CA-085-37** | Não existe integração com Motor, MRE, EIC, Gate G2 ou MTE | RNF-05; zero acoplamento nesta homologação |
+| **CA-085-37** | Não existe integração com Motor, MRE, EIC, Gate G2 ou MTE | RNF-05; zero acoplamento deste recorte |
 
 ---
 
 ## Fora do escopo (pacote)
 
-* Código, commits, módulos existentes.  
-* Implementação de RF-08 / C3.  
-* IMP e VAL da CAP-13.  
+* Código, commits e módulos existentes **neste acto** (v1.1 é só contrato).  
+* ARQ-033 v1.1, IMP de C3/UI, VAL de C3/UI, API, formulário.  
+* Alteração de C1, C2, IMP-073.  
 * Alteração de CAP-04, CAP-05, Motor, MRE, EIC, Gate G2, MTE, `monitorar`.
 
 ---
 
 ## Dependências
 
-* VIS-009 Homologada v1.0.  
+* VIS-009 Homologada v1.0; **VIS-009 v1.1** (§7 — mesmo gate).  
 * ANL-018 aprovada.  
 * ADR-020 (CAP-13).  
 * CON-001 Art. 6º, 8º, 9º.  
@@ -383,9 +409,9 @@ Fica requisito não funcional, verificável por inspecção do repositório da C
 ## Riscos e incertezas
 
 * **Confusão CAP-05 × MEP-CEO** na operação — mitigação: RF-01 + RN-01.1.  
-* **Pressão para «aprender com o cliente» copiando memória** — mitigação: RF-08 como fronteira, C3 não implementada.  
+* **Pressão para «aprender com o cliente» copiando memória** — mitigação: RF-08 fail-closed; C3 só `CONCEBIDO` / hipótese; sem ingestão automática.  
 * **Autoridade Delegada mal interpretada como alçada de baseline de produto** — mitigação: RN-05.2; RN-03.7.  
-* **Tratar esta homologação como autorização de IMP** — mitigação: RNF-07.
+* **Tratar o v1.1 como autorização de IMP/código** — mitigação: RNF-07; ARQ-033 permanece v1.0 até ciclo próprio.
 
 ---
 
@@ -394,13 +420,13 @@ Fica requisito não funcional, verificável por inspecção do repositório da C
 | Elo | Referência |
 |-----|------------|
 | Capacidade | **CAP-13** — Memória de Evolução do Produto (CAP-E; ADR-020) |
-| Visão | **VIS-009 Homologada v1.0** |
-| Arquitectura | **ARQ-033 Homologada v1.0** |
+| Visão | **VIS-009 Homologada v1.1** |
+| Arquitectura | **ARQ-033 Homologada v1.1** |
 | Análise | **ANL-018 aprovada** |
 | Norma superior | CON-001 Art. 4º, 6º, 8º, 9º; VIS-001; ADR-006; ADR-010; ADR-016; ADR-020 |
-| Origem | Contrato CTO 14/08/2026; despacho de homologação 14/08/2026 |
-| Implementação | **Não aberta** |
-| Testes | — |
+| Origem | Contrato CTO 14/08/2026; despacho de homologação 14/08/2026; formalização C3/UI 16/08/2026 |
+| Implementação | Núcleo C1+C2: IMP-072 / persistência: IMP-073. **C3/UI: IMP não aberta** |
+| Testes | VAL-072 / VAL-074 (C1+C2 / persistência). **VAL C3/UI: não aberta** |
 
 ---
 
@@ -411,3 +437,4 @@ Fica requisito não funcional, verificável por inspecção do repositório da C
 | 0.1 | 14/08/2026 | Engenheiro (Cursor) | Pacote mínimo RF-01…08 + RNF-01…06 | Contrato CTO — VIS → REQ; sem código | Rascunho |
 | 0.1 (anotação) | 14/08/2026 | Engenheiro (Cursor) | Elo CAP preenchido: **CAP-13** (ADR-020) | Formalização da CAP antes da homologação | Rascunho técnico aprovado |
 | 1.0 | 14/08/2026 | CTO despachou; Engenheiro incorporou IDs, transições, RNF-07 | Homologação do pacote | Despacho CTO — homologar especificação MEP-CEO | **Homologado** |
+| 1.1 | 16/08/2026 | CTO homologou; Engenheiro formalizou | RF-08 implementável (C3); RNF-02 bloco só-leitura no Centro; CA-085-32/35 supersedidos; CA-085-38…42 | Formalização normativa C3/UI | **Homologado** |

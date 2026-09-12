@@ -325,6 +325,72 @@ test("CT-V06d: regressão ADR / fila / C3 após guard P6", async () => {
   assert.notEqual(outC3.modo, "clarificacao_contexto");
 });
 
+test("P0-contexto: consulta operacional → sem CSC, com contexto de sessão", () => {
+  const r = validarContextoAtivo({
+    mensagem: "Qual é o estado da fila?",
+    topicoActivo: criarTopico("outdoor", "usuario", ISO),
+    frenteActiva: true,
+    coa: { id: "prj-sistema-ceo", nome: "Sistema CEO" }
+  });
+  assert.equal(r.veredicto, "independente");
+  assert.equal(r.autorizaLastroCsc, false);
+  assert.equal(r.autorizaContextoSessao, true);
+});
+
+test("P0-contexto: análise deliberativa → sem CSC, com contexto de sessão", () => {
+  const viaP0 = validarContextoAtivo({
+    mensagem: "Avalie os riscos do outdoor sem executar nada.",
+    topicoActivo: criarTopico("outdoor", "usuario", ISO),
+    frenteActiva: true,
+    coa: { id: "prj-mg2", nome: "Motoboy Game 2" }
+  });
+  assert.equal(viaP0.veredicto, "independente");
+  assert.equal(viaP0.autorizaLastroCsc, false);
+  assert.equal(viaP0.autorizaContextoSessao, true);
+
+  const viaE22 = validarContextoAtivo({
+    mensagem: "Como devemos priorizar os bugs?",
+    topicoActivo: criarTopico("outdoor", "usuario", ISO),
+    frenteActiva: true,
+    coa: { id: "prj-mg2", nome: "Motoboy Game 2" }
+  });
+  assert.equal(viaE22.veredicto, "independente");
+  assert.equal(viaE22.autorizaLastroCsc, false);
+  assert.equal(viaE22.autorizaContextoSessao, true);
+});
+
+test("P0-contexto: autodiagnóstico / identificação de sessão → contexto COA permitido", () => {
+  const auto = validarContextoAtivo({
+    mensagem: "Faça um autodiagnóstico do seu estado atual.",
+    frenteActiva: true,
+    coa: { id: "prj-sistema-ceo", nome: "Sistema CEO" }
+  });
+  assert.equal(auto.veredicto, "independente");
+  assert.equal(auto.autorizaLastroCsc, false);
+  assert.equal(auto.autorizaContextoSessao, true);
+
+  const idSessao = validarContextoAtivo({
+    mensagem:
+      "CEO, informe sua versão/identificação operacional atual e quais capacidades e fontes de contexto estão ativas nesta sessão. Não faça diagnóstico; apenas informe esses dados",
+    frenteActiva: true,
+    coa: { id: "prj-sistema-ceo", nome: "Sistema CEO" }
+  });
+  assert.equal(idSessao.veredicto, "independente");
+  assert.equal(idSessao.autorizaLastroCsc, false);
+  assert.equal(idSessao.autorizaContextoSessao, true);
+});
+
+test("P0-contexto: pergunta autónoma (café) permanece sem contexto de sessão", () => {
+  const r = validarContextoAtivo({
+    mensagem: "Quanto custa um café em Lisboa?",
+    frenteActiva: true,
+    coa: { id: "prj-mg2", nome: "Motoboy Game 2" }
+  });
+  assert.equal(r.veredicto, "independente");
+  assert.equal(r.autorizaLastroCsc, false);
+  assert.equal(r.autorizaContextoSessao, false);
+});
+
 test("CT-V07: anti-C3 — veredictos VCA não forçam C3 / permiteJob", () => {
   const activo = criarTopico("outdoor", "usuario", ISO);
   const msgs = [

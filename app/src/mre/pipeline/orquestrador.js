@@ -138,26 +138,41 @@ export async function executarPipeline07(entrada, deps) {
     const msgUsuario = String(entrada.mensagem || "")
       .split("[DIRETRIZ CANÓNICA — Manifesto")[0]
       .trim();
-    const pedidoDecisao =
-      deps.pedidoDecisaoExplicita === true ||
-      detectarPedidoDecisaoExplicita(msgUsuario);
+    // Info-gathering / PD=false explícito do Núcleo prevalece sobre re-detecção
+    // na mensagem enriquecida (fio/MTE podem conter «decisão» legado).
+    const pedidoInfoGathering = deps.pedidoInfoGathering === true;
+    const pedidoDecisao = pedidoInfoGathering
+      ? false
+      : deps.pedidoDecisaoExplicita === true
+        ? true
+        : deps.pedidoDecisaoExplicita === false
+          ? false
+          : detectarPedidoDecisaoExplicita(msgUsuario);
     // CONSULTA → RESPONDER (precedência V1 / situacional); não compete com PD
     const pedidoConsulta =
       !pedidoDecisao &&
-      (deps.pedidoConsultaResposta === true ||
-        detectarPedidoConsultaResposta(msgUsuario, {
-          consultaNaoEAcao:
-            deps.consultaNaoEAcao === true ||
-            entrada.consultaNaoEAcao === true,
-          tipoTurno: entrada.tipoTurno || deps.tipoTurno,
-          precedenciaTurno: entrada.precedenciaTurno || deps.precedenciaTurno
-        }));
+      !pedidoInfoGathering &&
+      (deps.pedidoConsultaResposta === true
+        ? true
+        : deps.pedidoConsultaResposta === false
+          ? false
+          : detectarPedidoConsultaResposta(msgUsuario, {
+              consultaNaoEAcao:
+                deps.consultaNaoEAcao === true ||
+                entrada.consultaNaoEAcao === true,
+              tipoTurno: entrada.tipoTurno || deps.tipoTurno,
+              precedenciaTurno: entrada.precedenciaTurno || deps.precedenciaTurno
+            }));
     // Opção A: pedido de decisão → P1-2 off; consulta ≠ análise de proposta
     const pedidoAnalise =
       !pedidoDecisao &&
       !pedidoConsulta &&
-      (deps.pedidoAnaliseDeliberativa === true ||
-        detectarPedidoAnaliseDeliberativa(msgUsuario));
+      !pedidoInfoGathering &&
+      (deps.pedidoAnaliseDeliberativa === true
+        ? true
+        : deps.pedidoAnaliseDeliberativa === false
+          ? false
+          : detectarPedidoAnaliseDeliberativa(msgUsuario));
     const pedidoDelegacaoExplicita =
       deps.pedidoDelegacaoExplicita === true ||
       ehPedidoDelegacaoExplicita(msgUsuario);
@@ -185,9 +200,15 @@ export async function executarPipeline07(entrada, deps) {
     } else {
       deps.pedidoAnaliseDeliberativa = false;
     }
-    if (pedidoDecisao) {
+    if (pedidoInfoGathering) {
+      deps.pedidoInfoGathering = true;
+      deps.pedidoDecisaoExplicita = false;
+      if (deps.proibirDespacho !== false) deps.proibirDespacho = true;
+    } else if (pedidoDecisao) {
       deps.pedidoDecisaoExplicita = true;
       if (deps.proibirDespacho !== false) deps.proibirDespacho = true;
+    } else if (deps.pedidoDecisaoExplicita === false) {
+      /* manter false — não reactivar PD */
     }
 
     // COA activo para filtro de princípios (escopo MG2 vs global)

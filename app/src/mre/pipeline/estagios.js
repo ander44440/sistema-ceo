@@ -31,6 +31,7 @@ import {
   hintEstagio6DecisaoSobConflito,
   temFatoBloqueanteNomeado
 } from "../politicaDecisaoSobConflito.js";
+import { hintEstagio6InfoGathering } from "../../classificadorIntencao/pedidoInfoGathering.js";
 import {
   comporAnaliseConsultaDesdeSnapshot,
   diagnosticoConsultaSituacional
@@ -400,7 +401,9 @@ export async function estagio6Decisao(parcial, deps) {
     "justificativa DEVE mencionar riscos, princípios ou oportunidades (ou declarar ausência).";
 
   let schemaHint = schemaHintEstagio6ComNcs(schemaBase, deps.pacoteNcs);
-  if (deps.pedidoConsultaResposta === true) {
+  if (deps.pedidoInfoGathering === true) {
+    schemaHint += hintEstagio6InfoGathering();
+  } else if (deps.pedidoConsultaResposta === true) {
     schemaHint += hintEstagio6ConsultaResposta();
   } else if (deps.pedidoAnaliseDeliberativa === true) {
     schemaHint += hintEstagio6AnaliseDeliberativa();

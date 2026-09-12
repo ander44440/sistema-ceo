@@ -1,0 +1,1671 @@
+{
+  "meta": {
+    "artefacto": "IMP-091-B0-baseline",
+    "versao": "0.1",
+    "capturadoEm": "2026-09-12T17:13:53.528Z",
+    "norma": "REQ-091 v0.3 / ARQ-091 v0.3 / IMP-091 §B0",
+    "proposito": "Congelar observáveis pré-Fatia 1 para matriz de equivalência (CA-091-8)",
+    "nota": "Captura read-only do runtime actual. Não é implementação Fatia 1. envelope.modo/intençãoActual devem permanecer null (Fatia 0 sombra).",
+    "totalCasos": 24,
+    "ids": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "N1",
+      "N2",
+      "N3",
+      "N4",
+      "N5",
+      "N6",
+      "N7",
+      "S1",
+      "S2",
+      "S3",
+      "S1b",
+      "S4",
+      "GATE",
+      "AD_ACK",
+      "VCA",
+      "E4_A",
+      "B_C2",
+      "IG_PD_D25"
+    ]
+  },
+  "casos": [
+    {
+      "id": "A",
+      "familia": "A-F",
+      "nota": "T1 factos → T2 prioridade negócio",
+      "input": {
+        "texto": "Qual deve ser nossa prioridade agora?",
+        "coaId": "prj-valeverde",
+        "historicoLen": 1,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "fallback",
+      "capacidade": "ia",
+      "objecto_turno_observado": "B",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 248
+      }
+    },
+    {
+      "id": "B",
+      "familia": "A-F",
+      "nota": "PD explícito após factos",
+      "input": {
+        "texto": "Tome a decisão agora.",
+        "coaId": "prj-valeverde",
+        "historicoLen": 1,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": true,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "fallback",
+      "capacidade": "ia",
+      "objecto_turno_observado": "indefinido",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "pedido_decisao",
+        "acao": "forcar_deliberacao_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "pedido_decisao",
+        "acao": "forcar_deliberacao_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao",
+        "razao": "V1: Pedido de decisão explícito → C2/MRE (bloqueia AD/CTO-003/C3)"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "pertence",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 232
+      }
+    },
+    {
+      "id": "C",
+      "familia": "A-F",
+      "nota": "E4 operacional nu + fio (não herda B)",
+      "input": {
+        "texto": "Qual é a próxima decisão que você recomenda?",
+        "coaId": "prj-valeverde",
+        "historicoLen": 1,
+        "setup": "none"
+      },
+      "destino_efectivo": "capacidade_operacional",
+      "classe": "comando_operacional",
+      "early_path": "none",
+      "forcarC2": false,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "recomendacao_operacional",
+      "capacidade": "memoria",
+      "objecto_turno_observado": "A",
+      "classificacao": {
+        "classe": "comando_operacional",
+        "destino": "capacidade_operacional",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "capacidade_operacional",
+        "ok": true,
+        "idClasse": "C4"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "capacidade_operacional",
+        "destinoFixo": true,
+        "tipoTurno": "consulta"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "capacidade_operacional",
+        "destinoFixo": true,
+        "tipoTurno": "consulta",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": false,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 292
+      }
+    },
+    {
+      "id": "D",
+      "familia": "A-F",
+      "nota": "IG + PD lexical em propósito",
+      "input": {
+        "texto": "CEO, antes de falar com o cliente, quais informações você gostaria de obter para decidir se vale a pena negociar preço, defender o valor atual ou aceitar o risco de perder esse cliente?",
+        "coaId": "prj-valeverde",
+        "historicoLen": 1,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": true,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "fallback",
+      "capacidade": "ia",
+      "objecto_turno_observado": "B",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 350
+      }
+    },
+    {
+      "id": "E",
+      "familia": "A-F",
+      "nota": "Pedido misto A+B",
+      "input": {
+        "texto": "Há um JOB-000067 na fila. Dois fornecedores para essa matéria-prima: o actual anunciou +12% e o outro é 8% mais barato, mas só cobre 60% do volume. Qual deve ser nossa prioridade agora?",
+        "coaId": "prj-valeverde",
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "fallback",
+      "capacidade": "ia",
+      "objecto_turno_observado": "misto",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 350
+      }
+    },
+    {
+      "id": "F",
+      "familia": "A-F",
+      "nota": "Fio outro COA não deve entrar no objecto do VV",
+      "input": {
+        "texto": "Qual deve ser nossa prioridade agora?",
+        "coaId": "prj-valeverde",
+        "historicoLen": 2,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "fallback",
+      "capacidade": "ia",
+      "objecto_turno_observado": "B",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 248
+      }
+    },
+    {
+      "id": "N1",
+      "familia": "N1-N7",
+      "nota": "para decidir / propósito",
+      "input": {
+        "texto": "Quais informações precisamos obter para decidir?",
+        "coaId": null,
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "clarificacao",
+      "classe": "conhecimento_geral",
+      "early_path": "none",
+      "forcarC2": false,
+      "flags_chave": {
+        "pedidoInfoGathering": true,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "clarificacao",
+      "capacidade": null,
+      "objecto_turno_observado": "indefinido",
+      "classificacao": {
+        "classe": "conhecimento_geral",
+        "destino": "clarificacao",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "clarificacao",
+        "ok": true,
+        "idClasse": "CLAR"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "clarificacao",
+        "destinoFixo": true,
+        "tipoTurno": "indefinido"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "clarificacao",
+        "destinoFixo": true,
+        "tipoTurno": "indefinido",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": false,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 128
+      }
+    },
+    {
+      "id": "N2",
+      "familia": "N1-N7",
+      "nota": "Ordem IG tipo 74",
+      "input": {
+        "texto": "CEO, antes de falar com o cliente, quais informações você gostaria de obter para decidir se vale a pena negociar preço, defender o valor atual ou aceitar o risco de perder esse cliente?",
+        "coaId": "prj-valeverde",
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": true,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "fallback",
+      "capacidade": "ia",
+      "objecto_turno_observado": "B",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 350
+      }
+    },
+    {
+      "id": "N3",
+      "familia": "N1-N7",
+      "nota": "Prioridade lexical isolada",
+      "input": {
+        "texto": "prioridade",
+        "coaId": null,
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "consciencia_operacional",
+      "capacidade": "ia",
+      "objecto_turno_observado": "indefinido",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "pertence",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 79
+      }
+    },
+    {
+      "id": "N4",
+      "familia": "N1-N7",
+      "nota": "Fio com mandato/recomendação anterior",
+      "input": {
+        "texto": "Qual deve ser nossa prioridade agora?",
+        "coaId": "prj-valeverde",
+        "historicoLen": 2,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "fallback",
+      "capacidade": "ia",
+      "objecto_turno_observado": "B",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 248
+      }
+    },
+    {
+      "id": "N5",
+      "familia": "N1-N7",
+      "nota": "C4/A operacional",
+      "input": {
+        "texto": "Analise e recomende a prioridade da Sprint 2 após o gate.",
+        "coaId": "prj-mg2",
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "capacidade_operacional",
+      "classe": "comando_operacional",
+      "early_path": "none",
+      "forcarC2": false,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "recomendacao_operacional",
+      "capacidade": "memoria",
+      "objecto_turno_observado": "A",
+      "classificacao": {
+        "classe": "comando_operacional",
+        "destino": "capacidade_operacional",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "capacidade_operacional",
+        "ok": true,
+        "idClasse": "C4"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "capacidade_operacional",
+        "destinoFixo": true,
+        "tipoTurno": "consulta"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "capacidade_operacional",
+        "destinoFixo": true,
+        "tipoTurno": "consulta",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": false,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 228
+      }
+    },
+    {
+      "id": "N6",
+      "familia": "N1-N7",
+      "nota": "B legítimo",
+      "input": {
+        "texto": "Temos dois fornecedores possíveis. O actual aumentou 12%; o outro é 8% mais barato com 60% do volume. Qual é a melhor decisão?",
+        "coaId": "prj-valeverde",
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "fallback",
+      "capacidade": "ia",
+      "objecto_turno_observado": "B",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 350
+      }
+    },
+    {
+      "id": "N7",
+      "familia": "N1-N7",
+      "nota": "Outro COA no histórico; alvo VV",
+      "input": {
+        "texto": "Qual é a próxima decisão que você recomenda?",
+        "coaId": "prj-valeverde",
+        "historicoLen": 1,
+        "setup": "none"
+      },
+      "destino_efectivo": "capacidade_operacional",
+      "classe": "comando_operacional",
+      "early_path": "none",
+      "forcarC2": false,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "recomendacao_operacional",
+      "capacidade": "memoria",
+      "objecto_turno_observado": "A",
+      "classificacao": {
+        "classe": "comando_operacional",
+        "destino": "capacidade_operacional",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "capacidade_operacional",
+        "ok": true,
+        "idClasse": "C4"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "capacidade_operacional",
+        "destinoFixo": true,
+        "tipoTurno": "consulta"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "capacidade_operacional",
+        "destinoFixo": true,
+        "tipoTurno": "consulta",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": false,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 292
+      }
+    },
+    {
+      "id": "S1",
+      "familia": "S1-S4",
+      "nota": "ARQ S1 exemplo «onde paramos?» — baseline regista comportamento actual (detector situacional pode ser false)",
+      "input": {
+        "texto": "onde paramos?",
+        "coaId": "prj-mg2",
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": true,
+        "pedidoSituacionalTrabalho": true,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "consulta-snapshot-sem-llm",
+      "capacidade": "ia",
+      "objecto_turno_observado": "indefinido",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "forcar_analise_situacional_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "consulta"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "forcar_analise_situacional_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "consulta",
+        "razao": "V1: Consulta situacional de trabalho → C2 (não panorama C4; não ação)"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "pertence",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 335
+      }
+    },
+    {
+      "id": "S2",
+      "familia": "S1-S4",
+      "nota": "Situacional actual (próximo passo) + execução lexical",
+      "input": {
+        "texto": "qual é o próximo passo? executa o LOD agora",
+        "coaId": "prj-mg2",
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": true,
+        "pedidoSituacionalTrabalho": true,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": true,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "consulta-snapshot-sem-llm",
+      "capacidade": "ia",
+      "objecto_turno_observado": "indefinido",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "forcar_analise_situacional_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "consulta"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "forcar_analise_situacional_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "consulta",
+        "razao": "V1: Consulta situacional de trabalho → C2 (não panorama C4; não ação)"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 340
+      }
+    },
+    {
+      "id": "S3",
+      "familia": "S1-S4",
+      "nota": "Mesmo input S1 — âncora para flag órfã pós-Fatia 1",
+      "input": {
+        "texto": "onde paramos?",
+        "coaId": "prj-mg2",
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": true,
+        "pedidoSituacionalTrabalho": true,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "consulta-snapshot-sem-llm",
+      "capacidade": "ia",
+      "objecto_turno_observado": "indefinido",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "forcar_analise_situacional_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "consulta"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "forcar_analise_situacional_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "consulta",
+        "razao": "V1: Consulta situacional de trabalho → C2 (não panorama C4; não ação)"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "pertence",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 336
+      }
+    },
+    {
+      "id": "S1b",
+      "familia": "S1-S4",
+      "nota": "Situacional puro com detector actual true (complemento S1)",
+      "input": {
+        "texto": "qual é o próximo passo do trabalho?",
+        "coaId": "prj-mg2",
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": true,
+        "pedidoSituacionalTrabalho": true,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "consulta-snapshot-sem-llm",
+      "capacidade": "ia",
+      "objecto_turno_observado": "indefinido",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "forcar_analise_situacional_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "consulta"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "forcar_analise_situacional_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "consulta",
+        "razao": "V1: Consulta situacional de trabalho → C2 (não panorama C4; não ação)"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 340
+      }
+    },
+    {
+      "id": "S4",
+      "familia": "S1-S4",
+      "nota": "consulta_composta",
+      "input": {
+        "texto": "executa e me diga o estado da fila",
+        "coaId": "prj-mg2",
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "capacidade_operacional",
+      "classe": "comando_operacional",
+      "early_path": "none",
+      "forcarC2": false,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": true,
+        "ordemExecucaoOperacional": true,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "consulta_estado",
+      "capacidade": "memoria",
+      "objecto_turno_observado": "A",
+      "classificacao": {
+        "classe": "comando_operacional",
+        "destino": "capacidade_operacional",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "capacidade_operacional",
+        "ok": true,
+        "idClasse": "C4"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "capacidade_operacional",
+        "destinoFixo": true,
+        "tipoTurno": "consulta"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "capacidade_operacional",
+        "destinoFixo": false,
+        "tipoTurno": "consulta",
+        "razao": "V1: Ordem composta com consulta/resposta — classificador decide; AD não executa"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": false,
+        "decisaoGate": null,
+        "validacaoContexto": "pertence",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 73
+      }
+    },
+    {
+      "id": "GATE",
+      "familia": "especial",
+      "nota": "Gate pendente + Aprovado.",
+      "input": {
+        "texto": "Aprovado.",
+        "coaId": null,
+        "historicoLen": 0,
+        "setup": "gate"
+      },
+      "destino_efectivo": "continuidade_gate",
+      "classe": "early:continuidade_gate",
+      "early_path": "gate",
+      "forcarC2": null,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "continuidade_gate",
+      "capacidade": "motor_execucao",
+      "objecto_turno_observado": "indefinido",
+      "classificacao": null,
+      "encaminhamento": {
+        "destino": "continuidade_gate",
+        "ok": true,
+        "idClasse": null
+      },
+      "precedencia_anexada": null,
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "continuidade_gate",
+        "destinoFixo": true,
+        "tipoTurno": "indefinido",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": true,
+        "classificadorSaltado": true,
+        "motorAcionado": true,
+        "mreInvocado": false,
+        "decisaoGate": "aprovado",
+        "validacaoContexto": null,
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 1,
+        "mensagemLen": 173
+      }
+    },
+    {
+      "id": "AD_ACK",
+      "familia": "especial",
+      "nota": "Activação AD sem EXECUTE",
+      "input": {
+        "texto": "VOCE ESTA AUTORIZADO A TOMAR TODAS AS MEDIDAS QUE JULGA NECESSÁRIAS, PARA UMA MELHOR PERFORMANCE DO MG2 OK..",
+        "coaId": null,
+        "historicoLen": 0,
+        "setup": "ad_ack"
+      },
+      "destino_efectivo": "autoridade_delegada",
+      "classe": "early:autoridade_delegada",
+      "early_path": "ad_ack",
+      "forcarC2": null,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "autoridade_delegada",
+      "capacidade": "ia",
+      "objecto_turno_observado": "indefinido",
+      "classificacao": null,
+      "encaminhamento": {
+        "destino": "autoridade_delegada",
+        "ok": true,
+        "idClasse": null
+      },
+      "precedencia_anexada": {
+        "autoridade": "ad_cto003_operacional",
+        "acao": "permitir_ad_ack",
+        "destinoPermitido": "autoridade_delegada",
+        "destinoFixo": true,
+        "tipoTurno": "delegacao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "autoridade_delegada",
+        "destinoFixo": true,
+        "tipoTurno": "indefinido",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": false,
+        "decisaoGate": null,
+        "validacaoContexto": null,
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 253
+      }
+    },
+    {
+      "id": "VCA",
+      "familia": "especial",
+      "nota": "ambiguo_contexto com tópico activo outdoor",
+      "input": {
+        "texto": "pagamento?",
+        "coaId": null,
+        "historicoLen": 0,
+        "setup": "vca"
+      },
+      "destino_efectivo": "clarificacao_contexto",
+      "classe": "early:clarificacao_contexto",
+      "early_path": "vca",
+      "forcarC2": null,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "clarificacao_contexto",
+      "capacidade": null,
+      "objecto_turno_observado": "indefinido",
+      "classificacao": null,
+      "encaminhamento": {
+        "destino": "clarificacao_contexto",
+        "ok": true,
+        "idClasse": null
+      },
+      "precedencia_anexada": null,
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "clarificacao_contexto",
+        "destinoFixo": true,
+        "tipoTurno": "indefinido",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": false,
+        "decisaoGate": null,
+        "validacaoContexto": "ambiguo_contexto",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 45
+      }
+    },
+    {
+      "id": "E4_A",
+      "familia": "especial",
+      "nota": "E4 A isolado (sem fio B)",
+      "input": {
+        "texto": "Qual é a próxima decisão que você recomenda?",
+        "coaId": null,
+        "historicoLen": 0,
+        "setup": "none"
+      },
+      "destino_efectivo": "capacidade_operacional",
+      "classe": "comando_operacional",
+      "early_path": "none",
+      "forcarC2": false,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "recomendacao_operacional",
+      "capacidade": "memoria",
+      "objecto_turno_observado": "A",
+      "classificacao": {
+        "classe": "comando_operacional",
+        "destino": "capacidade_operacional",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "capacidade_operacional",
+        "ok": true,
+        "idClasse": "C4"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "capacidade_operacional",
+        "destinoFixo": true,
+        "tipoTurno": "consulta"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "capacidade_operacional",
+        "destinoFixo": true,
+        "tipoTurno": "consulta",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": false,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 292
+      }
+    },
+    {
+      "id": "B_C2",
+      "familia": "especial",
+      "nota": "B/C2 — PD após factos (alias observacional de B)",
+      "input": {
+        "texto": "Tome a decisão agora.",
+        "coaId": "prj-valeverde",
+        "historicoLen": 1,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": false,
+        "pedidoDecisao": true,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "fallback",
+      "capacidade": "ia",
+      "objecto_turno_observado": "indefinido",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "pedido_decisao",
+        "acao": "forcar_deliberacao_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "pedido_decisao",
+        "acao": "forcar_deliberacao_c2",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao",
+        "razao": "V1: Pedido de decisão explícito → C2/MRE (bloqueia AD/CTO-003/C3)"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "pertence",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 232
+      }
+    },
+    {
+      "id": "IG_PD_D25",
+      "familia": "especial",
+      "nota": "IG/PD/D25 — ordem 74 com fio",
+      "input": {
+        "texto": "CEO, antes de falar com o cliente, quais informações você gostaria de obter para decidir se vale a pena negociar preço, defender o valor atual ou aceitar o risco de perder esse cliente?",
+        "coaId": "prj-valeverde",
+        "historicoLen": 1,
+        "setup": "none"
+      },
+      "destino_efectivo": "nucleo_mre",
+      "classe": "conversa_projeto",
+      "early_path": "none",
+      "forcarC2": true,
+      "flags_chave": {
+        "pedidoInfoGathering": true,
+        "pedidoDecisao": false,
+        "pedidoConsultaResposta": false,
+        "pedidoSituacionalTrabalho": false,
+        "panoramaEstadoGeral": false,
+        "pedidoConsultaOuRespostaComposta": false,
+        "ordemExecucaoOperacional": false,
+        "pedidoAnaliseDeliberativa": false
+      },
+      "modo_resposta": "fallback",
+      "capacidade": "ia",
+      "objecto_turno_observado": "B",
+      "classificacao": {
+        "classe": "conversa_projeto",
+        "destino": "nucleo_mre",
+        "permiteJob": false
+      },
+      "encaminhamento": {
+        "destino": "nucleo_mre",
+        "ok": true,
+        "idClasse": "C2"
+      },
+      "precedencia_anexada": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao"
+      },
+      "precedencia_observacional": {
+        "autoridade": "classificador",
+        "acao": "seguir_classificador",
+        "destinoPermitido": "nucleo_mre",
+        "destinoFixo": true,
+        "tipoTurno": "decisao",
+        "razao": "V1: Seguir classificador/destino; CN não altera destino"
+      },
+      "meta_resposta": {
+        "continuidade": false,
+        "classificadorSaltado": false,
+        "motorAcionado": false,
+        "mreInvocado": true,
+        "decisaoGate": null,
+        "validacaoContexto": "independente",
+        "temEnvelope": true,
+        "envelopeModo": null,
+        "envelopeObjecto": "indefinido",
+        "envelopeIntencao": null
+      },
+      "captura": {
+        "jobsPublicados": 0,
+        "mensagemLen": 350
+      }
+    }
+  ]
+}

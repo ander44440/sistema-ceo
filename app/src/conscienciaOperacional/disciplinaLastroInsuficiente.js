@@ -1,8 +1,11 @@
 /**
  * FRENTE 6 — Gate pós-LLM de disciplina de lastro insuficiente (C2 deliberativo).
  * Função pura: fail-closed quando o turno já declara insuficiência explícita.
- * Não é validador claim⊆lastro; não tipa facto/inferência/hipótese; não toca CONSULTA.
+ * Não é validador claim⊆lastro; não tipa facto/inferência/hipótese;
+ * não toca CONSULTA nem INFO-GATHERING (solicitar_dados legítimo).
  */
+
+import { detectarPedidoInfoGathering } from "../classificadorIntencao/pedidoInfoGathering.js";
 
 /** Prefixo estável para idempotência / testes. */
 export const PREFIXO_DECLARACAO_LASTRO_INSUFICIENTE =
@@ -22,6 +25,18 @@ export const PREFIXO_DECLARACAO_LASTRO_INSUFICIENTE =
  * @property {string} motivo
  * @property {SinalInsuficienciaLastro|null} sinal
  */
+
+/**
+ * @param {{
+ *   pedidoInfoGathering?: boolean,
+ *   instrucao?: string
+ * }} opts
+ */
+function ehInfoGatheringNosOpts(opts = {}) {
+  if (opts.pedidoInfoGathering === true) return true;
+  if (opts.pedidoInfoGathering === false) return false;
+  return detectarPedidoInfoGathering(opts.instrucao);
+}
 
 /**
  * Extrai factos do turno (entrada + dossier do parecer, se houver).
@@ -52,11 +67,14 @@ export function listarFactosTurnoParaDisciplina(opts = {}) {
 /**
  * Predicado: sinais explícitos já existentes no turno.
  * NÃO activa só com LACUNA EXPLÍCITA do Acervo (≠ lacuna material — REQ-070).
+ * INFO-GATHERING: solicitar_dados é estado deliberativo legítimo — não activa.
  *
  * @param {{
  *   factosOficiais?: ReadonlyArray<string>|null,
  *   parecer?: object|null,
- *   pedidoConsulta?: boolean
+ *   pedidoConsulta?: boolean,
+ *   pedidoInfoGathering?: boolean,
+ *   instrucao?: string
  * }} opts
  * @returns {SinalInsuficienciaLastro|{ ativo: false, motivo: string, lacunas: ReadonlyArray<string> }}
  */
@@ -69,12 +87,23 @@ export function detectarInsuficienciaLastroTurno(opts = {}) {
     };
   }
 
+  const infoGathering = ehInfoGatheringNosOpts(opts);
+
   const factos = listarFactosTurnoParaDisciplina(opts);
   const lacunasParecer = Array.isArray(opts.parecer?.lacunas)
     ? opts.parecer.lacunas.map((l) => String(l || "").trim()).filter(Boolean)
     : [];
 
   if (factos.some((f) => /LASTRO INSUFICIENTE/i.test(f))) {
+    // Fora de IG: fail-closed por flag explícita.
+    // Em IG: não wipe (solicitar_dados + prosa de lacunas é a resposta).
+    if (infoGathering) {
+      return {
+        ativo: false,
+        motivo: "info_gathering_preservado",
+        lacunas: Object.freeze([])
+      };
+    }
     const lacunasFlag = factos
       .filter((f) => /LACUNA|LASTRO INSUFICIENTE/i.test(f))
       .map((f) => f.replace(/\s+/g, " ").trim())
@@ -94,6 +123,14 @@ export function detectarInsuficienciaLastroTurno(opts = {}) {
 
   const estado = opts.parecer?.decisaoExecutiva?.estado;
   if (estado === "solicitar_dados") {
+    // IG: solicitar_dados = listar o que falta — não é falha de lastro
+    if (infoGathering) {
+      return {
+        ativo: false,
+        motivo: "info_gathering_solicitar_dados_legitimo",
+        lacunas: Object.freeze(lacunasParecer)
+      };
+    }
     return {
       ativo: true,
       motivo: "parecer_solicitar_dados",
@@ -142,13 +179,15 @@ export function prosaJaDeclaraLastroInsuficiente(mensagem) {
 
 /**
  * Gate pós-LLM: se o turno já declara insuficiência, substitui prosa livre.
- * Pass-through se não houver sinal, se for CONSULTA, ou se já declarado.
+ * Pass-through se não houver sinal, se for CONSULTA, INFO-GATHERING, ou já declarado.
  *
  * @param {string} mensagem
  * @param {{
  *   factosOficiais?: ReadonlyArray<string>|null,
  *   parecer?: object|null,
- *   pedidoConsulta?: boolean
+ *   pedidoConsulta?: boolean,
+ *   pedidoInfoGathering?: boolean,
+ *   instrucao?: string
  * }} [opts]
  * @returns {ResultadoDisciplinaLastro}
  */
@@ -160,6 +199,16 @@ export function garantirDisciplinaLastroInsuficiente(mensagem, opts = {}) {
       mensagem: original,
       aplicada: false,
       motivo: "consulta_fora_de_escopo",
+      sinal: null
+    };
+  }
+
+  // INFO-GATHERING: preservar prosa de lacunas (espelha CONSULTA)
+  if (ehInfoGatheringNosOpts(opts)) {
+    return {
+      mensagem: original,
+      aplicada: false,
+      motivo: "info_gathering_fora_de_escopo",
       sinal: null
     };
   }

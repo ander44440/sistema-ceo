@@ -13,6 +13,7 @@ import {
   registrarProximaAcao,
   selecionarProjeto
 } from "../../catalogoProjetos/index.js";
+import { limparCoaAtivo } from "../../executiveEngine/coaSessao.js";
 import { tomEstadoExecutivo } from "../../catalogoProjetos/estadoExecutivo.js";
 
 function escaparHtml(texto) {
@@ -200,7 +201,7 @@ export function montarProjetos() {
               )}</p>
               ${
                 p.ativo
-                  ? ""
+                  ? `<button type="button" class="proj-btn" data-fechar="${escaparHtml(p.id)}">Fechar projeto</button>`
                   : `<button type="button" class="proj-btn" data-ativar="${escaparHtml(p.id)}">Abrir</button>`
               }
             </article>`
@@ -223,6 +224,17 @@ export function montarProjetos() {
     root.querySelectorAll("[data-ativar]").forEach((btn) => {
       btn.addEventListener("click", () => {
         selecionarProjeto(btn.getAttribute("data-ativar"));
+        pintar();
+      });
+    });
+
+    root.querySelectorAll("[data-fechar]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        limparCoaAtivo();
+        const projectEl = document.getElementById("shell-project-name");
+        if (projectEl) projectEl.textContent = "Sem projeto ativo";
+        const statusEl = document.getElementById("system-status");
+        if (statusEl) statusEl.textContent = "CEO Online · Gabinete Executivo";
         pintar();
       });
     });

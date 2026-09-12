@@ -1,6 +1,6 @@
 /**
- * IMP-086 — Consulta de discussões e decisões registadas (V1).
- * Read-only. Sem quarta memória. Sem API HTTP.
+ * IMP-086 / IMP-089 — Consulta de discussões e decisões registadas.
+ * Fatia 1: HFC read-only + Trilha refs. Sem quarta memória.
  */
 
 export {
@@ -9,6 +9,7 @@ export {
 
 export {
   lerDecisoesMo,
+  lerDiscussao,
   lerDiscussaoTranscript,
   lerRefsTrilhaOpcional,
   listarSoCoa
@@ -17,3 +18,5 @@ export {
 export { montarRespostaConsulta } from "./montarResposta.js";
 
 export { orquestrarConsultaRegistados } from "./orquestrarConsulta.js";
+
+export { criarDepsConsultaProducao } from "./depsProducao.js";

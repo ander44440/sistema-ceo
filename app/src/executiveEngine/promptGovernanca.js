@@ -17,6 +17,7 @@ import {
   deveInjectarDic,
   obterDicVigente
 } from "./dicInstitucional.js";
+import { seleccionarFioCoa } from "../classificadorIntencao/fioConversacional.js";
 
 /**
  * @param {object} params
@@ -36,12 +37,24 @@ export function montarMensagensLlm({
   coa,
   intencao,
   validacaoContexto,
-  pathMetaInstitucional
+  pathMetaInstitucional,
+  objectoTurno,
+  pedidoDecisaoExplicita,
+  pedidoAnaliseDeliberativa,
+  fioCoa
 }) {
   const injectDic = deveInjectarDic({
     texto: instrucao,
     validacaoContexto,
-    pathMetaInstitucional
+    pathMetaInstitucional,
+    ...(objectoTurno != null ? { objectoTurno } : {}),
+    ...(pedidoDecisaoExplicita != null
+      ? { pedidoDecisaoExplicita: pedidoDecisaoExplicita === true }
+      : {}),
+    ...(pedidoAnaliseDeliberativa != null
+      ? { pedidoAnaliseDeliberativa: pedidoAnaliseDeliberativa === true }
+      : {}),
+    ...(fioCoa != null ? { fioCoa } : {})
   });
 
   const messages = [
@@ -96,7 +109,7 @@ export function montarMensagensLlm({
   }
 
   // Histórico antes do objetivo atual: a interação corrente fica como último turno.
-  const recentes = Array.isArray(historico) ? historico.slice(-12) : [];
+  const recentes = seleccionarFioCoa(historico, instrucao);
   for (const turn of recentes) {
     if (!turn || !turn.texto) continue;
     if (turn.papel === "usuario") {

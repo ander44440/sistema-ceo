@@ -60,8 +60,21 @@ export function deveInterceptarOperacional(opts = {}) {
   // não entram em motor_execucao por CTO-003 (detectores existentes).
   const autorizaCriarJob = ehAutorizacaoExplicitaCriarJob(t);
   if (!autorizaCriarJob && ehProibicaoExecucaoExplicita(t)) return false;
+  /** @type {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean, calcObjectoDoTurno?: Function, detectarPedidoDecisaoExplicita?: Function }} */
+  const optsSinais = {};
+  if (opts.objectoTurno != null) optsSinais.objectoTurno = opts.objectoTurno;
+  if (opts.pedidoDecisaoExplicita != null) {
+    optsSinais.pedidoDecisaoExplicita = opts.pedidoDecisaoExplicita === true;
+  }
+  if (typeof opts.calcObjectoDoTurno === "function") {
+    optsSinais.calcObjectoDoTurno = opts.calcObjectoDoTurno;
+  }
+  if (typeof opts.detectarPedidoDecisaoExplicita === "function") {
+    optsSinais.detectarPedidoDecisaoExplicita =
+      opts.detectarPedidoDecisaoExplicita;
+  }
   if (
-    ehPedidoAnaliseOuRecomendacao(t) &&
+    ehPedidoAnaliseOuRecomendacao(t, opts.fioCoa, optsSinais) &&
     !ehComandoExecucaoExplicito(t) &&
     !autorizaCriarJob
   ) {
@@ -74,12 +87,16 @@ export function deveInterceptarOperacional(opts = {}) {
   if (ehPedidoRelatoEncerramento(t)) return false;
 
   // C3 — precedência: pedidoDecisao > CTO-003 quando o objecto não é a operação/Gate.
-  // Reutiliza detectarPedidoDecisaoExplicita + reconhecerDecisao (sem detector novo).
-  // Léxico Gate/continuidade («Aprovado.» / «Pode prosseguir.») permanece soberano.
-  if (
-    detectarPedidoDecisaoExplicita(texto) &&
-    !reconhecerDecisao(texto).reconhecida
-  ) {
+  // Consome sinal pd canónico quando presente (IMP-091); fallback só se ausente.
+  const detectarPd =
+    typeof opts.detectarPedidoDecisaoExplicita === "function"
+      ? opts.detectarPedidoDecisaoExplicita
+      : detectarPedidoDecisaoExplicita;
+  const pedidoDecisao =
+    opts.pedidoDecisaoExplicita != null
+      ? opts.pedidoDecisaoExplicita === true
+      : detectarPd(texto);
+  if (pedidoDecisao && !reconhecerDecisao(texto).reconhecida) {
     return false;
   }
 

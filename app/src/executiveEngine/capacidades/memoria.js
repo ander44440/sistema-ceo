@@ -486,7 +486,10 @@ export const capacidadeMemoria = Object.freeze({
         obterJob: ctx.obterJob,
         listarJobs: ctx.listarJobs,
         storeContinuidade: ctx.storeContinuidade,
-        lerMemoriaFn: typeof ctx.memoria === "function" ? ctx.memoria : lerMemoria
+        lerMemoriaFn: typeof ctx.memoria === "function" ? ctx.memoria : lerMemoria,
+        ...(ctx.pedidoSituacionalTrabalho != null
+          ? { situacional: ctx.pedidoSituacionalTrabalho === true }
+          : {})
       });
       return {
         ok: consulta.ok !== false,
@@ -506,7 +509,17 @@ export const capacidadeMemoria = Object.freeze({
         obterJob: ctx.obterJob,
         listarJobs: ctx.listarJobs,
         storeContinuidade: ctx.storeContinuidade,
-        lerMemoriaFn: typeof ctx.memoria === "function" ? ctx.memoria : lerMemoria
+        lerMemoriaFn: typeof ctx.memoria === "function" ? ctx.memoria : lerMemoria,
+        ...(ctx.objectoTurno != null ? { objectoTurno: ctx.objectoTurno } : {}),
+        ...(ctx.pedidoDecisaoExplicita != null
+          ? { pedidoDecisaoExplicita: ctx.pedidoDecisaoExplicita === true }
+          : {}),
+        ...(ctx.pedidoInfoGathering != null
+          ? { pedidoInfoGathering: ctx.pedidoInfoGathering === true }
+          : {}),
+        ...(ctx.pedidoSituacionalTrabalho != null
+          ? { situacional: ctx.pedidoSituacionalTrabalho === true }
+          : {})
       });
       return {
         ok: rec.ok !== false,

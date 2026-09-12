@@ -84,18 +84,38 @@ export function avaliarComplexidadeDecisao(entrada = {}) {
   }
 
   // L1 — conhecimento geral / C4 / resposta leve
+  const optsSinaisCx = {};
+  if (entrada.objectoTurno != null) optsSinaisCx.objectoTurno = entrada.objectoTurno;
+  if (entrada.pedidoDecisaoExplicita != null) {
+    optsSinaisCx.pedidoDecisaoExplicita = entrada.pedidoDecisaoExplicita === true;
+  }
+  if (entrada.pedidoAnaliseDeliberativa != null) {
+    optsSinaisCx.pedidoAnaliseDeliberativa =
+      entrada.pedidoAnaliseDeliberativa === true;
+  }
+  if (typeof entrada.calcObjectoDoTurno === "function") {
+    optsSinaisCx.calcObjectoDoTurno = entrada.calcObjectoDoTurno;
+  }
+  if (typeof entrada.detectarPedidoDecisaoExplicita === "function") {
+    optsSinaisCx.detectarPedidoDecisaoExplicita =
+      entrada.detectarPedidoDecisaoExplicita;
+  }
+  const fioCx = entrada.fioCoa;
   if (
     classe === "conhecimento_geral" ||
     destino === "resposta_leve" ||
     classe === "comando_operacional" ||
     destino === "capacidade_operacional" ||
-    ehConhecimentoGeralE22(t)
+    ehConhecimentoGeralE22(t, fioCx, optsSinaisCx)
   ) {
     return resultado("leve", "conhecimento geral ou comando operacional");
   }
 
   // Meta institucional / modo conversacional → 1 LLM (sem MRE 0–7)
-  if (ehMetaModoConversacional(t) || ehAutoexplicacaoInstitucionalE23(t)) {
+  if (
+    ehMetaModoConversacional(t) ||
+    ehAutoexplicacaoInstitucionalE23(t, fioCx, optsSinaisCx)
+  ) {
     return resultado(
       "moderado",
       "meta-conversa / autoexplicação → deliberação rápida"

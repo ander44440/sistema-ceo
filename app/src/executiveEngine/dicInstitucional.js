@@ -46,8 +46,19 @@ export function deveInjectarDic(entrada = {}) {
   const texto = String(entrada.texto || "").trim();
   if (!texto) return false;
   const t = normalizarTexto(texto);
+  /** @type {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean, pedidoAnaliseDeliberativa?: boolean }} */
+  const optsSinais = {};
+  if (entrada.objectoTurno != null) optsSinais.objectoTurno = entrada.objectoTurno;
+  if (entrada.pedidoDecisaoExplicita != null) {
+    optsSinais.pedidoDecisaoExplicita = entrada.pedidoDecisaoExplicita === true;
+  }
+  if (entrada.pedidoAnaliseDeliberativa != null) {
+    optsSinais.pedidoAnaliseDeliberativa =
+      entrada.pedidoAnaliseDeliberativa === true;
+  }
   return (
-    ehAutoexplicacaoInstitucionalE23(t) || ehMetaModoConversacional(t)
+    ehAutoexplicacaoInstitucionalE23(t, entrada.fioCoa, optsSinais) ||
+    ehMetaModoConversacional(t)
   );
 }
 

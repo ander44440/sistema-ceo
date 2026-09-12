@@ -42,10 +42,15 @@ import {
  * @property {{ id?: string, nome?: string, titulo?: string }|null} [coa]
  * @property {boolean} [operacaoAberta] — Teste 3: Job F2 aberto (continuidade → lastro)
  * @property {boolean} [gatePendente]
+ * @property {string} [objectoTurno] — IMP-091: sinal canónico (sem reavaliar objecto)
+ * @property {boolean} [pedidoDecisaoExplicita] — IMP-091: sinal pd canónico
+ * @property {boolean} [pedidoAnaliseDeliberativa] — IMP-091: sinal analise (short-circuit)
+ * @property {unknown} [fioCoa]
  *
  * @typedef {object} ResultadoVca
  * @property {VeredictoVca} veredicto
- * @property {boolean} autorizaLastroCsc
+ * @property {boolean} autorizaLastroCsc — lastro CSC (tópico/objectivo/Job/continuidade)
+ * @property {boolean} autorizaContextoSessao — COA/Painel de sessão (consulta ≠ execução)
  * @property {string} [perguntaCurta]
  * @property {string} [clarificacaoGateIsolamento]
  * @property {string} razaoContexto
@@ -70,17 +75,63 @@ export function definirVcaAtivo(ativo) {
 }
 
 /**
+ * Opts canónicos para predicados de polaridade (IMP-091) — fallback se ausentes.
+ * @param {EntradaVca} entrada
+ */
+function optsSinaisVca(entrada = {}) {
+  /** @type {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean, pedidoAnaliseDeliberativa?: boolean, calcObjectoDoTurno?: Function, detectarPedidoDecisaoExplicita?: Function }} */
+  const o = {};
+  if (entrada.objectoTurno != null) o.objectoTurno = entrada.objectoTurno;
+  if (entrada.pedidoDecisaoExplicita != null) {
+    o.pedidoDecisaoExplicita = entrada.pedidoDecisaoExplicita === true;
+  }
+  if (entrada.pedidoAnaliseDeliberativa != null) {
+    o.pedidoAnaliseDeliberativa = entrada.pedidoAnaliseDeliberativa === true;
+  }
+  if (typeof entrada.calcObjectoDoTurno === "function") {
+    o.calcObjectoDoTurno = entrada.calcObjectoDoTurno;
+  }
+  if (typeof entrada.detectarPedidoDecisaoExplicita === "function") {
+    o.detectarPedidoDecisaoExplicita = entrada.detectarPedidoDecisaoExplicita;
+  }
+  return o;
+}
+
+/**
+ * Polaridade análise: sinal analise=true → true; senão predicado com objecto/pd cache.
+ * @param {string} t
+ * @param {unknown} [fioCoa]
+ * @param {ReturnType<typeof optsSinaisVca>} [opts]
+ */
+function ehAnalisePolaridadeVca(t, fioCoa, opts = {}) {
+  if (opts.pedidoAnaliseDeliberativa === true) return true;
+  return ehPedidoAnaliseOuRecomendacao(t, fioCoa, opts);
+}
+
+/**
  * @param {VeredictoVca} veredicto
  * @param {string} razaoContexto
  * @param {Partial<ResultadoVca>} [extra]
  * @returns {ResultadoVca}
  */
 function resultado(veredicto, razaoContexto, extra = {}) {
+  const {
+    autorizaLastroCsc: lastroExtra,
+    autorizaContextoSessao: contextoExtra,
+    ...rest
+  } = extra;
+  const autorizaLastroCsc =
+    lastroExtra !== undefined ? Boolean(lastroExtra) : veredicto === "pertence";
+  // Default: contexto de sessão acompanha o lastro CSC.
+  // P0 consulta/análise pode activar COA/Painel sem lastro de execução.
+  const autorizaContextoSessao =
+    contextoExtra !== undefined ? Boolean(contextoExtra) : autorizaLastroCsc;
   return {
     veredicto,
-    autorizaLastroCsc: veredicto === "pertence",
+    autorizaLastroCsc,
+    autorizaContextoSessao,
     razaoContexto,
-    ...extra
+    ...rest
   };
 }
 
@@ -239,6 +290,8 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
   }
 
   const t = normalizarTexto(mensagem);
+  const fioCoa = entrada.fioCoa;
+  const optsSinais = optsSinaisVca(entrada);
   const topicoActivo = entrada.topicoActivo || null;
   const objetivoActivo = entrada.objetivoActivo || null;
   const activo = temContextoActivo(topicoActivo, objetivoActivo);
@@ -252,7 +305,7 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
   const deixis = mensagemEhDeixisOuFollowUp(t);
 
   // P2 — metaconversa (E2.3)
-  if (ehAutoexplicacaoInstitucionalE23(t)) {
+  if (ehAutoexplicacaoInstitucionalE23(t, fioCoa, optsSinais)) {
     // P0: metaconversa não força lock de Gate (GATE ≠ CONVERSATION_LOCK)
     return resultado(
       "metaconversa",
@@ -281,20 +334,30 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
     );
   }
 
-  // P0 — consulta / proibição / análise deliberativa: nunca path de execução
+  // P0 — consulta / proibição / análise deliberativa: nunca lastro CSC de Job.
+  // Contrato: lastro de execução (CSC/Job) ≠ contexto de consulta (COA/Painel).
+  // Consulta, análise e autodiagnóstico isolam CSC mas preservam sessão.
   if (
     ehProibicaoExecucaoExplicita(t) ||
     ehConsultaEstadoOperacional(t) ||
-    (ehPedidoAnaliseOuRecomendacao(t) && !ehComandoExecucaoExplicito(t))
+    (ehAnalisePolaridadeVca(t, fioCoa, optsSinais) &&
+      !ehComandoExecucaoExplicito(t))
   ) {
     return resultado(
       "independente",
-      "P0: consulta/análise/proibição de execução → sem lastro CSC de Job"
+      "P0: consulta/análise/proibição → sem lastro CSC de Job; contexto de sessão (COA/Painel) permitido",
+      {
+        autorizaLastroCsc: false,
+        autorizaContextoSessao: true
+      }
     );
   }
 
   // Execução C3 / verbos de trabalho → pertence (Classificador decide C3; sem ambiguidade VCA)
-  if (ehIntencaoExecutivaE21(t) || temVerboExecucao(t)) {
+  if (
+    ehIntencaoExecutivaE21(t, fioCoa, optsSinais) ||
+    temVerboExecucao(t, fioCoa, optsSinais)
+  ) {
     return resultado(
       "pertence",
       "intenção executiva / verbo de execução → path CSC; Classificador decide C3"
@@ -302,7 +365,10 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
   }
 
   // C4 operacional → independente (sem lastro CSC; nunca ambiguo_contexto)
-  if (desambiguarJobs(t) === "c4" || pontuaC4Operacional(t)) {
+  if (
+    desambiguarJobs(t, fioCoa, optsSinais) === "c4" ||
+    pontuaC4Operacional(t)
+  ) {
     return resultado(
       "independente",
       "comando operacional C4 → isolamento de lastro; Classificador decide C4"
@@ -373,7 +439,7 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
     ) {
       // P6 mínimo: não bloquear C1/C2 já determináveis (E2.2) — Classificador decide.
       // «pagamento?» e âncoras sem marcador E2.2 continuam ambiguo_contexto.
-      if (ehConhecimentoGeralE22(t)) {
+      if (ehConhecimentoGeralE22(t, fioCoa, optsSinais)) {
         /* cair para P3 — conhecimento_geral / C1 */
       } else if (
         ehDeliberacaoProjetoE22(t, {
@@ -382,7 +448,11 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
       ) {
         return resultado(
           "independente",
-          "E2.2: deliberação de projecto determinável → Classificador C2; sem ambiguo VCA"
+          "E2.2: deliberação de projecto determinável → Classificador C2; sem ambiguo VCA; contexto de sessão permitido",
+          {
+            autorizaLastroCsc: false,
+            autorizaContextoSessao: true
+          }
         );
       } else {
         return resultado(
@@ -404,7 +474,7 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
   }
 
   // P3 — conhecimento geral (E2.2) sem âncora do fio activo
-  if (ehConhecimentoGeralE22(t) && overlap.length === 0) {
+  if (ehConhecimentoGeralE22(t, fioCoa, optsSinais) && overlap.length === 0) {
     return resultado(
       "conhecimento_geral",
       "E2.2: conhecimento geral sem âncora do fio → isolamento CSC"

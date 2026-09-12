@@ -23,6 +23,16 @@ const RE_DECISAO =
 const RE_DISCUSSAO =
   /\b(o\s+que\s+discutimos|no\s+transcript|no\s+hist[oó]rico\s+da\s+conversa|discuss[oõ]es?\s+(antigas?|registadas?|registradas?))\b/i;
 
+/** Referência explícita ao HFC (Histórico Físico das Conversas). */
+const RE_HISTORICO_FISICO = /\bhist[oó]rico\s+f[ií]sico\b/i;
+
+/**
+ * Contexto de consulta exigido junto a «histórico físico»
+ * para activar F-TX/HFC sem alargar âncoras de decisão.
+ */
+const RE_CONTEXTO_CONSULTA_HFC =
+  /\b(consult\w*|me\s+diga|diga[- ]?me|o\s+que\s+(discutimos|decidimos|ficou)|discuss[oõ]es?\s+(antigas?|registadas?|registradas?)|no\s+transcript|no\s+hist[oó]rico\s+da\s+conversa)\b/i;
+
 const RE_AMBOS =
   /\b(o\s+que\s+(j[aá]\s+)?(decidimos|discutimos)\s+e\s+(discutimos|decidimos)|consulta\s+(de\s+)?(discuss[oõ]es?\s+e\s+decis[oõ]es?|decis[oõ]es?\s+e\s+discuss[oõ]es?))\b/i;
 
@@ -59,7 +69,9 @@ export function detectarPedidoExplicitoConsulta(texto) {
   const coaNomeado = coaM ? String(coaM[1]).trim() : null;
 
   const temDec = RE_DECISAO.test(raw);
-  const temDisc = RE_DISCUSSAO.test(raw);
+  const temHfc =
+    RE_HISTORICO_FISICO.test(raw) && RE_CONTEXTO_CONSULTA_HFC.test(raw);
+  const temDisc = RE_DISCUSSAO.test(raw) || temHfc;
   const temAmbos = RE_AMBOS.test(raw);
 
   if (!temDec && !temDisc && !temAmbos) {

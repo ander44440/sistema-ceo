@@ -78,7 +78,7 @@
     "test:continuidade-gate": "node --test src/continuidadeGate/dominio.test.js src/continuidadeGate/reconhecerDecisao.test.js src/continuidadeGate/contexto.test.js src/continuidadeGate/integracaoConversa.test.js src/continuidadeGate/e5.test.js src/continuidadeGate/fronteiras.test.js src/continuidadeGate/e7.test.js",
     "test:mep-ceo": "node --test src/mepCeo/mepCeo.test.js",
     "test:mep-ceo-persistencia": "node --test src/mepCeo/mepCeo.persistencia.test.js",
-    "test:consulta-registados": "node --test --test-concurrency=1 src/consultaRegistados/pedidoExplicito.test.js src/consultaRegistados/orquestrarConsulta.test.js src/consultaRegistados/integracao.consulta.test.js",
+    "test:consulta-registados": "node --test --test-concurrency=1 src/consultaRegistados/pedidoExplicito.test.js src/consultaRegistados/orquestrarConsulta.test.js src/consultaRegistados/integracao.consulta.test.js src/consultaRegistados/imp089.fatia1.test.js",
     "verify:leg-mg2-001": "node scripts/verificar-leg-mg2-001-ordem-expansoes.mjs"
   },
   "devDependencies": {

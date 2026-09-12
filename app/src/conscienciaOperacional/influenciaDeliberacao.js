@@ -5,6 +5,7 @@
  */
 
 import { detectarPedidoDecisaoExplicita } from "../classificadorIntencao/pedidoDecisaoExplicita.js";
+import { detectarPedidoInfoGathering } from "../classificadorIntencao/pedidoInfoGathering.js";
 import { reconhecerDecisao } from "../continuidadeGate/reconhecerDecisao.js";
 
 /**
@@ -22,9 +23,14 @@ export const AVISO_GATE_INFORMATIVO =
  * Pedido deliberativo cujo objecto não é o próprio Gate (ARQ-019 léxico intacto).
  * Reutiliza `reconhecerDecisao` — sem detector paralelo.
  * @param {string} [instrucao]
+ * @param {{ pedidoDecisaoExplicita?: boolean }} [opts]
  */
-export function ehPedidoDecisaoForaDoGate(instrucao) {
-  if (!detectarPedidoDecisaoExplicita(instrucao)) return false;
+export function ehPedidoDecisaoForaDoGate(instrucao, opts = {}) {
+  const pd =
+    opts.pedidoDecisaoExplicita != null
+      ? opts.pedidoDecisaoExplicita === true
+      : detectarPedidoDecisaoExplicita(instrucao);
+  if (!pd) return false;
   return reconhecerDecisao(instrucao).reconhecida !== true;
 }
 
@@ -221,15 +227,16 @@ function sufixoPrioridades(instrucao) {
  *
  * @param {LastroConscienciaNucleo|null|undefined} lastro
  * @param {string} [instrucao]
+ * @param {{ pedidoDecisaoExplicita?: boolean }} [opts]
  * @returns {string|null} null se sem lastro relevante
  */
-export function comporProsaLastro(lastro, instrucao = "") {
+export function comporProsaLastro(lastro, instrucao = "", opts = {}) {
   if (!lastro || lastro.temContextoRelevante !== true) return null;
 
   const prioridade = lastro.fontePrioritaria?.id;
   const gates = lastro.contagens?.gatesPendentes || 0;
   const running = lastro.contagens?.jobsEmExecucao || 0;
-  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao);
+  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao, opts);
 
   // P1 — Gate pendente (demo E5): absoluto só quando o objecto não é fecho deliberativo
   // independente do Gate. Com pedidoDecisao ≠ Gate: não substituir (aviso no reflexo).
@@ -242,7 +249,11 @@ export function comporProsaLastro(lastro, instrucao = "") {
 
   // Teste 3 + P2: continuidade / «execução em andamento» — só fora de pedido de decisão.
   // Pedido explícito de decisão: não sobrepor deliberação com prosa operacional F2.
-  if (!detectarPedidoDecisaoExplicita(instrucao)) {
+  const pedidoDecisao =
+    opts.pedidoDecisaoExplicita != null
+      ? opts.pedidoDecisaoExplicita === true
+      : detectarPedidoDecisaoExplicita(instrucao);
+  if (!pedidoDecisao) {
     const resultadoMissao = extrairResultadoReconciliadoDoLastro(lastro);
     if (resultadoMissao && (prioridade === "F2" || running > 0)) {
       return comporProsaResultadoMissao(resultadoMissao);
@@ -276,11 +287,11 @@ export function comporProsaLastro(lastro, instrucao = "") {
  * @param {LastroConscienciaNucleo} lastro
  * @param {string} [instrucao]
  */
-export function schemaHintConsciencia(lastro, instrucao = "") {
-  const prosa = comporProsaLastro(lastro, instrucao) || "";
+export function schemaHintConsciencia(lastro, instrucao = "", opts = {}) {
+  const prosa = comporProsaLastro(lastro, instrucao, opts) || "";
   const gates = lastro.contagens?.gatesPendentes || 0;
   const resultadoMissao = extrairResultadoReconciliadoDoLastro(lastro);
-  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao);
+  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao, opts);
   const temGate = gates > 0 || lastro.fontePrioritaria?.id === "F3";
   const prioridade =
     temGate && deliberacaoForaDoGate
@@ -309,16 +320,19 @@ export function schemaHintConsciencia(lastro, instrucao = "") {
  * Garante que a resposta ao utilizador reflecte o Estado Executivo (E4/E5).
  * Com lastro Gate/Job: prosa canónica natural (não dump).
  * Sem lastro → mensagem **idêntica** (E5-CA3 / Demo 3).
+ * Info-gathering: nunca substitui a prosa de lacunas (Jobs/estado = contexto, não resposta).
  *
  * @param {string} mensagem
  * @param {LastroConscienciaNucleo|null|undefined} lastro
  * @param {string} [instrucao]
+ * @param {{ pedidoInfoGathering?: boolean }} [opts]
  * @returns {{ mensagem: string, aplicada: boolean, motivo: string }}
  */
 export function garantirReflexoEstadoExecutivo(
   mensagem,
   lastro,
-  instrucao = ""
+  instrucao = "",
+  opts = {}
 ) {
   const original = String(mensagem ?? "");
   if (!lastro || lastro.temContextoRelevante !== true) {
@@ -329,10 +343,30 @@ export function garantirReflexoEstadoExecutivo(
     };
   }
 
+  // IG: preservar prosa deliberativa de lacunas — reflexo F2/F3 não substitui
+  const pedidoInfoGathering =
+    opts.pedidoInfoGathering === true
+      ? true
+      : opts.pedidoInfoGathering === false
+        ? false
+        : detectarPedidoInfoGathering(instrucao);
+  if (pedidoInfoGathering) {
+    return {
+      mensagem: deduplicarFactoTopicoActivo(original),
+      aplicada: false,
+      motivo: "info_gathering_preservado"
+    };
+  }
+
   const gates = lastro.contagens?.gatesPendentes || 0;
   const running = lastro.contagens?.jobsEmExecucao || 0;
-  const pedidoDecisao = detectarPedidoDecisaoExplicita(instrucao);
-  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao);
+  const pedidoDecisao =
+    opts.pedidoDecisaoExplicita != null
+      ? opts.pedidoDecisaoExplicita === true
+      : detectarPedidoDecisaoExplicita(instrucao);
+  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao, {
+    pedidoDecisaoExplicita: pedidoDecisao
+  });
   const prioridadeGateBruta =
     lastro.fontePrioritaria?.id === "F3" || gates > 0;
   // Política híbrida: Gate não substitui deliberação cujo objecto ≠ Gate.
@@ -340,7 +374,9 @@ export function garantirReflexoEstadoExecutivo(
   // Pedido de decisão: não tratar F2 como prioridade que substitui a deliberação (P2/E5).
   const prioridadeJob = !prioridadeGateBruta && running > 0 && !pedidoDecisao;
 
-  const prosa = comporProsaLastro(lastro, instrucao);
+  const prosa = comporProsaLastro(lastro, instrucao, {
+    pedidoDecisaoExplicita: pedidoDecisao
+  });
 
   // Deliberação preservada + aviso informativo do Gate (não é nova decisão).
   if (deliberacaoForaDoGate && prioridadeGateBruta) {
@@ -449,10 +485,10 @@ export function garantirReflexoEstadoExecutivo(
  * @param {LastroConscienciaNucleo} lastro
  * @param {string} [instrucao]
  */
-export function blocoContextoEntradaMre(lastro, instrucao = "") {
-  const prosa = comporProsaLastro(lastro, instrucao);
+export function blocoContextoEntradaMre(lastro, instrucao = "", opts = {}) {
+  const prosa = comporProsaLastro(lastro, instrucao, opts);
   const factos = (lastro.factosOficiais || []).slice(0, 6).join(" | ");
-  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao);
+  const deliberacaoForaDoGate = ehPedidoDecisaoForaDoGate(instrucao, opts);
   const notaGate = deliberacaoForaDoGate
     ? "Gate pendente: informar bloqueio de despacho — não substituir a deliberação pedida. "
     : "Gate pendente tem prioridade absoluta. ";

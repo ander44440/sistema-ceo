@@ -172,7 +172,12 @@ export function ehDelegacaoFicticiaAnalise(estado, recomendacao) {
 /**
  * CONSULTA situacional / precedência tipoTurno=consulta → RESPONDER (não executar).
  * @param {string} [texto]
- * @param {{ consultaNaoEAcao?: boolean, tipoTurno?: string, precedenciaTurno?: { tipoTurno?: string } }} [ctx]
+ * @param {{
+ *   consultaNaoEAcao?: boolean,
+ *   tipoTurno?: string,
+ *   precedenciaTurno?: { tipoTurno?: string },
+ *   situacional?: boolean
+ * }} [ctx]
  */
 export function detectarPedidoConsultaResposta(texto, ctx = {}) {
   if (ctx.consultaNaoEAcao === true) return true;
@@ -181,6 +186,8 @@ export function detectarPedidoConsultaResposta(texto, ctx = {}) {
     ctx.precedenciaTurno?.tipoTurno ||
     null;
   if (tipo === "consulta") return true;
+  // Fatia 1: situacional já produzido em derivacoes — sem re-chamar o detector
+  if (ctx.situacional != null) return ctx.situacional === true;
   return ehPedidoSituacionalTrabalho(normalizarTexto(texto));
 }
 

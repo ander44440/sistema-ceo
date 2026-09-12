@@ -107,6 +107,28 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
     ]
       .filter(Boolean)
       .join("\n\n");
+  } else if (preferencias.pedidoInfoGathering === true) {
+    // Info-gathering: lista de lacunas/informações — sem Aprovo/Delego/Decisão:
+    const corpoRec = String(recomendacao || "")
+      .replace(/^(Decisão(\s+sob\s+conflito)?\s*:\s*)/i, "")
+      .trim();
+    const listaLacunas =
+      lacunas.length > 0
+        ? lacunas.map((l) => `- ${String(l).replace(/\?$/, "")}`).join("\n")
+        : null;
+    textoChat = [
+      corpoRec
+        ? corpoRec.endsWith(".")
+          ? corpoRec
+          : `${corpoRec}.`
+        : "Antes de decidir, estas informações ainda faltam:",
+      listaLacunas,
+      justificativa
+        ? `Porquê: ${encurtar(justificativa, preferencias.brevidade ? 180 : 320)}`
+        : null
+    ]
+      .filter(Boolean)
+      .join("\n\n");
   } else {
     textoChat = [
       `Sobre: ${objetivo}.`,
@@ -155,6 +177,16 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
     } else if (canal === "centro_situacao") {
       texto = textoChat.replace(/\n\n/g, " ");
       destaquesOut = [`Consulta: estado do trabalho`];
+    } else {
+      guião = null;
+    }
+  } else if (preferencias.pedidoInfoGathering === true) {
+    if (canal === "voz") {
+      texto = textoChat.replace(/\n\n/g, " ");
+      guião = texto;
+    } else if (canal === "centro_situacao") {
+      texto = textoChat.replace(/\n\n/g, " ");
+      destaquesOut = [`Lacunas: informações a obter`];
     } else {
       guião = null;
     }

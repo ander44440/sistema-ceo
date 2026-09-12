@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { exigirObjetivoCanonico } from '../../../app/src/motorExecucao/objetivoJob.js';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -182,6 +183,10 @@ export function criarFilaExecucao(rootDir) {
   }
 
   function publicar(entrada) {
+    const gate = exigirObjetivoCanonico(entrada);
+    if (!gate.ok) {
+      throw new Error(gate.mensagem);
+    }
     const id = proximoId();
     const agora = new Date().toISOString();
     const job = {
@@ -191,6 +196,7 @@ export function criarFilaExecucao(rootDir) {
       tipo: entrada.tipo || 'execucao_tecnica',
       titulo: String(entrada.titulo || '').trim() || 'Job sem título',
       descricao: String(entrada.descricao || '').trim() || '',
+      objetivo: gate.objetivo,
       prioridade: entrada.prioridade || 'normal',
       estado: 'pending',
       criadoEm: agora,
@@ -208,6 +214,9 @@ export function criarFilaExecucao(rootDir) {
         },
       ],
       ...(entrada.parecerId ? { parecerId: String(entrada.parecerId) } : {}),
+      ...(entrada.parentJobId
+        ? { parentJobId: String(entrada.parentJobId) }
+        : {}),
     };
     escreverJob(job);
     atualizarProximoMd(listarPorEstado('pending'));

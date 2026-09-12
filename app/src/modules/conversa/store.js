@@ -13,6 +13,7 @@ import {
   reiniciarEnvelopeSessaoParaTestes,
   invalidarChaveEnvelopeEmMemoria
 } from "../../classificadorIntencao/envelopeSessaoCoa.js";
+import { tentarRegistarMensagemHfc } from "../../historicoFisicoConversas/emissor.js";
 
 /** @typedef {"ceo" | "usuario" | "sistema"} PapelMensagem */
 
@@ -84,6 +85,26 @@ function persistirBucketActivo() {
 }
 
 /**
+ * IMP-087 / ARQ-087 — sombra HFC após durabilidade F5-C3.
+ * Fail-soft: nunca reverte nem bloqueia o transcript.
+ * @param {Mensagem | null | undefined} mensagem
+ */
+function espelharHfcSeDuravel(mensagem) {
+  try {
+    if (!mensagem || typeof mensagem !== "object") return;
+    const estado = mensagem.estado || "pronta";
+    if (estado === "pendente") return;
+    if (estado !== "pronta" && estado !== "erro") return;
+    tentarRegistarMensagemHfc({
+      mensagem,
+      coaId: chaveActiva()
+    });
+  } catch {
+    /* fail-soft HFC */
+  }
+}
+
+/**
  * Activa o bucket conversacional do COA.
  * Não copia histórico de outro COA. Hidrata do disco se o bucket ainda não
  * estiver em RAM (ex.: após refresh).
@@ -130,6 +151,7 @@ export function listarMensagens() {
 export function acrescentarMensagem(mensagem) {
   bucketActivo().push(mensagem);
   persistirBucketActivo();
+  espelharHfcSeDuravel(mensagem);
   return mensagem;
 }
 
@@ -140,6 +162,7 @@ export function atualizarMensagem(id, patch) {
   if (idx < 0) return null;
   historico[idx] = { ...historico[idx], ...patch };
   persistirBucketActivo();
+  espelharHfcSeDuravel(historico[idx]);
   return historico[idx];
 }
 

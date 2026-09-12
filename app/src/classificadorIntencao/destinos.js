@@ -380,9 +380,32 @@ export async function executarDestinoClarificacao(ctx) {
   // Polaridade P0: proibição / análise-sem-autorização não forçam motor_execucao.
   const tClar = normalizarTexto(ctx.texto);
   const autorizaCriarJobClar = ehAutorizacaoExplicitaCriarJob(tClar);
+  /** @type {{ objectoTurno?: string, pedidoDecisaoExplicita?: boolean, pedidoAnaliseDeliberativa?: boolean, calcObjectoDoTurno?: Function, detectarPedidoDecisaoExplicita?: Function }} */
+  const optsSinaisClar = {};
+  const objectoClar = ctx.objectoTurno ?? ctx.deps?.objectoTurno;
+  const pdClar = ctx.pedidoDecisaoExplicita ?? ctx.deps?.pedidoDecisaoExplicita;
+  const analiseClar =
+    ctx.pedidoAnaliseDeliberativa ?? ctx.deps?.pedidoAnaliseDeliberativa;
+  if (objectoClar != null) optsSinaisClar.objectoTurno = objectoClar;
+  if (pdClar != null) optsSinaisClar.pedidoDecisaoExplicita = pdClar === true;
+  if (analiseClar != null) {
+    optsSinaisClar.pedidoAnaliseDeliberativa = analiseClar === true;
+  }
+  if (typeof ctx.deps?.calcObjectoDoTurno === "function") {
+    optsSinaisClar.calcObjectoDoTurno = ctx.deps.calcObjectoDoTurno;
+  }
+  if (typeof ctx.deps?.detectarPedidoDecisaoExplicita === "function") {
+    optsSinaisClar.detectarPedidoDecisaoExplicita =
+      ctx.deps.detectarPedidoDecisaoExplicita;
+  }
+  const fioClar = ctx.fioCoa ?? ctx.deps?.fioCoa;
+  const ehAnaliseClar =
+    optsSinaisClar.pedidoAnaliseDeliberativa === true
+      ? true
+      : ehPedidoAnaliseOuRecomendacao(tClar, fioClar, optsSinaisClar);
   const recusaMotorPorPolaridade =
     (!autorizaCriarJobClar && ehProibicaoExecucaoExplicita(tClar)) ||
-    (ehPedidoAnaliseOuRecomendacao(tClar) &&
+    (ehAnaliseClar &&
       !ehComandoExecucaoExplicito(tClar) &&
       !autorizaCriarJobClar);
   if (

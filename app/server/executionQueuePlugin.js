@@ -58,14 +58,22 @@ export function executionQueuePlugin() {
 
           if (req.method === "POST" && req.url.startsWith("/api/ceo/queue/jobs")) {
             const body = await lerJson(req);
-            if (!body || (!body.titulo && !body.descricao)) {
+            if (!body || (!body.titulo && !body.descricao && !body.objetivo)) {
               return enviarJson(res, 400, {
                 ok: false,
                 mensagem: "titulo ou descricao é obrigatório."
               });
             }
-            const job = fila.publicar(body);
-            return enviarJson(res, 201, { ok: true, job });
+            try {
+              const job = fila.publicar(body);
+              return enviarJson(res, 201, { ok: true, job });
+            } catch (err) {
+              const msg = err && err.message ? String(err.message) : "Falha ao publicar.";
+              if (msg.startsWith("objetivo_ausente")) {
+                return enviarJson(res, 400, { ok: false, mensagem: msg });
+              }
+              throw err;
+            }
           }
 
           if (req.method === "PATCH" && req.url.startsWith("/api/ceo/queue/jobs/")) {

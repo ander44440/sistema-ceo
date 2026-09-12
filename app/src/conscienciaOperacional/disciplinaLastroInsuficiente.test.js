@@ -195,5 +195,108 @@ test("integração nucleo: call site único no path MRE (antes do reflexo)", () 
   assert.ok(iDisc > 0);
   assert.match(src, /omitido_apos_disciplina_lastro/);
   assert.match(src, /disciplinaLastro/);
+  assert.match(src, /pedidoInfoGathering/);
   void iRefl;
+});
+
+const ORDEM_74 =
+  "CEO, antes de falar com o cliente, quais informações você gostaria de obter " +
+  "para decidir se vale a pena negociar preço, defender o valor atual ou aceitar " +
+  "o risco de perder esse cliente?";
+
+const PROSA_IG =
+  "Antes de falar com o cliente, obter: (1) margem contribuída; " +
+  "(2) elasticidade de preço; (3) prazo efectivo da oferta concorrente.";
+
+test("D25: IG + solicitar_dados + lacunas nomeadas → disciplina.aplicada false; prosa intacta", () => {
+  const out = garantirDisciplinaLastroInsuficiente(PROSA_IG, {
+    factosOficiais: [],
+    parecer: {
+      lacunas: ["margem contribuída", "elasticidade de preço"],
+      decisaoExecutiva: { estado: "solicitar_dados" }
+    },
+    pedidoConsulta: false,
+    pedidoInfoGathering: true,
+    instrucao: ORDEM_74
+  });
+  assert.equal(out.aplicada, false);
+  assert.equal(out.motivo, "info_gathering_fora_de_escopo");
+  assert.equal(out.mensagem, PROSA_IG);
+  assert.doesNotMatch(out.mensagem, new RegExp(PREFIXO_DECLARACAO_LASTRO_INSUFICIENTE));
+});
+
+test("D25: caso real ordem 74/76 — IG via instrucao; sem wipe", () => {
+  const out = garantirDisciplinaLastroInsuficiente(PROSA_IG, {
+    factosOficiais: [],
+    parecer: {
+      lacunas: ["Informação essencial não especificada"],
+      decisaoExecutiva: { estado: "solicitar_dados" }
+    },
+    pedidoConsulta: false,
+    instrucao: ORDEM_74
+  });
+  assert.equal(out.aplicada, false);
+  assert.equal(out.mensagem, PROSA_IG);
+  assert.doesNotMatch(out.mensagem, /^Não tenho lastro suficiente/i);
+});
+
+test("D25: IG + só LACUNA_GENERICA_ESSENCIAL → não wipe", () => {
+  const out = garantirDisciplinaLastroInsuficiente(PROSA_IG, {
+    factosOficiais: [],
+    parecer: {
+      lacunas: ["Informação essencial não especificada"],
+      decisaoExecutiva: { estado: "solicitar_dados" }
+    },
+    pedidoInfoGathering: true
+  });
+  assert.equal(out.aplicada, false);
+  assert.equal(out.mensagem, PROSA_IG);
+});
+
+test("D25: CONSULTA continua pass-through", () => {
+  const prosa = "Snapshot: etapa actual = lacuna.";
+  const out = garantirDisciplinaLastroInsuficiente(prosa, {
+    factosOficiais: ["LASTRO INSUFICIENTE: x"],
+    parecer: {
+      lacunas: ["x"],
+      decisaoExecutiva: { estado: "solicitar_dados" }
+    },
+    pedidoConsulta: true
+  });
+  assert.equal(out.aplicada, false);
+  assert.equal(out.motivo, "consulta_fora_de_escopo");
+  assert.equal(out.mensagem, prosa);
+});
+
+test("D25: fora de IG + LASTRO INSUFICIENTE → disciplina continua", () => {
+  const out = garantirDisciplinaLastroInsuficiente(PROSA_INVENTADA, {
+    factosOficiais: [
+      "LASTRO INSUFICIENTE: responder declarando as lacunas — proibido inventar."
+    ],
+    parecer: {
+      lacunas: ["orçamento Q3"],
+      decisaoExecutiva: { estado: "aprovar" }
+    },
+    pedidoConsulta: false,
+    pedidoInfoGathering: false,
+    instrucao: "Aprove o outdoor agora."
+  });
+  assert.equal(out.aplicada, true);
+  assert.equal(out.motivo, "flag_lastro_insuficiente");
+  assert.match(out.mensagem, new RegExp(PREFIXO_DECLARACAO_LASTRO_INSUFICIENTE));
+  assert.doesNotMatch(out.mensagem, /outdoor do bairro Centro/i);
+});
+
+test("D25: fora de IG + solicitar_dados → disciplina continua", () => {
+  const out = garantirDisciplinaLastroInsuficiente(PROSA_INVENTADA, {
+    factosOficiais: [],
+    parecer: {
+      lacunas: ["critério de pagamento"],
+      decisaoExecutiva: { estado: "solicitar_dados" }
+    },
+    pedidoInfoGathering: false,
+    instrucao: "Qual a prioridade da Sprint 2?"
+  });
+  assert.equal(out.aplicada, true);
+  assert.equal(out.motivo, "parecer_solicitar_dados");
 });
