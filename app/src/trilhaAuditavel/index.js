@@ -6,6 +6,8 @@ import {
   TIPO_JOB_TRANSICAO,
   TIPO_GATE_DECISAO_TERMINAL,
   TIPO_AD_FECHO_SOB_DELEGACAO,
+  TIPO_LFC_MUTACAO,
+  TIPO_CG_AUTORIZACAO,
   construirEventoJobTransicao,
   construirEventoGateDecisaoTerminal,
   construirEventoAdFechoSobDelegacao,
@@ -24,7 +26,10 @@ export {
   TIPO_JOB_TRANSICAO,
   TIPO_GATE_DECISAO_TERMINAL,
   TIPO_AD_FECHO_SOB_DELEGACAO,
+  TIPO_LFC_MUTACAO,
+  TIPO_CG_AUTORIZACAO,
   TIPOS_V1,
+  TIPOS_ADMITIDOS,
   CHAVES_PAYLOAD_PROIBIDAS,
   calcularConteudoHash,
   calcularConteudoHashCampos,
@@ -127,6 +132,26 @@ function validarRefsObrigatorias(evento) {
         ok: false,
         codigo: "moRegistroId_ausente",
         mensagem: "refs.moRegistroId é obrigatório."
+      };
+    }
+    return { ok: true };
+  }
+  if (tipo === TIPO_LFC_MUTACAO) {
+    if (!texto(refs.coaId) || !texto(refs.casoId) || !texto(refs.operacao)) {
+      return {
+        ok: false,
+        codigo: "refs_lfc_incompletas",
+        mensagem: "refs.coaId, refs.casoId e refs.operacao são obrigatórios para lfc.mutacao."
+      };
+    }
+    return { ok: true };
+  }
+  if (tipo === TIPO_CG_AUTORIZACAO) {
+    if (!texto(refs.actoChamada)) {
+      return {
+        ok: false,
+        codigo: "refs_cg_incompletas",
+        mensagem: "refs.actoChamada é obrigatório para cg.autorizacao."
       };
     }
     return { ok: true };

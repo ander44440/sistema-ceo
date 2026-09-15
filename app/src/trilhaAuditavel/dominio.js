@@ -7,11 +7,22 @@ export const SCHEMA_VERSAO = 1;
 export const TIPO_JOB_TRANSICAO = "job.transicao";
 export const TIPO_GATE_DECISAO_TERMINAL = "gate.decisao_terminal";
 export const TIPO_AD_FECHO_SOB_DELEGACAO = "ad.fecho_sob_delegacao";
+/** Extensão IMP-092.1 / ARQ-092 — mutações do Lastro Factual do Caso. */
+export const TIPO_LFC_MUTACAO = "lfc.mutacao";
+/** Extensão IMP-093 M1 / ARQ-093 — Context Governor. */
+export const TIPO_CG_AUTORIZACAO = "cg.autorizacao";
 
 export const TIPOS_V1 = Object.freeze([
   TIPO_JOB_TRANSICAO,
   TIPO_GATE_DECISAO_TERMINAL,
   TIPO_AD_FECHO_SOB_DELEGACAO
+]);
+
+/** Tipos admitidos no append (V1 + LFC + CG). */
+export const TIPOS_ADMITIDOS = Object.freeze([
+  ...TIPOS_V1,
+  TIPO_LFC_MUTACAO,
+  TIPO_CG_AUTORIZACAO
 ]);
 
 export const RESULTADOS = Object.freeze(["ok", "falha", "info"]);

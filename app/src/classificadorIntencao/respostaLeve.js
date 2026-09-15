@@ -5,6 +5,15 @@
 
 import { deliberarComLlm, obterStatusLlm } from "../executiveEngine/llmCliente.js";
 import { avaliarComplexidadeDecisao } from "../executiveEngine/complexidadeDecisao.js";
+import {
+  FONTES_CG,
+  USOS_CG
+} from "../contextGovernor/contratos.js";
+import {
+  criarFragmento,
+  montarCgMetaPromptDirecto
+} from "../contextGovernor/etiquetarPipeline.js";
+import { ehBloqueioCg } from "../contextGovernor/gateLlm.js";
 
 const STUB_PROIBIDO =
   /resposta imediata\s*\(C1\)|Que detalhe precisa\?/i;
@@ -133,11 +142,67 @@ export async function gerarRespostaConhecimentoGeral({
       classe: "conhecimento_geral",
       destino: "resposta_leve"
     });
+    const fragmentos = messages.map((m, i) => {
+      if (i === 0 && m.role === "system") {
+        return criarFragmento({
+          id: "c1-system",
+          papel: "system",
+          texto: m.content,
+          fonte: FONTES_CG.NAO_DECLARADA,
+          uso: USOS_CG.MANDATO_PROMPT
+        });
+      }
+      if (m.role === "user" && String(m.content).trim() === String(texto || "").trim()) {
+        return criarFragmento({
+          id: `c1-turno-${i}`,
+          papel: "user",
+          texto: m.content,
+          fonte: FONTES_CG.TURNO_ATUAL,
+          uso: USOS_CG.MANDATO_PROMPT
+        });
+      }
+      return criarFragmento({
+        id: `c1-${i}`,
+        papel: m.role,
+        texto: m.content,
+        fonte: FONTES_CG.NAO_ETIQUETADO,
+        uso: USOS_CG.CONTINUIDADE
+      });
+    });
+    const cgMeta = {
+      ...montarCgMetaPromptDirecto({
+        messages,
+        instrucao: texto,
+        actoChamada: "conhecimento_geral",
+        dicMeta: { injectado: false },
+        temBriefing: false
+      }),
+      fontesLastroAutorizadas: [FONTES_CG.TURNO_ATUAL],
+      conteudoCandidato: { messages, fragmentos }
+    };
     const saida = await deliberar({
       messages,
       temperature: 0.5,
-      max_tokens: cx.maxTokens || 450
+      max_tokens: cx.maxTokens || 450,
+      cgMeta
     });
+    if (ehBloqueioCg(saida)) {
+      return {
+        ok: true,
+        mensagem:
+          saida.mensagem ||
+          "Não posso responder com o contexto actual — governança bloqueou o envio.",
+        modo: "cg_bloqueado",
+        dados: {
+          gerador: "cg",
+          mreInvocado: false,
+          motorAcionado: false,
+          complexidadeDecisao: cx,
+          cgBloqueio: saida.cg || null,
+          resultadoCg: saida.resultadoCg || null
+        }
+      };
+    }
     const mensagem = String(saida?.texto || "").trim();
     if (!mensagem || ehStubRespostaLeveProibido(mensagem)) {
       return {

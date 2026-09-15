@@ -1,8 +1,12 @@
 /**
  * Cliente do motor de linguagem — apenas via /api/ceo/* (chave no servidor).
+ * IMP-093 M4: todo envio oficial passa pelo CG-GATE (ENFORCE padrão).
+ * `transportarDeliberarHttp` é o único fetch a `/api/ceo/deliberar` em app/src —
+ * invocado somente através de `atravessarGateLlm` / `deliberarComLlm`.
  */
 
 import { ceoApiUrl } from "../ceoApiBase.js";
+import { atravessarGateLlm } from "../contextGovernor/gateLlm.js";
 
 let cacheStatus = null;
 let cacheEm = 0;
@@ -24,16 +28,17 @@ export async function obterStatusLlm() {
 }
 
 /**
- * @param {{ messages: Array<{role:string,content:string}>, temperature?: number }} pedido
+ * Transporte HTTP bruto (sem CG). Usado pelo gate e testes de igualdade de body.
+ * @param {{ messages: Array<{role:string,content:string}>, temperature?: number, max_tokens?: number }} body
  */
-export async function deliberarComLlm(pedido) {
+export async function transportarDeliberarHttp(body) {
   const resp = await fetch(ceoApiUrl("/api/ceo/deliberar"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      messages: pedido.messages,
-      temperature: pedido.temperature ?? 0.4,
-      max_tokens: pedido.max_tokens ?? 900
+      messages: body.messages,
+      temperature: body.temperature ?? 0.4,
+      max_tokens: body.max_tokens ?? 900
     })
   });
 
@@ -53,4 +58,25 @@ export async function deliberarComLlm(pedido) {
     uso: data.uso,
     origem: "llm"
   };
+}
+
+/**
+ * @param {{
+ *   messages: Array<{role:string,content:string}>,
+ *   temperature?: number,
+ *   max_tokens?: number,
+ *   cgMeta?: object,
+ *   actoChamada?: string
+ * }} pedido
+ * @param {object} [opts] — { metaCg?, transportar? } para testes
+ */
+export async function deliberarComLlm(pedido, opts = {}) {
+  const transportar =
+    typeof opts.transportar === "function"
+      ? opts.transportar
+      : transportarDeliberarHttp;
+
+  return atravessarGateLlm(pedido, transportar, {
+    metaCg: opts.metaCg
+  });
 }
