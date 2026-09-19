@@ -6,6 +6,10 @@
  */
 
 import { detectarPedidoInfoGathering } from "../classificadorIntencao/pedidoInfoGathering.js";
+import {
+  soLacunasInstitucionaisCoaPainel,
+  temFactosMateriaisDoUtilizador
+} from "../mre/ncs/politicas.js";
 
 /** Prefixo estável para idempotência / testes. */
 export const PREFIXO_DECLARACAO_LASTRO_INSUFICIENTE =
@@ -131,6 +135,19 @@ export function detectarInsuficienciaLastroTurno(opts = {}) {
         lacunas: Object.freeze(lacunasParecer)
       };
     }
+
+    // C3: factos do turno + só lacunas COA/Painel ≠ wipe por isolamento institucional
+    if (
+      temFactosMateriaisDoUtilizador(factos) &&
+      soLacunasInstitucionaisCoaPainel(lacunasParecer)
+    ) {
+      return {
+        ativo: false,
+        motivo: "factos_turno_sem_lacuna_material_nomeada",
+        lacunas: Object.freeze([])
+      };
+    }
+
     return {
       ativo: true,
       motivo: "parecer_solicitar_dados",

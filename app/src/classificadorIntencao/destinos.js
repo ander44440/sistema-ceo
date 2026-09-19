@@ -11,6 +11,7 @@ import {
 import { gerarRespostaConhecimentoGeral } from "./respostaLeve.js";
 import {
   devePreservarMissao,
+  ehMudancaContextoComObjectoExplicito,
   montarConfirmacaoNatural,
   sanitizarProsaUtilizador
 } from "./preservarMissao.js";
@@ -446,6 +447,46 @@ export async function executarDestinoClarificacao(ctx) {
         estadoOperacional: estadoOp,
         rotaOrigem: "clarificacao",
         rota: "motor_execucao"
+      }
+    };
+  }
+
+  // C2: novo_contexto + objecto explícito → trabalhar o objecto (sem «dúvida geral»;
+  // sem restaurar histórico da missão abandonada).
+  const vcaClar = ctx.validacaoContexto || ctx.deps?.validacaoContexto;
+  if (ehMudancaContextoComObjectoExplicito(ctx.texto, vcaClar)) {
+    const intencaoNovo = {
+      ...ctx.intencao,
+      id:
+        ctx.intencao?.id === "deliberar" ||
+        ctx.intencao?.id === "deliberar_objetivo"
+          ? ctx.intencao.id
+          : "deliberar_objetivo",
+      capacidade: "ia",
+      precisaClarificacao: false,
+      destino: "nucleo_mre"
+    };
+    const ctxNovo = {
+      ...ctx,
+      historico: [],
+      intencao: intencaoNovo,
+      rota: {
+        ...(ctx.rota && typeof ctx.rota === "object" ? ctx.rota : {}),
+        destino: "nucleo_mre"
+      }
+    };
+    const resposta = await executarDestinoC2(ctxNovo);
+    return {
+      ...resposta,
+      dados: {
+        ...(resposta.dados && typeof resposta.dados === "object"
+          ? resposta.dados
+          : {}),
+        motorAcionado: false,
+        preservacaoMissao: false,
+        novoContextoObjectoExplicito: true,
+        rotaOrigem: "clarificacao",
+        rota: "nucleo_mre"
       }
     };
   }

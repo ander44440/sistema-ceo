@@ -202,10 +202,18 @@ export function obterFioTranscriptCoa(entrada = {}) {
 
 /**
  * Destino / MRE: o fio deliberativo sobrevive a autorizaLastroCsc=false.
- * @param {{ autorizaLastroCsc?: boolean, historicoDeliberativo?: object[] }} entrada
+ * C2: `novo_contexto` não reutiliza o histórico da missão abandonada.
+ * @param {{
+ *   autorizaLastroCsc?: boolean,
+ *   historicoDeliberativo?: object[],
+ *   veredictoVca?: string
+ * }} entrada
  */
 export function historicoDeliberativoParaDestino(entrada = {}) {
   void entrada.autorizaLastroCsc;
+  if (entrada.veredictoVca === "novo_contexto") {
+    return [];
+  }
   return Array.isArray(entrada.historicoDeliberativo)
     ? entrada.historicoDeliberativo
     : [];

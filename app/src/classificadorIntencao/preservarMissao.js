@@ -82,10 +82,54 @@ export function classeCandidataEMissao(classificacao) {
 }
 
 /**
+ * C2 — mudança explícita de contexto com objecto nominal no enunciado.
+ * Não restaura missão abandonada; evita clarificação «dúvida geral».
+ * @param {string} [texto]
+ * @param {{ veredicto?: string }|null|undefined} [validacaoContexto]
+ * @returns {boolean}
+ */
+export function ehMudancaContextoComObjectoExplicito(texto, validacaoContexto) {
+  const raw = String(texto || "").trim();
+  if (!raw) return false;
+  const t = raw
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
+  const marcador =
+    validacaoContexto?.veredicto === "novo_contexto" ||
+    /\b(mude|mudar|muda|mudando)\s+(o\s+)?contexto\b/.test(t) ||
+    /\b(mudando|mudar)\s+de\s+assunto\b/.test(t) ||
+    /\besque[cç]a\b/.test(t) ||
+    /\bnovo\s+(assunto|contexto|fio|tema)\b/.test(t) ||
+    /\breoriente\b/.test(t);
+  if (!marcador) return false;
+  if (/\bagora\s+(o\s+)?assunto\s+[ée]\b/.test(t)) return true;
+  if (/\bexclusivamente\b/.test(t) && t.length >= 36) return true;
+  if (
+    /\b(fornecedor|prazo|norteazul|or[cç]amento|cliente|log[ií]stica|entrega)\b/.test(
+      t
+    )
+  ) {
+    return true;
+  }
+  // Objecto nominal após marcador (frase substancial)
+  return t.length >= 48;
+}
+
+/**
  * Deve preservar missão (P1 CTO-001) / operação (CTO-003) em vez de menu.
  * @param {object} ctx — ContextoDestino
  */
 export function devePreservarMissao(ctx = {}) {
+  // C2: novo fio com objecto explícito — não preservar missão abandonada
+  if (
+    ehMudancaContextoComObjectoExplicito(
+      ctx.texto,
+      ctx.validacaoContexto || ctx.deps?.validacaoContexto
+    )
+  ) {
+    return false;
+  }
   const estadoOp = extrairEstadoOperacional({
     lastroConsciencia: ctx.deps?.lastroConsciencia,
     historico: ctx.historico,

@@ -51,6 +51,57 @@ import {
   obterManifestoMg2EmCache
 } from "../camadaConhecimento/manifestoMg2.js";
 
+import {
+  blocoGovernaFactosUtilizador,
+  factosMateriaisDoTurno
+} from "./factosTurnoUtilizador.js";
+import {
+  soLacunasInstitucionaisCoaPainel,
+  temFactosMateriaisDoUtilizador
+} from "./ncs/politicas.js";
+
+/**
+ * C3: factos materiais do turno + lacunas COA/Painel →
+ * não manter solicitar_dados nem expor lacunas institucionais como bloqueio.
+ * @param {object} parecer
+ * @param {ReadonlyArray<string>|null|undefined} factosOficiais
+ */
+export function ajustarParecerSobFactosTurno(parecer, factosOficiais) {
+  if (!parecer || typeof parecer !== "object") return parecer;
+  if (!temFactosMateriaisDoUtilizador(factosOficiais)) return parecer;
+  const lacunas = Array.isArray(parecer.lacunas) ? parecer.lacunas : [];
+  const filtradas = lacunas.filter(
+    (l) => !/COA ativo ausente|Painel executivo ausente/i.test(String(l || ""))
+  );
+  const estado = parecer.decisaoExecutiva?.estado;
+  const soInst = soLacunasInstitucionaisCoaPainel(lacunas);
+  const mudouLacunas = filtradas.length !== lacunas.length;
+  if (!mudouLacunas && !(estado === "solicitar_dados" && soInst)) {
+    return parecer;
+  }
+  let de = parecer.decisaoExecutiva
+    ? { ...parecer.decisaoExecutiva }
+    : undefined;
+  let acao = parecer.acao;
+  if (estado === "solicitar_dados" && soInst) {
+    de = { ...(de || {}), estado: "monitorar" };
+    acao = {
+      ...(parecer.acao && typeof parecer.acao === "object" ? parecer.acao : {}),
+      tipo: "aguardar",
+      descricao:
+        String(parecer.acao?.descricao || "").trim() ||
+        "Análise com base nos factos explícitos do turno (sem lastro COA/Painel)."
+    };
+  }
+  return {
+    ...parecer,
+    lacunas: filtradas,
+    ...(de ? { decisaoExecutiva: de } : {}),
+    ...(acao ? { acao } : {})
+  };
+}
+
+
 /** Store de retenção da sessão (browser/Node). */
 let storeRetencaoSessao = criarStoreRetencaoMemoria();
 /** Idempotência de despacho na sessão. */
@@ -102,6 +153,16 @@ export function montarEntradaMre(ctx) {
   ];
   const projecaoBriefing = isolamento ? null : obterProjecaoBriefing(coa);
   const factosBriefing = isolamento ? [] : obterFactosBriefingProjeto(coa);
+
+  // Factos do turno/fio do utilizador: lastro material (≠ património do Acervo).
+  const factosUtilizador = factosMateriaisDoTurno(
+    texto,
+    Array.isArray(ctx.historico) ? ctx.historico : []
+  );
+  for (const f of factosUtilizador) {
+    factos.push(f);
+  }
+
 
   if (!isolamento) {
     if (mem?.proximoPasso) factos.push(`Próximo passo: ${mem.proximoPasso}`);
@@ -185,6 +246,11 @@ export function montarEntradaMre(ctx) {
   mensagem = enriquecerMensagemComMemoriaTrabalho(mensagem, lastro, {
     omitirInstrucaoOperacional: infoGatheringEntrada
   });
+
+  const blocoFactosUser = blocoGovernaFactosUtilizador(factosUtilizador);
+  if (blocoFactosUser) {
+    mensagem = `${mensagem}\n\n${blocoFactosUser}\n${factosUtilizador.join("\n")}`;
+  }
 
   // P1-3 — Manifesto canónico (diretriz; não Fonte Oficial / Acervo)
   const manifesto =
@@ -671,6 +737,16 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
         conscienciaInfluencia: reflexoFalha
       }
     };
+  }
+
+
+  // C3: factos do turno + só COA/Painel → não substituir análise por pedir lastro institucional.
+  let parecerAjustado = ajustarParecerSobFactosTurno(
+    resultado.parecer,
+    entrada.factosOficiais
+  );
+  if (parecerAjustado !== resultado.parecer) {
+    resultado.parecer = parecerAjustado;
   }
 
   const falado = gerarComunicadoExecutivo(resultado.parecer, canal, {

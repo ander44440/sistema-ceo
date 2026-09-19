@@ -2032,7 +2032,8 @@ export const executiveEngine = {
 
     const historicoParaDestino = historicoDeliberativoParaDestino({
       autorizaLastroCsc,
-      historicoDeliberativo
+      historicoDeliberativo,
+      veredictoVca: resultadoVca.veredicto
     });
 
     let respostaBruta;

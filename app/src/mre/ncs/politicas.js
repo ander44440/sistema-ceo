@@ -5,6 +5,62 @@
 
 import { ehFatoBloqueanteNomeado } from "../politicaDecisaoSobConflito.js";
 
+/** Espelha PREFIXO_FACTO_UTILIZADOR — evita ciclo politicas ↔ factosTurno. */
+const MARCA_FACTO_UTILIZADOR = "[Facto do utilizador (turno";
+
+/**
+ * Lacuna só de isolamento institucional (COA/Painel) — ≠ lacuna material do pedido.
+ * @param {string} [texto]
+ * @returns {boolean}
+ */
+export function ehLacunaInstitucionalCoaPainel(texto) {
+  const t = String(texto || "").trim();
+  if (!t) return false;
+  return (
+    /COA ativo ausente/i.test(t) ||
+    /Painel executivo ausente/i.test(t)
+  );
+}
+
+/**
+ * @param {ReadonlyArray<string>|null|undefined} lacunas
+ * @returns {boolean}
+ */
+export function soLacunasInstitucionaisCoaPainel(lacunas) {
+  const arr = Array.isArray(lacunas)
+    ? lacunas.map((l) => String(l || "").trim()).filter(Boolean)
+    : [];
+  if (!arr.length) return false;
+  return arr.every((l) => ehLacunaInstitucionalCoaPainel(l));
+}
+
+/**
+ * Factos materiais do utilizador no lastro do turno (≠ Acervo / seed).
+ * @param {ReadonlyArray<string>|null|undefined} factos
+ * @returns {boolean}
+ */
+export function temFactosMateriaisDoUtilizador(factos) {
+  if (!Array.isArray(factos)) return false;
+  return factos.some((f) => String(f || "").includes(MARCA_FACTO_UTILIZADOR));
+}
+
+/**
+ * C3: análise possível só com factos do turno — COA/Painel ausentes não bloqueiam.
+ * @param {object} entrada
+ * @param {ReadonlyArray<string>} lacunasAcc
+ * @param {object} [enquadramento]
+ * @returns {boolean}
+ */
+export function factosTurnoCobremAnaliseSemCoaPainel(
+  entrada,
+  lacunasAcc,
+  enquadramento
+) {
+  if (enquadramento?.tipoPedido === "ambiguo") return false;
+  if (!temFactosMateriaisDoUtilizador(entrada?.factosOficiais)) return false;
+  return soLacunasInstitucionaisCoaPainel(lacunasAcc);
+}
+
 /**
  * @param {object|null|undefined} pacoteNcs
  * @returns {boolean}
@@ -62,7 +118,22 @@ export function calcularShortCircuitNcs(entrada, lacunasAcc, enquadramento, paco
     return lacunasAcc.length > 0 && enquadramento?.tipoPedido === "ambiguo";
   }
 
-  // Baseline REQ-049 / comportamento pré-NCS
+  // C3: com factos materiais do turno, lacunas só de COA/Painel (isolamento)
+  // não contam para short-circuit — a análise pode seguir só com o enunciado.
+  const temFactosTurno = temFactosMateriaisDoUtilizador(entrada?.factosOficiais);
+  const lacunasParaSc = temFactosTurno
+    ? lacunasAcc.filter((l) => !ehLacunaInstitucionalCoaPainel(l))
+    : lacunasAcc;
+
+  if (temFactosTurno) {
+    // Sem lacunas materiais remanescentes: não bloquear por ausência COA/Painel.
+    if (lacunasParaSc.length === 0) return false;
+    // Ambiguidade explícita ou itens concretos (já tratados acima) — demais
+    // lacunas materiais sem COA/Painel: short-circuit só se pedido ambíguo.
+    return enquadramento?.tipoPedido === "ambiguo";
+  }
+
+  // Baseline REQ-049 / comportamento pré-NCS (sem factos do turno)
   return (
     lacunasAcc.length > 0 &&
     (enquadramento?.tipoPedido === "ambiguo" ||

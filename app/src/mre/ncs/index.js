@@ -32,7 +32,11 @@ export {
   calcularShortCircuitNcs,
   aplicarPoliticaDossierNcs,
   aplicarPoliticaDecisaoNcs,
-  comContextoNcs
+  comContextoNcs,
+  ehLacunaInstitucionalCoaPainel,
+  soLacunasInstitucionaisCoaPainel,
+  temFactosMateriaisDoUtilizador,
+  factosTurnoCobremAnaliseSemCoaPainel
 } from "./politicas.js";
 
 export {

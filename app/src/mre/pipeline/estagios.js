@@ -20,7 +20,9 @@ import { mapearTipoAcao } from "./mapeamentoAcao.js";
 import {
   aplicarPoliticaDossierNcs,
   comContextoNcs,
-  schemaHintEstagio6ComNcs
+  ehLacunaInstitucionalCoaPainel,
+  schemaHintEstagio6ComNcs,
+  temFactosMateriaisDoUtilizador
 } from "../ncs/politicas.js";
 import {
   hintEstagio6AnaliseDeliberativa,
@@ -429,7 +431,16 @@ export async function estagio6Decisao(parcial, deps) {
 
   if ((parcial.lacunas || []).length > 0 && estado !== "solicitar_dados" && deps.preferirSolicitarDados !== false) {
     // REQ-049: lacunas materiais → preferir solicitar_dados
-    if (parcial.shortCircuit || (parcial.lacunas || []).some((l) => /ausente|falt/i.test(l))) {
+    // C3: lacunas só COA/Painel + factos do turno não forçam solicitar_dados
+    const factosUsados = parcial.dossier?.factosUsados;
+    const temFactosTurno = temFactosMateriaisDoUtilizador(factosUsados);
+    const lacunaMaterialAusente = (parcial.lacunas || []).some((l) => {
+      if (temFactosTurno && ehLacunaInstitucionalCoaPainel(l)) {
+        return false;
+      }
+      return /ausente|falt/i.test(String(l || ""));
+    });
+    if (parcial.shortCircuit || lacunaMaterialAusente) {
       // Decisão sob conflito: conflito ≠ lacuna; só forçar com facto bloqueante nomeado
       if (deps.pedidoDecisaoExplicita === true) {
         const bloqueante =
@@ -525,15 +536,105 @@ export async function estagio7Acao(decisao, parcial, deps) {
 }
 
 /**
+ * C5 — reorientação explícita: handoff ao CTO + critério de pronto (ou eixo equivalente).
+ * Detecção estrita: não dispara em pedidos genéricos sem esses marcadores.
+ * @param {string} [texto]
+ * @returns {boolean}
+ */
+export function ehReorientacaoExplicitaHandoffCto(texto) {
+  const t = String(texto || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
+  if (!t) return false;
+  const marcaReorientacao =
+    /\breorient/.test(t) ||
+    /\bunic[ao]\s+tarefa\s+agora\b/.test(t) ||
+    (/\bpare\b/.test(t) && /\btarefas?\b/.test(t));
+  const handoff = /\bhandoff\b/.test(t);
+  const eixo = /\bcto\b/.test(t) || /\bcriterio\s+de\s+pronto\b/.test(t);
+  return marcaReorientacao && handoff && eixo;
+}
+
+/**
+ * C5 — falha de pipeline/enum NÃO substitui orientação explícita de handoff.
+ * @param {object} entrada
+ * @param {string} motivo
+ */
+function montarRecuperacaoOrientacaoHandoff(entrada, motivo) {
+  return {
+    diagnostico: {
+      objetivoReal: "Preparar handoff ao CTO com critério de pronto",
+      problemaNegocio: "reorientação explícita do utilizador",
+      natureza: "operacional"
+    },
+    enquadramento: {
+      tipoPedido: "execucao",
+      urgencia: "alta",
+      escopo: "Handoff ao CTO — sem deliberar outdoor"
+    },
+    dossier: {
+      resumoPainel:
+        entrada.snapshotPainel?.resumo ||
+        "Não utilizado nesta reorientação explícita",
+      factosUsados: Array.isArray(entrada.factosOficiais)
+        ? entrada.factosOficiais.slice()
+        : [],
+      fontes: ["utilizador"]
+    },
+    principiosAplicados: [
+      "Respeito absoluto ao tempo do utilizador",
+      "Ser transparente sobre limitações"
+    ],
+    analise:
+      "Reorientação aceite: a única tarefa agora é preparar o handoff ao CTO com critério de pronto. " +
+      "Não delibero o outdoor nem invento COA, Painel ou jobs.",
+    riscos: [
+      {
+        nivel: "baixo",
+        texto: "Perder o critério de pronto se o handoff for adiado"
+      }
+    ],
+    oportunidades: [],
+    decisaoExecutiva: {
+      estado: "aprovar",
+      recomendacao:
+        "Preparar o handoff ao CTO com critério de pronto explícito; outdoor fica fora desta deliberação.",
+      alternativas: [],
+      justificativa:
+        "Princípio Respeito absoluto ao tempo do utilizador: a orientação explícita de handoff prevalece sobre falha interna de pipeline/enum. Sem riscos materiais inventados além do atraso do critério de pronto."
+    },
+    acao: {
+      tipo: "orientar",
+      descricao:
+        "Aceitar o handoff ao CTO: definir o critério de pronto e fechar o pacote de handoff. Sem deliberar outdoor.",
+      job: null
+    },
+    lacunas: [],
+    confianca: 0.7,
+    _falhaControlada: true,
+    _motivoFalha: motivo,
+    _recuperacaoOrientacaoExplicita: true
+  };
+}
+
+/**
  * Parecer de falha deliberativa controlada (REQ-049) — blocos mínimos válidos com stub aprendizado.
+ * C5: se o turno já fixou reorientação explícita de handoff, preservar essa orientação
+ * em vez de fechar com «Falha técnica» / solicitar_dados.
  */
 export function montarFalhaControlada(entrada, motivo, lacunas = []) {
+  const entradaSafe = entrada && typeof entrada === "object" ? entrada : { mensagem: "" };
+  if (ehReorientacaoExplicitaHandoffCto(entradaSafe.mensagem)) {
+    return montarRecuperacaoOrientacaoHandoff(entradaSafe, motivo);
+  }
+
   const lac = lacunas.length ? lacunas.slice() : ["Falha técnica no raciocínio"];
   const solicitar = lac.length > 0;
   const estado = solicitar ? "solicitar_dados" : "adiar";
   return {
     diagnostico: {
-      objetivoReal: trimStr(entrada.mensagem, "deliberação interrompida"),
+      objetivoReal: trimStr(entradaSafe.mensagem, "deliberação interrompida"),
       problemaNegocio: "falha no pipeline de raciocínio",
       natureza: "operacional"
     },
@@ -543,8 +644,10 @@ export function montarFalhaControlada(entrada, motivo, lacunas = []) {
       escopo: "Recuperação de falha deliberativa"
     },
     dossier: {
-      resumoPainel: entrada.snapshotPainel?.resumo || "Indisponível na falha",
-      factosUsados: Array.isArray(entrada.factosOficiais) ? entrada.factosOficiais.slice() : [],
+      resumoPainel: entradaSafe.snapshotPainel?.resumo || "Indisponível na falha",
+      factosUsados: Array.isArray(entradaSafe.factosOficiais)
+        ? entradaSafe.factosOficiais.slice()
+        : [],
       fontes: ["utilizador"]
     },
     principiosAplicados: ["Ser transparente sobre limitações"],

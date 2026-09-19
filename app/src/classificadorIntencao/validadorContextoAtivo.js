@@ -56,9 +56,13 @@ import {
  * @property {string} razaoContexto
  */
 
-/** Marcador explícito de novo fio (ARQ-026 P4) — alinhado a RE_SHIFT de tópicos. */
+/**
+ * Marcador explícito de novo fio (ARQ-026 P4) — alinhado a RE_SHIFT de tópicos.
+ * Fronteira C2×C5: «reoriente» sozinho NÃO dispara novo_contexto (handoff C5
+ * usa «Reoriente as tarefas…»; C2 usa mude/mudar contexto, esqueça, novo objecto).
+ */
 const RE_NOVO_CONTEXTO =
-  /\b(agora\s+sobre|mudando\s+de\s+assunto|mudar\s+de\s+assunto|deixemos\s+(o|a)|passando\s+(ao|à|a|para)|falando\s+(de|do|da)|vamos\s+(falar|tratar)\s+(de|do|da)|quero\s+(falar|conversar)\s+(de|do|da|sobre)|vamos\s+esquecer|esque[cç]a(\s+todos)?|esquecer\s+(o|a|os|as|todos)|por\s+um\s+momento|novo\s+(assunto|contexto|fio|tema))\b/i;
+  /\b(agora\s+sobre|mudando\s+de\s+assunto|mudar\s+de\s+assunto|mude\s+(o\s+)?contexto|mudar\s+(o\s+)?contexto|muda\s+(o\s+)?contexto|deixemos\s+(o|a)|passando\s+(ao|à|a|para)|falando\s+(de|do|da)|vamos\s+(falar|tratar)\s+(de|do|da)|quero\s+(falar|conversar)\s+(de|do|da|sobre)|vamos\s+esquecer|esque[cç]a(\s+todos)?|esquecer\s+(o|a|os|as|todos)|por\s+um\s+momento|novo\s+(assunto|contexto|fio|tema))\b/i;
 
 /** Retoma explícita do fio (alinhado a RE_RETOMAR de tópicos). */
 const RE_RETOMAR =
@@ -334,6 +338,15 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
     );
   }
 
+  // P4 — novo contexto explícito (antes de P0 análise: mudança de fio ≠ análise isolada)
+  if (RE_NOVO_CONTEXTO.test(mensagem) || RE_NOVO_CONTEXTO.test(t)) {
+    // «quero falar sobre o Sistema CEO» já tratado acima; resto = novo fio
+    return resultado(
+      "novo_contexto",
+      "marcador explícito de novo fio → sem lastro do anterior; stores preservados"
+    );
+  }
+
   // P0 — consulta / proibição / análise deliberativa: nunca lastro CSC de Job.
   // Contrato: lastro de execução (CSC/Job) ≠ contexto de consulta (COA/Painel).
   // Consulta, análise e autodiagnóstico isolam CSC mas preservam sessão.
@@ -372,15 +385,6 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
     return resultado(
       "independente",
       "comando operacional C4 → isolamento de lastro; Classificador decide C4"
-    );
-  }
-
-  // P4 — novo contexto explícito
-  if (RE_NOVO_CONTEXTO.test(mensagem) || RE_NOVO_CONTEXTO.test(t)) {
-    // «quero falar sobre o Sistema CEO» já tratado acima; resto = novo fio
-    return resultado(
-      "novo_contexto",
-      "marcador explícito de novo fio → sem lastro do anterior; stores preservados"
     );
   }
 
