@@ -14,6 +14,7 @@ import {
   trimPausas,
   aplicarShiftEstado,
   extrairAncorasMensagem,
+  ancoraNegadaLocalmente,
   LIMIAR_SHIFT,
   MAX_PAUSAS
 } from "./gestorTopicos.js";
@@ -402,6 +403,28 @@ test("A4: campanha digital + «não do outdoor» não reforça outdoor por menç
   });
   assert.notEqual(r.evento, "continuar");
   assert.equal(/mesma família/i.test(String(r.razaoTopico || "")), false);
+});
+
+test("F2B/A4: «sem deliberar o X» não conta como âncora positiva (genérico)", () => {
+  assert.deepEqual(
+    extrairAncorasMensagem(
+      "a única tarefa agora é o handoff, sem deliberar o outdoor"
+    ),
+    []
+  );
+  assert.equal(
+    ancoraNegadaLocalmente("sem deliberar o outdoor", "sem deliberar o ".length),
+    true
+  );
+  const activo = criarTopico("outdoor", "usuario", ISO);
+  const r = gestorTopicos({
+    mensagem:
+      "Pare. Reoriente as tarefas: a única tarefa agora é preparar o handoff ao CTO, sem deliberar o outdoor.",
+    topicoActivo: activo,
+    pausas: [],
+    agoraIso: ISO
+  });
+  assert.notEqual(r.topicoActivo?.ancora, "outdoor");
 });
 
 test("A4 controlo: «Outdoor laterais» continua a reconhecer outdoor", () => {

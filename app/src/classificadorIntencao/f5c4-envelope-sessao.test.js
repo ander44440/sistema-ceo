@@ -70,17 +70,17 @@ function resetAmbiente() {
 }
 
 function simularRefreshPreservandoDisco() {
-  const rawEnv = globalThis.localStorage.getItem("ceo.conversa.envelope.v1");
-  const rawChat = globalThis.localStorage.getItem("ceo.conversa.transcript.v1");
+  const rawEnv = globalThis.localStorage.getItem("ceo.conversa.envelope.v2");
+  const rawChat = globalThis.localStorage.getItem("ceo.conversa.transcript.v2");
   const rawGab = globalThis.localStorage.getItem("ceo.onda01.gabinete.v1");
   descartarHistoricosEmMemoria();
   recarregarCatalogo();
   if (rawGab) globalThis.localStorage.setItem("ceo.onda01.gabinete.v1", rawGab);
   if (rawChat) {
-    globalThis.localStorage.setItem("ceo.conversa.transcript.v1", rawChat);
+    globalThis.localStorage.setItem("ceo.conversa.transcript.v2", rawChat);
   }
   if (rawEnv) {
-    globalThis.localStorage.setItem("ceo.conversa.envelope.v1", rawEnv);
+    globalThis.localStorage.setItem("ceo.conversa.envelope.v2", rawEnv);
   }
   descartarHistoricosEmMemoria();
   inicializarCatalogo();

@@ -2,8 +2,13 @@ import {
   listarMensagens,
   temHistorico,
   acrescentarMensagem,
-  criarMensagem
+  criarMensagem,
+  obterContextoConversacional
 } from "./store.js";
+import {
+  htmlBotaoCopiarResposta,
+  ligarBotoesCopiarResposta
+} from "./copiarResposta.js";
 import { textoBoasVindasNatural } from "../../conversacaoNatural/index.js";
 import { enviarAoNucleo } from "./enviarAoNucleo.js";
 import { criarVoiceController, ESTADO_TURNO } from "../../ceoOuvindo/index.js";
@@ -14,6 +19,11 @@ import {
   ligarPainelOrquestracao
 } from "../../orquestracao/ui.js";
 import { obterVistaDiaAtivo } from "../centroSituacao/painelDiaAtivo.js";
+import { obterCoaAtivo } from "../../executiveEngine/coaSessao.js";
+import {
+  htmlMarcaCeo20,
+  htmlComMarcaCeo20
+} from "../../ui/identidadeCeo20.js";
 
 const MENSAGEM_BOAS_VINDAS = textoBoasVindasNatural();
 
@@ -28,7 +38,7 @@ function escaparHtml(texto) {
 function rotuloPapel(papel) {
   if (papel === "usuario") return "Você";
   if (papel === "sistema") return "Sistema";
-  return "CEO";
+  return htmlMarcaCeo20();
 }
 
 function formatarHora(iso) {
@@ -54,11 +64,18 @@ function garantirBoasVindas() {
 
 function renderMensagem(msg) {
   const pendente = msg.estado === "pendente" ? " is-pendente" : "";
+  const copiar =
+    msg.papel === "ceo" && msg.estado !== "pendente"
+      ? htmlBotaoCopiarResposta()
+      : "";
   return `
     <article class="conv-msg conv-msg--${msg.papel}${pendente}" data-msg-id="${escaparHtml(msg.id)}">
       <header class="conv-msg-meta">
         <span class="conv-msg-autor">${rotuloPapel(msg.papel)}</span>
-        <time datetime="${escaparHtml(msg.criadoEm)}">${formatarHora(msg.criadoEm)}</time>
+        <div class="conv-msg-meta-acoes">
+          ${copiar}
+          <time datetime="${escaparHtml(msg.criadoEm)}">${formatarHora(msg.criadoEm)}</time>
+        </div>
       </header>
       <div class="conv-msg-corpo">${escaparHtml(msg.texto)}</div>
     </article>
@@ -97,6 +114,19 @@ function rotuloEstadoOuvindo(estado, mensagemErro) {
   }
 }
 
+function htmlContextoCoaActivo() {
+  const coa = obterCoaAtivo();
+  const bucket = obterContextoConversacional();
+  if (!coa?.id) {
+    return `<p class="conversa-coa-activo" id="conversa-coa-activo">Sem projeto activo — o LFC de caso não será lido.</p>`;
+  }
+  const aviso =
+    bucket && bucket !== coa.id
+      ? ` · bucket conversa realinhado`
+      : "";
+  return `<p class="conversa-coa-activo" id="conversa-coa-activo" title="${escaparHtml(coa.id)}">Projeto activo: <strong>${escaparHtml(coa.nome || coa.id)}</strong> <span class="conversa-coa-id">(${escaparHtml(coa.id)})</span>${aviso}</p>`;
+}
+
 /**
  * Monta a superfície de Conversa no workspace.
  * @returns {HTMLElement}
@@ -107,15 +137,19 @@ export function montarConversa() {
   const root = document.createElement("section");
   root.className = "conversa";
   root.dataset.module = "conversa";
-  root.setAttribute("aria-label", "Conversa com o CEO");
+  root.setAttribute("aria-label", "Conversa com o CEO 2.0");
 
   root.innerHTML = `
     <div class="conversa-layout">
       <div class="conversa-col-chat">
         <header class="conversa-cabecalho">
           <div>
-            <h1>Conversa</h1>
+            <div class="conversa-titulo-linha">
+              <h1>Conversa</h1>
+              <span class="conversa-id-ceo20" title="Identidade visual temporária">${htmlMarcaCeo20()}</span>
+            </div>
             <p class="conversa-subtitulo">Canal principal com o Executivo Digital</p>
+            ${htmlContextoCoaActivo()}
           </div>
           <p class="conversa-estado" id="conversa-estado" aria-live="polite">À escuta do próximo passo</p>
         </header>
@@ -123,7 +157,7 @@ export function montarConversa() {
         <div class="conversa-historico" id="conversa-historico" role="log" aria-relevant="additions" aria-label="Histórico da conversa"></div>
 
         <form class="conversa-composer" id="conversa-form" autocomplete="off">
-          <label class="visually-hidden" for="conversa-input">Instrução para o CEO</label>
+          <label class="visually-hidden" for="conversa-input">Instrução para o CEO 2.0</label>
           <textarea
             id="conversa-input"
             name="instrucao"
@@ -135,7 +169,7 @@ export function montarConversa() {
           <div class="conversa-composer-bar">
             <p class="conversa-hint" id="conversa-hint">Enter envia · Shift+Enter nova linha</p>
             <div class="conversa-composer-acoes">
-              <button type="button" class="conversa-mic" id="conversa-mic" aria-pressed="false" title="CEO Ouvindo">
+              <button type="button" class="conversa-mic" id="conversa-mic" aria-pressed="false" title="CEO 2.0 Ouvindo">
                 Ouvindo
               </button>
               <button type="submit" class="conversa-enviar" id="conversa-enviar">Enviar</button>
@@ -165,11 +199,12 @@ export function montarConversa() {
 
   function pintarHistorico() {
     historicoEl.innerHTML = listarMensagens().map(renderMensagem).join("");
+    ligarBotoesCopiarResposta(historicoEl);
     historicoEl.scrollTop = historicoEl.scrollHeight;
   }
 
   function definirEstado(texto) {
-    estadoEl.textContent = texto;
+    estadoEl.innerHTML = htmlComMarcaCeo20(texto);
   }
 
   function sincronizarBotao() {

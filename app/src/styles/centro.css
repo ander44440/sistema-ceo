@@ -595,21 +595,61 @@
   background: rgba(59, 130, 246, 0.2);
 }
 
-.cs-bubble span {
+.cs-bubble-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.cs-bubble-head span,
+.cs-bubble > span {
   display: block;
   font-size: 0.62rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 700;
   color: #93c5fd;
-  margin-bottom: 0.2rem;
 }
 
-.cs-bubble p {
+.cs-bubble p,
+.cs-bubble-texto {
   margin: 0;
   font-size: 0.88rem;
   line-height: 1.45;
   white-space: pre-wrap;
+}
+
+.ceo-copiar-resposta {
+  appearance: none;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.55);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.ceo-copiar-resposta:hover {
+  border-color: rgba(147, 197, 253, 0.45);
+  color: #e2e8f0;
+}
+
+.ceo-copiar-resposta.is-copiado {
+  border-color: rgba(52, 211, 153, 0.45);
+  color: #a7f3d0;
+}
+
+.ceo-copiar-resposta:disabled {
+  cursor: default;
+  opacity: 0.9;
 }
 
 .cs-composer {

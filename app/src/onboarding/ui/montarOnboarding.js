@@ -3,6 +3,7 @@
  */
 
 import "./onboarding.css";
+import { htmlMarcaCeo20 } from "../../ui/identidadeCeo20.js";
 
 function esc(s) {
   return String(s || "")
@@ -17,9 +18,9 @@ function esc(s) {
  */
 export function montarOnboardingUi(root, handlers = {}) {
   root.innerHTML = `
-    <section class="onb" aria-label="Onboarding do CEO Digital">
+    <section class="onb" aria-label="Onboarding do CEO 2.0 Digital">
       <header class="onb-head">
-        <p class="onb-kicker">CEO Digital</p>
+        <p class="onb-kicker">${htmlMarcaCeo20()} Digital</p>
         <h1>Onboarding</h1>
         <p class="onb-sub">Conversa por voz para conhecer o seu ambiente. Chrome ou Edge recomendados.</p>
       </header>
@@ -90,7 +91,7 @@ export function montarOnboardingUi(root, handlers = {}) {
         .map(
           (t) =>
             `<article class="onb-turn onb-turn--${t.papel}"><strong>${
-              t.papel === "ceo" ? "CEO" : "Usuário"
+              t.papel === "ceo" ? htmlMarcaCeo20() : "Usuário"
             }:</strong> ${esc(t.texto)}</article>`
         )
         .join("");

@@ -15,6 +15,7 @@ import {
 } from "../../catalogoProjetos/index.js";
 import { limparCoaAtivo } from "../../executiveEngine/coaSessao.js";
 import { tomEstadoExecutivo } from "../../catalogoProjetos/estadoExecutivo.js";
+import { htmlComMarcaCeo20 } from "../../ui/identidadeCeo20.js";
 
 function escaparHtml(texto) {
   return String(texto)
@@ -234,7 +235,7 @@ export function montarProjetos() {
         const projectEl = document.getElementById("shell-project-name");
         if (projectEl) projectEl.textContent = "Sem projeto ativo";
         const statusEl = document.getElementById("system-status");
-        if (statusEl) statusEl.textContent = "CEO Online · Gabinete Executivo";
+        if (statusEl) statusEl.innerHTML = htmlComMarcaCeo20("CEO Online · Gabinete Executivo");
         pintar();
       });
     });

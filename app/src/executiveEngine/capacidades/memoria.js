@@ -487,6 +487,8 @@ export const capacidadeMemoria = Object.freeze({
         listarJobs: ctx.listarJobs,
         storeContinuidade: ctx.storeContinuidade,
         lerMemoriaFn: typeof ctx.memoria === "function" ? ctx.memoria : lerMemoria,
+        coaId: ctx.coaId || ctx.coaAtivo?.id || null,
+        lfcReader: ctx.lfcReader || null,
         ...(ctx.pedidoSituacionalTrabalho != null
           ? { situacional: ctx.pedidoSituacionalTrabalho === true }
           : {})

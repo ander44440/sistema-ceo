@@ -28,6 +28,12 @@ import {
 } from "./regras.js";
 import { executarConsultaFactualCatalogo } from "../catalogoProjetos/consultaFactual.js";
 import { CAPACIDADES_CANONICAS } from "../executiveEngine/registrar.js";
+import { tentarRespostaProtocoloExecutivo } from "../executiveEngine/protocoloAgenteExecutivo.js";
+import {
+  anexarObservabilidadeCanonico,
+  familiaProtocoloOuDic,
+  funilPortaCanonicaActiva
+} from "../executiveEngine/portaCanonica.js";
 
 /**
  * Slugs canónicos excluídos do destino C4.
@@ -112,6 +118,33 @@ function responderConsultaFactualCatalogo(ctx) {
  * @param {ContextoDestino} ctx
  */
 export async function executarDestinoC1(ctx) {
+  const protocolo = tentarRespostaProtocoloExecutivo(ctx.texto);
+  if (protocolo.activo && protocolo.mensagem) {
+    let resposta = baseResposta(ctx, {
+      ok: true,
+      mensagem: protocolo.mensagem,
+      capacidade: "ia",
+      modo: "protocolo_executivo",
+      dados: {
+        mreInvocado: false,
+        motorAcionado: false,
+        publicarJobProibido: true,
+        rota: "protocolo_executivo",
+        modoProtocolo: protocolo.modo
+      }
+    });
+    if (funilPortaCanonicaActiva()) {
+      resposta = anexarObservabilidadeCanonico(resposta, {
+        familiaCanonico: familiaProtocoloOuDic(protocolo.modo),
+        modo: protocolo.modo
+      });
+    }
+    if (typeof ctx.naturalizar === "function") {
+      resposta = ctx.naturalizar(resposta);
+    }
+    return resposta;
+  }
+
   const capacidadeIa = ctx.obterCapacidade("ia");
   let resultado;
 
@@ -371,6 +404,32 @@ export async function executarDestinoC4(ctx) {
  * @param {ContextoDestino} ctx
  */
 export async function executarDestinoClarificacao(ctx) {
+  const protocolo = tentarRespostaProtocoloExecutivo(ctx.texto);
+  if (protocolo.activo && protocolo.mensagem) {
+    let resposta = baseResposta(ctx, {
+      ok: true,
+      mensagem: protocolo.mensagem,
+      capacidade: "ia",
+      modo: "protocolo_executivo",
+      dados: {
+        mreInvocado: false,
+        motorAcionado: false,
+        rota: "protocolo_executivo",
+        modoProtocolo: protocolo.modo
+      }
+    });
+    if (funilPortaCanonicaActiva()) {
+      resposta = anexarObservabilidadeCanonico(resposta, {
+        familiaCanonico: familiaProtocoloOuDic(protocolo.modo),
+        modo: protocolo.modo
+      });
+    }
+    if (typeof ctx.naturalizar === "function") {
+      resposta = ctx.naturalizar(resposta);
+    }
+    return resposta;
+  }
+
   const estadoOp = extrairEstadoOperacional({
     lastroConsciencia: ctx.deps?.lastroConsciencia,
     historico: ctx.historico,

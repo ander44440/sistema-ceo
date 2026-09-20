@@ -196,8 +196,20 @@ test("DESP-009: mesmo COA sem F2 — MTE corrente entra no lastro C2", () => {
     memoria: () => ({ pendencias: [] }),
     lastroConsciencia: lastro
   });
-  assert.match(entrada.mensagem, new RegExp(ACAO_A));
-  assert.match(entrada.mensagem, /Estado executivo da conversa|hierarquia de objectivos/i);
+  assert.ok(
+    (entrada.factosOficiais || []).some((f) => new RegExp(ACAO_A).test(f)) ||
+      new RegExp(ACAO_A).test(
+        String(entrada.anexosDeliberativos?.memoriaTrabalho || "")
+      )
+  );
+  assert.doesNotMatch(
+    entrada.mensagem,
+    /Estado executivo da conversa|hierarquia de objectivos/i
+  );
+  assert.match(
+    String(entrada.anexosDeliberativos?.memoriaTrabalho || ""),
+    /Estado executivo da conversa|hierarquia de objectivos/i
+  );
 });
 
 test("reconstrução ao entrar em B usa o contexto de B, não o residual de A", () => {

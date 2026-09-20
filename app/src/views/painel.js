@@ -1,4 +1,5 @@
 import { esc } from "../shell.js";
+import { htmlMarcaCeo20 } from "../ui/identidadeCeo20.js";
 
 export function renderPainel(runtime, shellApi) {
   const homeState = runtime.home.montarHome();
@@ -24,11 +25,11 @@ export function renderPainel(runtime, shellApi) {
       <ul class="exemplos" id="exs"></ul>
       <div class="campo">
         <label class="label" for="msg">A sua mensagem</label>
-        <textarea id="msg" ${homeState.precisaProjeto ? "disabled" : ""} placeholder="Fale com o CEO…"></textarea>
+        <textarea id="msg" ${homeState.precisaProjeto ? "disabled" : ""} placeholder="Fale com o CEO 2.0…"></textarea>
       </div>
       <button type="button" class="btn" id="enviar" ${
         homeState.precisaProjeto ? "disabled" : ""
-      }>Enviar ao CEO</button>
+      }>Enviar ao ${htmlMarcaCeo20()}</button>
       <p class="note" style="margin-top:0.75rem">${esc(superficie.limitacao || "")}</p>
       <div class="mod-slot">
         <strong>Conector · conversa:</strong>
@@ -103,7 +104,7 @@ export function renderPainel(runtime, shellApi) {
       <article class="turno">
         <div class="u">Você · ${esc(t.quando || "")}</div>
         <div>${esc(t.textoUsuario || "")}</div>
-        <div class="r" style="margin-top:0.35rem"><strong>CEO</strong> · ${esc(
+        <div class="r" style="margin-top:0.35rem"><strong>${htmlMarcaCeo20()}</strong> · ${esc(
           t.resposta || ""
         )}</div>
       </article>`

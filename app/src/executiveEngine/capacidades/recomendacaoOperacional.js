@@ -170,8 +170,9 @@ function montarJuizoOperacional(estado, objeto, t) {
       );
     } else {
       linhas.push(
-        "Recomendação operacional: não há prioridade alinhada no lastro operacional — " +
-          "confirme a próxima decisão antes de executar."
+        "Recomendação operacional: não há prioridade alinhada no lastro operacional " +
+          "do sistema (fila/estado) — isto não avalia o negócio descrito na mensagem; " +
+          "confirme a próxima decisão operacional ou peça análise deliberativa."
       );
     }
     linhas.push(montarJustificativaTipada(lastro));

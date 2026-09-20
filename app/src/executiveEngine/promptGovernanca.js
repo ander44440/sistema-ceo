@@ -109,7 +109,9 @@ export function montarMensagensLlm({
   }
 
   // Histórico antes do objetivo atual: a interação corrente fica como último turno.
-  const recentes = seleccionarFioCoa(historico, instrucao);
+  const recentes = seleccionarFioCoa(historico, instrucao, {
+    coaId: coa?.id || null
+  });
   for (const turn of recentes) {
     if (!turn || !turn.texto) continue;
     if (turn.papel === "usuario") {

@@ -126,6 +126,14 @@ export function devePreservarRespostaNucleo(opts = {}) {
 
   if (INTENCOES_RESPOSTA_DIRECTA.includes(intencaoId)) return true;
 
+  // Disciplina de resposta restrita: preservar prosa pontual do Núcleo.
+  if (modo === "resposta_restrita" || opts.dados?.rota === "resposta_restrita") {
+    return true;
+  }
+
+  // Análise / juízo deliberativo: preservar prosa do Núcleo (não ABERTURA/ESPELHO).
+  if (ehPedidoAnaliseConversa(instrucao)) return true;
+
   if (
     modo === "consulta_estado" ||
     (modo === "capacidade_operacional" && ehPedidoEspecifico(instrucao, intencaoId))
@@ -149,7 +157,16 @@ export function ehPedidoAnaliseConversa(instrucao) {
   return (
     /\b(analisa|analise|analisar|avalia|avalie|avaliar|compara|compare|comparar)\b/.test(
       t
-    ) || /\b(recomenda|recomendaria|voce\s+recomenda)\b/.test(t)
+    ) ||
+    /\b(recomenda|recomendaria|voce\s+recomenda)\b/.test(t) ||
+    /\b(deliber[ae]|deliberar|apenas\s+deliber)\b/.test(t) ||
+    /\bqual\s+(deve|seria|deveria)\s+(ser\s+)?(a\s+|nossa\s+)?(pr[oó]xima\s+)?prioridade\b/.test(
+      t
+    ) ||
+    /\bqual\s+prioridade\b/.test(t) ||
+    /\bo\s+que\s+(voce|tu)\s+acha\b/.test(t) ||
+    /\b(leitura|primeira\s+leitura|prioriz)\b/.test(t) ||
+    /\bnao\s+execute\b/.test(t)
   );
 }
 

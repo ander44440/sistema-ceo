@@ -1,6 +1,8 @@
 /**
  * Adapter LLM do CEO → saídas JSON por estágio do MRE (IMP-014).
  * IMP-093 M1/M2: propaga meta CG (actoChamada + fragmentos etiquetados).
+ * IMP-094: mandato/payload interno do estágio usam fonte `mre_contrato`
+ * (autorizada só no acto `mre:*`) para não serem removidos por V3_FONTE.
  */
 
 import { deliberarComLlm } from "../executiveEngine/llmCliente.js";
@@ -50,7 +52,7 @@ export function criarChamarLlmCeo(opts = {}) {
         texto: messages[0].content,
         coaId: cgMetaBase.coaAtivo?.id || null,
         casoId: null,
-        fonte: FONTES_CG.NAO_DECLARADA,
+        fonte: FONTES_CG.MRE_CONTRATO,
         uso: USOS_CG.MANDATO_PROMPT
       }),
       criarFragmento({
@@ -59,7 +61,7 @@ export function criarChamarLlmCeo(opts = {}) {
         texto: messages[1].content,
         coaId: cgMetaBase.coaAtivo?.id || null,
         casoId: cgMetaBase.casoAtivo?.casoId || null,
-        fonte: FONTES_CG.NAO_ETIQUETADO,
+        fonte: FONTES_CG.MRE_CONTRATO,
         uso: USOS_CG.MANDATO_PROMPT
       })
     ];
@@ -74,6 +76,10 @@ export function criarChamarLlmCeo(opts = {}) {
       !fontesBase.includes(FONTES_CG.LFC_ACTIVOS)
     ) {
       fontesBase.push(FONTES_CG.LFC_ACTIVOS);
+    }
+    // Contrato interno do estágio: só actos `mre:*` autorizam esta fonte.
+    if (!fontesBase.includes(FONTES_CG.MRE_CONTRATO)) {
+      fontesBase.push(FONTES_CG.MRE_CONTRATO);
     }
 
     const saida = await deliberar({

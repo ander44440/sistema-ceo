@@ -5,6 +5,7 @@ import { onboardingPlugin } from "./server/onboardingPlugin.js";
 import { orquestracaoPlugin } from "./server/orquestracaoPlugin.js";
 import { trilhaAuditavelPlugin } from "./server/trilhaAuditavelPlugin.js";
 import { historicoFisicoConversasPlugin } from "./server/historicoFisicoConversasPlugin.js";
+import { lastroFactualCasoPlugin } from "./server/lastroFactualCasoPlugin.js";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -16,6 +17,7 @@ export default defineConfig(({ mode }) => {
       executionQueuePlugin(),
       trilhaAuditavelPlugin(),
       historicoFisicoConversasPlugin(),
+      lastroFactualCasoPlugin(),
       onboardingPlugin(),
       orquestracaoPlugin(env)
     ],

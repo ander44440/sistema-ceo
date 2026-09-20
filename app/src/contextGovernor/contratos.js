@@ -33,6 +33,8 @@ export const FONTES_CG = Object.freeze({
   DIC: "dic",
   BRIEFING_OFICIAL: "briefing_oficial",
   CONSCIENCIA_OPS: "consciencia_ops",
+  /** Mandato/payload interno de estágio MRE (actos `mre:*` apenas). */
+  MRE_CONTRATO: "mre_contrato",
   NAO_DECLARADA: "nao_declarada",
   NAO_ETIQUETADO: "nao_etiquetado"
 });

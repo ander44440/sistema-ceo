@@ -55,7 +55,7 @@ test("B1 legado: sem COA conhecido — sem factos de briefing na projecção", (
   assert.ok(!entrada.factosOficiais.some((f) => /WorldLab2/i.test(f)));
 });
 
-test("DEC-010: montarEntradaMre inclui fio recente da conversa", () => {
+test("DEC-010: montarEntradaMre isola fio recente em anexos (não na âncora)", () => {
   const entrada = montarEntradaMre({
     instrucao: "e isso?",
     coaAtivo: { id: "prj-mg2", nome: "Motoboy Game 2" },
@@ -66,9 +66,17 @@ test("DEC-010: montarEntradaMre inclui fio recente da conversa", () => {
       { papel: "usuario", texto: "e isso?" }
     ]
   });
-  assert.match(entrada.mensagem, /Fio recente da conversa/i);
-  assert.match(entrada.mensagem, /Priorizar pagamento/);
-  assert.match(entrada.mensagem, /Utilizador:|CEO:/);
+  assert.equal(entrada.mensagemAtual, "e isso?");
+  assert.doesNotMatch(entrada.mensagem, /Fio recente da conversa/i);
+  assert.doesNotMatch(entrada.mensagem, /Priorizar pagamento/);
+  assert.match(
+    String(entrada.anexosDeliberativos?.fioRecente || ""),
+    /Fio recente da conversa/i
+  );
+  assert.match(
+    String(entrada.anexosDeliberativos?.fioRecente || ""),
+    /Priorizar pagamento/
+  );
 });
 
 test("ciclo Decidir: exploração ≠ diagnóstico de factos", async () => {
@@ -90,7 +98,7 @@ test("ciclo Decidir: exploração ≠ diagnóstico de factos", async () => {
   );
 });
 
-test("DEC-010: montarEntradaMre ancora Memória de Trabalho EIC", () => {
+test("DEC-010: montarEntradaMre isola Memória de Trabalho EIC em anexos", () => {
   const entrada = montarEntradaMre({
     instrucao: "continuar",
     coaAtivo: { id: "prj-mg2", nome: "Motoboy Game 2" },
@@ -110,12 +118,15 @@ test("DEC-010: montarEntradaMre ancora Memória de Trabalho EIC", () => {
       }
     }
   });
-  assert.match(entrada.mensagem, /Objectivo estratégico/i);
-  assert.match(entrada.mensagem, /entrega corrente|pagamento/i);
-  assert.match(entrada.mensagem, /Restrições activas/i);
+  assert.equal(entrada.mensagemAtual, "continuar");
+  assert.doesNotMatch(entrada.mensagem, /Objectivo estratégico/i);
+  const mte = String(entrada.anexosDeliberativos?.memoriaTrabalho || "");
+  assert.match(mte, /Objectivo estratégico/i);
+  assert.match(mte, /entrega corrente|pagamento/i);
+  assert.match(mte, /Restrições activas/i);
 });
 
-test("DESP-009: montarEntradaMre leva decisão já promovida, pendência e em execução ao MRE", () => {
+test("DESP-009: montarEntradaMre isola decisão/pendência/execução em anexos MTE", () => {
   const entrada = montarEntradaMre({
     instrucao: "ok",
     coaAtivo: { id: "prj-mg2", nome: "Motoboy Game 2" },
@@ -143,10 +154,13 @@ test("DESP-009: montarEntradaMre leva decisão já promovida, pendência e em ex
       }
     }
   });
-  // Fixture = decisão já promovida pelo utilizador, não recomendação do parecer.
-  assert.match(entrada.mensagem, /Decisão em vigor/i);
-  assert.match(entrada.mensagem, /Adiar outdoor/i);
-  assert.match(entrada.mensagem, /Pendências abertas|Sprint 1/i);
-  assert.match(entrada.mensagem, /Em execução|integração/i);
-  assert.match(entrada.mensagem, /conduzir a missão|hierarquia de objectivos/i);
+  // Fixture = decisão já promovida — disponível em anexos, não fundida na âncora.
+  assert.equal(entrada.mensagemAtual, "ok");
+  assert.doesNotMatch(entrada.mensagem, /Decisão em vigor/i);
+  const mte = String(entrada.anexosDeliberativos?.memoriaTrabalho || "");
+  assert.match(mte, /Decisão em vigor/i);
+  assert.match(mte, /Adiar outdoor/i);
+  assert.match(mte, /Pendências abertas|Sprint 1/i);
+  assert.match(mte, /Em execução|integração/i);
+  assert.match(mte, /conduzir a missão|hierarquia de objectivos/i);
 });

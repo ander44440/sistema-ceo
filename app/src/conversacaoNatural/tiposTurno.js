@@ -2,7 +2,7 @@
  * Tipos de turno — contrato PX-003 E1 §3.3.
  */
 
-import { devePreservarRespostaNucleo } from "./prioridadeIntencao.js";
+import { devePreservarRespostaNucleo, ehPedidoAnaliseConversa } from "./prioridadeIntencao.js";
 
 export const TIPO_TURNO = Object.freeze({
   ABERTURA: "abertura",
@@ -67,7 +67,11 @@ export function classificarTipoTurno(entrada = {}) {
     return TIPO_TURNO.FECHO;
   }
 
-  if (intencaoId === "saudacao" || entrada.forcarAbertura) {
+  // Nunca ABERTURA se o corpo pede análise/juízo (mesmo com forcarAbertura residual).
+  if (
+    (intencaoId === "saudacao" || entrada.forcarAbertura) &&
+    !ehPedidoAnaliseConversa(instrucao)
+  ) {
     return TIPO_TURNO.ABERTURA;
   }
 

@@ -17,6 +17,7 @@ import {
 } from "./detalhe.js";
 import { HINT_DEGRADADO, HINT_POLLING, HINT_SSE } from "./streamContrato.js";
 import { ligarTempoRealOrquestracao } from "./tempoReal.js";
+import { htmlComMarcaCeo20 } from "../ui/identidadeCeo20.js";
 
 /** Padrões técnicos proibidos na vista principal (checklist Progressividade). */
 export const PADROES_PROIBIDOS_VISTA = Object.freeze([
@@ -116,7 +117,7 @@ export function htmlCartaoNoVistaPrincipal(no, opts = {}) {
 
   return `<article class="cs-orq-no cs-orq-no--${cls}${expandCls}" data-orq-id="${escaparHtml(id)}" data-orq-campos="${CAMPOS_VISTA_PRINCIPAL.join(",")}" tabindex="0" role="button" aria-expanded="${expandido ? "true" : "false"}">
     <div class="cs-orq-principal">
-      <h3 class="cs-orq-nome">${escaparHtml(vista.nome)}</h3>
+      <h3 class="cs-orq-nome">${htmlComMarcaCeo20(vista.nome)}</h3>
       <p class="cs-orq-estado">
         <span class="cs-orq-dot" aria-hidden="true"></span>
         <span class="cs-orq-estado-label">${escaparHtml(rotulo)}</span>

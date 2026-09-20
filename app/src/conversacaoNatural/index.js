@@ -9,6 +9,7 @@ import {
 } from "./contextoImediato.js";
 import { comporPorTipo } from "./compor.js";
 import { TIPO_TURNO, classificarTipoTurno } from "./tiposTurno.js";
+import { ehPedidoAnaliseConversa } from "./prioridadeIntencao.js";
 import { sanitizarProsaUsuario } from "./sanitizarProsa.js";
 import { _resetVariacaoParaTestes } from "./variacao.js";
 
@@ -53,14 +54,17 @@ export function aplicarConversacaoNatural(entrada = {}) {
   const pedidoAmbiguo = detectarPedidoAmbiguo(instrucao, parecer);
   const pediuDetalhe = /porqu[eê]|detalh|explica|justif/i.test(instrucao);
 
+  const intencaoId = dados.intencao?.id || entrada.intencaoId;
   const tipoTurno = classificarTipoTurno({
     ok: entrada.ok,
     modo: entrada.modo,
     parecer,
     dados,
-    intencaoId: dados.intencao?.id || entrada.intencaoId,
+    intencaoId,
     pedidoAmbiguo,
-    forcarAbertura: dados.intencao?.id === "saudacao" || entrada.forcarAbertura,
+    forcarAbertura:
+      (intencaoId === "saudacao" || entrada.forcarAbertura) &&
+      !ehPedidoAnaliseConversa(instrucao),
     forcarFecho: entrada.forcarFecho,
     instrucao
   });
@@ -72,7 +76,7 @@ export function aplicarConversacaoNatural(entrada = {}) {
     canal,
     pediuDetalhe,
     instrucao,
-    intencaoId: dados.intencao?.id || entrada.intencaoId || "",
+    intencaoId: intencaoId || "",
     modo: entrada.modo || "",
     pedidoInfoGathering: entrada.pedidoInfoGathering,
     pedidoDecisaoExplicita: entrada.pedidoDecisaoExplicita,

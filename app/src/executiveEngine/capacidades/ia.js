@@ -14,11 +14,15 @@ import {
   metadadoDicInjecao,
   montarMensagensLlm
 } from "../promptGovernanca.js";
+import { obterProjecaoBriefing } from "../briefingsProjeto.js";
 import { deliberarComLlm, obterStatusLlm } from "../llmCliente.js";
+import { montarCgMetaPromptDirecto } from "../../contextGovernor/etiquetarPipeline.js";
+import { ehBloqueioCg } from "../../contextGovernor/gateLlm.js";
 import {
   ehRotaDeliberativa,
   executarRotaDeliberativa
 } from "../../mre/integracaoNucleo.js";
+import { obterConsumoLfcParaMre } from "../../mre/consumoLfcMre.js";
 import { flagMre } from "../../mre/roteamentoDeliberativo.js";
 import { naturalizarRespostaNucleo } from "../../conversacaoNatural/index.js";
 import {
@@ -34,6 +38,21 @@ import {
   ehAutoanaliseRespostaAnterior
 } from "../../mre/politicaAnaliseDeliberativa.js";
 import { detectarPedidoDecisaoExplicita } from "../../classificadorIntencao/pedidoDecisaoExplicita.js";
+import { tentarRespostaRestrita } from "../../classificadorIntencao/comporRespostaRestrita.js";
+import { detectarPedidoInfoGathering } from "../../classificadorIntencao/pedidoInfoGathering.js";
+import { processarTurnoLfc } from "../../lastroFactualCaso/wiringConversacional.js";
+import { corrigirRespostaConsultaCampoLfc } from "../../lastroFactualCaso/consultaCampoLfc.js";
+import { obterLfcRuntime } from "../../lastroFactualCaso/runtimeLfc.js";
+import { tentarRespostaProtocoloExecutivo } from "../protocoloAgenteExecutivo.js";
+import {
+  anexarObservabilidadeCanonico,
+  familiaProtocoloOuDic,
+  funilPortaCanonicaActiva
+} from "../portaCanonica.js";
+import {
+  funilDeliberarUnicoActiva,
+  anexarObservabilidadeDeliberar
+} from "../funilDeliberarUnico.js";
 
 function formatarDataAgora() {
   const agora = new Date();
@@ -119,6 +138,93 @@ function memoriaParaDeliberacao(coa, mem) {
 }
 
 /**
+ * IMP-093 — meta CG para path LLM directo / llm_rapido.
+ * Propaga LFC só via consumo autorizado alinhado ao COA/caso (mesmo contrato MRE).
+ * @param {object} p
+ */
+function montarCgMetaIa({
+  messages,
+  paramsMsg,
+  dicMeta,
+  coa,
+  ctx,
+  actoChamada,
+  lfcConsumo = null
+}) {
+  const isolamento = coa === null;
+  const temBriefing =
+    !isolamento &&
+    dicMeta?.injectado !== true &&
+    Boolean(obterProjecaoBriefing(coa)?.textoRotulado);
+  const casoId =
+    ctx?.lfcCasoId ||
+    ctx?.casoId ||
+    ctx?.casoAtivo?.casoId ||
+    lfcConsumo?.casoId ||
+    null;
+  return montarCgMetaPromptDirecto({
+    messages,
+    coa,
+    casoId,
+    validacaoContexto: paramsMsg.validacaoContexto || ctx?.validacaoContexto,
+    dicMeta,
+    temBriefing,
+    instrucao: paramsMsg.instrucao,
+    actoChamada,
+    lfcConsumo: lfcConsumo || null
+  });
+}
+
+/**
+ * Reutiliza obterConsumoLfcParaMre (ADR-022) — sem regras próprias de autorização.
+ * @param {object} ctx
+ * @param {object|null} coa
+ * @param {string} instrucao
+ * @param {object} lfcRuntime
+ */
+async function consumirLfcParaCgMeta(ctx, coa, instrucao, lfcRuntime) {
+  if (coa === null) return null;
+  try {
+    return await obterConsumoLfcParaMre({
+      reader: ctx.lfcReader || lfcRuntime?.reader || null,
+      coaId: coa?.id || null,
+      instrucao: String(instrucao || ""),
+      casoId: ctx.lfcCasoId || ctx.casoId || null
+    });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * IMP-093 M3 — se ENFORCE bloqueou, não usar prosa LLM.
+ * @param {object} saida
+ * @param {object} base
+ */
+function respostaSeBloqueioCg(saida, base) {
+  if (!ehBloqueioCg(saida)) return null;
+  const rc = saida.resultadoCg || {};
+  return {
+    ok: true,
+    capacidade: "ia",
+    mensagem:
+      saida.mensagem ||
+      (rc.exigeEsclarecimento
+        ? "Preciso de um esclarecimento de contexto antes de continuar."
+        : rc.declaraInsuficienciaLastro
+          ? "Lastro insuficiente para responder com segurança neste acto."
+          : "Não posso enviar este contexto ao motor de linguagem."),
+    modo: "cg_bloqueado",
+    dados: {
+      ...base,
+      cgBloqueio: saida.cg || null,
+      resultadoCg: rc,
+      mreInvocado: false
+    }
+  };
+}
+
+/**
  * Execução bruta (antes da Conversação Natural).
  * @param {object} ctx
  */
@@ -175,6 +281,135 @@ async function executarBruto(ctx) {
     };
   }
 
+  // Protocolo Agente Executivo (DIC) — antes de MRE/LLM (evita falha técnica / lastro falso).
+  const protocolo = tentarRespostaProtocoloExecutivo(texto);
+  if (protocolo.activo && protocolo.mensagem) {
+    const cxProt = avaliarComplexidadeDecisao({
+      texto,
+      intencao,
+      classe: intencao.classe,
+      destino: intencao.destino,
+      frenteActiva: Boolean(coa),
+      ...(ctx.objectoTurno != null ? { objectoTurno: ctx.objectoTurno } : {})
+    });
+    let brutoProt = {
+      ok: true,
+      capacidade: "ia",
+      mensagem: protocolo.mensagem,
+      modo: "protocolo_executivo",
+      dados: {
+        instrucao: texto,
+        intencao,
+        memoria: memDelib,
+        coa,
+        rota: "protocolo_executivo",
+        modoProtocolo: protocolo.modo,
+        complexidadeDecisao: cxProt
+      }
+    };
+    if (funilPortaCanonicaActiva()) {
+      brutoProt = anexarObservabilidadeCanonico(brutoProt, {
+        familiaCanonico: familiaProtocoloOuDic(protocolo.modo),
+        modo: protocolo.modo
+      });
+    }
+    return naturalizarRespostaNucleo(brutoProt, {
+      instrucao: texto,
+      historico: ctx.historico || [],
+      coaAtivo: coa,
+      memoria: memDelib
+    });
+  }
+
+  // Disciplina executiva: LFC (IMP-092.3) para registo/correção/factos/dado_unico;
+  // sim_nao / lacunas e fallback reparse via resposta restrita legada (não remove reparse).
+  const lfcRuntime = obterLfcRuntime({
+    writer: ctx.lfcWriter,
+    reader: ctx.lfcReader,
+    baseUrl: ctx.lfcBaseUrl
+  });
+  const restritaLfc = await processarTurnoLfc(texto, {
+    historico: ctx.historico || [],
+    coaId: coa?.id || null,
+    writer: lfcRuntime.writer,
+    reader: lfcRuntime.reader,
+    permitirFallbackReparse: true
+  });
+  if (restritaLfc.activo && restritaLfc.mensagem) {
+    const cxRestrita = avaliarComplexidadeDecisao({
+      texto,
+      intencao,
+      classe: intencao.classe,
+      destino: intencao.destino,
+      frenteActiva: Boolean(coa),
+      ...(ctx.objectoTurno != null ? { objectoTurno: ctx.objectoTurno } : {})
+    });
+    let brutoRestrita = {
+      ok: true,
+      capacidade: "ia",
+      mensagem: restritaLfc.mensagem,
+      modo: "resposta_restrita",
+      dados: {
+        instrucao: texto,
+        intencao,
+        memoria: memDelib,
+        coa,
+        rota: "resposta_restrita",
+        modoRespostaRestrita: restritaLfc.modo,
+        fonteLfc: restritaLfc.fonte || null,
+        lfc: restritaLfc.dados?.lfc || null,
+        complexidadeDecisao: cxRestrita
+      }
+    };
+    if (funilPortaCanonicaActiva()) {
+      brutoRestrita = anexarObservabilidadeCanonico(brutoRestrita, {
+        familiaCanonico: "lfc",
+        modo: restritaLfc.modo
+      });
+    }
+    return naturalizarRespostaNucleo(brutoRestrita, {
+      instrucao: texto,
+      historico: ctx.historico || [],
+      coaAtivo: coa,
+      memoria: memDelib
+    });
+  }
+
+  const restrita = tentarRespostaRestrita(texto, {
+    historico: ctx.historico || []
+  });
+  if (restrita.activo && restrita.mensagem) {
+    const cxRestrita = avaliarComplexidadeDecisao({
+      texto,
+      intencao,
+      classe: intencao.classe,
+      destino: intencao.destino,
+      frenteActiva: Boolean(coa),
+      ...(ctx.objectoTurno != null ? { objectoTurno: ctx.objectoTurno } : {})
+    });
+    const brutoRestrita = {
+      ok: true,
+      capacidade: "ia",
+      mensagem: restrita.mensagem,
+      modo: "resposta_restrita",
+      dados: {
+        instrucao: texto,
+        intencao,
+        memoria: memDelib,
+        coa,
+        rota: "resposta_restrita",
+        modoRespostaRestrita: restrita.modo,
+        complexidadeDecisao: cxRestrita
+      }
+    };
+    return naturalizarRespostaNucleo(brutoRestrita, {
+      instrucao: texto,
+      historico: ctx.historico || [],
+      coaAtivo: coa,
+      memoria: memDelib
+    });
+  }
+
   const complexidade = avaliarComplexidadeDecisao({
     texto,
     intencao,
@@ -193,6 +428,10 @@ async function executarBruto(ctx) {
   if (ehRotaDeliberativa(intencao) && flagMre.ativo) {
     const lastro = ctx.lastroConsciencia || null;
     // Opção A: fecho decisório prevalece sobre hint/prosa P1-2
+    const pedidoInfoGathering =
+      ctx.pedidoInfoGathering != null
+        ? ctx.pedidoInfoGathering === true
+        : detectarPedidoInfoGathering(texto);
     const pedidoConsulta =
       ctx.pedidoConsultaResposta != null
         ? ctx.pedidoConsultaResposta === true || ctx.consultaNaoEAcao === true
@@ -201,22 +440,28 @@ async function executarBruto(ctx) {
             tipoTurno: ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno,
             precedenciaTurno: ctx.precedenciaTurno
           });
-    const pedidoDecisao =
-      ctx.pedidoDecisaoExplicita != null
+    const pedidoDecisao = pedidoInfoGathering
+      ? false
+      : ctx.pedidoDecisaoExplicita != null
         ? ctx.pedidoDecisaoExplicita === true
         : detectarPedidoDecisaoExplicita(texto);
     const pedidoAnalise =
       !pedidoDecisao &&
       !pedidoConsulta &&
+      !pedidoInfoGathering &&
       (ctx.pedidoAnaliseDeliberativa != null
         ? ctx.pedidoAnaliseDeliberativa === true
         : detectarPedidoAnaliseDeliberativa(texto));
 
     // CONSULTA situacional: nunca desviar para LLM rápido sem snapshot
     // (complexidade «moderado/follow-up» não anula o caminho com SNAPSHOT)
+    // IMP-094 F3: deliberação de projecto = só MRE+CG (flag; off = rollback llm_rapido)
     const forcarMreConsulta = pedidoConsulta === true;
+    const deliberarUnico = funilDeliberarUnicoActiva();
     const usarMreCompleto =
-      complexidade.permiteMreCompleto === true || forcarMreConsulta;
+      deliberarUnico === true ||
+      complexidade.permiteMreCompleto === true ||
+      forcarMreConsulta;
 
     const semReflexoContaminante = (mensagem, motivo) => ({
       mensagem,
@@ -246,30 +491,37 @@ async function executarBruto(ctx) {
     };
 
     // REQ-066: decisões «completa» pagam MRE 0–7; CONSULTA situacional também
+    // IMP-094 F3: OBS-4/OBS-8 em todo retorno deste ramo
     if (usarMreCompleto) {
+      const obsMre = (resposta, llmInvocado) =>
+        anexarObservabilidadeDeliberar(resposta, { llmInvocado });
+
       const status = await obterStatusLlm();
       if (!status || !status.configurado) {
         // P1-2: pedido de análise sem LLM → incapacidade explícita (não prosa de lastro nem delegação fictícia)
         if (pedidoAnalise) {
-          return {
-            ok: true,
-            capacidade: "ia",
-            mensagem: fallbackSemLlm(
-              texto,
-              "chave não configurada — MRE indisponível",
-              { pedidoAnalise: true }
-            ),
-            modo: "fallback",
-            dados: {
-              instrucao: texto,
-              intencao,
-              memoria: memDelib,
-              coa,
-              llm: status,
-              rota: "analise-sem-llm",
-              complexidadeDecisao: complexidade
-            }
-          };
+          return obsMre(
+            {
+              ok: true,
+              capacidade: "ia",
+              mensagem: fallbackSemLlm(
+                texto,
+                "chave não configurada — MRE indisponível",
+                { pedidoAnalise: true }
+              ),
+              modo: "fallback",
+              dados: {
+                instrucao: texto,
+                intencao,
+                memoria: memDelib,
+                coa,
+                llm: status,
+                rota: "analise-sem-llm",
+                complexidadeDecisao: complexidade
+              }
+            },
+            false
+          );
         }
         // CONSULTA: sem LLM → snapshot local (não prosa de Atenção/continuidade)
         if (pedidoConsulta) {
@@ -284,73 +536,91 @@ async function executarBruto(ctx) {
             instrucao: texto
           });
           const mensagem = comporAnaliseConsultaDesdeSnapshot(snap);
-          return {
-            ok: true,
-            capacidade: "ia",
-            mensagem,
-            modo: "consulta-snapshot-sem-llm",
-            dados: {
-              instrucao: texto,
-              intencao,
-              memoria: memDelib,
-              coa,
-              llm: status,
-              snapshotSituacional: snap,
-              rota: "consulta_situacional_snapshot",
-              complexidadeDecisao: {
-                ...complexidade,
-                forcarMreConsulta: true,
-                caminho: "snapshot_sem_llm"
-              },
-              ...(lastro ? { lastroConsciencia: lastro } : {})
-            }
-          };
+          return obsMre(
+            {
+              ok: true,
+              capacidade: "ia",
+              mensagem,
+              modo: "consulta-snapshot-sem-llm",
+              dados: {
+                instrucao: texto,
+                intencao,
+                memoria: memDelib,
+                coa,
+                llm: status,
+                snapshotSituacional: snap,
+                rota: "consulta_situacional_snapshot",
+                complexidadeDecisao: {
+                  ...complexidade,
+                  forcarMreConsulta: true,
+                  caminho: "snapshot_sem_llm"
+                },
+                ...(lastro ? { lastroConsciencia: lastro } : {})
+              }
+            },
+            false
+          );
         }
         // IMP-059 E4: com lastro operacional, contextualizar mesmo sem LLM
         const prosaLastro = comporProsaLastro(lastro, texto);
         if (prosaLastro) {
-          return {
+          return obsMre(
+            {
+              ok: true,
+              capacidade: "ia",
+              mensagem: prosaLastro,
+              modo: "consciencia_operacional",
+              dados: {
+                instrucao: texto,
+                intencao,
+                memoria: memDelib,
+                coa,
+                llm: status,
+                lastroConsciencia: lastro,
+                rota: "deliberativa-consciencia-sem-llm",
+                complexidadeDecisao: complexidade
+              }
+            },
+            false
+          );
+        }
+        return obsMre(
+          {
             ok: true,
             capacidade: "ia",
-            mensagem: prosaLastro,
-            modo: "consciencia_operacional",
+            mensagem: fallbackSemLlm(
+              texto,
+              "chave não configurada — MRE indisponível"
+            ),
+            modo: "fallback",
             dados: {
               instrucao: texto,
               intencao,
               memoria: memDelib,
               coa,
               llm: status,
-              lastroConsciencia: lastro,
-              rota: "deliberativa-consciencia-sem-llm",
+              rota: "deliberativa-sem-llm",
               complexidadeDecisao: complexidade
             }
-          };
-        }
-        return {
-          ok: true,
-          capacidade: "ia",
-          mensagem: fallbackSemLlm(texto, "chave não configurada — MRE indisponível"),
-          modo: "fallback",
-          dados: {
-            instrucao: texto,
-            intencao,
-            memoria: memDelib,
-            coa,
-            llm: status,
-            rota: "deliberativa-sem-llm",
-            complexidadeDecisao: complexidade
-          }
-        };
+          },
+          false
+        );
       }
 
       try {
         const mreCtx = {
           ...ctx,
           memoria: memDelib,
+          pedidoInfoGathering,
+          pedidoConsultaResposta: pedidoConsulta,
+          pedidoAnaliseDeliberativa: pedidoAnalise,
+          pedidoDecisaoExplicita: pedidoDecisao,
           consultaNaoEAcao: pedidoConsulta || ctx.consultaNaoEAcao,
           tipoTurno: pedidoConsulta
             ? "consulta"
             : ctx.tipoTurno || ctx.precedenciaTurno?.tipoTurno,
+          // IMP-092.4: Reader RO para consumo LFC→MRE (ADR-022)
+          lfcReader: lfcRuntime.reader,
           ...(lastro ? { lastroConsciencia: lastro } : {})
         };
         // Isolamento: preservar coaAtivo === null. Legado (campo ausente): injectar resolvido.
@@ -363,6 +633,7 @@ async function executarBruto(ctx) {
             skipFila:
               pedidoAnalise ||
               pedidoConsulta ||
+              pedidoInfoGathering ||
               ctx.skipFilaConsciencia === true
                 ? true
                 : undefined
@@ -379,12 +650,14 @@ async function executarBruto(ctx) {
                 sinal: null
               };
         const reflexo =
-          pedidoAnalise || pedidoConsulta
+          pedidoAnalise || pedidoConsulta || pedidoInfoGathering
             ? semReflexoContaminante(
                 mreOut.mensagem,
-                pedidoConsulta
-                  ? "consulta_snapshot_sem_reflexo"
-                  : "analise_p12"
+                pedidoInfoGathering
+                  ? "info_gathering_sem_reflexo"
+                  : pedidoConsulta
+                    ? "consulta_snapshot_sem_reflexo"
+                    : "analise_p12"
               )
             : reflexoAposDisciplina(
                 mreOut.mensagem,
@@ -392,40 +665,43 @@ async function executarBruto(ctx) {
                 texto,
                 disciplina
               );
-        return {
-          ...mreOut,
-          mensagem: reflexo.mensagem,
-          capacidade: "ia",
-          dados: {
-            ...(mreOut.dados || {}),
-            instrucao: texto,
-            intencao,
-            memoria: memDelib,
-            coa,
-            llm: status,
-            disciplinaLastro: disciplina,
-            conscienciaInfluencia: reflexo,
-            complexidadeDecisao: {
-              ...complexidade,
-              ...(forcarMreConsulta
+        return obsMre(
+          {
+            ...mreOut,
+            mensagem: reflexo.mensagem,
+            capacidade: "ia",
+            dados: {
+              ...(mreOut.dados || {}),
+              instrucao: texto,
+              intencao,
+              memoria: memDelib,
+              coa,
+              llm: status,
+              disciplinaLastro: disciplina,
+              conscienciaInfluencia: reflexo,
+              complexidadeDecisao: {
+                ...complexidade,
+                ...(forcarMreConsulta
+                  ? {
+                      forcarMreConsulta: true,
+                      caminho: "mre_consulta_situacional"
+                    }
+                  : {})
+              },
+              ...(lastro ? { lastroConsciencia: lastro } : {}),
+              ...(mreOut.dados?.parecer?.dossier
                 ? {
-                    forcarMreConsulta: true,
-                    caminho: "mre_consulta_situacional"
+                    snapshotActivado: Boolean(
+                      (mreOut.dados.parecer.dossier.factosUsados || []).some(
+                        (f) => /SNAPSHOT SITUACIONAL/.test(String(f))
+                      )
+                    )
                   }
                 : {})
-            },
-            ...(lastro ? { lastroConsciencia: lastro } : {}),
-            ...(mreOut.dados?.parecer?.dossier
-              ? {
-                  snapshotActivado: Boolean(
-                    (mreOut.dados.parecer.dossier.factosUsados || []).some(
-                      (f) => /SNAPSHOT SITUACIONAL/.test(String(f))
-                    )
-                  )
-                }
-              : {})
-          }
-        };
+            }
+          },
+          true
+        );
       } catch (err) {
         const fallback = fallbackSemLlm(
           texto,
@@ -460,27 +736,31 @@ async function executarBruto(ctx) {
                 texto,
                 disciplinaFallback
               );
-        return {
-          ok: true,
-          capacidade: "ia",
-          mensagem: reflexo.mensagem,
-          modo: "fallback",
-          dados: {
-            instrucao: texto,
-            intencao,
-            memoria: memDelib,
-            coa,
-            erro: err && err.message,
-            rota: "deliberativa-erro",
-            disciplinaLastro: disciplinaFallback,
-            conscienciaInfluencia: reflexo,
-            complexidadeDecisao: complexidade
-          }
-        };
+        return obsMre(
+          {
+            ok: true,
+            capacidade: "ia",
+            mensagem: reflexo.mensagem,
+            modo: "fallback",
+            dados: {
+              instrucao: texto,
+              intencao,
+              memoria: memDelib,
+              coa,
+              erro: err && err.message,
+              rota: "deliberativa-erro",
+              disciplinaLastro: disciplinaFallback,
+              conscienciaInfluencia: reflexo,
+              complexidadeDecisao: complexidade
+            }
+          },
+          false
+        );
       }
     }
 
     // Nível moderado/leve deliberativo → 1× LLM (sem pipeline MRE)
+    // Só alcançável com CEO_FUNIL_DELIBERAR_UNICO=off (rollback F3)
     const statusMod = await obterStatusLlm();
     if (!statusMod || !statusMod.configurado) {
       if (pedidoAnalise) {
@@ -581,20 +861,55 @@ async function executarBruto(ctx) {
         });
       }
       const dicMeta = metadadoDicInjecao(paramsMsg);
+      const lfcConsumo = await consumirLfcParaCgMeta(
+        ctx,
+        coa,
+        texto,
+        lfcRuntime
+      );
+      const cgMeta = montarCgMetaIa({
+        messages,
+        paramsMsg,
+        dicMeta,
+        coa,
+        ctx,
+        actoChamada: "llm_rapido",
+        lfcConsumo
+      });
       const saida = await deliberarComLlm({
         messages,
         temperature: 0.4,
-        max_tokens: complexidade.maxTokens
+        max_tokens: complexidade.maxTokens,
+        cgMeta
       });
+      const bloqueioRapido = respostaSeBloqueioCg(saida, {
+        instrucao: texto,
+        intencao,
+        memoria: memDelib,
+        coa,
+        rota: "deliberativa-rapida",
+        complexidadeDecisao: complexidade,
+        dicInjecao: dicMeta
+      });
+      if (bloqueioRapido) return bloqueioRapido;
       // CONSULTA não deve chegar aqui (forcarMreConsulta); se chegar, não contaminar
+      let textoLlm = saida.texto;
+      const fidelidadeLfc = corrigirRespostaConsultaCampoLfc({
+        resposta: textoLlm,
+        instrucao: texto,
+        factos: lfcConsumo?.factos || []
+      });
+      if (fidelidadeLfc.aplicada) {
+        textoLlm = fidelidadeLfc.mensagem;
+      }
       const disciplinaRapida = pedidoConsulta
         ? {
-            mensagem: saida.texto,
+            mensagem: textoLlm,
             aplicada: false,
             motivo: "consulta_fora_de_escopo",
             sinal: null
           }
-        : garantirDisciplinaLastroInsuficiente(saida.texto, {
+        : garantirDisciplinaLastroInsuficiente(textoLlm, {
             factosOficiais: lastro?.factosOficiais,
             parecer: null,
             pedidoConsulta: false,
@@ -627,6 +942,7 @@ async function executarBruto(ctx) {
           complexidadeDecisao: complexidade,
           dicInjecao: dicMeta,
           disciplinaLastro: disciplinaRapida,
+          fidelidadeCampoLfc: fidelidadeLfc,
           conscienciaInfluencia: reflexo,
           llm: {
             modelo: saida.modelo,
@@ -737,12 +1053,39 @@ async function executarBruto(ctx) {
     };
     const messages = montarMensagensLlm(paramsMsg);
     const dicMeta = metadadoDicInjecao(paramsMsg);
+    const lfcConsumo = await consumirLfcParaCgMeta(
+      ctx,
+      coa,
+      texto,
+      lfcRuntime
+    );
+    const cgMeta = montarCgMetaIa({
+      messages,
+      paramsMsg,
+      dicMeta,
+      coa,
+      ctx,
+      actoChamada: "llm_direct",
+      lfcConsumo
+    });
 
     const saida = await deliberarComLlm({
       messages,
       temperature: 0.45,
-      max_tokens: complexidade.maxTokens || 900
+      max_tokens: complexidade.maxTokens || 900,
+      cgMeta
     });
+
+    const bloqueioLegado = respostaSeBloqueioCg(saida, {
+      instrucao: texto,
+      intencao,
+      memoria: memDelib,
+      coa,
+      rota: "legado-llm",
+      complexidadeDecisao: complexidade,
+      dicInjecao: dicMeta
+    });
+    if (bloqueioLegado) return bloqueioLegado;
 
     return {
       ok: true,

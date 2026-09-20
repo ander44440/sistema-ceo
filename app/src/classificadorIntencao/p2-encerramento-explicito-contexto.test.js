@@ -95,3 +95,38 @@ test("C: mudando de assunto → NÃO dispara resets", async () => {
   assert.ok(obterEstadoObjectivoSessao().objetivoActivo);
   assert.ok(obterEstadoObjectivoSessao().objetivoAnterior);
 });
+
+test("F2B: Pare + Reoriente + única tarefa agora → limpa tópico/objectivos (C5)", async () => {
+  semearContextoOutdoor();
+  const c5 =
+    "Pare. Reoriente as tarefas: a única tarefa agora é preparar o handoff ao CTO com critério de pronto, sem deliberar o outdoor.";
+  assert.equal(ehEncerramentoExplicitoContexto(c5), true);
+  await executiveEngine.executar({ texto: c5 }, {});
+  const top = obterEstadoTopicosSessao();
+  const obj = obterEstadoObjectivoSessao();
+  assert.equal(top.topicoActivo, null);
+  assert.equal(top.pausas.length, 0);
+  assert.equal(obj.objetivoActivo, null);
+  assert.equal(obj.objetivoAnterior, null);
+});
+
+test("F2B: C1/C2/C4 prompts NÃO disparam encerramento", () => {
+  assert.equal(
+    ehEncerramentoExplicitoContexto(
+      "Precisamos priorizar o trabalho desta semana. O que deve vir primeiro?"
+    ),
+    false
+  );
+  assert.equal(
+    ehEncerramentoExplicitoContexto(
+      "Mude o contexto: esqueça a campanha. Agora o assunto é só o fornecedor de logística NorteAzul e o prazo de entrega."
+    ),
+    false
+  );
+  assert.equal(
+    ehEncerramentoExplicitoContexto(
+      "Informação nova: o orçamento passou a R$ 2.000.000 e o prazo caiu para 15 dias. Diante disso, qual decisão toma agora?"
+    ),
+    false
+  );
+});

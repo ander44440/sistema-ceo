@@ -24,6 +24,14 @@ export function detectarPedidoInfoGathering(texto) {
   if (/\b(feche|fecha|fechar)\s+(a\s+)?decisao\b/.test(t)) return false;
 
   if (/\bquais\s+informa[cç]/.test(t)) return true;
+  if (/\blistar\s+informa[cç]/.test(t)) return true;
+  if (
+    /\binforma[cç].{0,60}m[ií]nimas?\b/.test(t) &&
+    (/\bantes\s+de\b/.test(t) || /\bavaliar\b/.test(t) || /\baumento\b/.test(t))
+  ) {
+    return true;
+  }
+  if (/\bn[aã]o\s+recomend/.test(t) && /\binforma[cç]/.test(t)) return true;
   if (/\bo\s+que\s+falta\s+(saber|descobrir|obter|avaliar)\b/.test(t)) {
     return true;
   }
@@ -85,6 +93,57 @@ export function hintEstagio6InfoGathering() {
     "Proibido: estado=aprovar|rejeitar|delegar|monitorar como fecho. " +
     "Recomendações anteriores no fio são CONTEXTO, não mandato. A pergunta actual governa."
   );
+}
+
+/**
+ * Remapeia decisão: info-gathering nunca fecha com aprovar/delegar/rejeitar.
+ * @param {object} decisao
+ * @param {{ pedidoInfoGathering?: boolean }} [opts]
+ */
+export function aplicarPoliticaInfoGathering(decisao, opts = {}) {
+  if (!decisao || typeof decisao !== "object") return decisao;
+  if (!opts.pedidoInfoGathering) return decisao;
+
+  let estado = decisao.estado;
+  let recomendacao = String(decisao.recomendacao || "").trim();
+  let justificativa = String(decisao.justificativa || "").trim();
+
+  const fecha =
+    estado === "aprovar" ||
+    estado === "rejeitar" ||
+    estado === "delegar" ||
+    estado === "adiar";
+  const prosaDecisao =
+    /\b(aprovo|aprovar|aprovado|rejeito|rejeitar|delego|delegar|decis[aã]o|recomend[oa]|adiar|adiei)\b/i.test(
+      recomendacao
+    );
+
+  if (!fecha && !prosaDecisao && estado === "solicitar_dados") {
+    return decisao;
+  }
+
+  estado = "solicitar_dados";
+  if (fecha || prosaDecisao || !recomendacao) {
+    if (
+      !recomendacao ||
+      prosaDecisao ||
+      /\b(aprovo|aprovar|rejeito|delego|adiar)\b/i.test(recomendacao)
+    ) {
+      recomendacao =
+        "Listar as informações mínimas em falta antes de qualquer recomendação — sem fechar decisão neste turno.";
+    }
+    justificativa = (
+      justificativa +
+      " INFO-GATHERING: turno pede lacunas/informações; fecho/recomendação removidos."
+    ).trim();
+  }
+
+  return {
+    ...decisao,
+    estado,
+    recomendacao,
+    justificativa
+  };
 }
 
 /**

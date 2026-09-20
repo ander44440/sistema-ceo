@@ -23,6 +23,7 @@ import {
   ehProibicaoExecucaoExplicita,
   ehPedidoAnaliseOuRecomendacao,
   ehComandoExecucaoExplicito,
+  ehConsultaEstadoOperacional,
   normalizarTexto
 } from "../classificadorIntencao/regras.js";
 import { detectarPedidoDecisaoExplicita } from "../classificadorIntencao/pedidoDecisaoExplicita.js";
@@ -53,8 +54,10 @@ export function deveInterceptarOperacional(opts = {}) {
   }
   const t = normalizarTexto(texto);
 
-  // C4 qualificada: «estado da fila» / «estado da fila de execução» ≠ comando sobre Job.
+  // C4 qualificada: consulta de estado/Job ≠ comando sobre Job / CTO-003.
+  // «estado da fila» e F19 («estado operacional», «Jobs em aberto», «último Job»).
   if (/\bestado\s+da\s+fila\b/.test(t)) return false;
+  if (ehConsultaEstadoOperacional(t)) return false;
 
   // Polaridade P0 ANTES de forçar Motor: proibição / análise-sem-autorização
   // não entram em motor_execucao por CTO-003 (detectores existentes).

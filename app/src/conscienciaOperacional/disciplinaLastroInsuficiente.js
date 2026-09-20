@@ -7,6 +7,7 @@
 
 import { detectarPedidoInfoGathering } from "../classificadorIntencao/pedidoInfoGathering.js";
 import {
+  ehLacunaGenericaEssencial,
   soLacunasInstitucionaisCoaPainel,
   temFactosMateriaisDoUtilizador
 } from "../mre/ncs/politicas.js";
@@ -14,6 +15,29 @@ import {
 /** Prefixo estável para idempotência / testes. */
 export const PREFIXO_DECLARACAO_LASTRO_INSUFICIENTE =
   "Não tenho lastro suficiente neste turno para afirmar isso com segurança.";
+
+/** Espelha PREFIXO_FACTO_LFC (consumoLfcMre) — evita ciclo de imports. */
+const MARCA_LFC_ACTIVO = "[LFC activo — autoridade factual do caso]";
+
+/**
+ * ADR-022 CM12 — há factos LFC activos no lastro do turno.
+ * @param {ReadonlyArray<string>|null|undefined} factos
+ */
+export function temFactosLfcActivosNoTurno(factos) {
+  if (!Array.isArray(factos)) return false;
+  return factos.some((f) => String(f || "").includes(MARCA_LFC_ACTIVO));
+}
+
+/**
+ * @param {ReadonlyArray<string>|null|undefined} lacunas
+ */
+export function soLacunasGenericasEssenciais(lacunas) {
+  const arr = Array.isArray(lacunas)
+    ? lacunas.map((l) => String(l || "").trim()).filter(Boolean)
+    : [];
+  if (!arr.length) return false;
+  return arr.every((l) => ehLacunaGenericaEssencial(l));
+}
 
 /**
  * @typedef {object} SinalInsuficienciaLastro
@@ -135,7 +159,18 @@ export function detectarInsuficienciaLastroTurno(opts = {}) {
         lacunas: Object.freeze(lacunasParecer)
       };
     }
-
+    // ADR-022 CM12: LFC activos + só lacuna genérica ≠ insuficiência material
+    if (
+      temFactosLfcActivosNoTurno(factos) &&
+      (lacunasParecer.length === 0 ||
+        soLacunasGenericasEssenciais(lacunasParecer))
+    ) {
+      return {
+        ativo: false,
+        motivo: "lfc_activo_sem_lacuna_material_nomeada",
+        lacunas: Object.freeze([])
+      };
+    }
     // C3: factos do turno + só lacunas COA/Painel ≠ wipe por isolamento institucional
     if (
       temFactosMateriaisDoUtilizador(factos) &&
@@ -147,7 +182,6 @@ export function detectarInsuficienciaLastroTurno(opts = {}) {
         lacunas: Object.freeze([])
       };
     }
-
     return {
       ativo: true,
       motivo: "parecer_solicitar_dados",

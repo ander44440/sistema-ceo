@@ -69,14 +69,11 @@ test("CT-CX03: priorizar / trade-off → completa", () => {
   assert.equal(d.nivel, "completa");
 });
 
-test("CT-CX04: capacidadeIa moderado não chama pipeline MRE", async () => {
-  let mreCalls = 0;
+test("CT-CX04: capacidadeIa moderado — F3 força MRE (não llm_rapido)", async () => {
   const original = flagMre.ativo;
   flagMre.ativo = true;
+  delete process.env.CEO_FUNIL_DELIBERAR_UNICO;
 
-  // Spy: executarRotaDeliberativa is imported inside ia — we assert via rota metadata
-  // by injecting deliberarComLlm and ensuring modo llm_rapido without MRE deps.
-  // Retoma «onde paramos?» é CONSULTA situacional (snapshot) — usar outro moderado.
   const out = await capacidadeIa.executar({
     instrucao: "em que ponto estamos?",
     historico: [],
@@ -86,18 +83,36 @@ test("CT-CX04: capacidadeIa moderado não chama pipeline MRE", async () => {
       classe: "conversa_projeto",
       destino: "nucleo_mre"
     },
-    memoria: () => ({}),
-    // Sem LLM configurado no unit → fallback rápido, não MRE
+    memoria: () => ({})
+    // Sem LLM configurado no unit → ramo MRE sem chave (não llm_rapido)
   });
 
   assert.equal(out.dados?.complexidadeDecisao?.nivel, "moderado");
-  assert.notEqual(out.dados?.rota, undefined);
+  assert.notEqual(out.modo, "llm_rapido");
+  assert.doesNotMatch(String(out.dados?.rota || ""), /deliberativa-rapida/);
+  assert.equal(out.dados?.caminhoDeliberativo, "mre");
   assert.match(
     String(out.dados?.rota || ""),
+    /deliberativa-sem-llm|consciencia|fallback|deliberativa/
+  );
+
+  process.env.CEO_FUNIL_DELIBERAR_UNICO = "off";
+  const outOff = await capacidadeIa.executar({
+    instrucao: "em que ponto estamos?",
+    historico: [],
+    intencao: {
+      id: "deliberar_objetivo",
+      capacidade: "ia",
+      classe: "conversa_projeto",
+      destino: "nucleo_mre"
+    },
+    memoria: () => ({})
+  });
+  assert.match(
+    String(outOff.dados?.rota || ""),
     /deliberativa-rapida|consciencia|fallback|deterministica/
   );
-  assert.doesNotMatch(String(out.dados?.rota || ""), /^mre/);
-  void mreCalls;
+  delete process.env.CEO_FUNIL_DELIBERAR_UNICO;
   flagMre.ativo = original;
 });
 

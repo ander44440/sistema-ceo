@@ -2,8 +2,8 @@
  * Persistência do envelope CSC (tópico/pausas/objectivo) por COA — F5-C4.
  */
 
-export const STORAGE_KEY_ENVELOPE = "ceo.conversa.envelope.v1";
-const VERSAO = 1;
+export const STORAGE_KEY_ENVELOPE = "ceo.conversa.envelope.v2";
+const VERSAO = 2;
 
 /**
  * @returns {Storage | null}

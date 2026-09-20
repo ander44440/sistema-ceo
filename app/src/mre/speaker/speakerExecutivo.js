@@ -160,8 +160,12 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
     .join(" ");
 
   const destaques = [
-    `Decisão: ${estado}`,
-    `Ação: ${parecer.acao.tipo} — ${encurtar(acaoDesc, 80)}`,
+    preferencias.pedidoAnalise === true
+      ? `Juízo: ${estado}`
+      : `Decisão: ${estado}`,
+    preferencias.pedidoAnalise === true
+      ? `Próximo: ${encurtar(acaoDesc, 80)}`
+      : `Ação: ${parecer.acao.tipo} — ${encurtar(acaoDesc, 80)}`,
     lacunas[0] ? `Lacuna: ${encurtar(lacunas[0], 60)}` : null
   ].filter(Boolean);
 
@@ -187,6 +191,16 @@ export function gerarComunicadoExecutivo(parecer, canal, preferencias = {}) {
     } else if (canal === "centro_situacao") {
       texto = textoChat.replace(/\n\n/g, " ");
       destaquesOut = [`Lacunas: informações a obter`];
+    } else {
+      guião = null;
+    }
+  } else if (preferencias.pedidoAnalise === true) {
+    if (canal === "voz") {
+      texto = textoChat.replace(/\n\n/g, " ");
+      guião = texto;
+    } else if (canal === "centro_situacao") {
+      texto = textoChat.replace(/\n\n/g, " ");
+      destaquesOut = [`Análise deliberativa`];
     } else {
       guião = null;
     }

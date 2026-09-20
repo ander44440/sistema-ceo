@@ -7,6 +7,10 @@ import {
 } from "../conversa/store.js";
 import { enviarAoNucleo } from "../conversa/enviarAoNucleo.js";
 import {
+  htmlBotaoCopiarResposta,
+  ligarBotoesCopiarResposta
+} from "../conversa/copiarResposta.js";
+import {
   htmlFaixaDoDia,
   ligarFaixaDoDia
 } from "./faixaDoDia.js";
@@ -21,6 +25,9 @@ import { tomEstadoExecutivo } from "../../catalogoProjetos/estadoExecutivo.js";
 import { navegar } from "../../router.js";
 import { carregarVistaMepC3 } from "./carregarVistaMepC3.js";
 import { htmlBlocoMepC3 } from "./blocoMepC3.js";
+import {
+  htmlMarcaCeo20
+} from "../../ui/identidadeCeo20.js";
 
 function htmlDeliberacaoNatural(dados) {
   if (!dados || !Array.isArray(dados.destaques) || !dados.destaques.length) {
@@ -280,7 +287,7 @@ export function montarCentroSituacao() {
           <section class="cs-card cs-decisoes" aria-label="Centro de Decisões">
             <div>
               <p class="cs-kicker">Centro de Decisões</p>
-              <p>Registe uma decisão ou peça ao CEO uma recomendação operacional sobre a frente activa.</p>
+              <p>Registe uma decisão ou peça ao ${htmlMarcaCeo20()} uma recomendação operacional sobre a frente activa.</p>
             </div>
             <button type="button" class="cs-cta" id="cs-fazer-decisao">Fazer uma decisão</button>
           </section>
@@ -299,14 +306,19 @@ export function montarCentroSituacao() {
               .map(
                 (m) => `
               <article class="cs-bubble cs-bubble--${m.papel}">
-                <span>${m.papel === "usuario" ? "Você" : "CEO"}</span>
-                <p>${escaparHtml(m.texto)}</p>
+                <div class="cs-bubble-head">
+                  <span>${m.papel === "usuario" ? "Você" : htmlMarcaCeo20()}</span>
+                  ${
+                    m.papel === "ceo" ? htmlBotaoCopiarResposta() : ""
+                  }
+                </div>
+                <p class="cs-bubble-texto">${escaparHtml(m.texto)}</p>
               </article>`
               )
               .join("")}
           </div>
           <form class="cs-composer" id="cs-form" autocomplete="off">
-            <label class="visually-hidden" for="cs-input">Comando para o CEO</label>
+            <label class="visually-hidden" for="cs-input">Comando para o CEO 2.0</label>
             <input id="cs-input" type="text" maxlength="8000" placeholder="Faça sua pergunta ou comando…" />
             <button type="submit" class="cs-send" id="cs-enviar">Enviar</button>
           </form>
@@ -399,6 +411,8 @@ export function montarCentroSituacao() {
       },
       repintar: pintar
     });
+
+    ligarBotoesCopiarResposta(root.querySelector("#cs-log"));
 
     const form = root.querySelector("#cs-form");
     const input = root.querySelector("#cs-input");

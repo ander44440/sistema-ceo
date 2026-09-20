@@ -1,5 +1,21 @@
 import { classificarIntencao } from "./classificar.js";
 import {
+  resolverRespostaCanonica,
+  anexarObservabilidadeCanonico,
+  funilPortaCanonicaActiva
+} from "./portaCanonica.js";
+import {
+  permiteClarificacaoTurno,
+  anexarObservabilidadeClarificacao,
+  funilClarificacaoEstritaActiva
+} from "../classificadorIntencao/clarificacaoDisciplinada.js";
+import {
+  funilCoaRigidoActiva,
+  resolverCoaTurno,
+  anexarObservabilidadeCoa
+} from "./funilCoaRigido.js";
+import { detectarModoRespostaRestrita } from "../classificadorIntencao/pedidoRespostaRestrita.js";
+import {
   obterCapacidade,
   registrarCapacidade,
   listarCapacidades,
@@ -205,7 +221,10 @@ function contextoCapacidade({
   pedidoConsultaResposta = undefined,
   pedidoAnaliseDeliberativa = undefined,
   pedidoSituacionalTrabalho = undefined,
-  objectoTurno = undefined
+  objectoTurno = undefined,
+  lfcWriter = undefined,
+  lfcReader = undefined,
+  lfcBaseUrl = undefined
 }) {
   /** @type {Record<string, unknown>} */
   const ctx = {
@@ -218,6 +237,10 @@ function contextoCapacidade({
     /** FASE 2: institucional, passivo — nenhum consumidor decide com base nisto nesta fase. */
     empresaAtiva: obterEmpresaAtivaSessao()
   };
+  // IMP-094 F1: inject LFC Writer/Reader quando a entrada/teste os fornece.
+  if (lfcWriter) ctx.lfcWriter = lfcWriter;
+  if (lfcReader) ctx.lfcReader = lfcReader;
+  if (lfcBaseUrl != null) ctx.lfcBaseUrl = lfcBaseUrl;
   // IMP-090 Fatia 0: sombra — presente em ctx; nenhum consumidor decide com base nisto.
   if (envelope) {
     ctx.envelope = envelope;
@@ -480,6 +503,12 @@ export const executiveEngine = {
     this.inicializar();
 
     const { texto, historico, coaId: coaIdEntrada } = normalizarInstrucao(entrada);
+    const lfcWriterEntrada =
+      entrada && typeof entrada === "object" ? entrada.lfcWriter : undefined;
+    const lfcReaderEntrada =
+      entrada && typeof entrada === "object" ? entrada.lfcReader : undefined;
+    const lfcBaseUrlEntrada =
+      entrada && typeof entrada === "object" ? entrada.lfcBaseUrl : undefined;
     // IMP-090 Fatia 0: nascimento canónico após normalizarInstrucao, antes de early-returns.
     const canalIngresso =
       (entrada && typeof entrada === "object" && entrada.canal) ||
@@ -1184,6 +1213,7 @@ export const executiveEngine = {
 
     // Prioridade RF: Gate > ambiguo_contexto > objectivo > tópico > referente
     // G2.3: early-return VCA só se resolver autorizar clarificar_contexto.
+    // IMP-094 F2: CL-2 — não clarificar protocolo/LFC/DIC/demanda clara.
     if (
       resultadoVca.veredicto === "ambiguo_contexto" &&
       resultadoVca.perguntaCurta
@@ -1203,37 +1233,50 @@ export const executiveEngine = {
         precVca.autoridade === "vca_csc" &&
         precVca.acao === "clarificar_contexto"
       ) {
-        const pergunta =
-          resultadoVca.clarificacaoGateIsolamento || resultadoVca.perguntaCurta;
-        const respostaVca = {
-          ok: true,
-          mensagem: pergunta,
-          intencao: "conversa_projeto",
-          capacidade: null,
-          dados: {
-            classificacao: null,
-            encaminhamento: {
-              destino: "clarificacao_contexto",
-              ok: true,
-              idClasse: null
-            },
-            ...metaVca,
-            motorAcionado: false,
-            mreInvocado: false
-          },
-          origem: "executiveEngine",
-          modo: "clarificacao_contexto"
-        };
-        const memoriaVca = atualizarAposInstrucao({
-          instrucao: texto,
-          intencao: respostaVca.intencao,
-          capacidade: null,
-          ok: true,
-          mensagem: respostaVca.mensagem,
-          dados: respostaVca.dados
+        const verClVca = permiteClarificacaoTurno(texto, {
+          ambiguoBloqueante: true,
+          motivoCandidato: "vca"
         });
-        respostaVca.dados = { ...respostaVca.dados, memoria: memoriaVca };
-        return comEnvelope(respostaVca);
+        if (verClVca.permitido) {
+          const pergunta =
+            resultadoVca.clarificacaoGateIsolamento || resultadoVca.perguntaCurta;
+          let respostaVca = {
+            ok: true,
+            mensagem: pergunta,
+            intencao: "conversa_projeto",
+            capacidade: null,
+            dados: {
+              classificacao: null,
+              encaminhamento: {
+                destino: "clarificacao_contexto",
+                ok: true,
+                idClasse: null
+              },
+              ...metaVca,
+              motorAcionado: false,
+              mreInvocado: false
+            },
+            origem: "executiveEngine",
+            modo: "clarificacao_contexto"
+          };
+          if (funilClarificacaoEstritaActiva()) {
+            respostaVca = anexarObservabilidadeClarificacao(respostaVca, {
+              clarificacaoEvitada: false,
+              destinoClarificacao: "clarificacao_contexto"
+            });
+          }
+          const memoriaVca = atualizarAposInstrucao({
+            instrucao: texto,
+            intencao: respostaVca.intencao,
+            capacidade: null,
+            ok: true,
+            mensagem: respostaVca.mensagem,
+            dados: respostaVca.dados
+          });
+          respostaVca.dados = { ...respostaVca.dados, memoria: memoriaVca };
+          return comEnvelope(respostaVca);
+        }
+        // CL-2: cair no funil sem clarificar VCA
       }
     }
 
@@ -1241,6 +1284,20 @@ export const executiveEngine = {
     // COA/Painel: lastro CSC OU contexto de sessão (P0 consulta/análise).
     const autorizaContextoSessao =
       autorizaLastroCsc || resultadoVca.autorizaContextoSessao === true;
+
+    // IMP-094 F4 — resolução única COA (PC + destino); flag CEO_FUNIL_COA_RIGIDO
+    const resolucaoCoa = resolverCoaTurno({
+      entrada: coaIdEntrada,
+      sessao: obterCoaAtivo(),
+      autorizaContextoSessao
+    });
+
+    const detLfcTurno = detectarModoRespostaRestrita(texto);
+    const pediuLastroCaso =
+      detLfcTurno.activo === true &&
+      ["registo", "confirmacao", "factos", "dado_unico"].includes(
+        String(detLfcTurno.modo || "")
+      );
 
     const coaIdFio = coaIdEntrada || (coa && coa.id) || null;
     // P2: reutilizar fio B2 quando o COA do turno não mudou (mesma semântica).
@@ -1315,8 +1372,11 @@ export const executiveEngine = {
     }
     // Isolamento: stores preservados (não mutados); sem lastro CSC neste turno.
     // Encerramento explícito: limpa tópico/pausas/objectivos + persistência F5-C4.
+    // F2B: anula resultadoTop/Obj deste turno para o lastro não reinjectar o contexto anterior.
     if (ehEncerramentoExplicitoContexto(texto)) {
       limparEnvelopeActual();
+      resultadoTop = null;
+      resultadoObj = null;
     }
 
     const objetivoParaContexto = autorizaLastroCsc
@@ -1390,6 +1450,71 @@ export const executiveEngine = {
       pedidoDecisaoExplicita: pedidoDecisaoPrec
     });
 
+    // IMP-094 F4 — falhas observáveis de COA (após classificar; antes da PC)
+    if (
+      funilCoaRigidoActiva() &&
+      resolucaoCoa.ok === false &&
+      resolucaoCoa.codigo === "coa_divergente"
+    ) {
+      let respDiv = {
+        ok: false,
+        mensagem: resolucaoCoa.mensagem,
+        intencao,
+        capacidade: "ia",
+        dados: {
+          classificacao,
+          ...metaVca,
+          motorAcionado: false,
+          mreInvocado: false,
+          llmInvocado: false,
+          veredictoCaminho: "clarificacao",
+          rota: "coa_divergente"
+        },
+        origem: "executiveEngine",
+        modo: "coa_divergente"
+      };
+      respDiv = anexarObservabilidadeCoa(respDiv, {
+        coaId: null,
+        casoId: null,
+        marcadoresLn: resolucaoCoa.marcadoresLn,
+        codigoCoa: resolucaoCoa.codigo
+      });
+      return comEnvelope(respDiv);
+    }
+
+    if (
+      funilCoaRigidoActiva() &&
+      pediuLastroCaso &&
+      resolucaoCoa.codigo === "coa_ausente"
+    ) {
+      let respSem = {
+        ok: true,
+        mensagem: resolucaoCoa.mensagem,
+        intencao,
+        capacidade: "ia",
+        dados: {
+          classificacao,
+          ...metaVca,
+          motorAcionado: false,
+          mreInvocado: false,
+          llmInvocado: false,
+          veredictoCaminho: "canonico",
+          familiaCanonico: "lfc",
+          rota: "lfc_sem_coa",
+          fonteLfc: "lfc_sem_coa"
+        },
+        origem: "executiveEngine",
+        modo: "lfc_sem_coa"
+      };
+      respSem = anexarObservabilidadeCoa(respSem, {
+        coaId: null,
+        casoId: null,
+        marcadoresLn: resolucaoCoa.marcadoresLn,
+        codigoCoa: "coa_ausente"
+      });
+      return comEnvelope(respSem);
+    }
+
     const metaTopicos = resultadoTop
       ? {
           gestaoTopicos: {
@@ -1412,9 +1537,97 @@ export const executiveEngine = {
         }
       : {};
 
+    // IMP-094 Fase 1 — Porta Canónica (após classificador/VCA; antes de clarificação/MRE/LLM).
+    /** @type {{ clarificacaoEvitada: boolean, razao: string|null }} */
+    const obsClarF2 = { clarificacaoEvitada: false, razao: null };
+    /**
+     * @param {string} motivo
+     * @returns {boolean}
+     */
+    const autorizaClarificacaoCsc = (motivo) => {
+      const ver = permiteClarificacaoTurno(texto, {
+        ambiguoBloqueante: true,
+        motivoCandidato: motivo
+      });
+      if (!ver.permitido) {
+        obsClarF2.clarificacaoEvitada = true;
+        obsClarF2.razao = ver.razao;
+        return false;
+      }
+      return true;
+    };
+
+    if (funilPortaCanonicaActiva()) {
+      const coaIdPc = resolucaoCoa.coaId;
+      const canonico = await resolverRespostaCanonica(texto, {
+        historico,
+        coaId: coaIdPc,
+        lfcWriter: lfcWriterEntrada || deps.lfcWriter,
+        lfcReader: lfcReaderEntrada || deps.lfcReader,
+        lfcBaseUrl: lfcBaseUrlEntrada || deps.lfcBaseUrl
+      });
+      if (canonico.activo && canonico.mensagem) {
+        let respostaPc = {
+          ok: true,
+          mensagem: canonico.mensagem,
+          intencao,
+          capacidade: "ia",
+          dados: {
+            classificacao,
+            encaminhamento: {
+              destino: "porta_canonica",
+              ok: true,
+              idClasse: rota.rota?.id || null
+            },
+            ...metaVca,
+            ...metaObjectivos,
+            ...metaTopicos,
+            motorAcionado: false,
+            mreInvocado: false,
+            ...(canonico.dadosExtras || {})
+          },
+          origem: "executiveEngine",
+          modo: "porta_canonica"
+        };
+        respostaPc = anexarObservabilidadeCanonico(respostaPc, {
+          familiaCanonico: canonico.familiaCanonico || "protocolo",
+          modo: canonico.modo,
+          coaId:
+            canonico.dadosExtras?.coaId ?? coaIdPc ?? null,
+          casoId: canonico.dadosExtras?.casoId ?? null
+        });
+        respostaPc = anexarObservabilidadeCoa(respostaPc, {
+          coaId: respostaPc.dados?.coaId ?? coaIdPc,
+          casoId: respostaPc.dados?.casoId ?? null,
+          marcadoresLn: canonico.dadosExtras?.marcadoresLn || [],
+          codigoCoa: canonico.dadosExtras?.codigoCoa || null
+        });
+        if (funilClarificacaoEstritaActiva()) {
+          respostaPc = anexarObservabilidadeClarificacao(respostaPc, {
+            clarificacaoEvitada: true,
+            destinoClarificacao: null,
+            razao: "porta_canonica_precede_clarificacao"
+          });
+        }
+        const memoriaPc = atualizarAposInstrucao({
+          instrucao: texto,
+          intencao: respostaPc.intencao,
+          capacidade: respostaPc.capacidade,
+          ok: true,
+          mensagem: respostaPc.mensagem,
+          dados: respostaPc.dados
+        });
+        respostaPc.dados = { ...respostaPc.dados, memoria: memoriaPc };
+        return comEnvelope(respostaPc);
+      }
+    }
+
     // Prioridade (ARQ-026/025): ambiguo_contexto (já tratado) >
     // Gate×objectivo > ambiguo_objetivo > Gate×shift > tópico > referente
-    if (resultadoObj?.clarificacaoGateObjectivo) {
+    if (
+      resultadoObj?.clarificacaoGateObjectivo &&
+      autorizaClarificacaoCsc("csc_gate_objectivo")
+    ) {
       const respostaGo = {
         ok: true,
         mensagem: resultadoObj.clarificacaoGateObjectivo,
@@ -1468,7 +1681,8 @@ export const executiveEngine = {
       });
       if (
         precCscObj.autoridade === "vca_csc" &&
-        precCscObj.acao === "clarificar_contexto"
+        precCscObj.acao === "clarificar_contexto" &&
+        autorizaClarificacaoCsc("csc_objectivo")
       ) {
         const respostaObj = {
           ok: true,
@@ -1505,7 +1719,10 @@ export const executiveEngine = {
       }
     }
 
-    if (resultadoTop?.clarificacaoGateShift) {
+    if (
+      resultadoTop?.clarificacaoGateShift &&
+      autorizaClarificacaoCsc("csc_gate_shift")
+    ) {
       const respostaGs = {
         ok: true,
         mensagem: resultadoTop.clarificacaoGateShift,
@@ -1555,7 +1772,8 @@ export const executiveEngine = {
       });
       if (
         precCscTop.autoridade === "vca_csc" &&
-        precCscTop.acao === "clarificar_contexto"
+        precCscTop.acao === "clarificar_contexto" &&
+        autorizaClarificacaoCsc("csc_topico")
       ) {
         const respostaTop = {
           ok: true,
@@ -1609,7 +1827,8 @@ export const executiveEngine = {
       });
       if (
         precCscRef.autoridade === "vca_csc" &&
-        precCscRef.acao === "clarificar_contexto"
+        precCscRef.acao === "clarificar_contexto" &&
+        autorizaClarificacaoCsc("csc_referente")
       ) {
         const respostaAmb = {
           ok: true,
@@ -1995,7 +2214,15 @@ export const executiveEngine = {
                 : {})
           };
 
-    const coaParaDestino = autorizaContextoSessao ? obterCoaAtivo() : null;
+    // ADR-022 / IMP-092.4 + IMP-094 F4: LFC particionado por coaId.
+    // Resolução única via resolverCoaTurno (mesma que Porta Canónica).
+    const coaSessao = obterCoaAtivo();
+    const coaParaDestino =
+      !resolucaoCoa.coaId
+        ? null
+        : coaSessao && String(coaSessao.id) === String(resolucaoCoa.coaId)
+          ? coaSessao
+          : { id: String(resolucaoCoa.coaId) };
 
     const contextoCapacidadeComLastro = (parcial) =>
       contextoCapacidade({
@@ -2019,6 +2246,9 @@ export const executiveEngine = {
         pedidoConsultaResposta: pedidoConsultaPrec,
         pedidoAnaliseDeliberativa: pedidoAnalisePrec,
         pedidoSituacionalTrabalho: situacionalPrec,
+        lfcWriter: lfcWriterEntrada || deps.lfcWriter,
+        lfcReader: lfcReaderEntrada || deps.lfcReader,
+        lfcBaseUrl: lfcBaseUrlEntrada || deps.lfcBaseUrl,
         ...(turnEnvelope.sinais?.objecto_turno?.valor != null
           ? { objectoTurno: turnEnvelope.sinais.objecto_turno.valor }
           : {})
@@ -2050,6 +2280,7 @@ export const executiveEngine = {
         contextoCapacidade: contextoCapacidadeComLastro,
         deps: depsDestino,
         conduzirMotorPadrao,
+        validacaoContexto: metaVca.validacaoContexto,
         pedidoDecisaoExplicita: pedidoDecisaoPrec,
         pedidoAnaliseDeliberativa: pedidoAnalisePrec,
         pedidoSituacionalTrabalho: situacionalPrec,
@@ -2131,6 +2362,21 @@ export const executiveEngine = {
     }
 
     let resposta = anexarClassificacao(respostaBruta);
+    if (funilClarificacaoEstritaActiva()) {
+      const destinoFinal =
+        resposta?.dados?.encaminhamento?.destino ||
+        resposta?.modo ||
+        rota.destino ||
+        null;
+      const isClar =
+        destinoFinal === "clarificacao" ||
+        String(destinoFinal || "").startsWith("clarificacao_");
+      resposta = anexarObservabilidadeClarificacao(resposta, {
+        clarificacaoEvitada: !isClar,
+        destinoClarificacao: isClar ? destinoFinal : null,
+        razao: obsClarF2.razao
+      });
+    }
     if (!resposta.dados?.precedenciaTurno) {
       resposta = anexarPrecedenciaNaResposta(resposta, {
         ...precPos,

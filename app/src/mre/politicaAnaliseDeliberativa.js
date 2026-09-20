@@ -15,6 +15,7 @@ import {
   ehRecomendacaoOperacional,
   temObjetoPropostaDeliberativa
 } from "../classificadorIntencao/recomendacaoOperacional.js";
+import { ehPedidoRespostaRestrita } from "../classificadorIntencao/pedidoRespostaRestrita.js";
 
 /** Flag de sessão curta: último `detectarPedidoAnaliseDeliberativa` viu análise-somente. */
 let analiseSomenteActiva = false;
@@ -30,10 +31,19 @@ export function ehAnaliseSomente(texto) {
   if (!t) return false;
   return (
     /\b(apenas|somente)\s+(analis[ae]|analisar|avali[ae]|avaliar)\b/.test(t) ||
+    /\b(apenas|somente)\s+a\s+analise\b/.test(t) ||
+    /\banalis[ae]\s+so\b/.test(t) ||
+    /\b(faca|fazer|faz)\s+so\s+analise\b/.test(t) ||
+    /\bso\s+analise\b/.test(t) ||
     /\bvamos\s+apenas\s+(avaliar|analisar|analise)\b/.test(t) ||
     /\bnao\s+quero\s+recomend/.test(t) ||
     /\bnao\s+fa[cz]a\s+recomend/.test(t) ||
-    /\bnao\s+tome\s+(nenhuma\s+)?decis/.test(t)
+    /\bnao\s+d[eê]\s+recomend/.test(t) ||
+    /\bnao\s+recomend(e|ar)\s+nada\b/.test(t) ||
+    /\bsem\s+recomend/.test(t) ||
+    /\bnao\s+tome\s+(nenhuma\s+)?decis/.test(t) ||
+    /\b(apenas|somente)\s+confirm/.test(t) ||
+    /\bresponder\s+apenas\s+com\s+(o\s+)?fato\b/.test(t)
   );
 }
 
@@ -80,6 +90,12 @@ export function obterAutoanaliseActiva() {
 export function detectarPedidoAnaliseDeliberativa(texto) {
   const t = normalizarTexto(texto);
   if (!t) {
+    analiseSomenteActiva = false;
+    autoanaliseActiva = false;
+    return false;
+  }
+  // Resposta restrita (registo/facto/confirmação/lacunas) ≠ deliberação
+  if (ehPedidoRespostaRestrita(texto)) {
     analiseSomenteActiva = false;
     autoanaliseActiva = false;
     return false;

@@ -23,6 +23,7 @@ import {
   resolverRecuperacaoOperacional,
   respostaRecuperacaoNaoExecutavel
 } from "../conversacaoNatural/recuperacaoJob.js";
+import { prefixarDecisaoSeComposta } from "./declaracaoDecisaoUtilizador.js";
 
 /**
  * Opts canónicos para polaridade P0 (IMP-091).
@@ -561,6 +562,7 @@ export async function conduzirTrabalhoExecutivoC3(texto, classificacao, deps = {
         obterJob: deps.obterJob,
         listarJobs: deps.listarJobs || deps.listarPorEstado,
         storeContinuidade: deps.storeContinuidade,
+        coaId: deps.coaId || null,
         ...(deps.pedidoSituacionalTrabalho != null
           ? { situacional: deps.pedidoSituacionalTrabalho === true }
           : {}),
@@ -785,6 +787,9 @@ export async function conduzirTrabalhoExecutivoC3(texto, classificacao, deps = {
       `Iniciei o Motor de Execução para «${tituloJobDeInstrucao(texto)}». ` +
       `Acompanhe Job, Gate ou handoff — não uma recomendação consultiva.`;
   }
+
+  // F21 — decisão + execução no mesmo turno: preservar a decisão no texto C3/Gate
+  mensagem = prefixarDecisaoSeComposta(texto, mensagem);
 
   const falhou =
     !conducao ||

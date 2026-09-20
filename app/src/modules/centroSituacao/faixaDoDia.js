@@ -16,6 +16,7 @@ import {
   listarMensagens,
   obterContextoConversacional
 } from "../conversa/store.js";
+import { htmlComMarcaCeo20 } from "../../ui/identidadeCeo20.js";
 
 /** Texto explícito quando não há evidência no lastro/contexto. */
 export const TEXTO_NAO_IDENTIFICADO = "Não foi identificado.";
@@ -707,8 +708,12 @@ export function htmlFaixaDoDia(painelAberto) {
         <p class="cs-kicker">Encerrar o dia</p>
         <p class="cs-dia-painel-desc">${
           soLeituraCompleto
-            ? "Continuidade registada pelo CEO — campos preenchidos a partir do estado operacional."
-            : "Campos preenchidos pelo CEO a partir do contexto e lastro disponíveis. Revise, edite se quiser e confirme."
+            ? htmlComMarcaCeo20(
+                "Continuidade registada pelo CEO — campos preenchidos a partir do estado operacional."
+              )
+            : htmlComMarcaCeo20(
+                "Campos preenchidos pelo CEO a partir do contexto e lastro disponíveis. Revise, edite se quiser e confirme."
+              )
         }</p>
         <label class="cs-dia-label" for="cs-dia-andou">O que andou</label>
         <input id="cs-dia-andou" name="andou" type="text" maxlength="500" required

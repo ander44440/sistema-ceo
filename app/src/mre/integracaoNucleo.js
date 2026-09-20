@@ -14,6 +14,7 @@ import {
   hintEstagio6LacunaFonteOficial
 } from "../camadaConhecimento/portaRecuperacao.js";
 import { criarChamarLlmCeo } from "./adaptadorLlmCeo.js";
+import { montarCgMetaDeEntradaMre } from "../contextGovernor/etiquetarPipeline.js";
 import { gerarComunicadoExecutivo } from "./speaker/speakerExecutivo.js";
 import { textoParaVoz } from "./canais/adaptarCanal.js";
 import { executarDeliberacaoMre } from "./executarDeliberacao.js";
@@ -25,7 +26,11 @@ import {
   schemaHintConsciencia,
   garantirReflexoEstadoExecutivo
 } from "../conscienciaOperacional/influenciaDeliberacao.js";
-import { garantirDisciplinaLastroInsuficiente } from "../conscienciaOperacional/disciplinaLastroInsuficiente.js";
+import {
+  garantirDisciplinaLastroInsuficiente,
+  temFactosLfcActivosNoTurno,
+  soLacunasGenericasEssenciais
+} from "../conscienciaOperacional/disciplinaLastroInsuficiente.js";
 import {
   detectarPedidoAnaliseDeliberativa,
   detectarPedidoConsultaResposta,
@@ -50,15 +55,51 @@ import {
   obterManifestoMg2,
   obterManifestoMg2EmCache
 } from "../camadaConhecimento/manifestoMg2.js";
-
 import {
   blocoGovernaFactosUtilizador,
   factosMateriaisDoTurno
 } from "./factosTurnoUtilizador.js";
+import { enriquecerEntradaMreComLfc } from "./consumoLfcMre.js";
 import {
   soLacunasInstitucionaisCoaPainel,
   temFactosMateriaisDoUtilizador
 } from "./ncs/politicas.js";
+
+/**
+ * ADR-022 CM12: com LFC activo e lacuna só genérica, não manter solicitar_dados.
+ * @param {object} parecer
+ * @param {ReadonlyArray<string>|null|undefined} factosOficiais
+ */
+export function ajustarParecerSobLfcActivo(parecer, factosOficiais) {
+  if (!parecer || typeof parecer !== "object") return parecer;
+  const estado = parecer.decisaoExecutiva?.estado;
+  if (estado !== "solicitar_dados") return parecer;
+  if (!temFactosLfcActivosNoTurno(factosOficiais)) return parecer;
+  const lacunas = Array.isArray(parecer.lacunas) ? parecer.lacunas : [];
+  if (lacunas.length && !soLacunasGenericasEssenciais(lacunas)) {
+    return parecer;
+  }
+  const de = { ...(parecer.decisaoExecutiva || {}) };
+  de.estado = "monitorar";
+  if (!String(de.recomendacao || "").trim()) {
+    de.recomendacao =
+      "Com base nos factos activos do LFC, a preocupação executiva central é a " +
+      "compressão da margem (queda da margem líquida com subida de custos de matérias-primas).";
+  }
+  const acao = {
+    ...(parecer.acao && typeof parecer.acao === "object" ? parecer.acao : {}),
+    tipo: "aguardar",
+    descricao:
+      String(parecer.acao?.descricao || "").trim() ||
+      "Acompanhar a pressão sobre a margem com base nos factos LFC activos."
+  };
+  return {
+    ...parecer,
+    lacunas: [],
+    decisaoExecutiva: de,
+    acao
+  };
+}
 
 /**
  * C3: factos materiais do turno + lacunas COA/Painel →
@@ -101,7 +142,6 @@ export function ajustarParecerSobFactosTurno(parecer, factosOficiais) {
   };
 }
 
-
 /** Store de retenção da sessão (browser/Node). */
 let storeRetencaoSessao = criarStoreRetencaoMemoria();
 /** Idempotência de despacho na sessão. */
@@ -120,6 +160,8 @@ export function reiniciarStoresPosDeliberacaoParaTestes() {
  * Monta entrada do MRE a partir do contexto do Núcleo.
  * IMP-070 B1 / REQ-070: briefing = projecção subordinada (não canónica).
  * IMP-070 B5 / REQ-072: lastro de Camada só via Porta de recuperação.
+ * IMP-092.4 / ADR-022: consumo LFC é passo separado (`enriquecerEntradaMreComLfc`)
+ * após esta montagem — não escrever LFC aqui.
  * @param {object} ctx
  */
 export function montarEntradaMre(ctx) {
@@ -162,7 +204,6 @@ export function montarEntradaMre(ctx) {
   for (const f of factosUtilizador) {
     factos.push(f);
   }
-
 
   if (!isolamento) {
     if (mem?.proximoPasso) factos.push(`Próximo passo: ${mem.proximoPasso}`);
@@ -232,21 +273,11 @@ export function montarEntradaMre(ctx) {
       ? ctx.pedidoDecisaoExplicita === true
       : undefined;
 
+  // FRENTE 7 / assimetria F6: a âncora do turno NÃO funde fio/MTE/agenda/Jobs.
+  // Esses anexos ficam separados e governáveis (historico, lastro, anexosDeliberativos);
+  // o pipeline LLM usa mensagemAncoraEntradaMre → mre_contrato sem fusão irreversível.
+  const mensagemAtual = texto;
   let mensagem = enriquecerMensagemComBriefing(texto, factosBriefing);
-  mensagem = enriquecerMensagemComConsciencia(mensagem, lastro, (l) =>
-    blocoContextoEntradaMre(l, texto, {
-      pedidoInfoGathering: infoGatheringEntrada,
-      ...(pdEntrada !== undefined
-        ? { pedidoDecisaoExplicita: pdEntrada }
-        : {})
-    })
-  );
-  // DEC-010 / calibração: fio recente + âncoras EIC → raciocínio com continuidade
-  mensagem = enriquecerMensagemComFioRecente(mensagem, ctx.historico);
-  mensagem = enriquecerMensagemComMemoriaTrabalho(mensagem, lastro, {
-    omitirInstrucaoOperacional: infoGatheringEntrada
-  });
-
   const blocoFactosUser = blocoGovernaFactosUtilizador(factosUtilizador);
   if (blocoFactosUser) {
     mensagem = `${mensagem}\n\n${blocoFactosUser}\n${factosUtilizador.join("\n")}`;
@@ -264,8 +295,35 @@ export function montarEntradaMre(ctx) {
     }
   }
 
+  const blocoConsciencia =
+    lastro && lastro.temContextoRelevante === true
+      ? blocoContextoEntradaMre(lastro, texto, {
+          pedidoInfoGathering: infoGatheringEntrada,
+          ...(pdEntrada !== undefined
+            ? { pedidoDecisaoExplicita: pdEntrada }
+            : {})
+        })
+      : null;
+  const comFio = enriquecerMensagemComFioRecente("", ctx.historico);
+  const blocoFioRecente = comFio.trim() ? comFio.trim() : null;
+  const comMte = enriquecerMensagemComMemoriaTrabalho("", lastro, {
+    omitirInstrucaoOperacional: infoGatheringEntrada
+  });
+  const blocoMemoriaTrabalho = comMte.trim() ? comMte.trim() : null;
+
   return {
     mensagem,
+    /** Pedido actual do utilizador — âncora independente (não inclui fio/MTE/agenda). */
+    mensagemAtual,
+    /**
+     * Lastros de continuidade/ops separados da âncora — governáveis pelo CG/pipeline.
+     * Não entram em `mensagem` nem no JSON base do `mre_contrato`.
+     */
+    anexosDeliberativos: {
+      fioRecente: blocoFioRecente,
+      memoriaTrabalho: blocoMemoriaTrabalho,
+      consciencia: blocoConsciencia
+    },
     coaId: isolamento
       ? null
       : coa?.id ?? mem?.projetoAtivo?.id ?? null,
@@ -304,6 +362,14 @@ export function montarEntradaMre(ctx) {
       : {})
   };
 }
+
+/**
+ * Âncora do turno para o LLM / mre_contrato (FRENTE 7).
+ * Preferir `mensagemAtual`; fallback à `mensagem` (compat).
+ * @param {object|null|undefined} entrada
+ * @returns {string}
+ */
+export { mensagemAncoraEntradaMre } from "./mensagemAncora.js";
 
 /**
  * P4 — última resposta completa do CEO no histórico (sem truncar).
@@ -471,17 +537,6 @@ function enriquecerMensagemComBriefing(texto, factosBriefing) {
 }
 
 /**
- * @param {string} texto
- * @param {object|null|undefined} lastro
- * @param {(lastro: object) => string} blocoFn
- */
-function enriquecerMensagemComConsciencia(texto, lastro, blocoFn) {
-  if (!lastro || lastro.temContextoRelevante !== true) return texto;
-  if (typeof blocoFn !== "function") return texto;
-  return `${texto}\n\n${blocoFn(lastro)}`;
-}
-
-/**
  * @param {object} ctx
  * @param {object} [deps]
  */
@@ -510,11 +565,21 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     }
   }
 
-  const entrada = montarEntradaMre(ctxComManifesto);
+  let entrada = montarEntradaMre(ctxComManifesto);
+  // IMP-092.4 / ADR-022 — LfcReader RO sob gatilho COA+caso; nunca Writer.
+  entrada = await enriquecerEntradaMreComLfc(entrada, {
+    reader: ctxComManifesto.lfcReader || deps.lfcReader || null,
+    coaId: entrada.coaId,
+    instrucao: ctxComManifesto.instrucao || "",
+    casoId: ctxComManifesto.lfcCasoId || ctxComManifesto.casoId || null
+  });
   if (ctx.consultaNaoEAcao === true) entrada.consultaNaoEAcao = true;
   if (ctx.tipoTurno) entrada.tipoTurno = ctx.tipoTurno;
   if (ctx.precedenciaTurno) entrada.precedenciaTurno = ctx.precedenciaTurno;
-  const chamarLlmBase = deps.chamarLlm || criarChamarLlmCeo();
+  // IMP-093 M2 — meta CG a partir da entrada (fragmentos reais; SHADOW).
+  const cgMetaBase = montarCgMetaDeEntradaMre(entrada, ctxComManifesto);
+  const chamarLlmBase =
+    deps.chamarLlm || criarChamarLlmCeo({ cgMetaBase });
   const lastro = ctx.lastroConsciencia || null;
   const temLastroConsciencia = Boolean(
     lastro && lastro.temContextoRelevante === true
@@ -665,13 +730,17 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
 
   // Em exploração / info-gathering, preferir solicitar_dados (lacunas).
   // Pedido explícito de decisão: não preferir solicitar_dados por conflito/exploração.
+  // ADR-022: com LFC activo no turno, não preferir solicitar_dados só por exploração.
+  const temLfcActivo = temFactosLfcActivosNoTurno(entrada.factosOficiais);
   const preferirSolicitarDados = pedidoDecisao
     ? false
-    : pedidoInfoGathering || exploratoria
-      ? true
-      : temLastroBriefing || temLastroConsciencia
-        ? false
-        : undefined;
+    : temLfcActivo
+      ? false
+      : pedidoInfoGathering || exploratoria
+        ? true
+        : temLastroBriefing || temLastroConsciencia
+          ? false
+          : undefined;
 
   const resultado = await executarDeliberacaoMre(entrada, {
     chamarLlm,
@@ -739,10 +808,14 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
     };
   }
 
-
-  // C3: factos do turno + só COA/Painel → não substituir análise por pedir lastro institucional.
-  let parecerAjustado = ajustarParecerSobFactosTurno(
+  // ADR-022 CM12: LFC activos + só lacuna genérica → não falar como se faltasse lastro.
+  let parecerAjustado = ajustarParecerSobLfcActivo(
     resultado.parecer,
+    entrada.factosOficiais
+  );
+  // C3: factos do turno + só COA/Painel → não substituir análise por pedir lastro institucional.
+  parecerAjustado = ajustarParecerSobFactosTurno(
+    parecerAjustado,
     entrada.factosOficiais
   );
   if (parecerAjustado !== resultado.parecer) {
@@ -770,7 +843,8 @@ export async function executarRotaDeliberativa(ctx, deps = {}) {
   const comunicado = falado.comunicado;
   if (pedidoAnalise) {
     const prosaAnalise = montarProsaAnaliseDeliberativa(resultado.parecer, {
-      maxAnalise: canal === "voz" ? 400 : 900
+      maxAnalise: canal === "voz" ? 400 : 900,
+      instrucao: msgUser
     });
     if (prosaAnalise) {
       comunicado.texto = prosaAnalise;

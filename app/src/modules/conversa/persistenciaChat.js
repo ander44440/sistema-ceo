@@ -3,8 +3,8 @@
  * Não mistura workspace/gabinete — só buckets de mensagens.
  */
 
-export const STORAGE_KEY_CHAT = "ceo.conversa.transcript.v1";
-const VERSAO = 1;
+export const STORAGE_KEY_CHAT = "ceo.conversa.transcript.v2";
+const VERSAO = 2;
 
 /**
  * @returns {Storage | null}

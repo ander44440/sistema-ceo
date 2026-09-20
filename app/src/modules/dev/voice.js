@@ -21,7 +21,7 @@ export function montarDevVoice() {
       <button type="button" class="onb-btn" id="dv-stop">Parar</button>
     </div>
     <label class="label" for="dv-text">Texto</label>
-    <textarea id="dv-text" rows="4" style="width:100%;max-width:40rem">Olá. Eu sou o CEO Digital. Este é um teste da camada profissional de voz.</textarea>
+    <textarea id="dv-text" rows="4" style="width:100%;max-width:40rem">Olá. Eu sou o CEO 2.0 Digital. Este é um teste da camada profissional de voz.</textarea>
     <p class="meta" id="dv-status" aria-live="polite"></p>
     <p class="meta"><a href="#/dashboard">← Voltar ao Centro de Situação</a></p>
   `;

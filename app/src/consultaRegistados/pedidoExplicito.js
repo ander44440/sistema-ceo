@@ -21,7 +21,7 @@ const RE_DECISAO =
   /\b(o\s+que\s+decidimos|que\s+decis[aã]o|decis[oõ]es?\s+registadas?|consulta\s+[aà]\s+mem[oó]ria\s+organizacional|mem[oó]ria\s+organizacional|o\s+que\s+ficou\s+registado|o\s+que\s+ficou\s+registrado)\b/i;
 
 const RE_DISCUSSAO =
-  /\b(o\s+que\s+discutimos|no\s+transcript|no\s+hist[oó]rico\s+da\s+conversa|discuss[oõ]es?\s+(antigas?|registadas?|registradas?))\b/i;
+  /\b(o\s+que\s+discutimos|no\s+transcript|no\s+hist[oó]rico\s+da\s+conversa|discuss[oõ]es?\s+(antigas?|registadas?|registradas?)|o\s+que\s+j[aá]\s+foi\s+informado|o\s+que\s+(j[aá]\s+)?(foi\s+)?(dito|informado)\s+(at[eé]\s+aqui|nesta\s+conversa)|leitura\s+do\s+que\s+j[aá]\s+foi\s+informado|nesta\s+conversa\s+(o\s+que|quais))\b/i;
 
 /** Referência explícita ao HFC (Histórico Físico das Conversas). */
 const RE_HISTORICO_FISICO = /\bhist[oó]rico\s+f[ií]sico\b/i;

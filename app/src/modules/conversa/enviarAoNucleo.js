@@ -8,15 +8,35 @@ import {
   acrescentarMensagem,
   atualizarMensagem,
   criarMensagem,
+  definirContextoConversacional,
   listarMensagens,
   obterContextoConversacional
 } from "./store.js";
 import { obterFioTranscriptCoa } from "../../classificadorIntencao/fioConversacional.js";
 import { executiveEngine } from "../../executiveEngine/index.js";
+import { obterCoaAtivo } from "../../executiveEngine/coaSessao.js";
 import {
   prepararGestoEnvio,
   reproduzirRespostaCeo
 } from "../../experienciaVoz/reproduzirResposta.js";
+
+/**
+ * Projeto activo (Abrir) é a fonte de verdade do COA do turno.
+ * Re-sincroniza o bucket conversacional se divergir.
+ * @returns {string|null}
+ */
+function resolverCoaIdEnvio() {
+  const sessao = obterCoaAtivo();
+  const idSessao = sessao?.id ? String(sessao.id).trim() : null;
+  const conv = obterContextoConversacional();
+  if (idSessao) {
+    if (conv !== idSessao) {
+      definirContextoConversacional(idSessao);
+    }
+    return idSessao;
+  }
+  return conv || null;
+}
 
 /**
  * @param {string} textoBruto
@@ -60,7 +80,7 @@ export async function enviarAoNucleo(textoBruto, opts = {}) {
       );
       publicarJob = publicarJobFila;
     }
-    const coaId = obterContextoConversacional();
+    const coaId = resolverCoaIdEnvio();
     const transcript = listarMensagens()
       .filter((m) => m.id !== placeholder.id)
       .map((m) => ({

@@ -38,6 +38,7 @@ import {
   comporAnaliseConsultaDesdeSnapshot,
   diagnosticoConsultaSituacional
 } from "../snapshotSituacionalConsulta.js";
+import { mensagemAncoraEntradaMre } from "../mensagemAncora.js";
 
 function trimStr(v, fallback = "") {
   const s = typeof v === "string" ? v.trim() : "";
@@ -137,7 +138,7 @@ export async function estagio0Diagnostico(entrada, deps) {
     schemaHint: "{ objetivoReal, problemaNegocio, natureza }",
     contexto: comContextoNcs(
       {
-        mensagem: entrada.mensagem,
+        mensagem: mensagemAncoraEntradaMre(entrada),
         intencao: entrada.intencao || null
       },
       deps.pacoteNcs
@@ -146,7 +147,10 @@ export async function estagio0Diagnostico(entrada, deps) {
   let natureza = bruto.natureza;
   if (!NaturezaInteracao.includes(natureza)) natureza = "operacional";
   return {
-    objetivoReal: trimStr(bruto.objetivoReal, trimStr(entrada.mensagem, "objetivo não identificado")),
+    objetivoReal: trimStr(
+      bruto.objetivoReal,
+      trimStr(mensagemAncoraEntradaMre(entrada), "objetivo não identificado")
+    ),
     problemaNegocio: trimStr(bruto.problemaNegocio, "não identificado"),
     natureza
   };
@@ -161,13 +165,19 @@ export async function estagio1Enquadramento(entrada, diagnostico, deps) {
   if (deps.pedidoConsultaResposta === true) tipoPedido = "informacao";
   else if (/info|pergunta|consulta/i.test(intencaoId)) tipoPedido = "informacao";
   if (/exec|fila|despach/i.test(intencaoId)) tipoPedido = "execucao";
-  if (/ambigu/i.test(intencaoId) || !entrada.mensagem?.trim()) tipoPedido = "ambiguo";
+  if (/ambigu/i.test(intencaoId) || !mensagemAncoraEntradaMre(entrada)) {
+    tipoPedido = "ambiguo";
+  }
 
   const bruto = await chamarComRetry(deps.chamarLlm, {
     estagio: "1_enquadramento",
     schemaHint: "{ tipoPedido, urgencia, escopo }",
     contexto: comContextoNcs(
-      { mensagem: entrada.mensagem, diagnostico, tipoPedidoSinal: tipoPedido },
+      {
+        mensagem: mensagemAncoraEntradaMre(entrada),
+        diagnostico,
+        tipoPedidoSinal: tipoPedido
+      },
       deps.pacoteNcs
     )
   });

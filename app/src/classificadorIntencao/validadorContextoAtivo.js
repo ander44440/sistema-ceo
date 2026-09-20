@@ -28,6 +28,7 @@ import {
   extrairAncorasMensagem,
   familiaDeAncora
 } from "./gestorTopicos.js";
+import { pediuAmbitoCasoLfc } from "../mre/consumoLfcMre.js";
 
 /**
  * @typedef {"pertence"|"independente"|"conhecimento_geral"|"metaconversa"|"novo_contexto"|"ambiguo_contexto"} VeredictoVca
@@ -350,9 +351,13 @@ export function validarContextoAtivo(entrada = { mensagem: "" }) {
   // P0 — consulta / proibição / análise deliberativa: nunca lastro CSC de Job.
   // Contrato: lastro de execução (CSC/Job) ≠ contexto de consulta (COA/Painel).
   // Consulta, análise e autodiagnóstico isolam CSC mas preservam sessão.
+  // IMP-093 B1: consulta explícita ao LFC do caso activo também preserva COA/caso
+  // (senão A1/P5 anulam a sessão e o llm_rapido nunca consome lfc_activos).
   if (
     ehProibicaoExecucaoExplicita(t) ||
     ehConsultaEstadoOperacional(t) ||
+    pediuAmbitoCasoLfc(mensagem) ||
+    pediuAmbitoCasoLfc(t) ||
     (ehAnalisePolaridadeVca(t, fioCoa, optsSinais) &&
       !ehComandoExecucaoExplicito(t))
   ) {

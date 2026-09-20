@@ -34,10 +34,12 @@ import {
   aplicarPoliticaDecisaoSobConflito,
   detectarPedidoDecisaoExplicita
 } from "../politicaDecisaoSobConflito.js";
+import { aplicarPoliticaInfoGathering } from "../../classificadorIntencao/pedidoInfoGathering.js";
 import {
   comporAnaliseConsultaDesdeSnapshot,
   injectarSnapshotSituacionalNaEntrada
 } from "../snapshotSituacionalConsulta.js";
+import { mensagemAncoraEntradaMre } from "../mensagemAncora.js";
 
 /**
  * @typedef {object} EntradaMre
@@ -126,7 +128,7 @@ export async function executarPipeline07(entrada, deps) {
   const pacoteNcs = obterPacoteNcs(deps) || obterPacoteNcs(entrada);
 
   try {
-    if (!entrada || !String(entrada.mensagem || "").trim()) {
+    if (!entrada || !mensagemAncoraEntradaMre(entrada)) {
       throw new Error("Entrada deliberativa sem mensagem");
     }
 
@@ -135,11 +137,11 @@ export async function executarPipeline07(entrada, deps) {
       deps.pacoteNcs = pacoteNcs;
     }
 
-    const msgUsuario = String(entrada.mensagem || "")
+    const msgUsuario = mensagemAncoraEntradaMre(entrada)
       .split("[DIRETRIZ CANÓNICA — Manifesto")[0]
       .trim();
     // Info-gathering / PD=false explícito do Núcleo prevalece sobre re-detecção
-    // na mensagem enriquecida (fio/MTE podem conter «decisão» legado).
+    // na âncora do turno (FRENTE 7: fio/MTE já não fundem na mensagem base).
     const pedidoInfoGathering = deps.pedidoInfoGathering === true;
     const pedidoDecisao = pedidoInfoGathering
       ? false
@@ -377,6 +379,10 @@ export async function executarPipeline07(entrada, deps) {
                 : comporAnaliseConsultaDesdeSnapshot(snap)
           };
         }
+      } else if (pedidoInfoGathering) {
+        decisaoExecutiva = aplicarPoliticaInfoGathering(decisaoExecutiva, {
+          pedidoInfoGathering: true
+        });
       } else {
         decisaoExecutiva = aplicarPoliticaAnaliseDeliberativa(decisaoExecutiva, {
           pedidoAnalise,

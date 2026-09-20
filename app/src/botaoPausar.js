@@ -60,7 +60,7 @@ export function executarPausa() {
 export function pintarBotaoPausar(btn) {
   btn.dataset.pauseState = pausado ? "pausado" : "activo";
   btn.setAttribute("aria-label", pausado ? "Pausado" : "Pausar");
-  btn.title = pausado ? "CEO pausado" : "Pausar";
+  btn.title = pausado ? "CEO 2.0 pausado" : "Pausar";
   btn.classList.toggle("is-pausado", pausado);
 }
 

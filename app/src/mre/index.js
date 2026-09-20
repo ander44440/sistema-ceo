@@ -25,9 +25,28 @@ export {
   ehRotaDeliberativa,
   executarRotaDeliberativa,
   montarEntradaMre,
+  mensagemAncoraEntradaMre,
   obterStoreRetencaoSessao,
   reiniciarStoresPosDeliberacaoParaTestes
 } from "./integracaoNucleo.js";
+
+export {
+  PREFIXO_FACTO_LFC,
+  obterConsumoLfcParaMre,
+  aplicarConsumoLfcNaEntrada,
+  enriquecerEntradaMreComLfc,
+  extrairTituloCasoParaConsumoMre,
+  pediuAmbitoCasoLfc
+} from "./consumoLfcMre.js";
+
+export {
+  detectarRestricaoBaseFactual,
+  removerFioRecenteDaMensagem,
+  removerReparseHfcDaMensagem,
+  regimeRfrActivo,
+  aplicarIsolamentoRfrNaEntrada,
+  MARCA_FIO_RECENTE
+} from "./restricaoBaseFactual.js";
 
 export { gerarComunicadoExecutivo } from "./speaker/speakerExecutivo.js";
 

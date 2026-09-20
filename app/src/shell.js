@@ -2,6 +2,10 @@ import { listarRotas, navegar, obterRota } from "./router.js";
 import { montarBotaoVoz } from "./experienciaVoz/botaoVoz.js";
 import { montarBotaoPausar } from "./botaoPausar.js";
 import { obterProjetoAtivo } from "./catalogoProjetos/index.js";
+import {
+  htmlMarcaCeo20,
+  htmlComMarcaCeo20
+} from "./ui/identidadeCeo20.js";
 
 const NAV_ICONS = Object.freeze({
   dashboard:
@@ -62,9 +66,9 @@ export function montarShell(root) {
     <div class="shell" id="shell">
       <aside class="shell-sidebar" id="shell-sidebar" role="navigation" aria-label="Navegação principal">
         <div class="shell-brand-block">
-          <div class="shell-mark" aria-hidden="true">CEO</div>
+          <div class="shell-mark" aria-hidden="true">${htmlMarcaCeo20()}</div>
           <div>
-            <strong>CEO</strong>
+            <strong>${htmlMarcaCeo20()}</strong>
             <span>Sistema Executivo de Governança</span>
           </div>
         </div>
@@ -122,7 +126,7 @@ export function montarShell(root) {
             </div>
           </div>
         </div>
-        <span id="system-status" class="visually-hidden">CEO Online</span>
+        <span id="system-status" class="visually-hidden">${htmlComMarcaCeo20("CEO Online")}</span>
       </header>
 
       <div class="shell-backdrop" id="shell-backdrop" hidden></div>
@@ -145,7 +149,7 @@ export function montarShell(root) {
   const pausaUi = pauseHost
     ? montarBotaoPausar(pauseHost, {
         onPausa: (p) => {
-          if (p) statusEl.textContent = "CEO pausado";
+          if (p) statusEl.innerHTML = htmlComMarcaCeo20("CEO pausado");
         }
       })
     : null;
@@ -271,7 +275,7 @@ export function montarShell(root) {
     voz: vozUi,
     pausa: pausaUi,
     definirStatus(texto) {
-      statusEl.textContent = texto;
+      statusEl.innerHTML = htmlComMarcaCeo20(texto);
       actualizarCabecalho();
     },
     renderModule(nodeOrHtml) {

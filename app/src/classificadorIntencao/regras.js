@@ -29,6 +29,12 @@ import {
 } from "./ancoraEmpresa.js";
 import { detectarPedidoDecisaoExplicita } from "./pedidoDecisaoExplicita.js";
 import { ehConsultaCatalogoProjetos } from "./consultaCatalogoProjetos.js";
+import { detectarModoRespostaRestrita } from "./pedidoRespostaRestrita.js";
+import { pediuAmbitoCasoLfc } from "../mre/consumoLfcMre.js";
+import {
+  disciplinarSaidaClarificacao,
+  detectarPedidoProtocoloExecutivo
+} from "./clarificacaoDisciplinada.js";
 
 /**
  * @typedef {object} ContextoClassificacao
@@ -162,13 +168,20 @@ export function ehProibicaoExecucaoExplicita(t) {
     /\bnao\s+(execute|executa|executar)(\s+nada)?\b/.test(t) ||
     /\bnao\s+(implemente|implementa|implementar)\b/.test(t) ||
     /\bnao\s+(crie|cria|criar)\s+(um\s+)?jobs?\b/.test(t) ||
+    // F11/C3 — «não despache Jobs» ≠ verbo E2.1 de despacho
+    /\bnao\s+(despache|despacha|despachar)(\s+(um\s+|o\s+|novo\s+|nenhum\s+)?)?jobs?\b/.test(
+      t
+    ) ||
+    /\bnao\s+(despache|despacha|despachar)\b/.test(t) ||
     /\bnao\s+(faca|faz|fazer)\s+(altera|mudan|nada)\b/.test(t) ||
     /\bnao\s+faca\s+alteracoes?\b/.test(t) ||
     /\bapenas\s+(responda|informe|diga|analise|analisar|mostre)\b/.test(t) ||
     /\bsomente\s+(responda|informe|diga|analise|analisar|mostre)\b/.test(t) ||
     /\bso\s+(responda|informe|diga)\b/.test(t) ||
-    /\bsem\s+(executar|execucao|criar\s+jobs?|alterar|implementar)\b/.test(t) ||
-    /\bnunca\s+(execute|executa|implemente|crie\s+jobs?)\b/.test(t)
+    /\bsem\s+(executar|execucao|criar\s+jobs?|despachar|despacho|alterar|implementar)\b/.test(
+      t
+    ) ||
+    /\bnunca\s+(execute|executa|implemente|crie\s+jobs?|despache|despachar)\b/.test(t)
   );
 }
 
@@ -182,15 +195,31 @@ export function ehConsultaEstadoOperacional(t) {
   if (!t) return false;
   if (ehComandoExecucaoExplicito(t)) return false;
 
+  // F25/T20 — resumo composto COA+LFC+Jobs (antes das âncoras genéricas)
+  if (ehPedidoResumoCompostoSessao(t)) return true;
+
   // Âncoras operacionais explícitas
+  // F19: «estado operacional (actual|atual)», «Jobs em aberto», «último Job»
+  // F23: Jobs em recuperação / dispatched / «há algum Job» — consulta, não C3/MRE
   const ancoraOperacional =
     /\bgates?\b/.test(t) ||
     /\bjobs?-\d+\b/.test(t) ||
     /\bjobs?\s+pendentes?\b/.test(t) ||
-    /\bestado\s+(do\s+)?(jobs?|gates?|sistema|ceo|atual|fila)\b/.test(t) ||
-    /\bestado\s+da\s+fila\b/.test(t) ||
-    /\bstatus\s+(do\s+)?(jobs?|gates?|sistema|ceo|fila)\b/.test(t) ||
-    /\bestado\s+atual\b/.test(t) ||
+    /\bjobs?\s+em\s+aberto\b/.test(t) ||
+    /\bjobs?\s+em\s+recuperacao\b/.test(t) ||
+    /\bem\s+recuperacao\b/.test(t) ||
+    /\bdispatched\b/.test(t) ||
+    /\bha\s+(algum|alguns)\s+jobs?\b/.test(t) ||
+    /\b(ultimo|ultima)\s+jobs?\b/.test(t) ||
+    /\bjobs?\s+(mais\s+)?recente\b/.test(t) ||
+    /\bestado\s+operacional(\s+(atual|actual))?\b/.test(t) ||
+    /\bestado\s+(do\s+)?(jobs?|gates?|sistema|ceo|atual|actual|fila)\b/.test(
+      t
+    ) ||
+    /\bestado\s+(operacional\s+)?(atual|actual)(\s+da\s+sessao)?\b/.test(t) ||
+    /\bestado\s+da\s+(fila|sessao)\b/.test(t) ||
+    /\bstatus\s+(do\s+)?(jobs?|gates?|sistema|ceo|fila|sessao)\b/.test(t) ||
+    /\bestado\s+(atual|actual)\b/.test(t) ||
     /^status$/.test(t) ||
     /\bfila\s+(de\s+)?(execucao|jobs?)\b/.test(t) ||
     /\b(resultado|verificad|verificacao).*\bjobs?-\d+\b/.test(t) ||
@@ -205,12 +234,12 @@ export function ehConsultaEstadoOperacional(t) {
 
   const perguntaOuPedidoInfo =
     ehPerguntaDeliberativa(t) ||
-    /^(qual|quais|o\s+que|me\s+mostre|mostra|mostrar|diga|informe|liste|listar|mostre)\b/.test(
+    /^(qual|quais|o\s+que|me\s+mostre|mostra|mostrar|diga|informe|liste|listar|mostre|ha)\b/.test(
       t
     ) ||
     /^(o\s+)?jobs?-\d+\b/.test(t) ||
     /\b(me\s+diga|me\s+informe|me\s+mostre)\b/.test(t) ||
-    /\b(estado|status|resultado|verificad|verificacao|pendenc|fila|gates?)\b/.test(
+    /\b(estado|status|resultado|verificad|verificacao|pendenc|fila|gates?|recuperacao|dispatched)\b/.test(
       t
     ) ||
     /\bconsulte?\b/.test(t) ||
@@ -287,6 +316,42 @@ export function ehPedidoRelatoEncerramento(t) {
 }
 
 /**
+ * F25/T20 — resumo composto de encerramento: COA + LFC + Jobs.
+ * Consulta factual (C4); não é relato dos três campos nem deliberação MRE.
+ * Texto já normalizado (sem acentos).
+ * @param {string} t
+ */
+export function ehPedidoResumoCompostoSessao(t) {
+  if (!t) return false;
+  const pediuResumo =
+    /\b(resuma|resumo|consolid)\b/.test(t) ||
+    (/\bencerrar\b/.test(t) && /\bestado\s+final\b/.test(t)) ||
+    /\bestado\s+final\s+(desta\s+)?sessao\b/.test(t);
+  if (!pediuResumo) return false;
+  const temCoa = /\bcoa\b/.test(t);
+  const temLfc =
+    /\blfc\b/.test(t) ||
+    (/\bfactos?\b/.test(t) && /\b(activ|ativ|confirmad)\b/.test(t));
+  const temJobs = /\bjobs?\b/.test(t);
+  return temCoa && temLfc && temJobs;
+}
+
+/**
+ * Proibição explícita de propor próximos passos no pedido actual.
+ * @param {string} t — normalizado
+ */
+export function ehProibicaoProximosPassos(t) {
+  if (!t) return false;
+  return (
+    /\bsem\s+(propor\s+)?pr[oó]ximos?\s+passos?\b/.test(t) ||
+    /\bn[aã]o\s+(propor|proponha|sugira|adicione)\s+pr[oó]ximos?\s+passos?\b/.test(
+      t
+    ) ||
+    /\bsem\s+pr[oó]ximo\s+passo\b/.test(t)
+  );
+}
+
+/**
  * Pedido situacional sobre o trabalho em curso (etapa / concluído / agora / próximo passo).
  * Não é panorama curto «Qual é o estado atual?» — deve ir a C2/deliberação, não a estado_geral.
  * @param {string} t — texto normalizado
@@ -294,12 +359,15 @@ export function ehPedidoRelatoEncerramento(t) {
 export function ehPedidoSituacionalTrabalho(t) {
   if (!t) return false;
   if (ehComandoExecucaoExplicito(t)) return false;
+  // «sem próximos passos» / «não propor próximo passo» ≠ pedido situacional
+  const pediuProximoPasso =
+    /\bpr[oó]ximo\s+passo\b/.test(t) && !ehProibicaoProximosPassos(t);
   return (
     /\bonde\s+paramos\b/.test(t) ||
     /\betapa\b/.test(t) ||
     /\b(acabamos|acabou)\s+de\s+concluir\b/.test(t) ||
     /\b(o\s+que\s+)?(estamos|estou)\s+fazendo\s+agora\b/.test(t) ||
-    /\bpr[oó]ximo\s+passo\b/.test(t) ||
+    pediuProximoPasso ||
     /\btrabalho\s+(que\s+estamos|em\s+curso)\b/.test(t) ||
     /\bestado\s+(atual\s+)?(do\s+)?trabalho\b/.test(t) ||
     /\bsitua[cç][aã]o\s+(do\s+)?trabalho\b/.test(t) ||
@@ -367,11 +435,33 @@ function pedidoDecisaoDe(ctx, t) {
   return detectarPedidoDecisaoExplicita(t);
 }
 
+/**
+ * F22 / T07 — mudança explícita de assunto + consulta de estado.
+ * «Esqueça preço/margem» não deve virar análise (objecto B) e anular C4.
+ * @param {string} t — normalizado
+ */
+export function ehMudancaAssuntoComConsultaEstado(t) {
+  if (!t || !ehConsultaEstadoOperacional(t)) return false;
+  return (
+    /\bmud[ae]\s+de\s+assunto\b/.test(t) ||
+    /\bmudando\s+de\s+assunto\b/.test(t) ||
+    /\b(mudar|mude|muda)\s+(o\s+)?contexto\b/.test(t) ||
+    /\besque[cç]a\b/.test(t) ||
+    /\bvamos\s+esquecer\b/.test(t) ||
+    /\besquecer\s+(o|a|os|as|todos)\b/.test(t)
+  );
+}
+
 export function ehConsultaEstadoParaC4(t, ctx = {}) {
   if (!ehConsultaEstadoOperacional(t)) return false;
   if (situacionalDe(ctx, t)) return false;
   if (ehPedidoAutodiagnosticoOuAutoavaliacaoCeo(t)) return false;
-  if (ehPedidoAnaliseOuRecomendacao(t, ctx.fioCoa, optsSinaisDe(ctx))) {
+  // F22: mudança de assunto + consulta de estado prevalece sobre objecto B
+  // residual («esqueça preço/margem») — a pergunta actual manda.
+  if (
+    !ehMudancaAssuntoComConsultaEstado(t) &&
+    ehPedidoAnaliseOuRecomendacao(t, ctx.fioCoa, optsSinaisDe(ctx))
+  ) {
     return false;
   }
   if (ehPedidoRelatoEncerramento(t)) return false;
@@ -916,6 +1006,8 @@ export function ehConhecimentoGeralE22(t, fioCoa, opts = {}) {
 export function ehIntencaoExecutivaE21(t, fioCoa, opts = {}) {
   if (!t || ehPerguntaDeliberativa(t)) return false;
   if (ehProibicaoExecucaoExplicita(t)) return false;
+  // Autodiagnóstico / autoavaliação = meta-análise do produto — nunca Job/Gate.
+  if (ehPedidoAutodiagnosticoOuAutoavaliacaoCeo(t)) return false;
   // Análise / recomendação deliberativa → C2 (hierarquia: ANÁLISE ≠ EXECUÇÃO)
   // Sinal analise=true: consumir sem reavaliar predicado; objecto/pd via opts.
   if (opts.pedidoAnaliseDeliberativa === true && !ehComandoExecucaoExplicito(t)) {
@@ -928,6 +1020,7 @@ export function ehIntencaoExecutivaE21(t, fioCoa, opts = {}) {
   const padroes = [
     /\b(resolv[ae]|resolver)\b.*\b(bugs?|erros?|falhas?|problemas?)\b/,
     /\b(corrija|corrige|corrigir|fix)\b.*\b(problema|c[oó]digo|bug|erro)\b/,
+    // «faça diagnóstico» operacional — excluído autodiagnóstico acima
     /\b(fa[cç]a|faz|fazer)\b.*\b(diagn[oó]stico|relat[oó]rio|feature|funcionalidade)\b/,
     /\b(implement[ae]|implementar)\b/,
     /\b(acion[ae]|acionar)\b.*\b(cto|engenheiro|cursor)\b/,
@@ -997,6 +1090,15 @@ export function desambiguarJobs(t, fioCoa, opts = {}) {
     return "c4";
   }
   if (/\bjobs?\s+pendentes?\b/.test(t)) return "c4";
+  // F19 — consulta de Jobs abertos / último Job ≠ criar trabalho
+  // F23 — recuperação / dispatched / há algum Job ≠ criar trabalho
+  if (/\bjobs?\s+em\s+aberto\b/.test(t)) return "c4";
+  if (/\bjobs?\s+em\s+recuperacao\b/.test(t)) return "c4";
+  if (/\bem\s+recuperacao\b/.test(t) && /\bjobs?\b/.test(t)) return "c4";
+  if (/\bdispatched\b/.test(t) && /\bjobs?\b/.test(t)) return "c4";
+  if (/\bha\s+(algum|alguns)\s+jobs?\b/.test(t)) return "c4";
+  if (/\b(ultimo|ultima)\s+jobs?\b/.test(t)) return "c4";
+  if (/\bjobs?\s+(mais\s+)?recente\b/.test(t)) return "c4";
   if (
     /\b(cria(r)?|cria|crie|despacha|despachar|publicar|enviar)\s+(um\s+|o\s+|novo\s+)?jobs?\b/.test(
       t
@@ -1315,6 +1417,37 @@ export function classificar(texto, contexto = {}) {
     });
   }
 
+  // Protocolo do Agente Executivo (procedimento/demanda/CTO/autorização) → C2.
+  // Evita default C1 clarificação e falso match de identidade.
+  {
+    const prot = detectarPedidoProtocoloExecutivo(texto);
+    if (prot.activo) {
+      return montarSaida(
+        "conversa_projeto",
+        0.95,
+        "Protocolo Agente Executivo (DIC) → C2 sem clarificação"
+      );
+    }
+  }
+
+  // LFC / resposta restrita factual do caso → C2 (capacidade ia + processarTurnoLfc).
+  // Sem isto, T1 cai no default C1 clarificação e nunca lê o LFC (conflito MVP).
+  {
+    const detLfc = detectarModoRespostaRestrita(texto);
+    const modosLfc = new Set(["dado_unico", "factos", "registo", "confirmacao"]);
+    if (
+      (detLfc.activo && detLfc.modo && modosLfc.has(detLfc.modo)) ||
+      (pediuAmbitoCasoLfc(texto) &&
+        /\b(qual|liste|listar|quais|mostre|mostrar|codigo\s+secreto)\b/.test(t))
+    ) {
+      return montarSaida(
+        "conversa_projeto",
+        0.94,
+        "LFC: consulta/registo/correção factual do caso → C2 (sem clarificação)"
+      );
+    }
+  }
+
   // 0) recomendação operacional → C4
   // 0b) relato/encerramento (três campos) → C4 memória encerrar_dia
   // 1) continuidade missão + operação aberta → C2 (Teste 3)
@@ -1487,7 +1620,9 @@ export function classificar(texto, contexto = {}) {
   const saida = montarSaida(resolvido.classe, confianca, razaoCurta);
 
   // S3 — histórico opcional (só C1↔C2)
-  return aplicarDesambiguacaoHistorico(saida, t, contexto);
+  const aposHist = aplicarDesambiguacaoHistorico(saida, t, contexto);
+  // IMP-094 Fase 2 — CL-1/CL-2/CL-3: não clarificar por limiar/lexicon em famílias proibidas.
+  return disciplinarSaidaClarificacao(aposHist, texto).saida;
 }
 
 export { LIMIAR_CONFIANCA, normalizarTexto };

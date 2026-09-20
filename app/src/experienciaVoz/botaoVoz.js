@@ -11,6 +11,10 @@ import {
   ouvirPendenteCeo
 } from "./reproduzirResposta.js";
 import { obterOrquestradorVozSessao } from "./sessao.js";
+import {
+  htmlComMarcaCeo20,
+  textoComMarcaCeo20
+} from "../ui/identidadeCeo20.js";
 
 const ROTULOS = Object.freeze({
   [ESTADO_VOZ.DESATIVADA]: "Voz desativada",
@@ -61,12 +65,15 @@ export function pintarBotaoVoz(btn, orch) {
   btn.dataset.voiceState = estado;
   btn.dataset.voiceUnlocked = snap.sessaoDesbloqueada ? "1" : "0";
   btn.dataset.voiceEnabled = snap.enabled ? "1" : "0";
-  btn.setAttribute("aria-label", `${ROTULOS[estado]}. ${acaoEfetiva(orch)}`);
-  btn.title = `${ROTULOS[estado]} — ${acaoEfetiva(orch)}`;
+  btn.setAttribute(
+    "aria-label",
+    textoComMarcaCeo20(`${ROTULOS[estado]}. ${acaoEfetiva(orch)}`)
+  );
+  btn.title = textoComMarcaCeo20(`${ROTULOS[estado]} — ${acaoEfetiva(orch)}`);
 
   const label = btn.querySelector("[data-voice-label]");
   if (label) {
-    label.textContent = ROTULOS[estado];
+    label.innerHTML = htmlComMarcaCeo20(ROTULOS[estado]);
   }
 
   if (snap.mensagemErro) {

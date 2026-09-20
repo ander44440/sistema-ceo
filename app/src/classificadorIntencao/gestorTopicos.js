@@ -70,6 +70,7 @@ const RE_RETOMAR =
 /**
  * Encerramento explícito e inequívoco de tópico/assunto/contexto.
  * Não cobre «novo contexto», «mudando de assunto» nem shift simples.
+ * F2B: reorientação explícita («reoriente», «a única tarefa agora») também limpa.
  * @param {string} [texto]
  */
 export function ehEncerramentoExplicitoContexto(texto) {
@@ -80,7 +81,9 @@ export function ehEncerramentoExplicitoContexto(texto) {
     ) ||
     /\bn[aã]o\s+considere\s+mais\s+(este|esse|o)\s+(t[oó]pico|assunto|contexto)\b/i.test(
       t
-    )
+    ) ||
+    /\breorient(e|ar|em)?\b/i.test(t) ||
+    /\ba\s+[uú]nica\s+(tarefa|prioridade|frente)\s+agora\b/i.test(t)
   );
 }
 
@@ -134,7 +137,8 @@ export function criarTopico(ancora, origem = "usuario", agoraIso) {
 }
 
 /**
- * A4 — âncora sob negação local («não do outdoor») não é menção temática positiva.
+ * A4 — âncora sob negação local não é menção temática positiva.
+ * Cobre «não do/da/de X», «sem … X», «esqueça … X» (genérico; não por lexema de âncora).
  * @param {string} texto
  * @param {number} idx — início do match da âncora
  */
@@ -142,7 +146,14 @@ export function ancoraNegadaLocalmente(texto, idx) {
   const i = Number(idx);
   if (!Number.isFinite(i) || i < 0) return false;
   const antes = String(texto || "").slice(0, i);
-  return /\bn[aã]o\s+(do|da|de)\s+$/i.test(antes);
+  return (
+    /\bn[aã]o\s+(do|da|de)\s+$/i.test(antes) ||
+    /\bsem\s+(?:\w+\s+){0,5}(?:o\s+|a\s+|de\s+|do\s+|da\s+|sobre\s+(?:o\s+|a\s+)?)?$/i.test(
+      antes
+    ) ||
+    /\bn[aã]o\s+(?:\w+\s+){0,4}(?:o\s+|a\s+|de\s+|do\s+|da\s+)?$/i.test(antes) ||
+    /\besquec[ae]\s+(?:o\s+|a\s+|de\s+|do\s+|da\s+)?$/i.test(antes)
+  );
 }
 
 /**
@@ -384,6 +395,17 @@ export function gestorTopicos(entrada = {}) {
     };
   }
 
+  // F2B: encerramento/reorientação explícita — não preservar activo/pausas neste turno
+  if (ehEncerramentoExplicitoContexto(mensagem)) {
+    return {
+      evento: "neutro",
+      topicoActivo: null,
+      pausas: [],
+      razaoTopico: "encerramento/reorientação explícita de contexto",
+      commitEstado: true
+    };
+  }
+
   const tNorm = normalizarTexto(mensagem);
   const deixis = mensagemEhDeixisOuFollowUp(mensagem);
   const marcadorShift = RE_SHIFT.test(tNorm) || RE_SHIFT.test(mensagem);
@@ -520,6 +542,18 @@ export function gestorTopicos(entrada = {}) {
       ? ancorasMsg.find((a) => familiaActiva(activo, a.familia))
       : null;
     if (!matchActivo) {
+      // F12/C5: co-menção (≥2 âncoras) sem «ou/vs» ≠ escolha — não bloquear
+      // execução explícita determinada (ex.: «criar Job para corrigir bugs»).
+      if (!/\bou\b|\bou\s+ao\b|\bvs\.?\b/i.test(mensagem)) {
+        const p = preservado();
+        return {
+          evento: "neutro",
+          ...p,
+          razaoTopico:
+            "múltiplas âncoras sem escolha explícita — neutro (não bloquear)",
+          commitEstado: false
+        };
+      }
       const p = preservado();
       return {
         evento: "ambiguo_topico",

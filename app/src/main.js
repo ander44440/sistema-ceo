@@ -12,6 +12,7 @@ import {
   obterEstadoGabinete,
   obterProjetoAtivo
 } from "./catalogoProjetos/index.js";
+import { textoComMarcaCeo20 } from "./ui/identidadeCeo20.js";
 
 function boot() {
   const root = document.getElementById("app");
@@ -57,31 +58,31 @@ function boot() {
     if (rota.id === "dashboard") {
       shell.workspace.classList.add("is-centro");
       shell.renderModule(montarCentroSituacao());
-      document.title = "CEO — Centro de Situação";
+      document.title = textoComMarcaCeo20("CEO — Centro de Situação");
       return;
     }
 
     if (rota.id === "conversa") {
       shell.workspace.classList.add("is-conversa");
       shell.renderModule(montarConversa());
-      document.title = `CEO — ${rota.titulo}`;
+      document.title = textoComMarcaCeo20(`CEO — ${rota.titulo}`);
       return;
     }
 
     if (rota.id === "projetos") {
       shell.renderModule(montarProjetos());
-      document.title = `CEO — ${rota.titulo}`;
+      document.title = textoComMarcaCeo20(`CEO — ${rota.titulo}`);
       return;
     }
 
     if (rota.id === "dev-voice" || rota.id === "settings-voice") {
       shell.renderModule(montarDevVoice());
-      document.title = "CEO — Dev · Voice Engine";
+      document.title = textoComMarcaCeo20("CEO — Dev · Voice Engine");
       return;
     }
 
     shell.renderModule(renderModulo(rota));
-    document.title = `CEO — ${rota.titulo}`;
+    document.title = textoComMarcaCeo20(`CEO — ${rota.titulo}`);
   });
 }
 

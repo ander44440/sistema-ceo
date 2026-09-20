@@ -177,6 +177,10 @@ export function temLastroNegocio(texto) {
   if (/\b(faturamento|facturacao)\b/.test(t)) return true;
   if (/\bmateria-?primas?\b/.test(t)) return true;
   if (/\b(dilema|trade-?off)\b/.test(t)) return true;
+  if (/\b(funcionarios?|colaboradores?)\b/.test(t)) return true;
+  if (/\bdesperd[ií]cio\b/.test(t)) return true;
+  if (/r\$\s*[\d.,]+/.test(t) || /\d+\s*%/.test(t)) return true;
+  if (/\bvale\s*verde\b/.test(t)) return true;
   if (
     /\b(dois|duas)\b/.test(t) &&
     (/\bo\s+outro\b/.test(t) ||

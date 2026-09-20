@@ -12,7 +12,7 @@ const ROTAS = Object.freeze([
     id: "conversa",
     path: "#/conversa",
     titulo: "Conversa",
-    descricao: "Interface principal de diálogo com o CEO."
+    descricao: "Interface principal de diálogo com o CEO 2.0."
   }),
   Object.freeze({
     id: "capacidades",

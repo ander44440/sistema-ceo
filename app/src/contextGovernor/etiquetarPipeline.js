@@ -383,7 +383,9 @@ export function montarCgMetaDeEntradaMre(entrada = {}, ctx = {}) {
   const fragmentos = [];
   const fontes = unirFontesAutorizadas(FONTES_CG.TURNO_ATUAL);
 
-  const instrucao = texto(ctx.instrucao || entrada.perguntaAtual);
+  const instrucao = texto(
+    ctx.instrucao || entrada.mensagemAtual || entrada.perguntaAtual
+  );
   if (instrucao) {
     fragmentos.push(
       criarFragmento({
@@ -437,11 +439,47 @@ export function montarCgMetaDeEntradaMre(entrada = {}, ctx = {}) {
     }
   }
 
-  const lastro = ctx.lastroConsciencia;
-  if (lastro?.temContextoRelevante === true && !isolamentoCsc) {
-    if (!fontes.includes(FONTES_CG.CONSCIENCIA_OPS)) {
-      fontes.push(FONTES_CG.CONSCIENCIA_OPS);
-    }
+  // Anexos deliberativos (fio/MTE/ops): etiquetados à parte — NÃO autorizados
+  // por omissão (FRENTE 7). Só entram no residual se a política autorizar a fonte.
+  const anexos = entrada.anexosDeliberativos || {};
+  if (anexos.fioRecente) {
+    fragmentos.push(
+      criarFragmento({
+        id: "mre-anexo-fio",
+        papel: "anexo",
+        texto: String(anexos.fioRecente),
+        coaId,
+        casoId: null,
+        fonte: FONTES_CG.HFC_CONTINUIDADE,
+        uso: USOS_CG.CONTINUIDADE
+      })
+    );
+  }
+  if (anexos.memoriaTrabalho) {
+    fragmentos.push(
+      criarFragmento({
+        id: "mre-anexo-mte",
+        papel: "anexo",
+        texto: String(anexos.memoriaTrabalho),
+        coaId,
+        casoId: null,
+        fonte: FONTES_CG.CONSCIENCIA_OPS,
+        uso: USOS_CG.CONTINUIDADE
+      })
+    );
+  }
+  if (anexos.consciencia) {
+    fragmentos.push(
+      criarFragmento({
+        id: "mre-anexo-consciencia",
+        papel: "anexo",
+        texto: String(anexos.consciencia),
+        coaId,
+        casoId: null,
+        fonte: FONTES_CG.CONSCIENCIA_OPS,
+        uso: USOS_CG.CONTINUIDADE
+      })
+    );
   }
 
   // Fio/histórico no envelope: só etiquetar com coaId se o turno já o trouxer
@@ -466,6 +504,10 @@ export function montarCgMetaDeEntradaMre(entrada = {}, ctx = {}) {
       })
     );
   });
+
+  // FRENTE 7: lastro CSC relevante NÃO autoriza automaticamente CONSCIENCIA_OPS
+  // no acto MRE — senão anexos MTE/Jobs reentrariam no residual HTTP.
+  // (fonte permanece etiquetável; autorização é acto explícito / política futura)
 
   return {
     coaAtivo: coaId

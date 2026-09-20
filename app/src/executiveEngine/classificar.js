@@ -4,7 +4,10 @@
  */
 
 import { normalizarTexto } from "../classificadorIntencao/lexicon.js";
-import { classificar as classificarCanonico } from "../classificadorIntencao/regras.js";
+import {
+  classificar as classificarCanonico,
+  ehPedidoResumoCompostoSessao
+} from "../classificadorIntencao/regras.js";
 import { ID_POR_CLASSE } from "../classificadorIntencao/dominio.js";
 import { ehRecomendacaoOperacional } from "../classificadorIntencao/recomendacaoOperacional.js";
 import { detectarPedidoDecisaoExplicita } from "../classificadorIntencao/pedidoDecisaoExplicita.js";
@@ -13,6 +16,7 @@ import {
   temAncoraExplicitaProjeto
 } from "../classificadorIntencao/ancoraEmpresa.js";
 import { ehConsultaCatalogoProjetos } from "../classificadorIntencao/consultaCatalogoProjetos.js";
+import { disciplinarSaidaClarificacao } from "../classificadorIntencao/clarificacaoDisciplinada.js";
 
 export { normalizarTexto };
 
@@ -95,6 +99,35 @@ function comMetadadosContexto(intencao, texto, opts = {}) {
  */
 
 /**
+ * Saudação isolada (cumprimento curto). Corpo com análise/negócio ⇒ não é saudação.
+ * @param {string} t — texto já normalizado
+ */
+export function ehSaudacaoPura(t) {
+  if (!t) return false;
+  if (
+    !/^(ol[aá]|oi|bom dia|boa tarde|boa noite|hey|hello)([!. ]|$)/.test(t) &&
+    !/^(ol[aá]|oi|bom dia|boa tarde|boa noite)\b/.test(t)
+  ) {
+    return false;
+  }
+  const resto = t
+    .replace(/^(ol[aá]|oi|bom dia|boa tarde|boa noite|hey|hello)\b[!.]*/i, "")
+    .replace(/^[,:\-–—\s]+/, "")
+    .trim();
+  if (!resto) return true;
+  // Cumprimento + nome curto («bom dia anderson»)
+  if (
+    resto.length <= 24 &&
+    !/\b(analis|avali|prioridade|empresa|deliber|assum|fornecedor|margem|decis|nao\s+execute)\b/.test(
+      resto
+    )
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Mapa texto → capacidade registada (C1/C2/C4 e legado operacional).
  * C3 não usa capacidade — o Núcleo chama o Motor.
  * @param {string} texto
@@ -142,10 +175,13 @@ export function mapearCapacidadePorTexto(texto, fioCoa, opts = {}) {
     return { id: "encerrar_dia", capacidade: "memoria", confianca: 0.97 };
   }
 
-  if (
-    /^(ol[aá]|oi|bom dia|boa tarde|boa noite|hey|hello)([!. ]|$)/.test(t) ||
-    /^(ol[aá]|oi|bom dia|boa tarde|boa noite)\b/.test(t)
-  ) {
+  // F25/T20 — resumo composto COA+LFC+Jobs
+  if (ehPedidoResumoCompostoSessao(t)) {
+    return { id: "consultar_estado", capacidade: "memoria", confianca: 0.96 };
+  }
+
+  // Saudação pura apenas — «Bom dia» + análise/negócio NÃO engole o turno.
+  if (ehSaudacaoPura(t)) {
     return { id: "saudacao", capacidade: "ia", confianca: 0.95 };
   }
 
@@ -175,9 +211,11 @@ export function mapearCapacidadePorTexto(texto, fioCoa, opts = {}) {
   }
 
   if (
-    /qual\s+[eé]\s+o\s+estado\s+atual/.test(t) ||
-    /\bestado\s+atual\b/.test(t) ||
-    /\bestado\s+da\s+fila\b/.test(t) ||
+    /qual\s+[eé]\s+o\s+estado\s+(atual|actual)/.test(t) ||
+    /\bestado\s+operacional(\s+(atual|actual))?\b/.test(t) ||
+    /\bestado\s+(operacional\s+)?(atual|actual)\b/.test(t) ||
+    /\bestado\s+(atual|actual)\b/.test(t) ||
+    /\bestado\s+da\s+(fila|sessao)\b/.test(t) ||
     /\b(resumo\s+(executivo|da\s+sess[aã]o)|mem[oó]ria\s+executiva)\b/.test(t) ||
     /\bgates?\s+pendentes?\b/.test(t) ||
     /\bquais\s+gates?\b/.test(t) ||
@@ -185,6 +223,12 @@ export function mapearCapacidadePorTexto(texto, fioCoa, opts = {}) {
     /\bid\s+(do\s+)?gates?\b/.test(t) ||
     /\bestado\s+(do\s+)?jobs?-?\d*\b/.test(t) ||
     /\bjobs?-\d+\b/.test(t) ||
+    /\b(ultimo|ultima)\s+jobs?\b/.test(t) ||
+    /\bjobs?\s+em\s+aberto\b/.test(t) ||
+    /\bjobs?\s+em\s+recuperacao\b/.test(t) ||
+    (/\bem\s+recuperacao\b/.test(t) && /\bjobs?\b/.test(t)) ||
+    (/\bdispatched\b/.test(t) && /\bjobs?\b/.test(t)) ||
+    /\bha\s+(algum|alguns)\s+jobs?\b/.test(t) ||
     /\b(resultado|verificad|verificacao).*\bjobs?-\d*\b/.test(t) ||
     /\bconsulte?\s+(o\s+)?estado\b/.test(t) ||
     /\bo\s+que\s+esta\s+(pendente|aguardando)\b/.test(t) ||
@@ -357,12 +401,14 @@ export function classificarIntencao(texto, saidaPrevia = null, extra = {}) {
   if (extra && extra.pedidoDecisaoExplicita != null) {
     optsSinais.pedidoDecisaoExplicita = extra.pedidoDecisaoExplicita === true;
   }
-  const saida =
+  const saidaBruta =
     saidaPrevia &&
     typeof saidaPrevia === "object" &&
     typeof saidaPrevia.classe === "string"
       ? saidaPrevia
       : classificarCanonico(texto, extra.contextoClassificacao || { fioCoa });
+  // IMP-094 F2 — reforço CL-* (também se saidaPrevia trouxe clarificação legada).
+  const saida = disciplinarSaidaClarificacao(saidaBruta, texto).saida;
   const idClasse = ID_POR_CLASSE[saida.classe] || "C?";
 
   if (saida.classe === "trabalho_executivo" && !saida.precisaClarificacao) {
