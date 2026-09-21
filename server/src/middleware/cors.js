@@ -1,10 +1,21 @@
 /**
  * CORS — BP-001 E10.
- * CEO_ALLOWED_ORIGIN definida → só essa origem.
+ * CEO_ALLOWED_ORIGIN definida → só origens listadas (vírgula/espaço).
  * Ausente → apenas localhost / 127.0.0.1 (dev seguro; sem *).
  */
 
 import { cors } from 'hono/cors';
+
+/**
+ * @param {string | undefined} allowedEnv — valor de CEO_ALLOWED_ORIGIN
+ * @returns {string[]}
+ */
+function listarOrigensPermitidas(allowedEnv) {
+  return String(allowedEnv || '')
+    .split(/[,;\s]+/)
+    .map((o) => o.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+}
 
 /**
  * @param {string | undefined} allowedEnv — valor de CEO_ALLOWED_ORIGIN
@@ -15,12 +26,10 @@ export function resolverOrigemCors(allowedEnv, requestOrigin) {
   const origin = String(requestOrigin || '').trim();
   if (!origin) return null;
 
-  const configured = String(allowedEnv || '')
-    .trim()
-    .replace(/\/$/, '');
-
-  if (configured) {
-    return origin === configured ? origin : null;
+  const permitidas = listarOrigensPermitidas(allowedEnv);
+  if (permitidas.length) {
+    const normalizada = origin.replace(/\/$/, '');
+    return permitidas.includes(normalizada) ? origin : null;
   }
 
   // Dev: só loopback
