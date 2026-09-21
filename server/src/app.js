@@ -17,7 +17,7 @@ export function createApp(env = process.env) {
   const app = new Hono();
   const repoRoot = resolverRepoRoot(env);
   registrarCors(app, env);
-  registrarHealth(app);
+  registrarHealth(app, env);
   registrarLlm(app, env);
   registrarCto(app, env);
   registrarQueue(app, { repoRoot });

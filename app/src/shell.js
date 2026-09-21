@@ -6,6 +6,7 @@ import {
   htmlMarcaCeo20,
   htmlComMarcaCeo20
 } from "./ui/identidadeCeo20.js";
+import { htmlCommitVersao } from "./ui/versaoBuild.js";
 
 const NAV_ICONS = Object.freeze({
   dashboard:
@@ -69,7 +70,7 @@ export function montarShell(root) {
           <div class="shell-mark" aria-hidden="true">${htmlMarcaCeo20()}</div>
           <div>
             <strong>${htmlMarcaCeo20()}</strong>
-            <span>Sistema Executivo de Governança</span>
+            <span>Sistema CEO ${htmlCommitVersao()}</span>
           </div>
         </div>
         <div id="shell-nav"></div>

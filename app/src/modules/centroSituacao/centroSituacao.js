@@ -28,6 +28,7 @@ import { htmlBlocoMepC3 } from "./blocoMepC3.js";
 import {
   htmlMarcaCeo20
 } from "../../ui/identidadeCeo20.js";
+import { htmlCommitVersao } from "../../ui/versaoBuild.js";
 
 function htmlDeliberacaoNatural(dados) {
   if (!dados || !Array.isArray(dados.destaques) || !dados.destaques.length) {
@@ -287,7 +288,7 @@ export function montarCentroSituacao() {
           <section class="cs-card cs-decisoes" aria-label="Centro de Decisões">
             <div>
               <p class="cs-kicker">Centro de Decisões</p>
-              <p>Registe uma decisão ou peça ao ${htmlMarcaCeo20()} uma recomendação operacional sobre a frente activa.</p>
+              <p>Registe uma decisão ou peça ao ${htmlMarcaCeo20()} ${htmlCommitVersao()} uma recomendação operacional sobre a frente activa.</p>
             </div>
             <button type="button" class="cs-cta" id="cs-fazer-decisao">Fazer uma decisão</button>
           </section>

@@ -59,6 +59,16 @@ body {
   font-weight: 800;
 }
 
+/* COMMIT da versão em execução (build/runtime) */
+.ceo-commit-versao {
+  color: #f97316;
+  font-weight: 700;
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  letter-spacing: 0.02em;
+  margin-left: 0.35em;
+  white-space: nowrap;
+}
+
 .shell-mark {
   width: 2.35rem;
   height: 2.35rem;
